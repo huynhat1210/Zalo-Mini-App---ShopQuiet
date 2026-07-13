@@ -25,6 +25,10 @@ type AppState = {
   isFetchingCategories: boolean;
   isFetchingBanners: boolean;
 
+  productsPage: number;
+  productsHasMore: boolean;
+  isFetchingMoreProducts: boolean;
+
   setActiveTab: (tab: string) => void;
   setSelectedProductDetail: (product: IProduct | null) => void;
   setIsCartOpen: (open: boolean) => void;
@@ -48,8 +52,10 @@ type AppState = {
   
   // Fetchers for cache
   fetchProducts: () => Promise<void>;
+  fetchMoreProducts: () => Promise<void>;
   fetchCategories: () => Promise<void>;
   fetchBanners: () => Promise<void>;
+  refreshData: () => Promise<void>;
 };
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -71,6 +77,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   isFetchingProducts: false,
   isFetchingCategories: false,
   isFetchingBanners: false,
+
+  productsPage: 1,
+  productsHasMore: true,
+  isFetchingMoreProducts: false,
 
   setActiveTab: (tab) => set({ activeTab: tab }),
   setSelectedProductDetail: (product) => set({ selectedProductDetail: product }),
@@ -296,12 +306,45 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     set({ isFetchingProducts: true });
     try {
-      const fetched = await apiRequest<IProduct[]>('/products');
-      set({ products: fetched, isFetchingProducts: false });
-      localStorage.setItem('cache_products', JSON.stringify(fetched));
+      const fetched: any = await apiRequest('/products?page=1&limit=10');
+      const data = fetched.data || fetched;
+      set({ 
+        products: data, 
+        isFetchingProducts: false,
+        productsPage: 1,
+        productsHasMore: fetched.meta ? fetched.meta.page < fetched.meta.totalPages : false
+      });
+      localStorage.setItem('cache_products', JSON.stringify(data));
     } catch (err) {
       console.error('Failed to fetch products', err);
       set({ isFetchingProducts: false });
+    }
+  },
+
+  fetchMoreProducts: async () => {
+    const { productsPage, productsHasMore, isFetchingMoreProducts, products } = get();
+    if (!productsHasMore || isFetchingMoreProducts) return;
+
+    set({ isFetchingMoreProducts: true });
+    const nextPage = productsPage + 1;
+    try {
+      const fetched: any = await apiRequest(`/products?page=${nextPage}&limit=10`);
+      const newData = fetched.data || [];
+      
+      // Prevent duplicates by checking if the id already exists
+      const newItems = newData.filter((newItem: any) => !Array.isArray(products) || !products.some(p => p.id === newItem.id));
+      const updatedProducts = [...products, ...newItems];
+      
+      set({ 
+        products: updatedProducts, 
+        isFetchingMoreProducts: false,
+        productsPage: nextPage,
+        productsHasMore: fetched.meta ? nextPage < fetched.meta.totalPages : false
+      });
+      localStorage.setItem('cache_products', JSON.stringify(updatedProducts));
+    } catch (err) {
+      console.error('Failed to fetch more products', err);
+      set({ isFetchingMoreProducts: false });
     }
   },
 
@@ -343,6 +386,52 @@ export const useAppStore = create<AppState>((set, get) => ({
     } catch (err) {
       console.error('Failed to fetch banners', err);
       set({ isFetchingBanners: false });
+    }
+  },
+
+  refreshData: async () => {
+    set({ 
+      products: [], 
+      productsPage: 1, 
+      productsHasMore: true,
+      categories: [],
+      banners: [],
+      isFetchingProducts: true,
+      isFetchingCategories: true,
+      isFetchingBanners: true
+    });
+
+    try {
+      const [productsRes, categoriesRes, bannersRes] = await Promise.all([
+        apiRequest<any>('/products?page=1&limit=10'),
+        apiRequest<any[]>('/categories'),
+        apiRequest<any[]>('/banners')
+      ]);
+
+      const productsData = productsRes.data || productsRes;
+      const parsedCategories = categoriesRes.map((cat) => ({ ...cat, icon: undefined }));
+
+      set({
+        products: productsData,
+        productsPage: 1,
+        productsHasMore: productsRes.meta ? productsRes.meta.page < productsRes.meta.totalPages : false,
+        categories: parsedCategories,
+        banners: bannersRes,
+        isFetchingProducts: false,
+        isFetchingCategories: false,
+        isFetchingBanners: false
+      });
+
+      localStorage.setItem('cache_products', JSON.stringify(productsData));
+      localStorage.setItem('cache_categories', JSON.stringify(parsedCategories));
+      localStorage.setItem('cache_banners', JSON.stringify(bannersRes));
+    } catch (err) {
+      console.error('Failed to refresh data', err);
+      set({
+        isFetchingProducts: false,
+        isFetchingCategories: false,
+        isFetchingBanners: false
+      });
     }
   }
 }));

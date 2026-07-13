@@ -1,12 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 
 @Injectable()
 export class ProductsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
-  async findAll(search?: string, categoryId?: string) {
+  async findAll(search?: string, categoryId?: string, page: number = 1, limit: number = 10) {
+    const cacheKey = `products_${search || ''}_${categoryId || ''}_${page}_${limit}`;
+    const cachedData = await this.cacheManager.get(cacheKey);
+    
+    if (cachedData) {
+      return cachedData;
+    }
+
     const where: Prisma.ProductWhereInput = {};
 
     if (search) {
@@ -20,13 +32,34 @@ export class ProductsService {
       where.categoryId = parseInt(categoryId, 10);
     }
 
-    return this.prisma.product.findMany({
-      where,
-      include: {
-        category: true,
-        variants: true,
+    const skip = (page - 1) * limit;
+
+    const [products, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        include: {
+          category: true,
+          variants: true,
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+
+    const result = {
+      data: products,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-    });
+    };
+
+    // Cache for 10 seconds (10000ms)
+    await this.cacheManager.set(cacheKey, result, 10000);
+    return result;
   }
 
   async findOne(id: number) {

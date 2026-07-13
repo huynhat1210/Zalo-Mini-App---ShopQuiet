@@ -1,5 +1,6 @@
 import { Page } from 'zmp-ui';
 import { useCart } from '../../App';
+import { EmptyState } from '../../components/empty-state/EmptyState';
 import { ISavedItemsComponentProps } from './saved-items.type';
 
 const PageCast = Page as any;
@@ -22,24 +23,12 @@ export const SavedItemsComponent: React.FC<ISavedItemsComponentProps> = (_props)
 
       <div className="flex-1 px-6 py-5.5 space-y-4 pb-28">
         {savedItems.length === 0 ? (
-          /* Empty State */
-          <div className="flex flex-col items-center justify-center py-24 px-8 text-center bg-white rounded-2xl border border-[#f0edeb] my-2 shadow-xs">
-            <div className="w-16 h-16 rounded-full bg-[#f5f3f0] flex items-center justify-center text-[#526069] mb-4">
-              <svg className="w-7.5 h-7.5 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-            </div>
-            <h3 className="text-xs font-bold text-textColor uppercase tracking-widest">No saved items</h3>
-            <p className="text-[11px] text-textColor-variant mt-2 max-w-[210px] leading-relaxed">
-              Tap the heart icon on any product to save it here for later.
-            </p>
-            <button
-              onClick={() => setActiveTab('home')}
-              className="mt-6 bg-primary hover:bg-primary-dark text-white text-[10px] font-bold uppercase tracking-widest px-6 py-3 rounded-full shadow-sm active:scale-95 transition-all"
-            >
-              Explore Products
-            </button>
-          </div>
+          <EmptyState
+            title="No saved items"
+            description="Tap the heart icon on any product to save it here for later."
+            actionText="Explore Products"
+            onAction={() => setActiveTab('home')}
+          />
         ) : (
           /* Saved items list */
           <div className="grid grid-cols-2 gap-x-5 gap-y-7">

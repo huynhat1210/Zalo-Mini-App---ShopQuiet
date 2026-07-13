@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -6,6 +6,7 @@ import { Page, Text } from 'zmp-ui';
 import { useCart, IProduct, IOrder } from '../../App';
 import { apiRequest } from '../../utils/api';
 import api from 'zmp-sdk';
+import { EmptyState } from '../../components/empty-state/EmptyState';
 import { IProfileComponentProps } from './profile.type';
 
 const PageCast = Page as any;
@@ -152,7 +153,7 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
         apiRequest<IProduct[]>('/products')
       ]);
       setOrders(fetchedOrders);
-      const recs = fetchedProducts.slice(0, 3);
+      const recs = Array.isArray(fetchedProducts) ? fetchedProducts.slice(0, 3) : [];
       setRecommendationProducts(recs);
 
       // Save fresh data to cache
@@ -296,35 +297,16 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
           {loading ? (
             <div className="text-center py-10 text-textColor-variant text-xs font-medium">Đang tải đơn hàng...</div>
           ) : displayedOrders.length === 0 ? (
-            /* ShopeeFood Empty State */
-            <div className="flex flex-col items-center justify-center py-14 px-6 text-center bg-white rounded-3xl border border-[#f0edeb] shadow-xs">
-              <div className="w-24 h-24 flex items-center justify-center text-primary/10 mb-4">
-                <svg className="w-20 h-20 text-[#526069]/30" viewBox="0 0 120 120" fill="none">
-                  {/* Document Illustration SVG */}
-                  <rect x="25" y="15" width="70" height="90" rx="10" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
-                  <path d="M40 35H80" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                  <path d="M40 50H80" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                  <path d="M40 65H70" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-                  <circle cx="85" cy="85" r="15" fill="#ecf6f7" stroke="currentColor" strokeWidth="3" />
-                  <path d="M85 78V92M78 85H92" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                </svg>
-              </div>
-              <h3 className="text-xs font-bold text-textColor leading-tight">
-                {ordersTab === 'active' ? 'Quên chưa đặt sản phẩm rồi nè bạn ơi?' : 
-                 ordersTab === 'history' ? 'Chưa có lịch sử mua hàng' :
-                 ordersTab === 'reviews' ? 'Chưa có đánh giá nào' : 'Chưa có đơn nháp nào'}
-              </h3>
-              <p className="text-[10.5px] text-textColor-variant mt-2 max-w-[240px] leading-relaxed">
-                {ordersTab === 'active' ? 'Bạn sẽ nhìn thấy các đơn hàng đang được chuẩn bị hoặc giao đi tại đây để kiểm tra đơn hàng nhanh hơn!' : 
-                 'Khám phá các sản phẩm tối giản cao cấp của chúng tôi để mua sắm ngay.'}
-              </p>
-              <button
-                onClick={() => setActiveTab('home')}
-                className="mt-6.5 bg-primary hover:bg-primary-dark text-white text-[9.5px] font-extrabold uppercase tracking-widest px-6 py-3 rounded-full shadow-xs active:scale-95 transition-all border-none"
-              >
-                Mua sắm ngay
-              </button>
-            </div>
+            <EmptyState
+              title={ordersTab === 'active' ? 'Quên chưa đặt sản phẩm rồi nè bạn ơi?' :
+                     ordersTab === 'history' ? 'Chưa có lịch sử mua hàng' :
+                     ordersTab === 'reviews' ? 'Chưa có đánh giá nào' : 'Chưa có đơn nháp nào'}
+              description={ordersTab === 'active'
+                ? 'Bạn sẽ nhìn thấy các đơn hàng đang được chuẩn bị hoặc giao đi tại đây để kiểm tra đơn hàng nhanh hơn!'
+                : 'Khám phá các sản phẩm tối giản cao cấp của chúng tôi để mua sắm ngay.'}
+              actionText="Mua sắm ngay"
+              onAction={() => setActiveTab('home')}
+            />
           ) : (
             /* Orders List displaying */
             <div className="space-y-4 animate-fade-in">

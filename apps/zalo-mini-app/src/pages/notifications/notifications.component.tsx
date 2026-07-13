@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Page } from 'zmp-ui';
 import { useCart, IOrder } from '../../App';
 import { apiRequest } from '../../utils/api';
+import { EmptyState } from '../../components/empty-state/EmptyState';
 import { INotificationsComponentProps } from './notifications.type';
 
 const PageCast = Page as any;
@@ -123,19 +124,12 @@ export const NotificationsComponent: React.FC<INotificationsComponentProps> = (_
       {/* Notifications List content */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 pb-28">
         {filteredNotifications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 px-8 text-center bg-white rounded-3xl border border-[#f0edeb] shadow-xs">
-            <div className="w-16 h-16 rounded-full bg-[#f5f3f0] flex items-center justify-center text-[#526069] mb-4">
-              <svg className="w-7 h-7 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h3 className="text-xs font-bold text-textColor uppercase tracking-widest">Không có thông báo</h3>
-            <p className="text-[11px] text-textColor-variant mt-2 max-w-[210px] leading-relaxed">
-              {activeCategory === 'order'
-                ? 'Bạn chưa nhận được thông báo nào về đơn hàng.'
-                : 'Bạn chưa nhận được thông báo khuyến mãi, voucher hay sự kiện nào.'}
-            </p>
-          </div>
+          <EmptyState
+            title={activeCategory === 'order' ? 'Không có thông báo đơn hàng' : 'Không có thông báo hệ thống'}
+            description={activeCategory === 'order'
+              ? 'Bạn chưa nhận được thông báo nào về đơn hàng.'
+              : 'Bạn chưa nhận được thông báo khuyến mãi, voucher hay sự kiện nào.'}
+          />
         ) : (
           <div className="space-y-3.5">
             {filteredNotifications.map((item) => {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useCart } from '../../App';
 import { apiRequest } from '../../utils/api';
+import { EmptyState } from '../../components/empty-state/EmptyState';
 import { ICartComponentProps } from './cart.type';
 
 export const CartComponent: React.FC<ICartComponentProps> = (_props) => {
@@ -39,24 +40,12 @@ export const CartComponent: React.FC<ICartComponentProps> = (_props) => {
       {/* Scrollable Cart Content Area */}
       <div className="flex-1 flex flex-col overflow-y-auto px-6 py-5.5 pb-28">
         {cart.length === 0 ? (
-          /* Empty State - Full screen style */
-          <div className="flex-1 flex flex-col items-center justify-center py-20 px-6 text-center bg-surface my-auto">
-            <div className="w-16 h-16 rounded-full bg-[#f5f3f0] flex items-center justify-center text-[#526069] mb-4">
-              <svg className="w-7.5 h-7.5 text-[#526069]/50" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-            </div>
-            <h3 className="text-xs font-bold text-textColor uppercase tracking-widest">Cart is empty</h3>
-            <p className="text-[11px] text-textColor-variant mt-2 max-w-[210px] leading-relaxed">
-              Looks like you haven't added anything to your bag yet. Let's find some minimal goods!
-            </p>
-            <button
-              onClick={() => { setIsCartOpen(false); setActiveTab('home'); }}
-              className="mt-6 bg-primary hover:bg-primary-dark text-white text-[10px] font-bold uppercase tracking-widest px-6 py-3.5 rounded-full shadow-sm active:scale-95 transition-all border-none"
-            >
-              Start Shopping
-            </button>
-          </div>
+          <EmptyState
+            title="Cart is empty"
+            description="Looks like you haven't added anything to your bag yet. Let's find some minimal goods!"
+            actionText="Start Shopping"
+            onAction={() => { setIsCartOpen(false); setActiveTab('home'); }}
+          />
         ) : (
           /* Cart items list */
           <div className="space-y-3.5">

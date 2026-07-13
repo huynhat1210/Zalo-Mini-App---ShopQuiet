@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Page } from 'zmp-ui';
 import { useCart, IProduct } from '../../App';
 import { apiRequest } from '../../utils/api';
+import { useDebounce } from '../../utils/useDebounce';
 import { ICategoryItem, ISearchComponentProps } from './search.type';
 
 const PageCast = Page as any;
@@ -9,6 +10,7 @@ const PageCast = Page as any;
 export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
   const { setSelectedProductDetail, addToCart } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   // Dynamic API state
@@ -17,22 +19,53 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const cachedProducts = localStorage.getItem('cache_products');
-      const cachedCategories = localStorage.getItem('cache_categories');
-      if (cachedProducts) setProducts(JSON.parse(cachedProducts));
-      if (cachedCategories) setCategories(JSON.parse(cachedCategories));
+      try {
+        const cachedProducts = localStorage.getItem('cache_products');
+        const cachedCategories = localStorage.getItem('cache_categories');
+        if (cachedProducts) {
+          const parsed = JSON.parse(cachedProducts);
+          setProducts(Array.isArray(parsed) ? parsed : []);
+        }
+        if (cachedCategories) {
+          const parsedCat = JSON.parse(cachedCategories);
+          setCategories(Array.isArray(parsedCat) ? parsedCat : []);
+        }
+      } catch (e) {
+        console.warn('Failed to parse cached data', e);
+      }
+    }
+
+    async function loadAllProducts() {
+      try {
+        let allProducts: IProduct[] = [];
+        let page = 1;
+        let hasMore = true;
+
+        while (hasMore) {
+          const fetched: any = await apiRequest(`/products?page=${page}&limit=50`);
+          const productsData = fetched.data || fetched;
+          const productsArray = Array.isArray(productsData) ? productsData : [];
+          
+          allProducts = [...allProducts, ...productsArray];
+          
+          hasMore = fetched.meta ? page < fetched.meta.totalPages : productsArray.length > 0;
+          page++;
+        }
+
+        setProducts(allProducts);
+        localStorage.setItem('cache_products', JSON.stringify(allProducts));
+      } catch (err) {
+        console.error('Failed to load all products:', err);
+      }
     }
 
     async function loadData() {
       try {
-        const [fetchedProducts, fetchedCategories] = await Promise.all([
-          apiRequest<IProduct[]>('/products'),
-          apiRequest<ICategoryItem[]>('/categories')
+        const [fetchedCategories] = await Promise.all([
+          apiRequest<ICategoryItem[]>('/categories'),
+          loadAllProducts()
         ]);
-        setProducts(fetchedProducts);
-        setCategories(fetchedCategories);
-
-        localStorage.setItem('cache_products', JSON.stringify(fetchedProducts));
+        setCategories(Array.isArray(fetchedCategories) ? fetchedCategories : []);
         localStorage.setItem('cache_categories', JSON.stringify(fetchedCategories));
       } catch (err) {
         console.error('Failed to load search data:', err);
@@ -63,8 +96,8 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
   const filterTags = ['Price < $50', 'Home Goods', 'In Stock'];
 
   // Filtering
-  const filteredProducts = products.filter(p => {
-    const query = searchQuery.toLowerCase().trim();
+  const filteredProducts = (Array.isArray(products) ? products : []).filter(p => {
+    const query = debouncedSearchQuery.toLowerCase().trim();
     const matchesSearch = 
       p.name.toLowerCase().includes(query) || 
       p.description.toLowerCase().includes(query) ||
@@ -114,10 +147,9 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
           )}
 
           {/* Autocomplete suggestions dropdown */}
-          {searchQuery && products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).length > 0 && (
+          {searchQuery && (Array.isArray(products) ? products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())) : []).length > 0 && (
             <div className="absolute top-[48px] left-0 right-0 bg-white border border-[#f0edeb] rounded-2xl shadow-xl z-50 divide-y divide-neutral-100 overflow-hidden text-left max-h-56 overflow-y-auto">
-              {products
-                .filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+              {(Array.isArray(products) ? products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())) : [])
                 .slice(0, 5)
                 .map((p) => (
                   <div
@@ -174,7 +206,7 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
         </div>
 
         {/* Dynamic content rendering based on query */}
-        {!searchQuery ? (
+        {!debouncedSearchQuery ? (
           <>
             {/* Recent Searches */}
             <div className="space-y-3.5">
@@ -237,7 +269,7 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
 
             {filteredProducts.length === 0 ? (
               <div className="text-center py-16 bg-white rounded-2xl border border-[#f0edeb] text-xs text-textColor-variant shadow-xs">
-                No products found matching "{searchQuery}"
+                No products found matching "{debouncedSearchQuery}"
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-x-5 gap-y-7">

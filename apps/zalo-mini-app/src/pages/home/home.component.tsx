@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Page, Box, Text } from 'zmp-ui';
+import PullToRefresh from 'react-pull-to-refresh';
 import { useCart, IProduct } from '../../App';
 import { useAppStore } from '../../store/useAppStore';
 import { apiRequest } from '../../utils/api';
@@ -23,10 +24,25 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
     isFetchingProducts, 
     isFetchingCategories, 
     isFetchingBanners,
+    isFetchingMoreProducts,
+    productsHasMore,
     fetchProducts,
+    fetchMoreProducts,
     fetchCategories,
     fetchBanners
   } = useAppStore();
+
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastElementRef = useCallback((node: HTMLDivElement) => {
+    if (isFetchingMoreProducts) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && productsHasMore) {
+        fetchMoreProducts();
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [isFetchingMoreProducts, productsHasMore, fetchMoreProducts]);
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -76,19 +92,24 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
     return () => clearInterval(timer);
   }, [bannerSlides.length]);
 
-  const filteredProducts = selectedCategory
+  const filteredProducts = Array.isArray(products) ? (selectedCategory
     ? products.filter((p) => p.category?.slug === selectedCategory)
-    : products;
+    : products) : [];
 
   const handleAddToCart = (product: IProduct) => {
     addToCart(product);
     showToast(`Đã thêm ${product.name} vào giỏ hàng!`, 'success');
   };
 
+  const handleRefresh = async () => {
+    await useAppStore.getState().refreshData();
+  };
+
   return (
     <PageCast className="bg-surface relative flex flex-col w-full h-full overscroll-none scrollbar-none animate-fade-in">
-      {/* Top Header App Bar */}
-      <div className="bg-white/95 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-[#f0edeb] sticky top-0 z-30 shadow-xs">
+      <PullToRefresh onRefresh={handleRefresh}>
+        {/* Top Header App Bar */}
+        <div className="bg-white/95 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-[#f0edeb] sticky top-0 z-30 shadow-xs">
         <button onClick={() => setIsMenuOpen(true)} className="p-2 -ml-2 hover:bg-neutral-100 rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer">
           <Bars3Icon className="w-5.5 h-5.5 text-textColor" strokeWidth={2} />
         </button>
@@ -292,6 +313,13 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
             })}
           </div>
           )}
+          
+          {/* Loading more indicator & intersection observer target */}
+          <div ref={lastElementRef} className="w-full h-12 mt-4 flex items-center justify-center">
+            {isFetchingMoreProducts && (
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            )}
+          </div>
         </BoxCast>
       </div>
 
@@ -301,6 +329,7 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
         onClose={() => setIsMenuOpen(false)}
         setSelectedCategory={setSelectedCategory}
       />
+      </PullToRefresh>
     </PageCast>
   );
 }

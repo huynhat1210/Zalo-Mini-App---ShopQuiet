@@ -2,15 +2,25 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  plugins: [react()], // Bạn có thể bỏ plugin legacy đi nếu dùng cách này
+  plugins: [react()],
   base: './',
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://amendments-quiz-sterling-justify.trycloudflare.com',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api/, '/api'),
+      },
+    },
+  },
   build: {
     target: 'es2015',
     cssCodeSplit: false,
     rollupOptions: {
       output: {
-        format: 'iife',  // Ép buộc Rollup xuất ra định dạng IIFE thay vì ESM
-        name: 'app',     // Tên biến global (bắt buộc phải khai báo khi dùng format iife)
+        format: 'iife',
+        name: 'app',
         entryFileNames: 'assets/[name].js',
         chunkFileNames: 'assets/[name].js',
         assetFileNames: 'assets/[name].[ext]',

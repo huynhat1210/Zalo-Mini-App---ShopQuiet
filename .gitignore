@@ -6,3 +6,7 @@ dist/
 coverage/
 .next/
 *.log
+.DS_Store
+*.local
+.vscode/
+.idea/
