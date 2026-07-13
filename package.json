@@ -1,0 +1,23 @@
+{
+  "name": "zalo-ecommerce-monorepo",
+  "version": "1.0.0",
+  "description": "Graduation thesis: Zalo Mini App E-Commerce Monorepo",
+  "private": true,
+  "scripts": {
+    "dev:backend": "pnpm --filter backend dev",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:zalo": "pnpm --filter zalo-mini-app dev",
+    "dev:admin": "pnpm --filter admin-cms dev",
+    "dev": "pnpm run --parallel dev",
+    "build": "pnpm run --recursive build",
+    "lint": "pnpm run --recursive lint",
+    "db:generate": "pnpm --filter backend db:generate",
+    "db:migrate": "pnpm --filter backend db:migrate",
+    "db:migrate:dev": "pnpm --filter backend db:migrate:dev",
+    "db:seed": "pnpm --filter backend db:seed",
+    "db:studio": "pnpm --filter backend db:studio"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}

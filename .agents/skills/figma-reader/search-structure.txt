@@ -1,0 +1,121 @@
+========================================
+FRAME: Search & Filters - ShopQuiet (5:1941)
+========================================
++ [FRAME] Search & Filters - ShopQuiet
+  + [FRAME] BottomNavBar
+    + [FRAME] Button - Shop (Inactive)
+      + [FRAME] Container
+      + [FRAME] Margin
+        + [FRAME] Container
+          - [TEXT] "Shop" (Name: Text)
+    + [FRAME] Button - Search (Active)
+      + [FRAME] Container
+      + [FRAME] Margin
+        + [FRAME] Container
+          - [TEXT] "Search" (Name: Text)
+    + [FRAME] Button - Orders (Inactive)
+      + [FRAME] Container
+      + [FRAME] Margin
+        + [FRAME] Container
+          - [TEXT] "Orders" (Name: Text)
+    + [FRAME] Button - Profile (Inactive)
+      + [FRAME] Container
+      + [FRAME] Margin
+        + [FRAME] Container
+          - [TEXT] "Profile" (Name: Text)
+  + [FRAME] Header - TopAppBar
+    + [FRAME] Button - Back:margin
+      + [FRAME] Button - Back
+        + [FRAME] Container
+    + [FRAME] Heading 1
+      - [TEXT] "ShopQuiet" (Name: Text)
+  + [FRAME] Main
+    + [FRAME] Search Section
+      + [FRAME] Container
+        + [FRAME] Background+Border
+          + [FRAME] Container
+          + [FRAME] Input
+            + [FRAME] Container
+              - [TEXT] "Search for minimal goods..." (Name: Search for minimal goods...)
+        + [FRAME] Button
+          - [TEXT] "Cancel" (Name: Text)
+      + [FRAME] Recent Searches:margin
+        + [FRAME] Recent Searches
+          + [FRAME] Heading 2
+            - [TEXT] "RECENT SEARCHES" (Name: RECENT SEARCHES)
+          + [FRAME] Container
+            + [FRAME] Button
+              + [FRAME] Container
+              + [FRAME] Container
+                - [TEXT] "Linen" (Name: Text)
+            + [FRAME] Button
+              + [FRAME] Container
+              + [FRAME] Container
+                - [TEXT] "Ceramics" (Name: Text)
+            + [FRAME] Button
+              + [FRAME] Container
+              + [FRAME] Container
+                - [TEXT] "Minimalist" (Name: Text)
+    + [FRAME] Section - Filter Interface
+      + [FRAME] Button:margin
+        + [FRAME] Button
+          + [FRAME] Container
+          + [FRAME] Container
+            - [TEXT] "Filter" (Name: Text)
+      + [FRAME] Button
+        + [FRAME] Container
+          - [TEXT] "Price" (Name: Text)
+        + [FRAME] Container
+      + [FRAME] Button
+        + [FRAME] Container
+          - [TEXT] "Material" (Name: Text)
+        + [FRAME] Container
+      + [FRAME] Button
+        + [FRAME] Container
+          - [TEXT] "In Stock" (Name: Text)
+        + [FRAME] Container
+    + [FRAME] Section - Categories
+      + [FRAME] Heading 2
+        - [TEXT] "Categories" (Name: Categories)
+      + [FRAME] Container
+        + [FRAME] Button
+          + [FRAME] Background
+            + [FRAME] Container
+          - [TEXT] "Clothing" (Name: Text)
+        + [FRAME] Button
+          + [FRAME] Background
+            + [FRAME] Container
+          - [TEXT] "Home" (Name: Text)
+        + [FRAME] Button
+          + [FRAME] Background
+            + [FRAME] Container
+          - [TEXT] "Accessories" (Name: Text)
+        + [FRAME] Button
+          + [FRAME] Background
+            + [FRAME] Container
+          - [TEXT] "Shoes" (Name: Text)
+    + [FRAME] Section - Trending Now:margin
+      + [FRAME] Section - Trending Now
+        + [FRAME] Container
+          + [FRAME] Heading 2
+            - [TEXT] "Trending Now" (Name: Text)
+          + [FRAME] Button
+            - [TEXT] "View all" (Name: Text)
+        + [FRAME] Margin
+          + [FRAME] Container
+            + [FRAME] Product Card 1
+              + [FRAME] Background
+                + [FRAME] AB6AXuCqohiLnKgsyhRWzcyNEBMnQfoJ_-una0vYeyWkyfwcPMOG2KeQcro0lOR6inkyRLL-DTuErGIY5FgCEOekP-j99r2gp3CW0J_olvRpn7BH8IeDSN44QLqwSTvbb-CPlc21fRbG-dOvxI2S-6wumo8avwxqkIgHiAfpyAlq-yDNWM8Bq1Gxr8mNkRFINC6VxotKvMbyUH8E5A-CZQMKbfXKURuuB4ot2FqoKNVRUIHSx_th00novb01ZiwZrggu5mF98Y4hgUVnnw
+              + [FRAME] Container
+                + [FRAME] Heading 3
+                  - [TEXT] "Matte Ceramic…" (Name: Matte Ceramic…)
+                + [FRAME] Container
+                  - [TEXT] "$34.00" (Name: $34.00)
+            + [FRAME] Product Card 2
+              + [FRAME] Background
+                + [FRAME] AB6AXuDmSmxRwZnZji8ND60if46y2gC18G-gvP6EEzPeK9pEMsBQFcpATpsvri9rFlpZrPYTvXFktdPjQ9ZeMYAzBiUvbhzpB3eCeOhf7FY76YLyMVhka7YW7dAj0H7df5Fjfc0pcZ-3Jm6-YKMwzIYTxlxtC4MQSGxQPMskE8SrOf62rzNm2z4if6PIizf0GevZ7bKo3Od9XTm98xaAdN9qM5A0zIPFvcrS0e-NXuMKcMq8dIvX__YapO_AAajvfPDUtuD3H0NCN9k6vw
+              + [FRAME] Container
+                + [FRAME] Heading 3
+                  - [TEXT] "Raw Linen Tote" (Name: Raw Linen Tote)
+                + [FRAME] Container
+                  - [TEXT] "$28.00" (Name: $28.00)

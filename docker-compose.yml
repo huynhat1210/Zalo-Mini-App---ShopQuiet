@@ -1,0 +1,20 @@
+# Dự án dùng Docker PostgreSQL làm database.
+# Local PostgreSQL đang chiếm port 5432 nên Docker dùng port 5433.
+# DATABASE_URL trong .env phải trỏ về port 5433.
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: shopquiet-postgres
+    ports:
+      - '5433:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: '0336433234'
+      POSTGRES_DB: shopquiet
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

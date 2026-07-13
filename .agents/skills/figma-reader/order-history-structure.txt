@@ -1,0 +1,99 @@
+========================================
+FRAME: Order History - ShopQuiet (5:1744)
+========================================
++ [FRAME] Order History - ShopQuiet
+  + [FRAME] BottomNavBar (Mobile Only)
+    + [FRAME] Link - Shop (Inactive):css-transform
+      + [FRAME] Link - Shop (Inactive)
+        + [FRAME] Margin
+        + [FRAME] Container
+          - [TEXT] "Shop" (Name: Text)
+    + [FRAME] Link - Search (Inactive):css-transform
+      + [FRAME] Link - Search (Inactive)
+        + [FRAME] Margin
+        + [FRAME] Container
+          - [TEXT] "Search" (Name: Text)
+    + [FRAME] Link - Orders (Active):css-transform
+      + [FRAME] Link - Orders (Active)
+        + [FRAME] Margin
+        + [FRAME] Container
+          - [TEXT] "Orders" (Name: Text)
+    + [FRAME] Link - Profile (Inactive):css-transform
+      + [FRAME] Link - Profile (Inactive)
+        + [FRAME] Margin
+        + [FRAME] Container
+          - [TEXT] "Profile" (Name: Text)
+  + [FRAME] Header - TopAppBar (Based on JSON specs, adapted for "My Orders")
+    + [FRAME] Button - Go back:margin
+      + [FRAME] Button - Go back
+        + [FRAME] Container
+    + [FRAME] Heading 1
+      - [TEXT] "My Orders" (Name: Text)
+    + [FRAME] Button - Filter orders:margin
+      + [FRAME] Button - Filter orders
+        + [FRAME] Container
+  + [FRAME] Main Content
+    + [FRAME] Article - Order Card 1: Delivered
+      + [FRAME] Container
+        + [FRAME] Container
+          + [FRAME] Heading 2
+            - [TEXT] "#SQ-82934" (Name: Text)
+          + [FRAME] Container
+            - [TEXT] "Oct 20, 2023" (Name: Text)
+        + [FRAME] Background
+          + [FRAME] Container
+          + [FRAME] Margin
+            - [TEXT] "Delivered" (Name: Text)
+      + [FRAME] HorizontalBorder
+        + [FRAME] Container
+          + [FRAME] Background+Border
+            + [FRAME] AB6AXuCVIzNsYk2MsmgBps-QGvIEV5bc7CXQWwQ0nqRLKwkkkR5cllNMv-FcKkiWTiIole6WsSdZgGfPMxYI0j9eXLMlYjSYnREs9-8OqPGZy_Hc4f0bGnUEL742bZRH5Ivl162Y0Frb_K9DUFRffzOd-u6npN4WE99kYLpb93DtJ7o9on0S_bp4snzVz-OF3Y6jtmvt-WZaL5fTk4gk-9W_QM6lKsOYg_TIl_uWMieRCzBRNMMtLYNVE8BBMYModiW9YWK0kjPaQ3zaGg
+          + [FRAME] Margin
+            + [FRAME] Background+Border
+              + [FRAME] AB6AXuCbFIGgKPrnQFAlVn50Xk7TOI95KAmKiOfL_W2WuA1ldatAzA4uCkmXEv_yMuxH-rXjDb5zFKfLhwYuzQHDqKAFkAjZYWo2Gnnb4O9lncgVadyKDXAOrtSLfnRK9-mYWT3x7p4DiUH-2oJUdhKEizQjdbrPRRMBACnQB-hD6t2lb0xzwkwisnav8ggtWWW82fw4Q_-3N_-9ryc8ho88Uy6J7vWssHK99gId14cGgZStt73pf6qU4qW7WII9dTiBXqcw6MHtEykhiA
+        + [FRAME] Container
+          + [FRAME] Container
+            - [TEXT] "$48.50" (Name: Text)
+          + [FRAME] Margin
+    + [FRAME] Article - Order Card 2: Processing
+      + [FRAME] Container
+        + [FRAME] Container
+          + [FRAME] Heading 2
+            - [TEXT] "#SQ-82941" (Name: Text)
+          + [FRAME] Container
+            - [TEXT] "Oct 28, 2023" (Name: Text)
+        + [FRAME] Background
+          + [FRAME] Container
+          + [FRAME] Margin
+            - [TEXT] "Processing" (Name: Text)
+      + [FRAME] HorizontalBorder
+        + [FRAME] Container
+          + [FRAME] Background+Border
+            + [FRAME] AB6AXuCBTDMtpRZeCvWRlzKQsFPOX0jg1zhDlQH_4ku-CuLuIFM8kEcxdXL9O9FB5FEOgavcnx1YrNX6GoKpUbHJa3hqdf4ffz6EXIVkHMG_QQ8pwoExx0aLB4piztXZNmBb-Hi_A8i6_INPyQqzh3BvRY0FTWnS5KSXDzCApoXGwteDrvGkAcq3qhho5QlxkgmMPNS7272M4nUbhhT56iovOpzNh24dag94ehHVuZgeD8mfEL7YiZormCDTdf98yXMadnFs6hJx0R6FFw
+          + [FRAME] Margin
+            + [FRAME] Background+Border
+              + [FRAME] Container
+                - [TEXT] "+2" (Name: Text)
+        + [FRAME] Container
+          + [FRAME] Container
+            - [TEXT] "$129.00" (Name: Text)
+          + [FRAME] Margin
+    + [FRAME] Article - Order Card 3: Shipped
+      + [FRAME] Container
+        + [FRAME] Container
+          + [FRAME] Heading 2
+            - [TEXT] "#SQ-82955" (Name: Text)
+          + [FRAME] Container
+            - [TEXT] "Nov 02, 2023" (Name: Text)
+        + [FRAME] Overlay
+          + [FRAME] Container
+          + [FRAME] Margin
+            - [TEXT] "Shipped" (Name: Text)
+      + [FRAME] HorizontalBorder
+        + [FRAME] Container
+          + [FRAME] Background+Border
+            + [FRAME] AB6AXuCHlidriXi_U8xMP84spK5W_D-asBy0qw3cqKrYqbEhYNRgspuDIr3saLVS7HUBraXXmTb7B_YqaaNwIpjQZLG2rA_SZQckWKG2jlb2yINHQahwGZNATrh984CwRAomFsmZarhoKDlPjmVP06Vz4MNr3YhbaTwvTkfKJHRn76-DPLqTkjR3e5BgJPXmoYjUX1-kUMG6D6e0c9TbcHgPdhH_l8moQ55W6e304U8vwRwveV8bhm9lrx-Gh2Oafocr3gBo-8taHiABYA
+        + [FRAME] Container
+          + [FRAME] Container
+            - [TEXT] "$65.00" (Name: Text)
+          + [FRAME] Margin

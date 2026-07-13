@@ -1,0 +1,113 @@
+========================================
+FRAME: Home - ShopQuiet (5:1164)
+========================================
++ [FRAME] Home - ShopQuiet
+  + [FRAME] BottomNavBar
+    + [FRAME] Button - Active Tab: Home:css-transform
+      + [FRAME] Button - Active Tab: Home
+        + [FRAME] Background
+          + [FRAME] Container
+        + [FRAME] Container
+          - [TEXT] "Home" (Name: Text)
+    + [FRAME] Button - Inactive Tab: Cart:css-transform
+      + [FRAME] Button - Inactive Tab: Cart
+        + [FRAME] Container
+          + [FRAME] Container
+        + [FRAME] Container
+          - [TEXT] "Cart" (Name: Text)
+    + [FRAME] Button - Inactive Tab: Profile:css-transform
+      + [FRAME] Button - Inactive Tab: Profile
+        + [FRAME] Container
+          + [FRAME] Container
+        + [FRAME] Container
+          - [TEXT] "Profile" (Name: Text)
+  + [FRAME] Header - TopAppBar
+    + [FRAME] Button
+      + [FRAME] Container
+    + [FRAME] Heading 1
+      - [TEXT] "ShopQuiet" (Name: Text)
+    + [FRAME] Button
+      + [FRAME] Container
+  + [FRAME] Main
+    + [FRAME] Hero Section
+      + [FRAME] Background+Shadow
+        + [FRAME] Container
+          + [FRAME] Heading 2
+            - [TEXT] "Summer Collection" (Name: Summer Collection)
+          + [FRAME] Container
+            - [TEXT] "Breathe easy in lightweight
+linen and soft tones." (Name: Breathe easy in lightweight linen and soft tones.)
+          + [FRAME] Button
+            - [TEXT] "Shop Now" (Name: Text)
+    + [FRAME] Section - Categories (Bento style inspiration)
+      + [FRAME] Heading 3
+        - [TEXT] "Categories" (Name: Categories)
+      + [FRAME] Container
+        + [FRAME] Container
+          + [FRAME] Background
+            + [FRAME] Container
+          + [FRAME] Container
+            - [TEXT] "Clothing" (Name: Text)
+        + [FRAME] Container
+          + [FRAME] Background
+            + [FRAME] Container
+          + [FRAME] Container
+            - [TEXT] "Accessories" (Name: Text)
+        + [FRAME] Container
+          + [FRAME] Background
+            + [FRAME] Container
+          + [FRAME] Container
+            - [TEXT] "Shoes" (Name: Text)
+        + [FRAME] Container
+          + [FRAME] Background
+            + [FRAME] Container
+          + [FRAME] Container
+            - [TEXT] "Home" (Name: Text)
+    + [FRAME] Section - Featured Products
+      + [FRAME] Heading 3
+        - [TEXT] "Featured Products" (Name: Featured Products)
+      + [FRAME] Container
+        + [FRAME] Product 1
+          + [FRAME] Background
+            + [FRAME] AB6AXuCvjoaoLf4n9RctQvMudJST7Or6U87ZXqcIXVmIXbQpl-NzS3XdDVjJej0r7ktgIeMeXB1wOOuvoJrt5h7nB2oSvJ_kwOwbLMlo3EUZqOc9PznWs3x3D49MCZHUO-xK42wqLb4ScG3XnNCHIvZsJ6n7BPCSuNRbYc3fcZfubMCU18MA5mPRLxCVWR8mqNDwXLzSVy0DeXc1uOCxl-v9q0I7F9mHMIu44POQ6B92iOxyL9pVI4Iq_MbIC3NNtguFkc_mUgYUXPTKNQ
+          + [FRAME] Container
+            + [FRAME] Heading 4
+              - [TEXT] "Minimalist Vase" (Name: Minimalist Vase)
+            + [FRAME] Container
+              + [FRAME] Container
+                - [TEXT] "$45.00" (Name: Text)
+              + [FRAME] Button
+                + [FRAME] Container
+        + [FRAME] Product 2
+          + [FRAME] Background
+            + [FRAME] AB6AXuD5XNyy8frMQia3bIpzSzNflSsHomNVa-wiwa-xgaN0NjbGp3XvgG_Sh3U-XNZfusv5IO6LgS6KmhudBdkfU5Jtr7QH8ovgyBbmvTi1olHHo_2uszl6qxS7Qua1yCpgMGDPtjwr0F2v2PuMCySYUyo3H-7Y5q8ux9cOIQt2994PAMAWKxVpRABtX-MWRyBAg7lHRB7irSGBRQP5Y7427eI6880S-7lsnVdUEkZ6XyRvaa8f4dcTq7Bb159JnPMMNunmK2UDzTKoig
+          + [FRAME] Container
+            + [FRAME] Heading 4
+              - [TEXT] "Linen Shirt" (Name: Linen Shirt)
+            + [FRAME] Container
+              + [FRAME] Container
+                - [TEXT] "$89.00" (Name: Text)
+              + [FRAME] Button
+                + [FRAME] Container
+        + [FRAME] Product 3
+          + [FRAME] Background
+            + [FRAME] AB6AXuBF1jXlDhUVbwcAXBooCLr_C99vYeDU1VUZD0p2cNSEQ7SQZV_pMGI-mWAlYjLX9V99AOb8JtgZaG2OFIiE-sE79is2n9IeyeldTyry7OSu_q4e5zfGbAuk0ObhfyMAIhdalYObZh_Whh6M7yeQ36DBpvjidAnxg6ESyxMF7oWMnqKCQbSqgTUxF0_rXv81x6W9ezxSYEd29Xpchpa4D9uO0BZ6iF7YnPzs_L13jBkdkgC1Zn-whMN1BdTsQTO952lvwBq38Iz9sA
+          + [FRAME] Container
+            + [FRAME] Heading 4
+              - [TEXT] "Task Lamp" (Name: Task Lamp)
+            + [FRAME] Container
+              + [FRAME] Container
+                - [TEXT] "$120.00" (Name: Text)
+              + [FRAME] Button
+                + [FRAME] Container
+        + [FRAME] Product 4
+          + [FRAME] Background
+            + [FRAME] AB6AXuDYq9jMSdTxq1-HJ1lFqHmU6hg1NEm67Lf9AUlpwocJOAwxxIY2qrBAkm2mLlPmBEaft6LgLhtCuWGWxEVJ96krvw2uzbKy5qPxiGrl2o1SQtOeHeICo3bm2GRmLGIYwCkDNcelJ-0GQJDx5ytFaxj4I_AAnsNOaQdwvFd-U4tRcax5fXcZjRQirTLMP10PpSYLFLa0z8_6WzbiiQXD1kArj1dzPNeouOba5uV8UbDIN6abgIfRXgZrfuYaxBllu4dx_B8one5TwQ
+          + [FRAME] Container
+            + [FRAME] Heading 4
+              - [TEXT] "Concrete Planter" (Name: Concrete Planter)
+            + [FRAME] Container
+              + [FRAME] Container
+                - [TEXT] "$28.00" (Name: Text)
+              + [FRAME] Button
+                + [FRAME] Container

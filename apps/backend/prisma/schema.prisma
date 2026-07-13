@@ -1,0 +1,233 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String
+  slug     String    @unique
+  products Product[]
+}
+
+model Product {
+  id          Int              @id @default(autoincrement())
+  name        String
+  description String
+  price       Float
+  tags        String?
+  images      String // Stores JSON array of image strings
+  categoryId  Int
+  materialCare   String?
+  shippingReturn String?
+  category       Category         @relation(fields: [categoryId], references: [id])
+  orderItems     OrderItem[]
+  cartItems      CartItem[]
+  variants       ProductVariant[]
+  comments       Comment[]
+  favorites      Favorite[]
+}
+
+model User {
+  zaloId        String         @id
+  name          String
+  avatar        String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  orders        Order[]
+  cartItems     CartItem[]
+  comments      Comment[]
+  addresses     UserAddress[]
+  notifications Notification[]
+  favorites     Favorite[]
+}
+
+model CartItem {
+  id         Int      @id @default(autoincrement())
+  zaloUserId String
+  user       User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+  productId  Int
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size       String   @default("DEFAULT")
+  quantity   Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([zaloUserId, productId, size])
+}
+
+model ProductVariant {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size      String  // e.g., "S", "M", "L" for clothing, "39", "40" for shoes, "DEFAULT" for others
+  stock     Int     @default(0)
+
+  @@unique([productId, size])
+}
+
+model Comment {
+  id         Int      @id @default(autoincrement())
+  productId  Int
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  zaloUserId String
+  user       User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+  content    String
+  rating     Int      @default(5) // Rating 1-5 stars
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model UserAddress {
+  id         Int     @id @default(autoincrement())
+  zaloUserId String
+  user       User    @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+  label      String  // e.g., "Nhà riêng", "Văn phòng"
+  phone      String  // phone number
+  street     String  // street details
+  city       String  // city/state
+  isDefault  Boolean @default(false)
+}
+
+model Order {
+  id              String      @id // Custom order ID format SQ-XXXXX
+  totalAmount     Float
+  status          String      @default("PROCESSING") // PROCESSING, SHIPPED, DELIVERED, PENDING_PAYMENT
+  zaloUserId      String?
+  user            User?       @relation(fields: [zaloUserId], references: [zaloId])
+  createdAt       DateTime    @default(now())
+  items           OrderItem[]
+  paymentMethod   String      @default("COD") // COD, ZALOPAY
+  voucherCode     String?
+  discountAmount  Float       @default(0)
+  shippingAddress String?
+  shippingPhone   String?
+  shippingName    String?
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  quantity  Int
+  price     Float
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  size      String  @default("DEFAULT")
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  zaloUserId String?
+  user       User?    @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+  title      String
+  content    String
+  type       String // PROMOTION, SHIPPING, ORDER
+  date       String
+  read       Boolean  @default(false)
+}
+
+model Favorite {
+  id         Int      @id @default(autoincrement())
+  zaloUserId String
+  user       User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+  productId  Int
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([zaloUserId, productId])
+}
+
+model Voucher {
+  code        String    @id
+  type        String    // PERCENT, FIXED, FREESHIP
+  value       Float
+  minOrderVal Float     @default(0)
+  maxDiscount Float?
+  stock       Int       @default(999)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model Banner {
+  id          Int      @id @default(autoincrement())
+  imageUrl    String
+  tag         String?
+  title       String?
+  description String?
+  cta         String?
+  link        String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+model SiteSetting {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  label       String
+  value       String
+  type        String   @default("TEXT") // TEXT, NUMBER, BOOLEAN, URL, EMAIL, PHONE, JSON
+  group       String   @default("general")
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MenuItem {
+  id          Int      @id @default(autoincrement())
+  section     String   @default("collections") // collections, materials, footer
+  label       String
+  targetType  String   @default("CATEGORY") // CATEGORY, URL, STATIC_PAGE, TOAST
+  target      String?
+  description String?
+  imageUrl    String?
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model StaticPage {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  title       String
+  excerpt     String?
+  content     String
+  contactPhone String?
+  contactEmail String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ShippingMethod {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique
+  name        String
+  description String?
+  price       Float    @default(0)
+  estimatedDays String?
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PaymentMethod {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique
+  name        String
+  description String?
+  provider    String?
+  badge       String?
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

@@ -1,0 +1,306 @@
+import { useState, useEffect } from 'react';
+import { Page, Box, Text } from 'zmp-ui';
+import { useCart, IProduct } from '../../App';
+import { useAppStore } from '../../store/useAppStore';
+import { apiRequest } from '../../utils/api';
+import { Bars3Icon, ShoppingCartIcon } from '@heroicons/react/24/outline';
+// @ts-ignore
+import logoIcon from '../../assets/logo.png';
+import { MenuDrawerComponent, BannerSkeleton, CategorySkeleton, ProductGridSkeleton } from '../../components';
+import { IHomeComponentProps } from './home.type';
+
+const PageCast = Page as any;
+const BoxCast = Box as any;
+const TextCast = Text as any;
+
+export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
+  const { addToCart, setSelectedProductDetail, cart, setIsCartOpen, toggleSavedItem, isSavedItem, showToast } = useCart();
+  
+  const { 
+    products, 
+    categories, 
+    banners, 
+    isFetchingProducts, 
+    isFetchingCategories, 
+    isFetchingBanners,
+    fetchProducts,
+    fetchCategories,
+    fetchBanners
+  } = useAppStore();
+
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Carousel Slide State
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [brandName, setBrandName] = useState('ShopQuiet');
+
+  useEffect(() => {
+    fetchBanners();
+    fetchCategories();
+    fetchProducts();
+    
+    // settings isn't cached yet, fetch independently
+    async function loadSettings() {
+      try {
+        const settings = await apiRequest<Record<string, string>>('/cms/settings');
+        if (settings?.['brand.name']) {
+          setBrandName(settings['brand.name']);
+        }
+      } catch (e) {
+        console.error('Failed to load home CMS settings:', e);
+      }
+    }
+    loadSettings();
+  }, [fetchBanners, fetchCategories, fetchProducts]);
+
+  const bannerSlides = banners
+    .filter((banner) => banner.imageUrl)
+    .map((banner) => ({
+      id: banner.id,
+      tag: banner.tag || 'Khuyến mãi',
+      title: banner.title || 'Ưu đãi mới',
+      description: banner.description || 'Khám phá các ưu đãi đang được cập nhật tại ShopQuiet.',
+      cta: banner.cta || 'Xem ngay',
+      image: banner.imageUrl,
+      category: banner.link || null,
+    }));
+
+  // Auto-scroll logic for Carousel banner
+  useEffect(() => {
+    if (bannerSlides.length === 0) return;
+
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % bannerSlides.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [bannerSlides.length]);
+
+  const filteredProducts = selectedCategory
+    ? products.filter((p) => p.category?.slug === selectedCategory)
+    : products;
+
+  const handleAddToCart = (product: IProduct) => {
+    addToCart(product);
+    showToast(`Đã thêm ${product.name} vào giỏ hàng!`, 'success');
+  };
+
+  return (
+    <PageCast className="bg-surface relative flex flex-col w-full h-full overscroll-none scrollbar-none animate-fade-in">
+      {/* Top Header App Bar */}
+      <div className="bg-white/95 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-[#f0edeb] sticky top-0 z-30 shadow-xs">
+        <button onClick={() => setIsMenuOpen(true)} className="p-2 -ml-2 hover:bg-neutral-100 rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer">
+          <Bars3Icon className="w-5.5 h-5.5 text-textColor" strokeWidth={2} />
+        </button>
+
+        <div className="flex items-center gap-1.5 justify-center">
+          <img src={logoIcon} className="w-6.5 h-6.5 object-contain rounded-xl shadow-xs" alt="Logo" />
+          <span className="text-[11px] font-black uppercase tracking-[0.2em] text-textColor font-sans">{brandName}</span>
+        </div>
+
+        <button
+          onClick={() => setIsCartOpen(true)}
+          className="p-2 -mr-2 hover:bg-neutral-100 rounded-full transition-colors relative active:scale-95 border-none bg-transparent cursor-pointer"
+        >
+          <ShoppingCartIcon className="w-5.5 h-5.5 text-textColor" strokeWidth={2} />
+          {cart.length > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 bg-primary text-white text-[8px] w-4.5 h-4.5 rounded-full flex items-center justify-center font-bold border border-white animate-pulse">
+              {cart.reduce((sum, item) => sum + item.quantity, 0)}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Main Content scroll window */}
+      <div className="flex-1 pb-28">
+        {/* Banner Carousel Slider */}
+        {isFetchingBanners && bannerSlides.length === 0 ? (
+          <BannerSkeleton />
+        ) : bannerSlides.length > 0 ? (
+        <BoxCast className="mx-6 my-4 rounded-3xl overflow-hidden relative h-[220px] bg-stone-100 flex items-center shadow-sm group">
+          {bannerSlides.map((slide, index) => {
+            const isActive = index === currentSlide;
+            return (
+              <div
+                key={slide.id}
+                className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+                  }`}
+              >
+                <img
+                  src={slide.image}
+                  alt={slide.title}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-[6s] group-hover:scale-102"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/30 to-transparent"></div>
+
+                <div className="relative z-10 px-6 flex flex-col justify-center h-full max-w-[270px] text-white">
+                  <span className="text-[8px] font-extrabold uppercase tracking-widest text-primary-light bg-primary/45 w-fit px-2.5 py-0.5 rounded-md mb-2">
+                    {slide.tag}
+                  </span>
+                  <h2 className="text-xl font-bold leading-tight tracking-tight">
+                    {slide.title}
+                  </h2>
+                  <p className="text-white/80 text-[10.5px] mt-1 leading-relaxed">
+                    {slide.description}
+                  </p>
+                  <button
+                    className="mt-4.5 h-8.5 w-fit bg-white text-textColor text-[9px] font-extrabold uppercase tracking-widest px-5 rounded-full shadow-xs hover:bg-neutral-50 active:scale-95 transition-all flex items-center justify-center border-none"
+                    onClick={() => slide.category && setSelectedCategory(slide.category)}
+                  >
+                    {slide.cta}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Dots Indicator */}
+          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-20">
+            {bannerSlides.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`h-1.5 rounded-full transition-all duration-350 ${index === currentSlide ? 'w-4.5 bg-white' : 'w-1.5 bg-white/45'
+                  } border-none outline-none cursor-pointer`}
+              />
+            ))}
+          </div>
+        </BoxCast>
+        ) : null}
+
+        {/* Categories Section - Clean horizontal capsule scrolling */}
+        <BoxCast className="my-6">
+          <div className="flex justify-between items-center px-6 mb-3">
+            <TextCast className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/80">Categories</TextCast>
+          </div>
+
+          {isFetchingCategories && categories.length === 0 ? (
+            <CategorySkeleton />
+          ) : (
+          <div className="flex gap-2.5 overflow-x-auto pl-6 pr-6 scrollbar-none py-1">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className={`px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider border transition-all whitespace-nowrap ${selectedCategory === null
+                ? 'border-primary bg-primary text-white shadow-xs'
+                : 'border-[#f0edeb] bg-white text-textColor-variant hover:bg-neutral-50'
+                }`}
+            >
+              All Goods
+            </button>
+            {categories.map((cat) => {
+              const isActive = selectedCategory === cat.slug;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(isActive ? null : cat.slug)}
+                  className={`px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider border transition-all whitespace-nowrap ${isActive
+                    ? 'border-primary bg-primary text-white shadow-xs'
+                    : 'border-[#f0edeb] bg-white text-textColor-variant hover:bg-neutral-50'
+                    }`}
+                >
+                  <span className="mr-1.5">{cat.icon}</span>
+                  {cat.name}
+                </button>
+              );
+            })}
+          </div>
+          )}
+        </BoxCast>
+
+        {/* Featured Products - High-fidelity borderless grid cards */}
+        <BoxCast className="my-6">
+          <div className="px-6 mb-4">
+            <TextCast className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/80">Featured Products</TextCast>
+          </div>
+
+          {isFetchingProducts && products.length === 0 ? (
+            <ProductGridSkeleton count={4} />
+          ) : (
+          <div className="grid grid-cols-2 gap-x-5 gap-y-7 px-6">
+            {filteredProducts.map((prod) => {
+              let img = 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80';
+              try {
+                const parsed = JSON.parse(prod.images);
+                if (parsed && parsed.length > 0) img = parsed[0];
+              } catch (e) { }
+
+              const isLiked = isSavedItem(prod.id);
+
+              return (
+                <div
+                  key={prod.id}
+                  onClick={() => setSelectedProductDetail(prod)}
+                  className="group cursor-pointer flex flex-col space-y-2.5 animate-slide-up"
+                >
+                  {/* Image Wrapper Aspect Ratio 3:4 */}
+                  <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden bg-neutral-50 shadow-xs border border-[#f0edeb]">
+                    <img
+                      src={img}
+                      alt={prod.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102"
+                    />
+
+                    {/* Floating Heart Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSavedItem(prod);
+                        showToast(isLiked ? `Đã bỏ lưu ${prod.name}` : `Đã lưu ${prod.name}`, 'success');
+                      }}
+                      className="absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md shadow-xs flex items-center justify-center text-textColor transition-all active:scale-90 hover:bg-white"
+                    >
+                      <svg
+                        className={`w-4 h-4 transition-colors ${isLiked ? 'fill-red-500 text-red-500' : 'text-[#526069]'}`}
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                    </button>
+
+                    {/* Floating Tag */}
+                    {prod.tags && (
+                      <span className="absolute bottom-2.5 left-2.5 z-10 text-[8px] font-bold uppercase tracking-wider bg-white/90 backdrop-blur-md text-textColor px-2.5 py-1 rounded-full border border-white/50 shadow-xs">
+                        {prod.tags}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Product Details Section */}
+                  <div className="px-1 flex flex-col">
+                    <span className="text-[9px] text-[#526069]/60 uppercase font-bold tracking-widest">
+                      {prod.category?.name || 'Home'}
+                    </span>
+                    <h3 className="text-xs font-semibold text-textColor mt-0.5 line-clamp-1 group-hover:text-primary transition-colors">
+                      {prod.name}
+                    </h3>
+
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-xs font-extrabold text-textColor">${prod.price.toFixed(2)}</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleAddToCart(prod); }}
+                        className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm active:scale-90 transition-transform shadow-xs"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          )}
+        </BoxCast>
+      </div>
+
+      {/* Side Menu Drawer (Collections & Brand Story) */}
+      <MenuDrawerComponent
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        setSelectedCategory={setSelectedCategory}
+      />
+    </PageCast>
+  );
+}

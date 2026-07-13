@@ -1,0 +1,98 @@
+========================================
+FRAME: Profile - ShopQuiet (5:1438)
+========================================
++ [FRAME] Profile - ShopQuiet
+  + [FRAME] BottomNavBar Component
+    + [FRAME] Link:css-transform
+      + [FRAME] Link
+        + [FRAME] Margin
+        + [FRAME] Container
+          - [TEXT] "Shop" (Name: Text)
+    + [FRAME] Link:css-transform
+      + [FRAME] Link
+        + [FRAME] Margin
+        + [FRAME] Container
+          - [TEXT] "Search" (Name: Text)
+    + [FRAME] Link:css-transform
+      + [FRAME] Link
+        + [FRAME] Margin
+        + [FRAME] Container
+          - [TEXT] "Orders" (Name: Text)
+    + [FRAME] Link:css-transform
+      + [FRAME] Link
+        + [FRAME] Margin
+        + [FRAME] Container
+          - [TEXT] "Profile" (Name: Text)
+  + [FRAME] Header - TopAppBar Component
+    + [FRAME] Button - Go back
+      + [FRAME] Container
+    + [FRAME] Heading 1
+      - [TEXT] "Profile" (Name: Text)
+    + [FRAME] Button - Settings
+      + [FRAME] Container
+  + [FRAME] Main
+    + [FRAME] Profile Header Section
+      + [FRAME] Heading 2:margin
+        + [FRAME] Heading 2
+          - [TEXT] "Alex Johnson" (Name: Text)
+      + [FRAME] Link
+        - [TEXT] "Edit Profile" (Name: Text)
+      + [FRAME] Margin
+        + [FRAME] Background+Border+Shadow
+          + [FRAME] User Avatar
+    + [FRAME] Menu Sections
+      + [FRAME] Section 1: Shopping
+        + [FRAME] List
+          + [FRAME] Item → Link
+            + [FRAME] Container
+              + [FRAME] Container
+              + [FRAME] Container
+                - [TEXT] "My Orders" (Name: Text)
+            + [FRAME] Container
+          + [FRAME] Item
+            + [FRAME] Link
+              + [FRAME] Container
+                + [FRAME] Container
+                + [FRAME] Container
+                  - [TEXT] "Saved Items" (Name: Text)
+              + [FRAME] Container
+      + [FRAME] Section 2: Account
+        + [FRAME] List
+          + [FRAME] Item → Link
+            + [FRAME] Container
+              + [FRAME] Container
+              + [FRAME] Container
+                - [TEXT] "Shipping Address" (Name: Text)
+            + [FRAME] Container
+          + [FRAME] Item
+            + [FRAME] Link
+              + [FRAME] Container
+                + [FRAME] Container
+                + [FRAME] Container
+                  - [TEXT] "Payment Methods" (Name: Text)
+              + [FRAME] Container
+      + [FRAME] Section 3: General
+        + [FRAME] List
+          + [FRAME] Item → Link
+            + [FRAME] Container
+              + [FRAME] Container
+              + [FRAME] Container
+                - [TEXT] "Notifications" (Name: Text)
+            + [FRAME] Container
+          + [FRAME] Item
+            + [FRAME] Link
+              + [FRAME] Container
+                + [FRAME] Container
+                + [FRAME] Container
+                  - [TEXT] "Help & Support" (Name: Text)
+              + [FRAME] Container
+          + [FRAME] Item
+            + [FRAME] Link
+              + [FRAME] Container
+                + [FRAME] Container
+                + [FRAME] Container
+                  - [TEXT] "About ShopQuiet" (Name: Text)
+              + [FRAME] Container
+      + [FRAME] Logout Button → Button
+        + [FRAME] Container
+        - [TEXT] "Logout" (Name: Text)

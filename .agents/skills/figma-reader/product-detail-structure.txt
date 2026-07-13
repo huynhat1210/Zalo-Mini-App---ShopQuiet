@@ -1,0 +1,63 @@
+========================================
+FRAME: Product Detail - ShopQuiet (5:1286)
+========================================
++ [FRAME] Product Detail - ShopQuiet
+  + [FRAME] Section - Hero Image Area
+    + [FRAME] Minimalist Vase
+      + [FRAME] stitch-placeholder-300x300.svg
+        + [GROUP] Clip path group
+  + [FRAME] Section - Options (Variants & Quantity)
+    + [FRAME] Color Selection
+      + [FRAME] Heading 2
+        - [TEXT] "FINISH" (Name: FINISH)
+      + [FRAME] Container
+        + [FRAME] Button - Select Sand finish
+    + [FRAME] Quantity
+      + [FRAME] Button - Decrease quantity
+        + [FRAME] Container
+      + [FRAME] Container
+        - [TEXT] "1" (Name: Text)
+      + [FRAME] Button - Increase quantity
+        + [FRAME] Container
+  + [FRAME] Expandable Details Section
+    + [FRAME] Details
+      + [FRAME] Slot → Summary
+        + [FRAME] Container
+          - [TEXT] "Materials & Care" (Name: Text)
+        + [FRAME] Container
+      + [FRAME] Slot
+        - [TEXT] "100% Stoneware ceramic. Wipe clean with a soft,
+dry cloth. Do not use abrasive cleaners." (Name: 100% Stoneware ceramic. Wipe clean with a soft, dry cloth. Do not use abrasive cleaners.)
+    + [FRAME] Details
+      + [FRAME] Slot → Summary
+        + [FRAME] Container
+          - [TEXT] "Dimensions" (Name: Text)
+        + [FRAME] Container
+    + [FRAME] Details
+      + [FRAME] Slot → Summary
+        + [FRAME] Container
+          - [TEXT] "Shipping & Returns" (Name: Text)
+        + [FRAME] Container
+  + [FRAME] Section - Product Information
+    + [FRAME] Paragraph
+      - [TEXT] "Minimalist Vase" (Name: Heading 1 → Minimalist Vase)
+      - [TEXT] "$45.00" (Name: Text)
+    + [FRAME] Margin
+      + [FRAME] Container
+        - [TEXT] "Hand-crafted ceramic vase with a matte finish.
+Perfect for single stems or as a standalone
+sculptural piece. Its subtle texture and clean lines
+bring a sense of calm to any space." (Name: Hand-crafted ceramic vase with a matte finish. Perfect for single stems or as a standalone sculptural piece. Its subtle texture and clean lines bring a sense of calm to any space.)
+  + [FRAME] Header - Contextual Top Nav for PDP (Suppressed Global Nav)
+    + [FRAME] Button - Go back
+      + [FRAME] Container
+    + [FRAME] Container
+      + [FRAME] Button - Share
+        + [FRAME] Container
+      + [FRAME] Button - Add to favorites
+        + [FRAME] Container
+  + [FRAME] Contextual Bottom Action Bar
+    + [FRAME] Button - Add to cart
+      + [FRAME] Container
+    + [FRAME] Button
+      - [TEXT] "Buy Now" (Name: Text)

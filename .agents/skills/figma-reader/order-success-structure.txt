@@ -1,0 +1,65 @@
+========================================
+FRAME: Order Success - ShopQuiet (5:1680)
+========================================
++ [FRAME] Order Success - ShopQuiet
+  + [FRAME] Main Content Canvas
+    + [FRAME] Success Indicator:margin
+      + [FRAME] Success Indicator
+        + [FRAME] Background+Shadow
+          + [FRAME] Container
+        + [FRAME] Heading 2
+          - [TEXT] "Thank you for your order!" (Name: Text)
+        + [FRAME] Container
+          - [TEXT] "Your order #SQ-82934 has been placed and
+is being prepared for shipping." (Name: Text)
+    + [FRAME] Delivery Card:margin
+      + [FRAME] Delivery Card
+        + [FRAME] Container
+          + [FRAME] Container
+          + [FRAME] Heading 3
+            - [TEXT] "Estimated Delivery" (Name: Text)
+        + [FRAME] Container
+          - [TEXT] "Oct 24 - Oct 26" (Name: Text)
+    + [FRAME] Order Summary Bento:margin
+      + [FRAME] Order Summary Bento
+        + [FRAME] Background+HorizontalBorder
+          + [FRAME] Heading 3
+            - [TEXT] "ORDER SUMMARY" (Name: Text)
+          + [FRAME] Container
+            - [TEXT] "2 Items" (Name: Text)
+        + [FRAME] Container
+          + [FRAME] Item 1
+            + [FRAME] Background
+              + [FRAME] AB6AXuC8CoPjzh16dc5nH1_K7sBE65UfYozNtXo-CTJc9hrBva-saEjjkBcyMeGCHcseshKMR4h2YzcZGn6VjxKZJANGtNhZis1BENNkWWQKfxlYqsrVCC2txEtszM1UYyLt5cIMr02LwzPjouI07G3VceeZmpiIgzQcoJb8r44vDrbWHdtGhSgsZwnnww41FDlmG_eVYvyV4NWTPG_j-Z2itIjXABHJT8m1pdggH314X33lsnfhlCALK2J1ax6d0OBP4yGXKKc22vkjfQ
+            + [FRAME] Container
+              + [FRAME] Heading 4
+                - [TEXT] "Handcrafted Ceramic
+Mug" (Name: Handcrafted Ceramic Mug)
+              + [FRAME] Container
+                - [TEXT] "Qty: 1 · Soft Beige" (Name: Qty: 1 · Soft Beige)
+            + [FRAME] Container
+              - [TEXT] "$24.00" (Name: Text)
+          + [FRAME] Item 2
+            + [FRAME] Background
+              + [FRAME] AB6AXuC3zTfb21SAExEuyzxBuMcga_Kl_0hXGJH2taV46yVCkna7Od6j0oJN-lWnmJJ6sdcIPVHsmGRx7bF0CBc_s_ivMBrjUcBKexYUgaWMvbVmoI7IePnGN9Or01kzBLGp11vByoBC5xVdQtS6cIZRmy9CSDSNs7y5TQEYQVPetNrXTWKwvaJY4V1VQk-PDqjzA7dGwW4N2-CbvgXWyX5FLTmztdY7ycEdC0mZs6tn6wcRGVKdlMuuU-YkhDWgOE_3Fpun1omituruaw
+            + [FRAME] Container
+              + [FRAME] Heading 4
+                - [TEXT] "Everyday Linen Tote" (Name: Everyday Linen Tote)
+              + [FRAME] Container
+                - [TEXT] "Qty: 1 · Olive" (Name: Qty: 1 · Olive)
+            + [FRAME] Container
+              - [TEXT] "$45.00" (Name: Text)
+        + [FRAME] Background+HorizontalBorder
+          + [FRAME] Container
+            - [TEXT] "Total Paid" (Name: Text)
+          + [FRAME] Container
+            - [TEXT] "$69.00" (Name: Text)
+    + [FRAME] Actions
+      + [FRAME] Button
+        - [TEXT] "Track Order" (Name: Text)
+      + [FRAME] Button
+        - [TEXT] "Continue Shopping" (Name: Text)
+  + [FRAME] Header - TopAppBar
+    + [FRAME] Button - Close
+      + [FRAME] Container
+    - [TEXT] "Order Confirmed" (Name: Heading 1 → Order Confirmed)

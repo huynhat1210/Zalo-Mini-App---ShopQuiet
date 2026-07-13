@@ -1,0 +1,21 @@
+{
+  "pages": [
+    "pages/index"
+  ],
+  "app": {
+    "title": "ShopQuiet",
+    "headerTitle": "ShopQuiet",
+    "headerColor": "#fbf9f7",
+    "textColor": "black",
+    "statusBar": "normal",
+    "leftButton": "none"
+  },
+  "listCSS": [
+    "assets/style.css"
+  ],
+  "listSyncJS": [
+    "inline.js",
+    "assets/index.js"
+  ],
+  "listAsyncJS": []
+}

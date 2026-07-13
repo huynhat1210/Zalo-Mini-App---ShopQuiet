@@ -1,0 +1,75 @@
+========================================
+FRAME: Cart - ShopQuiet (5:1358)
+========================================
++ [FRAME] Cart - ShopQuiet
+  + [FRAME] Header - Top App Bar
+    + [FRAME] Button - Go back
+      + [FRAME] Container
+    + [FRAME] Heading 1
+      - [TEXT] "Your Cart" (Name: Text)
+  + [FRAME] Sticky Checkout Button
+    + [FRAME] Button
+      - [TEXT] "Proceed to Checkout" (Name: Text)
+  + [FRAME] Main
+    + [FRAME] Cart Items List
+      + [FRAME] Article - Item 1
+        + [FRAME] Background
+          + [FRAME] Ceramic Mug
+        + [FRAME] Container
+          + [FRAME] Container
+            + [FRAME] Heading 3
+              - [TEXT] "Minimalist Ceramic Mug" (Name: Minimalist Ceramic Mug)
+            + [FRAME] Container
+              - [TEXT] "$24.00" (Name: $24.00)
+          + [FRAME] Margin
+            + [FRAME] Container
+              + [FRAME] Background+Border
+                + [FRAME] Button - Decrease quantity
+                  + [FRAME] Container
+                + [FRAME] Container
+                  - [TEXT] "2" (Name: Text)
+                + [FRAME] Button - Increase quantity
+                  + [FRAME] Container
+              + [FRAME] Button - Remove item
+                + [FRAME] Container
+      + [FRAME] Article - Item 2
+        + [FRAME] Background
+          + [FRAME] Linen Notebook
+        + [FRAME] Container
+          + [FRAME] Container
+            + [FRAME] Heading 3
+              - [TEXT] "Linen Bound Notebook" (Name: Linen Bound Notebook)
+            + [FRAME] Container
+              - [TEXT] "$18.50" (Name: $18.50)
+          + [FRAME] Margin
+            + [FRAME] Container
+              + [FRAME] Background+Border
+                + [FRAME] Button - Decrease quantity
+                  + [FRAME] Container
+                + [FRAME] Container
+                  - [TEXT] "1" (Name: Text)
+                + [FRAME] Button - Increase quantity
+                  + [FRAME] Container
+              + [FRAME] Button - Remove item
+                + [FRAME] Container
+    + [FRAME] Section - Order Summary:margin
+      + [FRAME] Section - Order Summary
+        + [FRAME] Heading 2
+          - [TEXT] "Order Summary" (Name: Order Summary)
+        + [FRAME] Container
+          + [FRAME] Container
+            + [FRAME] Container
+              - [TEXT] "Subtotal" (Name: Text)
+            + [FRAME] Container
+              - [TEXT] "$66.50" (Name: Text)
+          + [FRAME] Container
+            + [FRAME] Container
+              - [TEXT] "Shipping" (Name: Text)
+            + [FRAME] Container
+              - [TEXT] "$5.00" (Name: Text)
+          + [FRAME] Margin
+          + [FRAME] Container
+            + [FRAME] Container
+              - [TEXT] "Total" (Name: Text)
+            + [FRAME] Container
+              - [TEXT] "$71.50" (Name: Text)

@@ -1,0 +1,56 @@
+packages:
+  - 'apps/*'
+
+overrides:
+  "drizzle-kit": "0.23.2"
+  "zalo-mini-app>@types/react": "18.2.61"
+  "zalo-mini-app>@types/react-dom": "18.2.19"
+  "zalo-mini-app>react": "18.2.0"
+  "zalo-mini-app>react-dom": "18.2.0"
+  "@tiptap/core": "2.1.16"
+  "@tiptap/pm": "2.1.16"
+  "@tiptap/starter-kit": "2.1.16"
+  "@tiptap/react": "2.1.16"
+  "@tiptap/extension-blockquote": "2.1.16"
+  "@tiptap/extension-bold": "2.1.16"
+  "@tiptap/extension-bullet-list": "2.1.16"
+  "@tiptap/extension-code": "2.1.16"
+  "@tiptap/extension-document": "2.1.16"
+  "@tiptap/extension-dropcursor": "2.1.16"
+  "@tiptap/extension-floating-menu": "2.1.16"
+  "@tiptap/extension-gapcursor": "2.1.16"
+  "@tiptap/extension-hard-break": "2.1.16"
+  "@tiptap/extension-heading": "2.1.16"
+  "@tiptap/extension-history": "2.1.16"
+  "@tiptap/extension-horizontal-rule": "2.1.16"
+  "@tiptap/extension-italic": "2.1.16"
+  "@tiptap/extension-image": "2.1.16"
+  "@tiptap/extension-link": "2.1.16"
+  "@tiptap/extension-list-item": "2.1.16"
+  "@tiptap/extension-ordered-list": "2.1.16"
+  "@tiptap/extension-paragraph": "2.1.16"
+  "@tiptap/extension-strike": "2.1.16"
+  "@tiptap/extension-table": "2.1.16"
+  "@tiptap/extension-table-cell": "2.1.16"
+  "@tiptap/extension-table-header": "2.1.16"
+  "@tiptap/extension-table-row": "2.1.16"
+  "@tiptap/extension-text": "2.1.16"
+  "@tiptap/extension-text-align": "2.1.16"
+  "@tiptap/extension-typography": "2.1.16"
+allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  '@swc/core': true
+  argon2: true
+  braintrust: true
+  core-js: true
+  es5-ext: true
+  esbuild: true
+  isolated-vm: true
+  oracledb: true
+  prisma: true
+  protobufjs: true
+  sharp: true
+  sqlite3: true
+  unrs-resolver: true
+  vue-demi: true

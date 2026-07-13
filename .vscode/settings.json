@@ -1,0 +1,16 @@
+{
+  "chat.tools.terminal.autoApprove": {
+    "/^cd \"d:\\\\Zalo Mini App e-commerce\\\\apps\\\\admin\"; python - <<'PY'\nimport os, re, pathlib\nroot = pathlib\\.Path\\('node_modules/adminjs'\\)\nfor p in root\\.rglob\\('\\*\\.d\\.ts'\\):\n    text = p\\.read_text\\(encoding='utf-8', errors='ignore'\\)\n    if re\\.search\\(r'AdminJSOptions\\|Asset\\|assets\\|styles\\|customStyles\\|branding', text\\):\n        print\\('---', p\\)\n        for line in text\\.splitlines\\(\\):\n            if re\\.search\\(r'AdminJSOptions\\|Asset\\|assets\\|styles\\|customStyles\\|branding', line\\):\n                print\\(line\\)\nPY$/": {
+      "approve": true,
+      "matchCommandLine": true
+    }
+  },
+  "cSpell.language": "en,vi",
+  "cSpell.words": [
+    "zalo",
+    "zalopay",
+    "favs",
+    "cust",
+    "notif"
+  ]
+}
