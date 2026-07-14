@@ -125,7 +125,7 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
         {/* Filters Grid */}
         <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-none pl-6 pr-6 -mx-6">
           <button 
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-[#eae8e6] bg-white text-xs font-bold text-textColor-variant active:scale-95 transition-all"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-[#eae8e6] bg-white text-xs font-bold text-textColor-variant active:scale-95 transition-all whitespace-nowrap shrink-0"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.59l-5.432 5.432a2.25 2.25 0 00-.659 1.59v3.414a2.25 2.25 0 01-.659 1.59l-1.87 1.87a.75.75 0 01-1.28-.53v-6.344a2.25 2.25 0 00-.659-1.59L3.659 7.408A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A50.06 50.06 0 0112 3z" />

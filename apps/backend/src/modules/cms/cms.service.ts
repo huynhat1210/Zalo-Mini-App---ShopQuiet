@@ -453,11 +453,38 @@ export class CmsService implements OnModuleInit {
 
   async getRecords(modelName: string) {
     const modelKey = this.getModelKey(modelName);
-    return (this.prisma as any)[modelKey].findMany({
-      orderBy: { createdAt: 'desc' },
-    }).catch(() => {
-      return (this.prisma as any)[modelKey].findMany();
-    });
+    
+    const include: any = {};
+    if (modelKey === 'order') {
+      include.items = {
+        include: {
+          product: true,
+        },
+      };
+    } else if (modelKey === 'product') {
+      include.variants = true;
+    }
+
+    const queryOptions: any = {};
+    if (Object.keys(include).length > 0) {
+      queryOptions.include = include;
+    }
+
+    try {
+      return await (this.prisma as any)[modelKey].findMany({
+        ...queryOptions,
+        orderBy: { createdAt: 'desc' },
+      });
+    } catch {
+      try {
+        return await (this.prisma as any)[modelKey].findMany({
+          ...queryOptions,
+          orderBy: { id: 'desc' },
+        });
+      } catch {
+        return await (this.prisma as any)[modelKey].findMany(queryOptions);
+      }
+    }
   }
 
   async createRecord(modelName: string, data: any) {

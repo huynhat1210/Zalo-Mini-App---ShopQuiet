@@ -45,6 +45,8 @@ export const DatabaseManager: React.FC = () => {
   };
 
   useEffect(() => {
+    setRecords([]);
+    setSearchTerm('');
     fetchRecords();
     setIsModalOpen(false);
     setEditingRecord(null);
@@ -202,10 +204,12 @@ export const DatabaseManager: React.FC = () => {
   const renderOrderView = () => (
     <div className="space-y-4">
       {filteredRecords.map((order) => (
-        <div key={order.id} className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4 hover:border-slate-300 transition-all duration-200">
+        <div key={order.id} className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4 hover:border-slate-350 transition-all duration-200">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 pb-3 border-b border-slate-100">
             <div>
-              <span className="font-mono text-xs text-[#0e6877] font-bold">#{order.id.slice(-6).toUpperCase()}</span>
+              <span className="font-mono text-xs text-[#0e6877] font-bold">
+                #{typeof order.id === 'string' ? order.id.slice(-6).toUpperCase() : String(order.id)}
+              </span>
               <span className="text-[10px] text-slate-400 font-medium ml-3">Ngày đặt: {new Date(order.createdAt).toLocaleDateString('vi-VN')}</span>
             </div>
             <div className="flex items-center gap-3">
@@ -229,18 +233,59 @@ export const DatabaseManager: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
             <div>
               <p className="text-slate-400 font-medium uppercase text-[9px] tracking-wider">Khách hàng</p>
-              <p className="font-bold text-[#1b1c1b] mt-1">{order.customerName || 'Zalo User'}</p>
-              <p className="text-slate-500 text-[10px] mt-0.5">{order.phone || 'Không có SĐT'}</p>
+              <p className="font-bold text-[#1b1c1b] mt-1">{order.shippingName || 'Zalo User'}</p>
+              <p className="text-slate-500 text-[10px] mt-0.5">{order.shippingPhone || 'Không có SĐT'}</p>
             </div>
             <div>
               <p className="text-slate-400 font-medium uppercase text-[9px] tracking-wider">Địa chỉ giao hàng</p>
-              <p className="font-semibold text-slate-700 mt-1 line-clamp-2">{order.address || 'Tại cửa hàng'}</p>
+              <p className="font-semibold text-slate-700 mt-1 line-clamp-2">{order.shippingAddress || 'Tại cửa hàng'}</p>
             </div>
             <div className="flex flex-col justify-between items-end">
               <span className="text-slate-400 font-medium uppercase text-[9px] tracking-wider">Tổng đơn hàng</span>
-              <span className="text-[#0e6877] font-bold text-sm mt-1">{formatPrice(order.total || 0)}</span>
+              <span className="text-[#0e6877] font-bold text-sm mt-1">{formatPrice(order.totalAmount || 0)}</span>
             </div>
           </div>
+
+          {/* Purchased Items List */}
+          {Array.isArray(order.items) && order.items.length > 0 && (
+            <div className="bg-[#fbf9f7] rounded-2xl p-4 border border-slate-100/60 mt-3 space-y-2">
+              <p className="text-[9px] font-bold text-[#526069] uppercase tracking-wider">Sản phẩm đã mua</p>
+              <div className="divide-y divide-slate-150/60">
+                {order.items.map((item: any, idx: number) => {
+                  // If product images is JSON string or array
+                  let imgUrl = '';
+                  try {
+                    const parsed = typeof item.product?.images === 'string' ? JSON.parse(item.product.images) : item.product?.images;
+                    imgUrl = Array.isArray(parsed) ? parsed[0] : parsed;
+                  } catch {
+                    imgUrl = item.product?.image;
+                  }
+                  return (
+                    <div key={idx} className="flex justify-between items-center py-2 text-xs">
+                      <div className="flex items-center gap-2.5">
+                        {imgUrl ? (
+                          <img src={imgUrl} alt={item.product?.name} className="w-8 h-8 rounded-lg object-cover border border-slate-200" />
+                        ) : (
+                          <div className="w-8 h-8 bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-center text-slate-400 font-bold text-[10px]">
+                            SP
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-bold text-[#1b1c1b]">{item.product?.name || 'Sản phẩm không tên'}</p>
+                          <p className="text-[10px] text-[#526069] font-medium mt-0.5">
+                            Size: {item.size || 'DEFAULT'} • Đơn giá: {formatPrice(item.price || 0)}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="font-bold text-[#0e6877] bg-[#ecf6f7] border border-[#0e6877]/10 px-2.5 py-0.5 rounded-full">
+                        x{item.quantity || 1}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       ))}
     </div>

@@ -37,9 +37,9 @@ export function useBanners() {
   });
 }
 
-export function useNotifications() {
+export function useNotifications(zaloUserId?: string) {
   return useQuery({
-    queryKey: ['notifications'],
+    queryKey: ['notifications', zaloUserId || 'guest'],
     queryFn: () => apiRequest<INotification[]>('/notifications'),
     refetchInterval: 5000, // Poll every 5 seconds
   });

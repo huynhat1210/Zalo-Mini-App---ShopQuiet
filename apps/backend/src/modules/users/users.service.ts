@@ -7,10 +7,11 @@ export class UsersService {
 
   async syncUser(zaloId: string, name: string, avatar?: string, phone?: string, birthday?: string) {
     if (!zaloId) return null;
+    const role = zaloId.toLowerCase().includes('admin') ? 'admin' : 'user';
     return this.prisma.user.upsert({
       where: { zaloId },
-      update: { name, avatar, ...(phone !== undefined && { phone }), ...(birthday !== undefined && { birthday }) },
-      create: { zaloId, name, avatar, phone, birthday },
+      update: { name, avatar, role, ...(phone !== undefined && { phone }), ...(birthday !== undefined && { birthday }) },
+      create: { zaloId, name, avatar, phone, birthday, role },
     });
   }
 
