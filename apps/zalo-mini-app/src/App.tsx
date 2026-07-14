@@ -1,5 +1,7 @@
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, useContext, useEffect, useRef } from 'react';
 import { App as ZaloApp, ZMPRouter, SnackbarProvider } from 'zmp-ui';
+import { useQueryClient } from '@tanstack/react-query';
+import { useNotifications } from './hooks/queries';
 import { HomeComponent } from './pages/home';
 import { CartComponent } from './pages/cart';
 import { ProfileComponent } from './pages/profile';
@@ -11,7 +13,7 @@ import { SavedItemsComponent } from './pages/saved-items';
 import { NotificationsComponent } from './pages/notifications';
 import { OrderDetailComponent } from './pages/order-detail';
 import { PaymentSimulateComponent } from './pages/payment-simulate';
-import { ToastComponent, BottomNavBarComponent } from './components';
+import { ToastComponent, BottomNavBarComponent, ErrorBoundaryComponent } from './components';
 import type { ICartContextType } from './App.type';
 import { useAppStore } from './store/useAppStore';
 
@@ -61,13 +63,11 @@ export default function App() {
   const zaloUser = useAppStore((state) => state.zaloUser);
   const selectedOrder = useAppStore((state) => state.selectedOrder);
   const buyNowItem = useAppStore((state) => state.buyNowItem);
-  const notifications = useAppStore((state) => state.notifications);
   const setActiveTab = useAppStore((state) => state.setActiveTab);
   const setSelectedProductDetail = useAppStore((state) => state.setSelectedProductDetail);
   const setIsCartOpen = useAppStore((state) => state.setIsCartOpen);
   const setSelectedOrder = useAppStore((state) => state.setSelectedOrder);
   const setBuyNowItem = useAppStore((state) => state.setBuyNowItem);
-  const setNotifications = useAppStore((state) => state.setNotifications);
   const showToast = useAppStore((state) => state.showToast);
   const updateZaloUser = useAppStore((state) => state.updateZaloUser);
   const addToCart = useAppStore((state) => state.addToCart);
@@ -77,10 +77,25 @@ export default function App() {
   const updateItemSize = useAppStore((state) => state.updateItemSize);
   const toggleSavedItem = useAppStore((state) => state.toggleSavedItem);
   const isSavedItem = useAppStore((state) => state.isSavedItem);
-  const fetchNotifications = useAppStore((state) => state.fetchNotifications);
   const fetchFavorites = useAppStore((state) => state.fetchFavorites);
   const fetchCart = useAppStore((state) => state.fetchCart);
   const syncUserFromStorage = useAppStore((state) => state.syncUserFromStorage);
+
+  // TanStack React Query for Notifications
+  const { data: notificationsData, refetch: fetchNotifications } = useNotifications();
+  const notifications = notificationsData || [];
+  const queryClient = useQueryClient();
+
+  const setNotifications = (updater: any) => {
+    queryClient.setQueryData(['notifications'], (old: any) => {
+      if (typeof updater === 'function') {
+        return updater(old || []);
+      }
+      return updater;
+    });
+  };
+
+  const prevNotificationsRef = useRef<any[]>([]);
 
   useEffect(() => {
     syncUserFromStorage();
@@ -91,10 +106,20 @@ export default function App() {
   }, [fetchFavorites, zaloUser?.id]);
 
   useEffect(() => {
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 5000);
-    return () => clearInterval(interval);
-  }, [fetchNotifications]);
+    if (notificationsData && prevNotificationsRef.current.length > 0) {
+      const newItems = notificationsData.filter(
+        (item) => !prevNotificationsRef.current.some((p) => p.id === item.id)
+      );
+      newItems.forEach((item) => {
+        if (!item.read) {
+          showToast(`Thông báo mới: ${item.title}`, 'info');
+        }
+      });
+    }
+    if (notificationsData) {
+      prevNotificationsRef.current = notificationsData;
+    }
+  }, [notificationsData, showToast]);
 
   useEffect(() => {
     fetchCart();
@@ -102,8 +127,9 @@ export default function App() {
 
   return (
     <ZaloAppCast>
-      <SnackbarProviderCast>
-        <CartContext.Provider
+      <ErrorBoundaryComponent>
+        <SnackbarProviderCast>
+          <CartContext.Provider
           value={{
             cart,
             addToCart,
@@ -129,8 +155,8 @@ export default function App() {
             buyNowItem,
             setBuyNowItem,
             notifications,
-            setNotifications,
-            fetchNotifications
+            setNotifications: setNotifications as any,
+            fetchNotifications: fetchNotifications as any
           }}
         >
           <ZMPRouterCast>
@@ -197,6 +223,7 @@ export default function App() {
           </ZMPRouterCast>
         </CartContext.Provider>
       </SnackbarProviderCast>
+      </ErrorBoundaryComponent>
     </ZaloAppCast>
   );
 }

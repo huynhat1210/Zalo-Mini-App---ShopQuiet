@@ -1,4 +1,5 @@
 import React from 'react';
+import { IProductGridSkeletonProps } from './skeleton.type';
 
 export const BannerSkeleton: React.FC = () => {
   return (
@@ -39,7 +40,8 @@ export const ProductCardSkeleton: React.FC = () => {
   );
 };
 
-export const ProductGridSkeleton: React.FC<{ count?: number }> = ({ count = 4 }) => {
+export const ProductGridSkeleton: React.FC<IProductGridSkeletonProps> = (props) => {
+  const { count = 4 } = props;
   return (
     <div className="grid grid-cols-2 gap-x-5 gap-y-7 px-6">
       {Array.from({ length: count }).map((_, i) => (

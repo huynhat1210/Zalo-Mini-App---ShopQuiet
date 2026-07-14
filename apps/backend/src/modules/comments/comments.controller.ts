@@ -6,9 +6,12 @@ import {
   Param,
   Headers,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { Comment } from '@prisma/client';
 import { CommentsService } from './comments.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateCommentDto } from './dto/comment.dto';
 
 @Controller('products/:productId/comments')
 export class CommentsController {
@@ -22,13 +25,13 @@ export class CommentsController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   async createComment(
     @Param('productId', ParseIntPipe) productId: number,
-    @Body('content') content: string,
-    @Body('rating') rating: number,
+    @Body() body: CreateCommentDto,
     @Headers('x-zalo-user-id') zaloUserId?: string,
   ): Promise<Comment> {
     const userId = zaloUserId || 'cust-zalo-id-1';
-    return this.commentsService.create(productId, userId, content, rating);
+    return this.commentsService.create(productId, userId, body.content, body.rating);
   }
 }

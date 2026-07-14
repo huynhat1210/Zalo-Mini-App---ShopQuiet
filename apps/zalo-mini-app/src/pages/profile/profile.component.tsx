@@ -6,7 +6,7 @@ import { Page, Text } from 'zmp-ui';
 import { useCart, IProduct, IOrder } from '../../App';
 import { apiRequest } from '../../utils/api';
 import api from 'zmp-sdk';
-import { EmptyState } from '../../components/empty-state/EmptyState';
+import { EmptyStateComponent } from '../../components';
 import { IProfileComponentProps } from './profile.type';
 
 const PageCast = Page as any;
@@ -297,7 +297,7 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
           {loading ? (
             <div className="text-center py-10 text-textColor-variant text-xs font-medium">Đang tải đơn hàng...</div>
           ) : displayedOrders.length === 0 ? (
-            <EmptyState
+            <EmptyStateComponent
               title={ordersTab === 'active' ? 'Quên chưa đặt sản phẩm rồi nè bạn ơi?' :
                      ordersTab === 'history' ? 'Chưa có lịch sử mua hàng' :
                      ordersTab === 'reviews' ? 'Chưa có đánh giá nào' : 'Chưa có đơn nháp nào'}

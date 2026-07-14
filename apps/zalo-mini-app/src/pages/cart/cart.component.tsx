@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useCart } from '../../App';
 import { apiRequest } from '../../utils/api';
-import { EmptyState } from '../../components/empty-state/EmptyState';
+import { EmptyStateComponent } from '../../components';
 import { ICartComponentProps } from './cart.type';
 
 export const CartComponent: React.FC<ICartComponentProps> = (_props) => {
@@ -40,7 +40,7 @@ export const CartComponent: React.FC<ICartComponentProps> = (_props) => {
       {/* Scrollable Cart Content Area */}
       <div className="flex-1 flex flex-col overflow-y-auto px-6 py-5.5 pb-28">
         {cart.length === 0 ? (
-          <EmptyState
+          <EmptyStateComponent
             title="Cart is empty"
             description="Looks like you haven't added anything to your bag yet. Let's find some minimal goods!"
             actionText="Start Shopping"

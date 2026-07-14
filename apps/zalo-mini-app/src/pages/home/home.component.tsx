@@ -4,6 +4,7 @@ import PullToRefresh from 'react-pull-to-refresh';
 import { useCart, IProduct } from '../../App';
 import { useAppStore } from '../../store/useAppStore';
 import { apiRequest } from '../../utils/api';
+import { useInfiniteProducts, useCategories, useBanners } from '../../hooks/queries';
 import { Bars3Icon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 // @ts-ignore
 import logoIcon from '../../assets/logo.png';
@@ -17,20 +18,18 @@ const TextCast = Text as any;
 export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
   const { addToCart, setSelectedProductDetail, cart, setIsCartOpen, toggleSavedItem, isSavedItem, showToast } = useCart();
   
-  const { 
-    products, 
-    categories, 
-    banners, 
-    isFetchingProducts, 
-    isFetchingCategories, 
-    isFetchingBanners,
-    isFetchingMoreProducts,
-    productsHasMore,
-    fetchProducts,
-    fetchMoreProducts,
-    fetchCategories,
-    fetchBanners
-  } = useAppStore();
+  const { data: productsData, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading: isLoadingProducts, refetch: refetchProducts } = useInfiniteProducts();
+  const { data: categoriesData, isLoading: isLoadingCategories, refetch: refetchCategories } = useCategories();
+  const { data: bannersData, isLoading: isLoadingBanners, refetch: refetchBanners } = useBanners();
+
+  const products = productsData ? productsData.pages.flatMap((page: any) => page.data || page) : [];
+  const categories = categoriesData || [];
+  const banners = bannersData || [];
+  const isFetchingProducts = isLoadingProducts;
+  const isFetchingCategories = isLoadingCategories;
+  const isFetchingBanners = isLoadingBanners;
+  const isFetchingMoreProducts = isFetchingNextPage;
+  const productsHasMore = hasNextPage;
 
   const observer = useRef<IntersectionObserver | null>(null);
   const lastElementRef = useCallback((node: HTMLDivElement) => {
@@ -38,11 +37,11 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
     if (observer.current) observer.current.disconnect();
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && productsHasMore) {
-        fetchMoreProducts();
+        fetchNextPage();
       }
     });
     if (node) observer.current.observe(node);
-  }, [isFetchingMoreProducts, productsHasMore, fetchMoreProducts]);
+  }, [isFetchingMoreProducts, productsHasMore, fetchNextPage]);
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -52,10 +51,6 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
   const [brandName, setBrandName] = useState('ShopQuiet');
 
   useEffect(() => {
-    fetchBanners();
-    fetchCategories();
-    fetchProducts();
-    
     // settings isn't cached yet, fetch independently
     async function loadSettings() {
       try {
@@ -68,7 +63,7 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
       }
     }
     loadSettings();
-  }, [fetchBanners, fetchCategories, fetchProducts]);
+  }, []);
 
   const bannerSlides = banners
     .filter((banner) => banner.imageUrl)
@@ -102,7 +97,11 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
   };
 
   const handleRefresh = async () => {
-    await useAppStore.getState().refreshData();
+    await Promise.all([
+      refetchBanners(),
+      refetchCategories(),
+      refetchProducts(),
+    ]);
   };
 
   return (

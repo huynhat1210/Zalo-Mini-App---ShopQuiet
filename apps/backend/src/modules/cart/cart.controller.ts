@@ -8,59 +8,78 @@ import {
   Param,
   Headers,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { CartService } from './cart.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AddToCartDto, UpdateQuantityDto, UpdateItemSizeDto } from './dto/cart.dto';
 
+@ApiTags('cart')
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get user cart' })
+  @ApiResponse({ status: 200, description: 'Cart retrieved' })
   async getCart(@Headers('x-zalo-user-id') zaloUserId?: string) {
     return this.cartService.getCart(zaloUserId);
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Add item to cart' })
+  @ApiResponse({ status: 201, description: 'Item added to cart' })
   async addToCart(
-    @Body('productId') productId: number,
-    @Body('quantity') quantity: number,
-    @Body('size') size?: string,
+    @Body() body: AddToCartDto,
     @Headers('x-zalo-user-id') zaloUserId?: string,
   ) {
-    return this.cartService.addToCart(productId, quantity, size, zaloUserId);
+    return this.cartService.addToCart(body.productId, body.quantity, body.size, zaloUserId);
   }
 
   @Put('quantity')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update cart item quantity' })
+  @ApiResponse({ status: 200, description: 'Quantity updated' })
   async updateQuantity(
-    @Body('productId') productId: number,
-    @Body('quantity') quantity: number,
-    @Body('size') size?: string,
+    @Body() body: UpdateQuantityDto,
     @Headers('x-zalo-user-id') zaloUserId?: string,
   ) {
     return this.cartService.updateQuantity(
-      productId,
-      quantity,
-      size,
+      body.productId,
+      body.quantity,
+      body.size,
       zaloUserId,
     );
   }
 
   @Put('size')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update cart item size' })
+  @ApiResponse({ status: 200, description: 'Size updated' })
   async updateItemSize(
-    @Body('productId') productId: number,
-    @Body('oldSize') oldSize?: string,
-    @Body('newSize') newSize?: string,
+    @Body() body: UpdateItemSizeDto,
     @Headers('x-zalo-user-id') zaloUserId?: string,
   ) {
     return this.cartService.updateItemSize(
-      productId,
-      oldSize,
-      newSize,
+      body.productId,
+      body.oldSize,
+      body.newSize,
       zaloUserId,
     );
   }
 
   @Delete(':productId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Remove item from cart' })
+  @ApiResponse({ status: 200, description: 'Item removed' })
   async removeFromCart(
     @Param('productId') productId: string,
     @Query('size') size?: string,
@@ -74,6 +93,10 @@ export class CartController {
   }
 
   @Delete()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Clear cart' })
+  @ApiResponse({ status: 200, description: 'Cart cleared' })
   async clearCart(@Headers('x-zalo-user-id') zaloUserId?: string) {
     return this.cartService.clearCart(zaloUserId);
   }

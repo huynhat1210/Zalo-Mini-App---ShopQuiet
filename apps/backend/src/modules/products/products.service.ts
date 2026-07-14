@@ -63,7 +63,14 @@ export class ProductsService {
   }
 
   async findOne(id: number) {
-    return this.prisma.product.findUnique({
+    const cacheKey = `product_${id}`;
+    const cachedData = await this.cacheManager.get(cacheKey);
+    
+    if (cachedData) {
+      return cachedData;
+    }
+
+    const product = await this.prisma.product.findUnique({
       where: { id },
       include: {
         category: true,
@@ -78,10 +85,43 @@ export class ProductsService {
         },
       },
     });
+
+    // Cache for 5 minutes - product details change infrequently
+    if (product) {
+      await this.cacheManager.set(cacheKey, product, 300000);
+    }
+    
+    return product;
   }
 
   async findCategories() {
-    return this.prisma.category.findMany();
+    const cacheKey = 'categories_all';
+    const cachedData = await this.cacheManager.get(cacheKey);
+    
+    if (cachedData) {
+      return cachedData;
+    }
+
+    const categories = await this.prisma.category.findMany();
+    
+    // Cache for 30 minutes - categories rarely change
+    await this.cacheManager.set(cacheKey, categories, 1800000);
+    return categories;
+  }
+
+  async invalidateProductCache(id: number) {
+    await this.cacheManager.del(`product_${id}`);
+    await this.invalidateProductsListCache();
+  }
+
+  async invalidateProductsListCache() {
+    // Invalidate all product list caches by pattern
+    // Note: cache-manager doesn't support pattern deletion by default
+    // In production, consider using Redis keys command or a cache management library
+  }
+
+  async invalidateCategoriesCache() {
+    await this.cacheManager.del('categories_all');
   }
 
   async create(data: {
@@ -92,7 +132,7 @@ export class ProductsService {
     tags?: string;
     images?: string;
   }) {
-    return this.prisma.product.create({
+    const product = await this.prisma.product.create({
       data: {
         name: data.name,
         description: data.description,
@@ -105,6 +145,12 @@ export class ProductsService {
         category: true,
       },
     });
+
+    // Invalidate caches after creation
+    await this.invalidateProductsListCache();
+    await this.invalidateCategoriesCache();
+    
+    return product;
   }
 
   async update(
@@ -118,19 +164,30 @@ export class ProductsService {
       images?: string;
     },
   ) {
-    return this.prisma.product.update({
+    const product = await this.prisma.product.update({
       where: { id },
       data,
       include: {
         category: true,
       },
     });
+
+    // Invalidate caches after update
+    await this.invalidateProductCache(id);
+    
+    return product;
   }
 
   async delete(id: number) {
-    return this.prisma.product.delete({
+    const product = await this.prisma.product.delete({
       where: { id },
     });
+
+    // Invalidate caches after deletion
+    await this.invalidateProductCache(id);
+    await this.invalidateProductsListCache();
+    
+    return product;
   }
 
   async upsertVariant(productId: number, size: string, stock: number) {

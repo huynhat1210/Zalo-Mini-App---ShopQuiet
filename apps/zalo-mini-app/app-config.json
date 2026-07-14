@@ -14,7 +14,6 @@
     "assets/style.css"
   ],
   "listSyncJS": [
-    "inline.js",
     "assets/index.js"
   ],
   "listAsyncJS": []

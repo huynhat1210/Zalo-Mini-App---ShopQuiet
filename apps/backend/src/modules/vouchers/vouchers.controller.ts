@@ -6,8 +6,12 @@ import {
   Body,
   Param,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { VouchersService } from './vouchers.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 type CreateVoucherDto = {
   code: string;
@@ -39,6 +43,8 @@ export class VouchersController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   async createVoucher(@Body() body: CreateVoucherDto) {
     if (!body.code || !body.type || body.value === undefined) {
       throw new BadRequestException('Mã, loại voucher và giá trị là bắt buộc');
@@ -47,6 +53,8 @@ export class VouchersController {
   }
 
   @Delete(':code')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   async deleteVoucher(@Param('code') code: string) {
     return this.vouchersService.delete(code);
   }

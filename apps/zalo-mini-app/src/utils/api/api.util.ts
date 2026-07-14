@@ -1,7 +1,9 @@
 import { TApiHttpMethod } from './api.type';
 
 // @ts-ignore
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const _envBase = import.meta.env.VITE_API_BASE_URL;
+export const API_BASE_URL =
+  _envBase || (typeof window !== 'undefined' ? `${window.location.origin}/api` : 'http://localhost:3000/api');
 
 export async function apiRequest<T = unknown>(
   path: string,
@@ -17,7 +19,7 @@ export async function apiRequest<T = unknown>(
         const parsed = JSON.parse(cached);
         if (parsed?.id) zaloUserId = parsed.id;
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 
   const headers: Record<string, string> = {
@@ -46,7 +48,7 @@ export async function apiRequest<T = unknown>(
       if (errJson && errJson.message) {
         errMsg = Array.isArray(errJson.message) ? errJson.message[0] : errJson.message;
       }
-    } catch (e) {}
+    } catch (e) { }
     throw new Error(errMsg);
   }
 

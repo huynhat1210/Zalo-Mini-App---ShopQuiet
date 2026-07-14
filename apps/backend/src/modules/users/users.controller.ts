@@ -1,28 +1,29 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { SyncUserDto, DecryptPhoneDto } from './dto/sync-user.dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post('sync')
-  async syncUser(
-    @Body() body: { zaloId: string; name: string; avatar?: string },
-  ) {
+  async syncUser(@Body() body: SyncUserDto) {
     return this.usersService.syncUser(body.zaloId, body.name, body.avatar);
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   async getAllUsers() {
     return this.usersService.getAllUsers();
   }
 
   @Post('decrypt-phone')
-  async decryptPhone(
-    @Body('token') token: string,
-    @Body('accessToken') accessToken?: string,
-  ) {
-    if (!token) {
+  async decryptPhone(@Body() body: DecryptPhoneDto) {
+    if (!body.token) {
       return { phoneNumber: '0987654321' };
     }
 
@@ -33,8 +34,8 @@ export class UsersController {
       const response = await fetch('https://graph.zalo.me/v2.0/me/info', {
         method: 'GET',
         headers: {
-          access_token: accessToken || '',
-          code: token,
+          access_token: body.accessToken || '',
+          code: body.token,
           secret_key: appSecret,
         },
       });

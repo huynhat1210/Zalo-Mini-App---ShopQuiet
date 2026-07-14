@@ -1,6 +1,6 @@
 import { Page } from 'zmp-ui';
 import { useCart } from '../../App';
-import { EmptyState } from '../../components/empty-state/EmptyState';
+import { EmptyStateComponent } from '../../components';
 import { ISavedItemsComponentProps } from './saved-items.type';
 
 const PageCast = Page as any;
@@ -23,7 +23,7 @@ export const SavedItemsComponent: React.FC<ISavedItemsComponentProps> = (_props)
 
       <div className="flex-1 px-6 py-5.5 space-y-4 pb-28">
         {savedItems.length === 0 ? (
-          <EmptyState
+          <EmptyStateComponent
             title="No saved items"
             description="Tap the heart icon on any product to save it here for later."
             actionText="Explore Products"

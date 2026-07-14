@@ -1,31 +1,9 @@
-import React from "react";
+import React from 'react';
+import { IEmptyStateComponentProps } from './empty-state.type';
 
-export interface EmptyStateProps {
-  /** Title displayed in the empty state */
-  title: string;
-  /** Description text displayed below the title */
-  description: string;
-  /** Optional custom icon JSX */
-  icon?: React.ReactNode;
-  /** Optional call‑to‑action text */
-  actionText?: string;
-  /** Optional click handler for the call‑to‑action */
-  onAction?: () => void;
-}
-
-/**
- * EmptyState – a reusable component that follows the same structural pattern as
- * other UI primitives in this project (e.g., skeleton components).
- * It provides a centered layout, optional icon, title, description, and an
- * optional CTA button.
- */
-export const EmptyState: React.FC<EmptyStateProps> = ({
-  title,
-  description,
-  icon,
-  actionText,
-  onAction,
-}) => {
+export const EmptyStateComponent: React.FC<IEmptyStateComponentProps> = (props) => {
+  const { title, description, icon, actionText, onAction } = props;
+  
   return (
     <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-surface">
       {icon ? (

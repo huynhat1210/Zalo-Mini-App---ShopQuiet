@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Page } from 'zmp-ui';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCart, IOrder } from '../../App';
 import { apiRequest } from '../../utils/api';
-import { EmptyState } from '../../components/empty-state/EmptyState';
+import { EmptyStateComponent } from '../../components';
 import { INotificationsComponentProps } from './notifications.type';
 
 const PageCast = Page as any;
@@ -11,6 +12,7 @@ const PageCast = Page as any;
 export const NotificationsComponent: React.FC<INotificationsComponentProps> = (_props) => {
   const { setActiveTab, showToast, setSelectedOrder, notifications, setNotifications, fetchNotifications } = useCart();
   const [activeCategory, setActiveCategory] = useState<'order' | 'system'>('order');
+  const queryClient = useQueryClient();
 
   const handleViewOrder = async (orderId: string) => {
     try {
@@ -33,6 +35,7 @@ export const NotificationsComponent: React.FC<INotificationsComponentProps> = (_
     try {
       await apiRequest('/notifications/mark-all-read', 'PATCH');
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
       showToast('Đã đánh dấu đọc tất cả thông báo!', 'success');
     } catch (err) {
       console.error(err);
@@ -46,6 +49,7 @@ export const NotificationsComponent: React.FC<INotificationsComponentProps> = (_
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, read: true } : n))
       );
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
     } catch (err) {
       console.error(err);
     }
@@ -124,7 +128,7 @@ export const NotificationsComponent: React.FC<INotificationsComponentProps> = (_
       {/* Notifications List content */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 pb-28">
         {filteredNotifications.length === 0 ? (
-          <EmptyState
+          <EmptyStateComponent
             title={activeCategory === 'order' ? 'Không có thông báo đơn hàng' : 'Không có thông báo hệ thống'}
             description={activeCategory === 'order'
               ? 'Bạn chưa nhận được thông báo nào về đơn hàng.'

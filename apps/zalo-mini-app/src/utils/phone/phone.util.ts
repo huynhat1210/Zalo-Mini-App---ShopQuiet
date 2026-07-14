@@ -1,5 +1,6 @@
 import { getPhoneNumber, getAccessToken } from "zmp-sdk/apis";
-import { apiRequest } from "./api";
+import { apiRequest } from "../api";
+import { IPhoneDecryptResult } from "./phone.type";
 
 /**
  * Gọi Zalo SDK để lấy token số điện thoại và access token,
@@ -25,7 +26,7 @@ export async function getDecryptedZaloPhone(): Promise<string> {
 
           try {
             // 3. Gửi token và accessToken lên backend để giải mã qua Zalo Graph API
-            const res = await apiRequest<{ phoneNumber: string }>('/users/decrypt-phone', 'POST', {
+            const res = await apiRequest<IPhoneDecryptResult>('/users/decrypt-phone', 'POST', {
               token,
               accessToken,
             });

@@ -6,10 +6,14 @@ import {
   Body,
   Param,
   Headers,
+  UseGuards,
 } from '@nestjs/common';
 import type { CreateOrderDto } from './orders.service';
 import type { Order } from '@prisma/client';
 import { OrdersService } from './orders.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('orders')
 export class OrdersController {
@@ -30,11 +34,15 @@ export class OrdersController {
 
   // Admin: returns ALL orders across all users — MUST be before ':id' route
   @Get('admin/all')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   async getAllOrdersAdmin() {
     return this.ordersService.findAllAdmin();
   }
 
   @Get('zns-logs')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   getZnsLogs() {
     return this.ordersService.getZnsLogs();
   }

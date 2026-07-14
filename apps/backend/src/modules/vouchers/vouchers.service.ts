@@ -2,8 +2,11 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  Inject,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 
 type CreateVoucherDto = {
   code: string;
@@ -16,12 +19,26 @@ type CreateVoucherDto = {
 
 @Injectable()
 export class VouchersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
   async findAll() {
-    return this.prisma.voucher.findMany({
+    const cacheKey = 'vouchers_all';
+    const cachedData = await this.cacheManager.get(cacheKey);
+    
+    if (cachedData) {
+      return cachedData;
+    }
+
+    const vouchers = await this.prisma.voucher.findMany({
       orderBy: { createdAt: 'desc' },
     });
+
+    // Cache for 10 minutes - vouchers change moderately
+    await this.cacheManager.set(cacheKey, vouchers, 600000);
+    return vouchers;
   }
 
   async create(data: CreateVoucherDto) {
@@ -31,7 +48,7 @@ export class VouchersService {
       throw new BadRequestException('Mã giảm giá đã tồn tại');
     }
 
-    return this.prisma.voucher.create({
+    const voucher = await this.prisma.voucher.create({
       data: {
         code,
         type: data.type.toUpperCase(),
@@ -41,18 +58,40 @@ export class VouchersService {
         expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
       },
     });
+
+    // Invalidate cache after creation
+    await this.invalidateVouchersCache();
+    
+    return voucher;
   }
 
   async delete(code: string) {
     await this.prisma.voucher.delete({ where: { code: code.toUpperCase() } });
+    
+    // Invalidate cache after deletion
+    await this.invalidateVouchersCache();
+    
     return { success: true };
   }
 
   async validateAndApply(code: string, orderTotal: number) {
     const formattedCode = code.trim().toUpperCase();
-    const voucher = await this.prisma.voucher.findUnique({
-      where: { code: formattedCode },
-    });
+    const cacheKey = `voucher_${formattedCode}`;
+    const cachedData = await this.cacheManager.get(cacheKey);
+    
+    let voucher: any;
+    if (cachedData) {
+      voucher = cachedData;
+    } else {
+      voucher = await this.prisma.voucher.findUnique({
+        where: { code: formattedCode },
+      });
+      
+      // Cache for 5 minutes
+      if (voucher) {
+        await this.cacheManager.set(cacheKey, voucher, 300000);
+      }
+    }
 
     if (!voucher) {
       throw new NotFoundException('Mã giảm giá không tồn tại');
@@ -87,8 +126,16 @@ export class VouchersService {
         where: { code: formattedCode },
         data: { stock: { decrement: 1 } },
       });
+      
+      // Invalidate cache after stock update
+      await this.cacheManager.del(`voucher_${formattedCode}`);
+      await this.invalidateVouchersCache();
     } catch (e) {
       console.error('Failed to decrement voucher stock:', e);
     }
+  }
+
+  async invalidateVouchersCache() {
+    await this.cacheManager.del('vouchers_all');
   }
 }

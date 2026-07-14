@@ -1,0 +1,355 @@
+# PROMPT: Áp dụng cấu trúc module pattern cho React + TypeScript
+
+Bạn là senior frontend developer. Hãy refactor/tạo code theo **Module Pattern** dưới đây.
+Áp dụng cho TOÀN BỘ `components/`, `pages/`, và `utils/`. Không bỏ sót file nào.
+
+---
+
+## 1. Cấu trúc thư mục (bắt buộc)
+
+Mỗi component, page, hoặc utility là **một folder riêng** với đúng 3 file:
+
+```
+[name]/
+├── index.ts                  → re-export
+├── [name].component.tsx      → React component (pages & components)
+└── [name].type.ts            → TypeScript interfaces & types
+```
+
+**Riêng utils** (không phải React component):
+
+```
+utils/
+└── [name]/
+    ├── index.ts
+    ├── [name].type.ts
+    └── [name].util.ts        → logic/function (KHÔNG dùng .component.tsx)
+```
+
+**Ví dụ tham chiếu chuẩn:**
+
+```
+components/
+└── menu-drawer/
+    ├── index.ts
+    ├── menu-drawer.component.tsx
+    └── menu-drawer.type.ts
+
+pages/
+└── home/
+    ├── index.ts
+    ├── home.component.tsx
+    └── home.type.ts
+
+utils/
+└── api/
+    ├── index.ts
+    ├── api.type.ts
+    └── api.util.ts
+```
+
+---
+
+## 2. Quy tắc đặt tên (bắt buộc)
+
+### Folder & file
+| Thành phần | Quy tắc | Ví dụ |
+|---|---|---|
+| Folder | kebab-case | `menu-drawer`, `product-detail`, `bottom-nav-bar` |
+| File component | `[folder-name].component.tsx` | `menu-drawer.component.tsx` |
+| File util | `[folder-name].util.ts` | `api.util.ts` |
+| File type | `[folder-name].type.ts` | `menu-drawer.type.ts` |
+
+### Symbol naming
+| Loại | Prefix | Ví dụ |
+|---|---|---|
+| `interface` | `I` | `IProduct`, `IMenuDrawerComponentProps` |
+| `type` alias (union, literal) | `T` | `TToastType`, `TApiHttpMethod` |
+| React component export | PascalCase + `Component` | `MenuDrawerComponent`, `HomeComponent` |
+| Utility function | camelCase | `apiRequest` |
+
+### Quy tắc chuyển folder → tên symbol
+```
+menu-drawer   → MenuDrawerComponent, IMenuDrawerComponentProps
+product-detail → ProductDetailComponent, IProductDetailComponentProps
+bottom-nav-bar → BottomNavBarComponent, IBottomNavBarComponentProps
+home          → HomeComponent, IHomeComponentProps
+```
+
+**KHÔNG** thêm `Page` vào tên component. Folder `home/` → `HomeComponent`, không phải `HomePageComponent`.
+
+---
+
+## 3. Nội dung từng file
+
+### `[name].type.ts`
+
+Chứa 2 loại type:
+
+```typescript
+// Loại 1: Props của component (BẮT BUỘC có, dù rỗng)
+export interface IMenuDrawerComponentProps {
+    isOpen: boolean;
+    onClose: () => void;
+    setSelectedCategory: (category: string | null) => void;
+}
+
+// Component không nhận props từ cha → interface rỗng
+export interface IHomeComponentProps {}
+
+// Loại 2: Data model nội bộ của module (nếu cần)
+export interface ICategoryItem {
+    id: number;
+    name: string;
+    slug: string;
+}
+
+// Loại 3: Type alias (union) — prefix T, KHÔNG dùng I
+export type TToastType = 'success' | 'warning' | 'info';
+```
+
+**Quy tắc `I...ComponentProps`:**
+- CHỈ khai báo props mà **component cha truyền xuống** qua JSX
+- KHÔNG đưa state nội bộ, context data, API response vào đây
+- Rỗng `{}` khi component tự lấy data từ context/hook, không nhận props
+
+### `[name].component.tsx`
+
+```typescript
+import { useCart } from "../../App";
+import { IMenuDrawerComponentProps } from "./menu-drawer.type";
+
+export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (props) => {
+    const { isOpen, onClose, setSelectedCategory } = props;
+
+    // ... logic & JSX
+};
+```
+
+**Quy tắc khai báo component (BẮT BUỘC):**
+1. `export const` — named export, KHÔNG `export default`
+2. Luôn dùng `React.FC<I...ComponentProps>`
+3. Luôn nhận `(props)` — KHÔNG destructure trực tiếp trong tham số
+4. Destructure bên trong body: `const { ... } = props;`
+5. Component không dùng props → `(_props)` để tránh lỗi TS unused
+
+**Ví dụ component không props:**
+```typescript
+import { IToastComponentProps } from "./toast.type";
+
+export const ToastComponent: React.FC<IToastComponentProps> = (_props) => {
+    const { toast } = useCart();
+    // ...
+};
+```
+
+**Ví dụ component có props:**
+```typescript
+import { IProductDetailComponentProps } from "./product-detail.type";
+
+export const ProductDetailComponent: React.FC<IProductDetailComponentProps> = (props) => {
+    const { product, onClose, onAddToCart } = props;
+    // ...
+};
+```
+
+### `[name].util.ts` (utils only)
+
+```typescript
+import { TApiHttpMethod } from "./api.type";
+
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+
+export async function apiRequest<T = unknown>(
+    path: string,
+    method: TApiHttpMethod = "GET",
+    body?: unknown,
+): Promise<T> {
+    // ...
+}
+```
+
+### `index.ts` (mọi folder)
+
+```typescript
+export * from "./[name].component";   // hoặc ./[name].util cho utils
+export * from "./[name].type";
+```
+
+**KHÔNG** dùng `export default` trong index.ts.
+
+---
+
+## 4. Shared types (dùng chung nhiều module)
+
+Types dùng across nhiều page/component → gom vào `App.type.ts`:
+
+```typescript
+// App.type.ts
+export interface IProduct { ... }
+export interface ICartItem { ... }
+export interface IOrder { ... }
+export interface INotification { ... }
+export interface ICartContextType { ... }
+export type TToastType = 'success' | 'warning' | 'info';
+```
+
+`App.tsx` re-export:
+```typescript
+export type { IProduct, ICartItem, IOrder, ... } from "./App.type";
+```
+
+Types chỉ dùng trong 1 module → để trong `[name].type.ts` của module đó.
+
+---
+
+## 5. Quy tắc import
+
+```typescript
+// Props riêng của module → từ ./[name].type
+import { IHomeComponentProps, ICategoryItem } from "./home.type";
+
+// Types dùng chung → từ App
+import { useCart, IProduct, IOrder } from "../../App";
+
+// Component khác → từ barrel index
+import { MenuDrawerComponent } from "../../components";
+
+// Utils → từ folder utils
+import { apiRequest } from "../../utils/api";
+```
+
+**Barrel export** ở folder cha:
+```typescript
+// components/index.ts
+export * from "./menu-drawer";
+export * from "./bottom-nav-bar";
+export * from "./toast";
+```
+
+---
+
+## 6. Checklist khi tạo module mới
+
+- [ ] Tạo folder kebab-case
+- [ ] Tạo `[name].type.ts` với `I...ComponentProps` (rỗng nếu không có props)
+- [ ] Tạo `[name].component.tsx` (hoặc `.util.ts`) với named export
+- [ ] Khai báo `React.FC<I...ComponentProps> = (props) => { const { ... } = props; }`
+- [ ] Tạo `index.ts` với `export *`
+- [ ] Thêm export vào barrel `index.ts` của folder cha
+- [ ] Import types từ đúng nguồn (local `.type.ts` vs `App.type.ts`)
+- [ ] Xóa file cũ flat (nếu refactor)
+- [ ] Chạy build verify không lỗi TypeScript
+
+---
+
+## 7. Anti-patterns (KHÔNG được làm)
+
+```typescript
+// ❌ File flat
+components/MenuDrawer.tsx
+pages/home.tsx
+
+// ❌ Default export component
+export default function HomePage() { ... }
+
+// ❌ Destructure trong tham số
+export const HomeComponent: React.FC<IHomeComponentProps> = ({ title }) => {
+
+// ❌ Interface không có prefix I
+export interface Product { ... }
+export interface CartItem { ... }
+
+// ❌ Dùng I cho type alias
+export type IApiHttpMethod = 'GET' | 'POST';
+
+// ❌ Thêm Page vào tên component
+export const HomePageComponent = ...
+
+// ❌ Props interface chứa data từ context
+export interface ICartComponentProps {
+    cart: ICartItem[];  // ← sai, cart lấy từ useCart()
+}
+
+// ❌ index.ts export default
+export { HomeComponent as default } from "./home.component";
+```
+
+---
+
+## 8. Template tạo module mới nhanh
+
+### Component có props:
+```
+components/[name]/
+├── index.ts
+├── [name].component.tsx
+└── [name].type.ts
+```
+
+```typescript
+// [name].type.ts
+export interface I[Name]ComponentProps {
+    // props từ cha truyền xuống
+}
+
+// [name].component.tsx
+import { I[Name]ComponentProps } from "./[name].type";
+
+export const [Name]Component: React.FC<I[Name]ComponentProps> = (props) => {
+    const { /* destructure props */ } = props;
+    return ( ... );
+};
+
+// index.ts
+export * from "./[name].component";
+export * from "./[name].type";
+```
+
+### Component không props:
+```typescript
+// [name].type.ts
+export interface I[Name]ComponentProps {}
+
+// [name].component.tsx
+import { I[Name]ComponentProps } from "./[name].type";
+
+export const [Name]Component: React.FC<I[Name]ComponentProps> = (_props) => {
+    return ( ... );
+};
+```
+
+### Utility:
+```typescript
+// [name].type.ts
+export type T[Name]Method = ...;
+export interface I[Name]Options { ... }
+
+// [name].util.ts
+import { T[Name]Method, I[Name]Options } from "./[name].type";
+
+export function [name]Function(...) { ... }
+
+// index.ts
+export * from "./[name].util";
+export * from "./[name].type";
+```
+
+---
+
+Hãy áp dụng pattern này cho [MÔ TẢ PHẠM VI: toàn bộ components / pages / utils / hoặc module cụ thể].
+Sau khi xong, chạy build và fix mọi lỗi TypeScript.
+Chỉ tạo commit khi được yêu cầu.
+```
+
+---
+
+### Cách dùng
+
+Thay `[MÔ TẢ PHẠM VI]` ở cuối bằng task cụ thể, ví dụ:
+
+- *"toàn bộ `src/components/` và `src/pages/` trong project React này"*
+- *"module mới `checkout/` cho Zalo Mini App e-commerce"*
+- *"refactor folder `features/auth/` sang pattern này"*
+
+Prompt này gom đủ: cấu trúc folder, naming `I`/`T`, khai báo component, shared types, import rules, checklist và anti-patterns từ session vừa rồi.

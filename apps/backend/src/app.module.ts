@@ -13,23 +13,39 @@ import { FavoritesModule } from './modules/favorites/favorites.module';
 import { VouchersModule } from './modules/vouchers/vouchers.module';
 import { BannersModule } from './modules/banners/banners.module';
 import { CmsModule } from './modules/cms/cms.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { HealthModule } from './modules/health/health.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { LoggerModule } from './common/logger/logger.module';
 
 @Module({
   imports: [
+    LoggerModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 1 minute
+        limit: 100, // 100 requests per minute
+      },
+      {
+        ttl: 10000, // 10 seconds
+        limit: 20, // 20 requests per 10 seconds
+      },
+    ]),
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async () => ({
         store: await redisStore({
           socket: {
-            host: 'localhost',
-            port: 6379,
+            host: process.env.REDIS_HOST || 'localhost',
+            port: parseInt(process.env.REDIS_PORT || '6379', 10),
           },
         }),
       }),
     }),
     PrismaModule,
+    AuthModule,
     ProductsModule,
     OrdersModule,
     NotificationsModule,
@@ -41,6 +57,7 @@ import { redisStore } from 'cache-manager-redis-yet';
     VouchersModule,
     BannersModule,
     CmsModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
