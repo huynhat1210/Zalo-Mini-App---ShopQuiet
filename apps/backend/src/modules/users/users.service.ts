@@ -5,12 +5,12 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async syncUser(zaloId: string, name: string, avatar?: string) {
+  async syncUser(zaloId: string, name: string, avatar?: string, phone?: string, birthday?: string) {
     if (!zaloId) return null;
     return this.prisma.user.upsert({
       where: { zaloId },
-      update: { name, avatar },
-      create: { zaloId, name, avatar },
+      update: { name, avatar, ...(phone !== undefined && { phone }), ...(birthday !== undefined && { birthday }) },
+      create: { zaloId, name, avatar, phone, birthday },
     });
   }
 

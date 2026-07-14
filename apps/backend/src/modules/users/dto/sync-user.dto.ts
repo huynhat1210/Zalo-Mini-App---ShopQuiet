@@ -10,6 +10,14 @@ export class SyncUserDto {
   @IsOptional()
   @IsString()
   avatar?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  birthday?: string;
 }
 
 export class DecryptPhoneDto {

@@ -11,7 +11,7 @@ export class UsersController {
 
   @Post('sync')
   async syncUser(@Body() body: SyncUserDto) {
-    return this.usersService.syncUser(body.zaloId, body.name, body.avatar);
+    return this.usersService.syncUser(body.zaloId, body.name, body.avatar, body.phone, body.birthday);
   }
 
   @Get()

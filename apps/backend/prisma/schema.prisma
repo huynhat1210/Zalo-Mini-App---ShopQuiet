@@ -44,6 +44,8 @@ model User {
   zaloId        String         @id
   name          String
   avatar        String?
+  phone         String?
+  birthday      String?
   role          String         @default("user") // user, admin
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt

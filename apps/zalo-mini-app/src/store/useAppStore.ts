@@ -68,7 +68,13 @@ export const useAppStore = create<AppState>()(
         set({ zaloUser: user });
         localStorage.setItem('zalo_profile_custom', JSON.stringify(user));
         if (user.id) {
-          apiRequest('/users/sync', 'POST', { zaloId: user.id, name: user.name, avatar: user.avatar }).catch(console.error);
+          apiRequest('/users/sync', 'POST', {
+            zaloId: user.id,
+            name: user.name,
+            avatar: user.avatar,
+            phone: user.phone || undefined,
+            birthday: user.birthday || undefined,
+          }).catch(console.error);
         }
       },
       setSelectedOrder: (order) => set({ selectedOrder: order }),
