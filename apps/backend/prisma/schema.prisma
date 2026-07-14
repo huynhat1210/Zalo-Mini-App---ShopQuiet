@@ -45,6 +45,7 @@ model User {
   name          String
   avatar        String?
   phone         String?
+  email         String?
   birthday      String?
   role          String         @default("user") // user, admin
   createdAt     DateTime       @default(now())
@@ -60,6 +61,7 @@ model User {
   @@index([name])
   @@index([role])
   @@index([createdAt])
+  @@index([email])
 }
 
 model CartItem {
