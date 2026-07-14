@@ -39,7 +39,7 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
     });
   };
 
-  const filterTags = ['Giá < $50', 'Đồ gia dụng', 'Còn hàng'];
+  const filterTags = ['Giá < 1.000.000 đ', 'Đồ gia dụng', 'Còn hàng'];
 
   // Filtering
   const filteredProducts = (Array.isArray(products) ? products : []).filter(p => {
@@ -55,8 +55,8 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
     if (activeFilter === 'Còn hàng') {
       return matchesSearch;
     }
-    if (activeFilter === 'Giá < $50') {
-      return matchesSearch && p.price < 50;
+    if (activeFilter === 'Giá < 1.000.000 đ') {
+      return matchesSearch && p.price < 1000000;
     }
     if (activeFilter === 'Đồ gia dụng') {
       return matchesSearch && p.category?.slug === 'home';
@@ -241,7 +241,7 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
                           <h3 className="text-xs font-semibold text-textColor mt-0.5 line-clamp-1 group-hover:text-primary transition-colors">{prod.name}</h3>
                         </div>
                         <div className="flex justify-between items-center mt-3.5">
-                          <span className="text-xs font-bold text-textColor">${prod.price.toFixed(2)}</span>
+                          <span className="text-xs font-bold text-textColor">{prod.price.toLocaleString('vi-VN')} đ</span>
                           <button
                             onClick={(e) => { e.stopPropagation(); addToCart(prod); }}
                             className="w-7.5 h-7.5 rounded-full bg-primary-light text-primary flex items-center justify-center font-bold text-sm active:scale-90 transition-transform"

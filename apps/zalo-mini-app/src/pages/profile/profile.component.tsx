@@ -368,7 +368,7 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
                           )}
                           <span className="font-semibold text-textColor ml-1">x{item.quantity}</span>
                         </span>
-                        <span className="font-semibold text-textColor">${(item.price * item.quantity).toFixed(2)}</span>
+                        <span className="font-semibold text-textColor">{(item.price * item.quantity).toLocaleString('vi-VN')} đ</span>
                       </div>
                     ))}
                   </div>
@@ -423,7 +423,7 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
 
                   <div className="flex justify-between items-center pt-2.5 border-t border-[#f0edeb] text-xs font-bold text-textColor">
                     <span>Tổng tiền</span>
-                    <span className="text-primary">${order.totalAmount.toFixed(2)}</span>
+                    <span className="text-primary">{order.totalAmount.toLocaleString('vi-VN')} đ</span>
                   </div>
                 </div>
               ))}
@@ -486,7 +486,7 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
                             Giảm 10%
                           </span>
                         </div>
-                        <span className="text-xs font-extrabold text-textColor">${prod.price.toFixed(2)}</span>
+                        <span className="text-xs font-extrabold text-textColor">{prod.price.toLocaleString('vi-VN')} đ</span>
                       </div>
                     </div>
                   </div>

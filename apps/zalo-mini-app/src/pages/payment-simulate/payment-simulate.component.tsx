@@ -100,7 +100,7 @@ export const PaymentSimulateComponent: React.FC<IPaymentSimulateComponentProps> 
 
           <div className="space-y-1">
             <span className="text-[10px] text-textColor-variant font-bold uppercase tracking-wider">Số tiền cần thanh toán</span>
-            <h2 className="text-2xl font-black text-primary">${selectedOrder.totalAmount.toFixed(2)}</h2>
+            <h2 className="text-2xl font-black text-primary">{selectedOrder.totalAmount.toLocaleString('vi-VN')} đ</h2>
           </div>
 
           <div className="bg-[#fbf9f7] border border-[#f0edeb] rounded-2xl p-4 text-left space-y-3">

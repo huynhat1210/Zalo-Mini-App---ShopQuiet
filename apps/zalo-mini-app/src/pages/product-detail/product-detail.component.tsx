@@ -174,7 +174,7 @@ export const ProductDetailComponent: React.FC<IProductDetailComponentProps> = (p
           </span>
           <h1 className="text-xl font-bold text-textColor leading-tight pr-4">{product.name}</h1>
           <div className="flex items-center gap-2">
-            <span className="text-lg font-extrabold text-primary">${product.price.toFixed(2)}</span>
+            <span className="text-lg font-extrabold text-primary">{product.price.toLocaleString('vi-VN')} đ</span>
             <div className="flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full text-[9px] font-extrabold border border-amber-100">
               <span>{comments.length > 0 ? (comments.reduce((acc, c) => acc + c.rating, 0) / comments.length).toFixed(1) : '5.0'} ★</span>
               <span className="text-amber-600/70 font-medium">({comments.length})</span>
@@ -299,7 +299,7 @@ export const ProductDetailComponent: React.FC<IProductDetailComponentProps> = (p
             </button>
             {expandedSection === 'shipping' && (
               <div className="px-4.5 py-3.5 text-xs text-[#526069] border-t border-[#f0edeb] leading-relaxed bg-white text-left">
-                {productDetails?.shippingReturn || 'Miễn phí vận chuyển toàn quốc cho đơn hàng từ $100. Đổi trả miễn phí trong vòng 30 ngày đối với sản phẩm còn nguyên tem mác, hộp đựng.'}
+                {productDetails?.shippingReturn || 'Miễn phí vận chuyển toàn quốc cho đơn hàng từ 2.500.000 đ. Đổi trả miễn phí trong vòng 30 ngày đối với sản phẩm còn nguyên tem mác, hộp đựng.'}
               </div>
             )}
           </div>
@@ -448,7 +448,7 @@ export const ProductDetailComponent: React.FC<IProductDetailComponentProps> = (p
                         <h4 className="text-[11px] font-semibold text-textColor mt-0.5 line-clamp-1 group-hover:text-primary transition-colors">
                           {prod.name}
                         </h4>
-                        <span className="text-[10.5px] font-extrabold text-textColor mt-1">${prod.price.toFixed(2)}</span>
+                        <span className="text-[10.5px] font-extrabold text-textColor mt-1">{prod.price.toLocaleString('vi-VN')} đ</span>
                       </div>
                     </div>
                   );
@@ -477,7 +477,7 @@ export const ProductDetailComponent: React.FC<IProductDetailComponentProps> = (p
           onClick={handleBuyNow}
           className="flex-1 h-12 bg-primary hover:bg-primary-dark text-white font-bold text-xs uppercase tracking-widest rounded-full shadow-md flex items-center justify-center active:scale-[0.98] transition-all border-none cursor-pointer disabled:bg-neutral-300 disabled:cursor-not-allowed"
         >
-          {stockCount > 0 ? `Mua ngay — $${(product.price * quantity).toFixed(2)}` : 'Hết hàng'}
+          {stockCount > 0 ? `Mua ngay — ${(product.price * quantity).toLocaleString('vi-VN')} đ` : 'Hết hàng'}
         </button>
       </div>
     </PageCast>

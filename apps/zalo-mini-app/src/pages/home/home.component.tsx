@@ -296,7 +296,7 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
                     </h3>
 
                     <div className="flex justify-between items-center mt-2">
-                      <span className="text-xs font-extrabold text-textColor">${prod.price.toFixed(2)}</span>
+                      <span className="text-xs font-extrabold text-textColor">{prod.price.toLocaleString('vi-VN')} đ</span>
                       <button
                         onClick={(e) => { e.stopPropagation(); handleAddToCart(prod); }}
                         className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm active:scale-90 transition-transform shadow-xs"

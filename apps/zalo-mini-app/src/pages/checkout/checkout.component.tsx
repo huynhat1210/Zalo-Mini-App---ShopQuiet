@@ -239,7 +239,7 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
         if (res.type === 'PERCENT') {
           desc = `Giảm ${res.value}% tổng đơn`;
         } else if (res.type === 'FIXED') {
-          desc = `Giảm $${res.value.toFixed(2)}`;
+          desc = `Giảm ${res.value.toLocaleString('vi-VN')} đ`;
         } else if (res.type === 'FREESHIP') {
           desc = 'Miễn phí vận chuyển';
         }
@@ -637,7 +637,7 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
                     )}
                   </div>
                 </div>
-                <span className="text-xs font-bold text-textColor">{method.price > 0 ? `$${method.price.toFixed(2)}` : 'Free'}</span>
+                 <span className="text-xs font-bold text-textColor">{method.price > 0 ? `${method.price.toLocaleString('vi-VN')} đ` : 'Miễn phí'}</span>
               </label>
             ))}
           </div>
@@ -752,7 +752,7 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
                         </div>
                       </div>
                     </div>
-                    <span className="text-xs font-bold text-textColor flex-shrink-0">${(item.product.price * item.quantity).toFixed(2)}</span>
+                    <span className="text-xs font-bold text-textColor flex-shrink-0">{(item.product.price * item.quantity).toLocaleString('vi-VN')} đ</span>
                   </div>
                 );
               })}
@@ -762,21 +762,21 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
             <div className="pt-3.5 space-y-2 text-xs">
               <div className="flex justify-between text-textColor-variant">
                 <span>Tạm tính</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>{subtotal.toLocaleString('vi-VN')} đ</span>
               </div>
               <div className="flex justify-between text-textColor-variant">
                 <span>Phí vận chuyển</span>
-                <span>{shippingCost > 0 ? `$${shippingCost.toFixed(2)}` : 'Miễn phí'}</span>
+                <span>{shippingCost > 0 ? `${shippingCost.toLocaleString('vi-VN')} đ` : 'Miễn phí'}</span>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-[#2e7d32] font-semibold animate-fade-in">
                   <span>Giảm giá {appliedPromo ? `(${appliedPromo.code})` : ''}</span>
-                  <span>-${discount.toFixed(2)}</span>
+                  <span>-{discount.toLocaleString('vi-VN')} đ</span>
                 </div>
               )}
               <div className="flex justify-between font-bold text-textColor pt-2.5 border-t border-dashed border-[#f0edeb]">
                 <span>Tổng cộng</span>
-                <span className="text-primary">${total.toFixed(2)}</span>
+                <span className="text-primary">{total.toLocaleString('vi-VN')} đ</span>
               </div>
             </div>
           </div>
@@ -787,7 +787,7 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
       <div className="fixed bottom-0 left-0 right-0 h-[80px] bg-white border-t border-[#f0edeb] flex justify-between items-center px-4.5 z-40 shadow-lg">
         <div className="flex flex-col">
           <span className="text-[9px] font-bold text-textColor-variant uppercase tracking-wider">Tổng cộng</span>
-          <span className="text-lg font-extrabold text-textColor">${total.toFixed(2)}</span>
+          <span className="text-lg font-extrabold text-textColor">{total.toLocaleString('vi-VN')} đ</span>
         </div>
 
         <button
@@ -882,9 +882,9 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
                 if (voucher.type === 'PERCENT') {
                   voucherDesc = `Giảm ${voucher.value}% tổng đơn hàng`;
                 } else if (voucher.type === 'FIXED') {
-                  voucherDesc = `Giảm $${voucher.value.toFixed(2)}`;
+                  voucherDesc = `Giảm ${voucher.value.toLocaleString('vi-VN')} đ`;
                 } else if (voucher.type === 'FREESHIP') {
-                  voucherDesc = `Miễn phí vận chuyển (Trị giá tối đa $${voucher.value.toFixed(2)})`;
+                  voucherDesc = `Miễn phí vận chuyển (Trị giá tối đa ${voucher.value.toLocaleString('vi-VN')} đ)`;
                 }
 
                 return (

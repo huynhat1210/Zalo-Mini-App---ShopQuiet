@@ -111,7 +111,7 @@ export const OrderSuccessComponent: React.FC<IOrderSuccessComponentProps> = (_pr
                       <p className="text-[10px] text-textColor-variant mt-0.5 font-medium">SL: {item.quantity}</p>
                     </div>
                   </div>
-                  <span className="text-xs font-bold text-textColor">${(item.price * item.quantity).toFixed(2)}</span>
+                  <span className="text-xs font-bold text-textColor">{(item.price * item.quantity).toLocaleString('vi-VN')} đ</span>
                 </div>
               );
             })}
@@ -119,7 +119,7 @@ export const OrderSuccessComponent: React.FC<IOrderSuccessComponentProps> = (_pr
 
           <div className="px-4.5 py-4 bg-neutral-50 border-t border-[#f0edeb] flex justify-between items-center text-xs font-bold text-textColor">
             <span className="uppercase tracking-wider text-[10px] text-textColor-variant font-extrabold">Tổng thanh toán</span>
-            <span className="text-base font-extrabold text-primary">${activeOrder.total.toFixed(2)}</span>
+            <span className="text-base font-extrabold text-primary">{activeOrder.total.toLocaleString('vi-VN')} đ</span>
           </div>
         </div>
 

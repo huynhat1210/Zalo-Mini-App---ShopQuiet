@@ -409,13 +409,13 @@ export class OrdersService {
     );
 
     // 2. Prepare parameters for ZaloPay Checkout SDK
-    const amountVnd = Math.round(order.totalAmount * 25000); // Convert USD to VND
+    const amountVnd = Math.round(order.totalAmount); // Already in VND
     const desc = `Thanh toan don hang #SQ-${order.id}`;
 
     // Item must contain only id and amount as expected by Zalo Checkout SDK
     const itemData = dto.items.map((item) => ({
       id: item.productId.toString(),
-      amount: Math.round(item.price * 25000) * item.quantity,
+      amount: Math.round(item.price) * item.quantity,
     }));
     const item = JSON.stringify(itemData);
 
@@ -481,13 +481,13 @@ export class OrdersService {
     }
 
     // 2. Prepare parameters for ZaloPay Checkout SDK
-    const amountVnd = Math.round(order.totalAmount * 25000); // Convert USD to VND
+    const amountVnd = Math.round(order.totalAmount); // Already in VND
     const desc = `Thanh toan don hang #SQ-${order.id}`;
 
     // Item must contain only id and amount as expected by Zalo Checkout SDK
     const itemData = order.items.map((item) => ({
       id: item.productId.toString(),
-      amount: Math.round(item.price * 25000) * item.quantity,
+      amount: Math.round(item.price) * item.quantity,
     }));
     const item = JSON.stringify(itemData);
 

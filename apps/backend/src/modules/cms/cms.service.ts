@@ -345,18 +345,18 @@ export class CmsService implements OnModuleInit {
     const defaults = [
       {
         code: 'standard',
-        name: 'Standard Shipping',
-        description: 'Delivery in 3-5 business days',
+        name: 'Giao hàng tiêu chuẩn',
+        description: 'Nhận hàng trong 3-5 ngày làm việc',
         price: 0,
-        estimatedDays: '3-5 business days',
+        estimatedDays: '3-5 ngày',
         sortOrder: 1,
       },
       {
         code: 'express',
-        name: 'Express Shipping',
-        description: 'Delivery in 1-2 business days',
-        price: 5,
-        estimatedDays: '1-2 business days',
+        name: 'Giao hàng hỏa tốc',
+        description: 'Nhận hàng trong 1-2 ngày làm việc',
+        price: 125000,
+        estimatedDays: '1-2 ngày',
         sortOrder: 2,
       },
     ];
@@ -364,7 +364,12 @@ export class CmsService implements OnModuleInit {
     for (const item of defaults) {
       await this.prisma.shippingMethod.upsert({
         where: { code: item.code },
-        update: {},
+        update: {
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          estimatedDays: item.estimatedDays,
+        },
         create: item,
       });
     }

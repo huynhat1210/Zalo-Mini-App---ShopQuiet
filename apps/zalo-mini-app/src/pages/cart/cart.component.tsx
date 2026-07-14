@@ -66,7 +66,7 @@ export const CartComponent: React.FC<ICartComponentProps> = (_props) => {
                     <div className="text-left">
                       <h4 className="text-xs font-semibold text-textColor line-clamp-1 pr-6 tracking-wide">{item.product.name}</h4>
                       <div className="flex items-center gap-1.5 mt-1">
-                        <span className="text-xs font-bold text-primary">${item.product.price.toFixed(2)}</span>
+                        <span className="text-xs font-bold text-primary">{item.product.price.toLocaleString('vi-VN')} đ</span>
                         {item.product.variants && item.product.variants.length > 0 && item.product.variants.some(v => v.size !== 'DEFAULT') ? (
                           <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                             <select
@@ -138,16 +138,16 @@ export const CartComponent: React.FC<ICartComponentProps> = (_props) => {
             <div className="space-y-2.5 text-xs">
               <div className="flex justify-between text-textColor-variant font-medium">
                 <span>Tạm tính</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>{subtotal.toLocaleString('vi-VN')} đ</span>
               </div>
               <div className="flex justify-between text-textColor-variant font-medium">
                 <span>Phí vận chuyển</span>
-                <span>${shipping.toFixed(2)}</span>
+                <span>{shipping.toLocaleString('vi-VN')} đ</span>
               </div>
               <hr className="border-[#f0edeb] my-1" />
               <div className="flex justify-between font-bold text-textColor">
                 <span>Tổng cộng</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{total.toLocaleString('vi-VN')} đ</span>
               </div>
             </div>
           </div>

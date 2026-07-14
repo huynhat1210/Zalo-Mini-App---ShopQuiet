@@ -68,7 +68,7 @@ export const SavedItemsComponent: React.FC<ISavedItemsComponentProps> = (_props)
                     </div>
 
                     <div className="flex justify-between items-center mt-3.5">
-                      <span className="text-xs font-bold text-textColor">${prod.price.toFixed(2)}</span>
+                      <span className="text-xs font-bold text-textColor">{prod.price.toLocaleString('vi-VN')} đ</span>
                       <button
                         onClick={(e) => { e.stopPropagation(); addToCart(prod); }}
                         className="text-[9px] font-bold uppercase tracking-wider text-primary hover:text-primary-dark active:scale-95 transition-transform"

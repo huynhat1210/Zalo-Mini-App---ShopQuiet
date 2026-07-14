@@ -244,7 +244,7 @@ export const OrderDetailComponent: React.FC<IOrderDetailComponentProps> = (_prop
                     )}
                   </div>
                 </div>
-                <span className="font-extrabold text-textColor">${(item.price * item.quantity).toFixed(2)}</span>
+                <span className="font-extrabold text-textColor">{(item.price * item.quantity).toLocaleString('vi-VN')} đ</span>
               </div>
             ))}
           </div>
@@ -263,12 +263,12 @@ export const OrderDetailComponent: React.FC<IOrderDetailComponentProps> = (_prop
             {selectedOrder.voucherCode && (
               <div className="flex justify-between text-emerald-600 font-semibold">
                 <span>Voucher ({selectedOrder.voucherCode}):</span>
-                <span>-${selectedOrder.discountAmount?.toFixed(2)}</span>
+                <span>-{selectedOrder.discountAmount?.toLocaleString('vi-VN')} đ</span>
               </div>
             )}
             <div className="flex justify-between font-extrabold text-textColor pt-2.5 border-t border-dashed border-[#f0edeb] text-sm">
               <span>Tổng thanh toán:</span>
-              <span className="text-primary">${selectedOrder.totalAmount.toFixed(2)}</span>
+              <span className="text-primary">{selectedOrder.totalAmount.toLocaleString('vi-VN')} đ</span>
             </div>
           </div>
         </div>
