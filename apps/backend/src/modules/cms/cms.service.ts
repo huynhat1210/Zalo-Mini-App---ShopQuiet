@@ -493,4 +493,11 @@ export class CmsService implements OnModuleInit {
       where: { id: parsedId },
     });
   }
+
+  async getAdminNotifications() {
+    return this.prisma.notification.findMany({
+      orderBy: { id: 'desc' },
+      take: 10,
+    });
+  }
 }

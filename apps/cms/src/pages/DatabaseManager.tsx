@@ -10,7 +10,13 @@ import {
   Save, 
   Database,
   ArrowLeft,
-  AlertCircle
+  AlertCircle,
+  Check,
+  XCircle,
+  Truck,
+  User as UserIcon,
+  Star,
+  Ticket
 } from 'lucide-react';
 
 export const DatabaseManager: React.FC = () => {
@@ -96,6 +102,16 @@ export const DatabaseManager: React.FC = () => {
     }
   };
 
+  const handleUpdateOrderStatus = async (orderId: string, status: string) => {
+    if (!modelName) return;
+    try {
+      await apiRequest(`/cms/database/models/Order/${orderId}`, 'PATCH', { status });
+      setRecords(records.map(r => r.id === orderId ? { ...r, status } : r));
+    } catch (err: any) {
+      alert(err.message || 'Lỗi khi cập nhật trạng thái đơn hàng.');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!modelName) return;
@@ -126,12 +142,288 @@ export const DatabaseManager: React.FC = () => {
     }
   };
 
+  const formatPrice = (amount: number) => {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  };
+
   const filteredRecords = records.filter((r) => {
     return columns.some((col) => {
       const val = r[col];
       return val !== null && String(val).toLowerCase().includes(searchTerm.toLowerCase());
     });
   });
+
+  // --- Specialized Custom Renderers ---
+
+  const renderProductView = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {filteredRecords.map((product) => (
+        <div key={product.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-200 group">
+          <div className="h-44 bg-[#fbf9f7] relative">
+            <img src={product.image || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400'} alt={product.name} className="w-full h-full object-cover" />
+            <span className="absolute top-3 left-3 bg-[#ecf6f7] text-[#0e6877] border border-[#0e6877]/10 px-2 py-0.5 rounded-full text-[10px] font-bold">
+              ID: {product.id}
+            </span>
+          </div>
+          <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+            <div className="space-y-1.5">
+              <h4 className="text-sm font-bold text-[#1b1c1b] line-clamp-1">{product.name}</h4>
+              <p className="text-[#526069] text-xs line-clamp-2 leading-relaxed">{product.description || 'Không có mô tả.'}</p>
+            </div>
+            <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+              <div>
+                <p className="text-[#0e6877] font-bold text-sm">{formatPrice(product.price)}</p>
+                {product.originalPrice && product.originalPrice > product.price && (
+                  <p className="text-[10px] text-slate-400 line-through">{formatPrice(product.originalPrice)}</p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => handleOpenEditModal(product)} className="p-2 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 rounded-xl transition-all"><Edit3 size={12} /></button>
+                <button onClick={() => handleDeleteRecord(product.id)} className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl transition-all"><Trash2 size={12} /></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const getOrderStatusBadge = (status: string) => {
+    switch (status) {
+      case 'PENDING': return <span className="px-2.5 py-1 text-[10px] font-bold text-amber-700 bg-amber-50 rounded-full border border-amber-200">Chờ thanh toán</span>;
+      case 'PROCESSING': return <span className="px-2.5 py-1 text-[10px] font-bold text-blue-700 bg-blue-50 rounded-full border border-blue-200">Đang xử lý</span>;
+      case 'SHIPPED': return <span className="px-2.5 py-1 text-[10px] font-bold text-indigo-700 bg-indigo-50 rounded-full border border-indigo-200">Đang giao</span>;
+      case 'COMPLETED': return <span className="px-2.5 py-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 rounded-full border border-emerald-200">Hoàn thành</span>;
+      case 'CANCELLED': return <span className="px-2.5 py-1 text-[10px] font-bold text-rose-700 bg-rose-50 rounded-full border border-rose-200">Đã hủy</span>;
+      default: return <span className="px-2.5 py-1 text-[10px] font-bold text-slate-700 bg-slate-50 rounded-full border border-slate-200">{status}</span>;
+    }
+  };
+
+  const renderOrderView = () => (
+    <div className="space-y-4">
+      {filteredRecords.map((order) => (
+        <div key={order.id} className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4 hover:border-slate-300 transition-all duration-200">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 pb-3 border-b border-slate-100">
+            <div>
+              <span className="font-mono text-xs text-[#0e6877] font-bold">#{order.id.slice(-6).toUpperCase()}</span>
+              <span className="text-[10px] text-slate-400 font-medium ml-3">Ngày đặt: {new Date(order.createdAt).toLocaleDateString('vi-VN')}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              {getOrderStatusBadge(order.status)}
+              <div className="flex gap-1.5">
+                {order.status === 'PENDING' && (
+                  <button onClick={() => handleUpdateOrderStatus(order.id, 'PROCESSING')} className="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-[10px] font-bold flex items-center gap-1"><Check size={10} /> Duyệt</button>
+                )}
+                {order.status === 'PROCESSING' && (
+                  <button onClick={() => handleUpdateOrderStatus(order.id, 'SHIPPED')} className="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-[10px] font-bold flex items-center gap-1"><Truck size={10} /> Giao hàng</button>
+                )}
+                {order.status === 'SHIPPED' && (
+                  <button onClick={() => handleUpdateOrderStatus(order.id, 'COMPLETED')} className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-bold flex items-center gap-1"><Check size={10} /> Hoàn tất</button>
+                )}
+                {order.status !== 'COMPLETED' && order.status !== 'CANCELLED' && (
+                  <button onClick={() => handleUpdateOrderStatus(order.id, 'CANCELLED')} className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[10px] font-bold flex items-center gap-1"><XCircle size={10} /> Hủy</button>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div>
+              <p className="text-slate-400 font-medium uppercase text-[9px] tracking-wider">Khách hàng</p>
+              <p className="font-bold text-[#1b1c1b] mt-1">{order.customerName || 'Zalo User'}</p>
+              <p className="text-slate-500 text-[10px] mt-0.5">{order.phone || 'Không có SĐT'}</p>
+            </div>
+            <div>
+              <p className="text-slate-400 font-medium uppercase text-[9px] tracking-wider">Địa chỉ giao hàng</p>
+              <p className="font-semibold text-slate-700 mt-1 line-clamp-2">{order.address || 'Tại cửa hàng'}</p>
+            </div>
+            <div className="flex flex-col justify-between items-end">
+              <span className="text-slate-400 font-medium uppercase text-[9px] tracking-wider">Tổng đơn hàng</span>
+              <span className="text-[#0e6877] font-bold text-sm mt-1">{formatPrice(order.total || 0)}</span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderVoucherView = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {filteredRecords.map((v) => (
+        <div key={v.id} className="bg-white border border-slate-200 rounded-3xl p-6 flex flex-col justify-between relative shadow-sm group hover:border-[#0e6877]/30 transition-all duration-200">
+          <div className="absolute top-1/2 -left-3 w-6 h-6 bg-[#fbf9f7] rounded-full border border-slate-200 border-r-transparent -translate-y-1/2"></div>
+          <div className="absolute top-1/2 -right-3 w-6 h-6 bg-[#fbf9f7] rounded-full border border-slate-200 border-l-transparent -translate-y-1/2"></div>
+          <div className="space-y-4">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2.5 bg-[#ecf6f7] text-[#0e6877] rounded-2xl border border-[#0e6877]/10">
+                  <Ticket size={20} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-[#1b1c1b] tracking-wide text-sm">{v.code}</h4>
+                  <p className="text-[10px] text-[#0e6877] font-bold uppercase">
+                    {v.type === 'PERCENTAGE' ? `Giảm ${v.value}%` : `Giảm ${formatPrice(v.value)}`}
+                  </p>
+                </div>
+              </div>
+              <button onClick={() => handleDeleteRecord(v.id)} className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg transition-colors"><Trash2 size={12} /></button>
+            </div>
+            <div className="space-y-2 border-t border-dashed border-slate-100 pt-4 text-xs font-semibold">
+              <p className="text-[#526069] font-medium text-xs">{v.description || 'Không có mô tả.'}</p>
+              <div className="flex justify-between text-[11px]"><span className="text-slate-400">Đơn tối thiểu:</span><span className="text-[#1b1c1b]">{formatPrice(v.minOrder)}</span></div>
+              <div className="flex justify-between text-[11px]"><span className="text-slate-400">Đã dùng:</span><span className="text-[#1b1c1b]">{v.usedCount || 0} / {v.maxUses || 'Vô hạn'}</span></div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderBannerView = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {filteredRecords.map((banner) => (
+        <div key={banner.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col hover:shadow-md transition-all duration-200 group">
+          <div className="h-44 bg-[#fbf9f7] relative overflow-hidden">
+            <img src={banner.imageUrl} alt={banner.title || 'Slide Banner'} className="w-full h-full object-cover" />
+            <button onClick={() => handleDeleteRecord(banner.id)} className="absolute top-4 right-4 p-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition-colors shadow-lg"><Trash2 size={13} /></button>
+          </div>
+          <div className="p-5 space-y-2 flex-1">
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">ID: {banner.id}</span>
+            <h4 className="font-bold text-[#1b1c1b] tracking-wide text-sm">{banner.title || 'Không có tiêu đề'}</h4>
+            <p className="text-xs text-[#526069] leading-relaxed">{banner.description || 'Không có mô tả.'}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderUserView = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {filteredRecords.map((user) => (
+        <div key={user.zaloId} className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4 hover:border-slate-300 transition-all">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-[#ecf6f7] text-[#0e6877] rounded-full shrink-0 border border-[#0e6877]/10">
+              <UserIcon size={20} />
+            </div>
+            <div className="min-w-0">
+              <h4 className="font-bold text-[#1b1c1b] text-sm truncate">{user.name}</h4>
+              <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full uppercase tracking-wider ${
+                user.role === 'admin' ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' : 'text-slate-600 bg-slate-50 border border-slate-200'
+              }`}>
+                {user.role}
+              </span>
+            </div>
+          </div>
+          <div className="space-y-2 border-t border-slate-100 pt-4 text-xs">
+            <div className="flex justify-between text-[11px]"><span className="text-slate-400">Số điện thoại:</span><span className="text-[#1b1c1b] font-semibold">{user.phone || 'Chưa cập nhật'}</span></div>
+            <div className="flex justify-between text-[11px]"><span className="text-slate-400">Ngày sinh:</span><span className="text-[#1b1c1b] font-semibold">{user.birthday || 'Chưa cập nhật'}</span></div>
+            <div className="flex justify-between text-[11px]"><span className="text-slate-400">Zalo ID:</span><span className="text-[#1b1c1b] font-mono text-[10px]">{user.zaloId}</span></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderCommentView = () => (
+    <div className="space-y-4">
+      {filteredRecords.map((c) => (
+        <div key={c.id} className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-3 hover:border-slate-350 transition-all duration-200">
+          <div className="flex justify-between items-start border-b border-slate-100 pb-3">
+            <div>
+              <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">Người dùng ID: {c.zaloUserId}</div>
+              <div className="text-[10px] text-slate-450 font-medium mt-0.5">Sản phẩm ID: {c.productId}</div>
+            </div>
+            <div className="flex gap-0.5 text-amber-400">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} size={14} fill={i < (c.rating || 0) ? 'currentColor' : 'none'} className={i < (c.rating || 0) ? 'text-amber-400' : 'text-slate-200'} />
+              ))}
+            </div>
+          </div>
+          <p className="text-xs text-[#1b1c1b] leading-relaxed font-semibold">{c.content}</p>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Fallback simplified table rendering (for Category, MenuItem, SiteSetting, StaticPage, etc.)
+  const renderDefaultTableView = () => {
+    // Columns to exclude from simplified view to make it extremely easy to read
+    const excludedColumns = ['description', 'images', 'link', 'createdAt', 'updatedAt', 'materialCare', 'shippingReturn', 'avatar'];
+    const simpleColumns = columns.filter(col => !excludedColumns.includes(col));
+
+    return (
+      <div className="bg-white border border-slate-200 rounded-3xl p-6 overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs text-slate-700 whitespace-nowrap">
+            <thead className="bg-[#fbf9f7] text-[#526069] text-[10px] font-bold uppercase tracking-wider sticky top-0 z-10">
+              <tr>
+                {simpleColumns.map((col) => (
+                  <th key={col} className="py-3.5 px-4 bg-[#fbf9f7] border-b border-slate-200">{col}</th>
+                ))}
+                <th className="py-3.5 px-4 bg-[#fbf9f7] border-b border-slate-200 text-right">Hành động</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 font-mono text-xs">
+              {filteredRecords.map((record) => (
+                <tr key={record.id || record.zaloId || record.code} className="hover:bg-slate-50 transition-colors">
+                  {simpleColumns.map((col) => {
+                    const val = record[col];
+                    let displayVal = String(val ?? 'NULL');
+                    if (typeof val === 'boolean') {
+                      displayVal = val ? 'TRUE' : 'FALSE';
+                    }
+                    return (
+                      <td key={col} className="py-3.5 px-4 max-w-xs truncate text-[#1b1c1b] font-medium" title={displayVal}>
+                        {displayVal}
+                      </td>
+                    );
+                  })}
+                  <td className="py-3.5 px-4 text-right">
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => handleOpenEditModal(record)}
+                        className="p-1.5 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 rounded-lg transition-colors"
+                        title="Sửa"
+                      >
+                        <Edit3 size={11} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteRecord(record.id || record.zaloId || record.code)}
+                        className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg transition-colors"
+                        title="Xóa"
+                      >
+                        <Trash2 size={11} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
+  const getBespokeLayout = () => {
+    if (filteredRecords.length === 0) {
+      return (
+        <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-[#526069] flex flex-col items-center justify-center gap-3 shadow-sm">
+          <Database size={32} className="text-slate-300" />
+          <p className="text-xs font-semibold">Bảng {modelName} hiện đang trống và chưa có bản ghi nào.</p>
+        </div>
+      );
+    }
+    
+    switch (modelName) {
+      case 'Product': return renderProductView();
+      case 'Order': return renderOrderView();
+      case 'Voucher': return renderVoucherView();
+      case 'Banner': return renderBannerView();
+      case 'User': return renderUserView();
+      case 'Comment': return renderCommentView();
+      default: return renderDefaultTableView();
+    }
+  };
 
   return (
     <div className="space-y-6 animate-fadeIn text-[#1b1c1b]">
@@ -177,68 +469,14 @@ export const DatabaseManager: React.FC = () => {
         </div>
       </div>
 
-      {/* Table Data */}
+      {/* Tailored Layout List */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <div className="w-10 h-10 border-4 border-[#0e6877] border-t-transparent rounded-full animate-spin"></div>
           <p className="text-[#526069] text-xs">Đang tải cấu trúc dữ liệu...</p>
         </div>
-      ) : filteredRecords.length > 0 ? (
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 overflow-hidden shadow-sm">
-          <div className="overflow-x-auto max-h-[500px]">
-            <table className="w-full text-left text-xs text-slate-700 whitespace-nowrap">
-              <thead className="bg-[#fbf9f7] text-[#526069] text-[10px] font-bold uppercase tracking-wider sticky top-0 z-10">
-                <tr>
-                  {columns.map((col) => (
-                    <th key={col} className="py-3.5 px-4 bg-[#fbf9f7] border-b border-slate-200">{col}</th>
-                  ))}
-                  <th className="py-3.5 px-4 bg-[#fbf9f7] border-b border-slate-200 text-right">Hành động</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-mono text-xs">
-                {filteredRecords.map((record) => (
-                  <tr key={record.id} className="hover:bg-slate-50 transition-colors">
-                    {columns.map((col) => {
-                      const val = record[col];
-                      let displayVal = String(val ?? 'NULL');
-                      if (typeof val === 'boolean') {
-                        displayVal = val ? 'TRUE' : 'FALSE';
-                      }
-                      return (
-                        <td key={col} className="py-3 px-4 max-w-xs truncate text-[#1b1c1b]" title={displayVal}>
-                          {displayVal}
-                        </td>
-                      );
-                    })}
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => handleOpenEditModal(record)}
-                          className="p-1.5 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 rounded-lg transition-colors"
-                          title="Sửa"
-                        >
-                          <Edit3 size={12} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteRecord(record.id)}
-                          className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg transition-colors"
-                          title="Xóa"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
       ) : (
-        <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-[#526069] flex flex-col items-center justify-center gap-3 shadow-sm">
-          <Database size={32} className="text-slate-300" />
-          <p className="text-xs font-semibold">Bảng {modelName} hiện đang trống và chưa có bản ghi nào.</p>
-        </div>
+        getBespokeLayout()
       )}
 
       {/* Dynamic Edit/Add Modal */}

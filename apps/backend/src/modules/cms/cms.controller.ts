@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { CmsService, CmsContentType } from './cms.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller('cms')
 export class CmsController {
@@ -49,19 +51,22 @@ export class CmsController {
   // --- Dynamic Database Manager CRUD ---
 
   @Get('database/summary')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   async getDatabaseSummary() {
     return this.cmsService.getDatabaseSummary();
   }
 
   @Get('database/models/:modelName')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   async getRecords(@Param('modelName') modelName: string) {
     return this.cmsService.getRecords(modelName);
   }
 
   @Post('database/models/:modelName')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   async createRecord(
     @Param('modelName') modelName: string,
     @Body() body: any,
@@ -70,7 +75,8 @@ export class CmsController {
   }
 
   @Patch('database/models/:modelName/:id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   async updateRecord(
     @Param('modelName') modelName: string,
     @Param('id') id: string,
@@ -80,11 +86,19 @@ export class CmsController {
   }
 
   @Delete('database/models/:modelName/:id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   async deleteRecord(
     @Param('modelName') modelName: string,
     @Param('id') id: string,
   ) {
     return this.cmsService.deleteRecord(modelName, id);
+  }
+
+  @Get('notifications')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async getAdminNotifications() {
+    return this.cmsService.getAdminNotifications();
   }
 }
