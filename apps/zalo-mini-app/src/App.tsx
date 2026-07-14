@@ -83,12 +83,12 @@ export default function App() {
   const logout = useAppStore((state) => state.logout);
 
   // TanStack React Query for Notifications
-  const { data: notificationsData, refetch: fetchNotifications } = useNotifications(zaloUser?.id || zaloUser?.zaloId);
+  const { data: notificationsData, refetch: fetchNotifications } = useNotifications(zaloUser?.id);
   const notifications = notificationsData || [];
   const queryClient = useQueryClient();
 
   const setNotifications = (updater: any) => {
-    const key = ['notifications', zaloUser?.id || zaloUser?.zaloId || 'guest'];
+    const key = ['notifications', zaloUser?.id || 'guest'];
     queryClient.setQueryData(key, (old: any) => {
       if (typeof updater === 'function') {
         return updater(old || []);
