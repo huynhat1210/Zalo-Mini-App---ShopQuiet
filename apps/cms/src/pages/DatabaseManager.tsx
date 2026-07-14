@@ -571,14 +571,10 @@ export const DatabaseManager: React.FC = () => {
           ══════════════════════════════════════════════ */}
       {isDrawerOpen && (
         <>
-          {/* Backdrop - mesh gradient, không đen thô */}
+          {/* Backdrop - rất nhẹ, không làm mờ nội dung */}
           <div
-            className="fixed inset-0 z-40 animate-backdropIn"
-            style={{
-              background: 'radial-gradient(ellipse at 60% 40%, rgba(14,104,119,0.08) 0%, rgba(15,23,42,0.25) 100%)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-            }}
+            className="fixed inset-0 z-40"
+            style={{ background: 'rgba(0,0,0,0.04)' }}
             onClick={closeDrawer}
           />
 
