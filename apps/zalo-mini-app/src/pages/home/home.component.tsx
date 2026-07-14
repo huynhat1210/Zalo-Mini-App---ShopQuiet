@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Page, Box, Text } from 'zmp-ui';
-import PullToRefresh from 'react-pull-to-refresh';
 import { useCart, IProduct } from '../../App';
 import { useAppStore } from '../../store/useAppStore';
 import { apiRequest } from '../../utils/api';
@@ -105,8 +104,7 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
   };
 
   return (
-    <PageCast className="bg-surface relative flex flex-col w-full h-full overscroll-none scrollbar-none animate-fade-in">
-      <PullToRefresh onRefresh={handleRefresh}>
+    <PageCast pullToRefresh onRefresh={handleRefresh} className="bg-surface relative flex flex-col w-full h-full overscroll-none scrollbar-none animate-fade-in">
         {/* Top Header App Bar */}
         <div className="bg-white/95 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-[#f0edeb] sticky top-0 z-30 shadow-xs">
         <button onClick={() => setIsMenuOpen(true)} className="p-2 -ml-2 hover:bg-neutral-100 rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer">
@@ -132,7 +130,7 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
       </div>
 
       {/* Main Content scroll window */}
-      <div className="flex-1 pb-28">
+      <div className="flex-1 overflow-y-auto pb-28">
         {/* Banner Carousel Slider */}
         {isFetchingBanners && bannerSlides.length === 0 ? (
           <BannerSkeleton />
@@ -328,7 +326,6 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
         onClose={() => setIsMenuOpen(false)}
         setSelectedCategory={setSelectedCategory}
       />
-      </PullToRefresh>
     </PageCast>
   );
 }

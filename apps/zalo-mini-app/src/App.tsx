@@ -168,7 +168,7 @@ export default function App() {
                   <ToastComponent />
 
                   {/* Active Tab rendering */}
-                  <div className="flex-1 overflow-y-auto overscroll-none scrollbar-none">
+                  <div className="flex-1 flex flex-col relative overflow-hidden">
                     {activeTab === 'home' && <HomeComponent />}
                     {activeTab === 'search' && <SearchComponent />}
                     {activeTab === 'orders' && <ProfileComponent initialSubPage="orders" />}

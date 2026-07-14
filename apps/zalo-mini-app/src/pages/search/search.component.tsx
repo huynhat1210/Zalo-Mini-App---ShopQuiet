@@ -121,7 +121,7 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
         )}
       </div>
 
-      <div className="flex-1 px-6 py-5.5 space-y-6 pb-28">
+      <div className="flex-1 overflow-y-auto px-6 py-5.5 space-y-6 pb-28">
         {/* Filters Grid */}
         <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-none pl-6 pr-6 -mx-6">
           <button 

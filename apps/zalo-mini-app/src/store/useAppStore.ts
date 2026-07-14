@@ -173,30 +173,22 @@ export const useAppStore = create<AppState>()(
         }
 
         const apiAny = api as any;
-        if (typeof window !== 'undefined' && apiAny && apiAny.authorize) {
-          apiAny.authorize({
-            scopes: ['scope.userInfo'],
-            success: () => {
-              apiAny.getUserInfo({
-                success: (data: any) => {
-                  if (data?.userInfo?.name) {
-                    const user = {
-                      name: data.userInfo.name,
-                      avatar: data.userInfo.avatar,
-                      id: data.userInfo.id,
-                    };
-                    set({ zaloUser: user });
-                    localStorage.setItem('zalo_profile_custom', JSON.stringify(user));
-                    apiRequest('/users/sync', 'POST', { zaloId: user.id, name: user.name, avatar: user.avatar }).catch(console.error);
-                  }
-                },
-                fail: (err: any) => {
-                  console.warn('getUserInfo failed after authorize:', err);
-                },
-              });
+        if (typeof window !== 'undefined' && apiAny && apiAny.getUserInfo) {
+          apiAny.getUserInfo({
+            success: (data: any) => {
+              if (data?.userInfo?.name) {
+                const user = {
+                  name: data.userInfo.name,
+                  avatar: data.userInfo.avatar,
+                  id: data.userInfo.id,
+                };
+                set({ zaloUser: user });
+                localStorage.setItem('zalo_profile_custom', JSON.stringify(user));
+                apiRequest('/users/sync', 'POST', { zaloId: user.id, name: user.name, avatar: user.avatar }).catch(console.error);
+              }
             },
             fail: (err: any) => {
-              console.warn('Zalo authorize failed (user may need to grant permission manually):', err);
+              console.warn('getUserInfo failed:', err);
             },
           });
         }
