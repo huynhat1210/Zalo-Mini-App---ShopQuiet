@@ -50,6 +50,13 @@ export async function apiRequest<T = any>(
   const response = await fetch(url, options);
 
   if (!response.ok) {
+    if (response.status === 401 && !path.includes('/auth/login')) {
+      tokenStorage.clearToken();
+      localStorage.removeItem('zalo_profile_custom');
+      if (typeof window !== 'undefined') {
+        window.location.reload();
+      }
+    }
     let errMsg = `Request failed with status ${response.status}`;
     try {
       const errJson = await response.json();
