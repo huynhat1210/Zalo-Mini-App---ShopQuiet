@@ -35,14 +35,24 @@ import { LoggerModule } from './common/logger/logger.module';
     ]),
     CacheModule.registerAsync({
       isGlobal: true,
-      useFactory: async () => ({
-        store: await redisStore({
-          socket: {
-            host: process.env.REDIS_HOST || 'localhost',
-            port: parseInt(process.env.REDIS_PORT || '6379', 10),
-          },
-        }),
-      }),
+      useFactory: async () => {
+        // Only use Redis if REDIS_HOST is provided (for production)
+        if (process.env.REDIS_HOST) {
+          return {
+            store: await redisStore({
+              socket: {
+                host: process.env.REDIS_HOST,
+                port: parseInt(process.env.REDIS_PORT || '6379', 10),
+              },
+            }),
+          };
+        }
+        // Use in-memory cache for development/Render without Redis
+        return {
+          store: 'memory',
+          ttl: 600, // 10 minutes default TTL
+        };
+      },
     }),
     PrismaModule,
     AuthModule,
