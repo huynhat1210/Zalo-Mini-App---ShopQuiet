@@ -49,7 +49,8 @@ export const ProductDetailComponent: React.FC<IProductDetailComponentProps> = (p
       const catId = product.category?.id;
       if (!catId) return;
       try {
-        const list = await apiRequest<IProduct[]>(`/products?categoryId=${catId}`);
+        const listRes = await apiRequest<any>(`/products?categoryId=${catId}`);
+        const list = Array.isArray(listRes) ? listRes : (listRes?.data || []);
         if (list && Array.isArray(list)) {
           setRelatedProducts(list.filter((p: IProduct) => p.id !== product.id).slice(0, 4));
         }
