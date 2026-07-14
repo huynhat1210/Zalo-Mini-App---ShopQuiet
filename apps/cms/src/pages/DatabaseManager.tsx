@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiRequest } from '../utils/api';
 import { 
@@ -29,7 +29,6 @@ export const DatabaseManager: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any | null>(null);
   const [error, setError] = useState('');
-  const drawerRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState<Record<string, any>>({});
 
@@ -484,7 +483,7 @@ export const DatabaseManager: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fadeIn text-[#1b1c1b] relative">
+    <div className="space-y-6 animate-fadeIn text-[#1b1c1b]">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-4">
@@ -542,140 +541,222 @@ export const DatabaseManager: React.FC = () => {
         getBespokeLayout()
       )}
 
-      {/* ── RIGHT SIDE DRAWER (Edit / Add) ── */}
-      {/* Subtle backdrop - fades in/out, no heavy blur or dark overlay */}
-      <div
-        className={`fixed inset-0 z-40 transition-all duration-300 ease-in-out pointer-events-none ${
-          isDrawerOpen
-            ? 'bg-slate-800/10 pointer-events-auto'
-            : 'bg-transparent'
-        }`}
-        onClick={closeDrawer}
-        aria-hidden="true"
-      />
-
-      {/* Drawer Panel - fixed right, hidden off-screen when closed */}
-      <div
-        ref={drawerRef}
-        style={{ boxShadow: isDrawerOpen ? '-8px 0 40px rgba(0,0,0,0.08)' : 'none' }}
-        className={`fixed top-0 right-0 h-full w-full max-w-md bg-white z-50 flex flex-col transition-all duration-300 ease-in-out ${
-          isDrawerOpen
-            ? 'translate-x-0 border-l border-slate-200'
-            : 'translate-x-full border-l-0'
-        }`}
-      >
-        {/* Drawer Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#ecf6f7] text-[#0e6877] rounded-xl border border-[#0e6877]/10">
-              {editingRecord ? <Edit3 size={15} /> : <Plus size={15} />}
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-[#1b1c1b]">
-                {editingRecord ? `Chỉnh sửa bản ghi` : `Thêm mới`}
-              </h3>
-              <p className="text-[10px] text-[#526069] font-medium">Bảng: {modelName}</p>
-            </div>
-          </div>
-          <button
+      {/* ══════════════════════════════════════════════
+          PREMIUM GLASSMORPHISM FLOATING EDIT PANEL
+          ══════════════════════════════════════════════ */}
+      {isDrawerOpen && (
+        <>
+          {/* Backdrop - mesh gradient, không đen thô */}
+          <div
+            className="fixed inset-0 z-40 animate-backdropIn"
+            style={{
+              background: 'radial-gradient(ellipse at 60% 40%, rgba(14,104,119,0.08) 0%, rgba(15,23,42,0.25) 100%)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+            }}
             onClick={closeDrawer}
-            className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-[#1b1c1b] transition-colors"
+          />
+
+          {/* Floating Panel */}
+          <div
+            className="fixed z-50 animate-popIn"
+            style={{
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '100%',
+              maxWidth: '520px',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
           >
-            <X size={16} />
-          </button>
-        </div>
+            {/* Glass card */}
+            <div
+              className="rounded-3xl overflow-hidden flex flex-col"
+              style={{
+                background: 'rgba(255,255,255,0.92)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                border: '1px solid rgba(255,255,255,0.7)',
+                boxShadow: '0 32px 80px rgba(14,104,119,0.18), 0 8px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9)',
+                maxHeight: '90vh',
+              }}
+            >
+              {/* Gradient Header Bar */}
+              <div
+                className="px-6 pt-6 pb-5 shrink-0"
+                style={{
+                  background: 'linear-gradient(135deg, #0e6877 0%, #0a9bb5 60%, #14b8a6 100%)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                {/* Decorative circles */}
+                <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.07)' }} />
+                <div style={{ position: 'absolute', bottom: -30, right: 40, width: 70, height: 70, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
 
-        {/* Drawer breadcrumb */}
-        {editingRecord && (
-          <div className="px-6 py-2.5 bg-[#fbf9f7] border-b border-slate-100 shrink-0 flex items-center gap-1.5 text-[10px] text-[#526069] font-medium">
-            <Database size={11} />
-            <span>{modelName}</span>
-            <ChevronRight size={10} />
-            <span className="font-bold text-[#1b1c1b] truncate">
-              {editingRecord.id || editingRecord.zaloId || editingRecord.code || 'Bản ghi'}
-            </span>
-          </div>
-        )}
+                <div className="flex items-start justify-between relative">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="p-2.5 rounded-2xl"
+                      style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.25)' }}
+                    >
+                      {editingRecord ? <Edit3 size={18} color="white" /> : <Plus size={18} color="white" />}
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-white leading-tight">
+                        {editingRecord ? 'Chỉnh sửa bản ghi' : 'Thêm bản ghi mới'}
+                      </h3>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Database size={10} color="rgba(255,255,255,0.6)" />
+                        <span className="text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                          {modelName}
+                          {editingRecord && (
+                            <>
+                              <ChevronRight size={9} style={{ display: 'inline', marginInline: 2 }} />
+                              <span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 700 }}>
+                                {String(editingRecord.id || editingRecord.zaloId || editingRecord.code || '').slice(-8)}
+                              </span>
+                            </>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={closeDrawer}
+                    className="p-2 rounded-xl transition-all"
+                    style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.22)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.12)')}
+                  >
+                    <X size={16} color="white" />
+                  </button>
+                </div>
+              </div>
 
-        {/* Error */}
-        {error && (
-          <div className="px-6 pt-4 shrink-0">
-            <div className="p-3.5 bg-rose-50 border border-rose-100 text-rose-700 text-xs rounded-2xl flex items-start gap-2.5">
-              <AlertCircle size={14} className="shrink-0 mt-0.5" />
-              <span>{error}</span>
+              {/* Error banner */}
+              {error && (
+                <div className="mx-6 mt-4 shrink-0">
+                  <div className="p-3.5 bg-rose-50 border border-rose-100 text-rose-700 text-xs rounded-2xl flex items-start gap-2.5">
+                    <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                    <span>{error}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Form - scrollable */}
+              <form onSubmit={handleSubmit} className="flex flex-col min-h-0" style={{ flex: 1, overflow: 'hidden' }}>
+                <div className="overflow-y-auto px-6 py-5 space-y-4" style={{ flex: 1 }}>
+                  {Object.keys(formData).map((key, idx) => {
+                    const sampleVal = records[0]?.[key];
+                    const isLongText = ['description', 'content', 'images', 'materialCare', 'shippingReturn'].includes(key);
+                    return (
+                      <div key={key} className="space-y-1.5">
+                        <label className="flex items-center gap-2 text-[10px] font-bold text-[#526069] uppercase tracking-widest">
+                          <span
+                            className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[8px] font-black text-white"
+                            style={{ background: 'linear-gradient(135deg, #0e6877, #0a9bb5)', flexShrink: 0 }}
+                          >
+                            {idx + 1}
+                          </span>
+                          {key}
+                        </label>
+
+                        {typeof sampleVal === 'boolean' ? (
+                          <div className="grid grid-cols-2 gap-2">
+                            {['true', 'false'].map(v => (
+                              <button
+                                key={v}
+                                type="button"
+                                onClick={() => setFormData({ ...formData, [key]: v === 'true' })}
+                                className="py-2 rounded-xl text-xs font-bold transition-all border"
+                                style={
+                                  String(formData[key]) === v
+                                    ? { background: 'linear-gradient(135deg, #0e6877, #0a9bb5)', color: 'white', borderColor: 'transparent', boxShadow: '0 4px 12px rgba(14,104,119,0.25)' }
+                                    : { background: '#f8fafc', color: '#526069', borderColor: '#e2e8f0' }
+                                }
+                              >
+                                {v === 'true' ? '✓ TRUE' : '✗ FALSE'}
+                              </button>
+                            ))}
+                          </div>
+                        ) : isLongText ? (
+                          <textarea
+                            rows={3}
+                            value={formData[key]}
+                            onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                            placeholder={`Nhập ${key}...`}
+                            className="w-full rounded-2xl py-3 px-4 text-xs text-[#1b1c1b] placeholder-slate-300 resize-none focus:outline-none transition-all"
+                            style={{
+                              background: '#f8fafc',
+                              border: '1.5px solid #e2e8f0',
+                              transition: 'border-color 0.2s, box-shadow 0.2s',
+                            }}
+                            onFocus={e => { e.target.style.borderColor = '#0e6877'; e.target.style.boxShadow = '0 0 0 3px rgba(14,104,119,0.08)'; }}
+                            onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
+                          />
+                        ) : typeof sampleVal === 'number' ? (
+                          <input
+                            type="number"
+                            required
+                            value={formData[key]}
+                            onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                            className="w-full rounded-2xl py-3 px-4 text-xs text-[#1b1c1b] focus:outline-none transition-all"
+                            style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0' }}
+                            onFocus={e => { e.target.style.borderColor = '#0e6877'; e.target.style.boxShadow = '0 0 0 3px rgba(14,104,119,0.08)'; }}
+                            onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            value={formData[key]}
+                            onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                            placeholder={`Nhập ${key}...`}
+                            className="w-full rounded-2xl py-3 px-4 text-xs text-[#1b1c1b] placeholder-slate-300 focus:outline-none transition-all"
+                            style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0' }}
+                            onFocus={e => { e.target.style.borderColor = '#0e6877'; e.target.style.boxShadow = '0 0 0 3px rgba(14,104,119,0.08)'; }}
+                            onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Footer actions */}
+                <div className="shrink-0 px-6 pb-6 pt-4 flex gap-3" style={{ borderTop: '1px solid rgba(14,104,119,0.08)' }}>
+                  <button
+                    type="button"
+                    onClick={closeDrawer}
+                    className="flex-1 py-3 rounded-2xl text-xs font-bold text-[#526069] transition-all"
+                    style={{ background: '#f1f5f9', border: '1.5px solid #e2e8f0' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#e2e8f0')}
+                    onMouseLeave={e => (e.currentTarget.style.background = '#f1f5f9')}
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 rounded-2xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-all"
+                    style={{
+                      background: 'linear-gradient(135deg, #0e6877 0%, #0a9bb5 100%)',
+                      boxShadow: '0 8px 20px rgba(14,104,119,0.30)',
+                      border: 'none',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 12px 28px rgba(14,104,119,0.40)')}
+                    onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 8px 20px rgba(14,104,119,0.30)')}
+                  >
+                    <Save size={14} />
+                    {editingRecord ? 'Cập nhật' : 'Lưu mới'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
-        )}
-
-        {/* Form - scrollable */}
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-            {Object.keys(formData).map((key) => {
-              const sampleVal = records[0]?.[key];
-              const isLongText = key === 'description' || key === 'content' || key === 'images' || key === 'materialCare' || key === 'shippingReturn';
-              return (
-                <div key={key}>
-                  <label className="block text-[#526069] text-[10px] font-bold mb-2 uppercase tracking-wider">
-                    {key}
-                  </label>
-                  {typeof sampleVal === 'boolean' ? (
-                    <select
-                      value={formData[key] ? 'true' : 'false'}
-                      onChange={(e) => setFormData({ ...formData, [key]: e.target.value === 'true' })}
-                      className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-[#0e6877] focus:ring-1 focus:ring-[#0e6877] rounded-xl py-2.5 px-3.5 text-xs text-[#1b1c1b] focus:outline-none transition-all"
-                    >
-                      <option value="true">TRUE</option>
-                      <option value="false">FALSE</option>
-                    </select>
-                  ) : isLongText ? (
-                    <textarea
-                      rows={4}
-                      value={formData[key]}
-                      onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
-                      placeholder={`Nhập ${key}...`}
-                      className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-[#0e6877] focus:ring-1 focus:ring-[#0e6877] rounded-xl py-2.5 px-3.5 text-xs text-[#1b1c1b] focus:outline-none transition-all resize-y"
-                    />
-                  ) : typeof sampleVal === 'number' ? (
-                    <input
-                      type="number"
-                      required
-                      value={formData[key]}
-                      onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
-                      className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-[#0e6877] focus:ring-1 focus:ring-[#0e6877] rounded-xl py-2.5 px-3.5 text-xs text-[#1b1c1b] focus:outline-none transition-all"
-                    />
-                  ) : (
-                    <input
-                      type="text"
-                      value={formData[key]}
-                      onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
-                      placeholder={`Nhập ${key}...`}
-                      className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-[#0e6877] focus:ring-1 focus:ring-[#0e6877] rounded-xl py-2.5 px-3.5 text-xs text-[#1b1c1b] focus:outline-none transition-all"
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Drawer Footer Actions - always visible at bottom */}
-          <div className="shrink-0 px-6 py-4 border-t border-slate-100 bg-[#fbf9f7] flex gap-3">
-            <button
-              type="button"
-              onClick={closeDrawer}
-              className="flex-1 px-4 py-2.5 bg-white hover:bg-slate-100 text-[#526069] font-bold rounded-xl text-xs transition-colors border border-slate-200"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-5 py-2.5 bg-[#0e6877] hover:bg-[#0a4c57] text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-[#0e6877]/15"
-            >
-              <Save size={14} />
-              {editingRecord ? 'Cập nhật' : 'Lưu mới'}
-            </button>
-          </div>
-        </form>
-      </div>
+        </>
+      )}
     </div>
   );
 };
