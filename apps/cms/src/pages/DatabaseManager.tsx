@@ -29,8 +29,31 @@ export const DatabaseManager: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any | null>(null);
   const [error, setError] = useState('');
+  // Position of the floating panel — computed from the triggering button rect
+  const [panelAnchor, setPanelAnchor] = useState<{ top: number; left: number } | null>(null);
 
   const [formData, setFormData] = useState<Record<string, any>>({});
+
+  // Compute smart position: near the button, clamped inside viewport
+  const computeAnchor = (e: React.MouseEvent<HTMLButtonElement>): { top: number; left: number } => {
+    const PANEL_W = 420;
+    const PANEL_H = Math.min(560, window.innerHeight * 0.85);
+    const MARGIN = 12;
+    const rect = e.currentTarget.getBoundingClientRect();
+
+    // Try to appear to the LEFT of the button first, then right
+    let left = rect.left - PANEL_W - MARGIN;
+    if (left < MARGIN) left = rect.right + MARGIN;
+    // If still overflows on right, clamp
+    if (left + PANEL_W > window.innerWidth - MARGIN) left = window.innerWidth - PANEL_W - MARGIN;
+
+    // Vertically: align to the button top, clamped
+    let top = rect.top;
+    if (top + PANEL_H > window.innerHeight - MARGIN) top = window.innerHeight - PANEL_H - MARGIN;
+    if (top < MARGIN) top = MARGIN;
+
+    return { top, left };
+  };
 
   const fetchRecords = async () => {
     if (!modelName) return;
@@ -71,7 +94,8 @@ export const DatabaseManager: React.FC = () => {
 
   const columns = getColumns();
 
-  const openDrawerForAdd = () => {
+  const openDrawerForAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
+    setPanelAnchor(computeAnchor(e));
     setEditingRecord(null);
     const initialForm: Record<string, any> = {};
     columns.forEach((col) => {
@@ -86,7 +110,8 @@ export const DatabaseManager: React.FC = () => {
     setIsDrawerOpen(true);
   };
 
-  const openDrawerForEdit = (record: any) => {
+  const openDrawerForEdit = (record: any, e: React.MouseEvent<HTMLButtonElement>) => {
+    setPanelAnchor(computeAnchor(e));
     setEditingRecord(record);
     const initialForm: Record<string, any> = {};
     columns.forEach((col) => {
@@ -187,7 +212,7 @@ export const DatabaseManager: React.FC = () => {
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => openDrawerForEdit(product)}
+                  onClick={(e) => openDrawerForEdit(product, e)}
                   className="p-2 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 rounded-xl transition-all flex items-center gap-1 text-xs font-semibold"
                   title="Sửa sản phẩm"
                 >
@@ -320,7 +345,7 @@ export const DatabaseManager: React.FC = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => openDrawerForEdit(v)} className="p-1.5 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 rounded-lg transition-colors"><Edit3 size={12} /></button>
+                <button onClick={(e) => openDrawerForEdit(v, e)} className="p-1.5 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 rounded-lg transition-colors"><Edit3 size={12} /></button>
                 <button onClick={() => handleDeleteRecord(v.id)} className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg transition-colors"><Trash2 size={12} /></button>
               </div>
             </div>
@@ -342,7 +367,7 @@ export const DatabaseManager: React.FC = () => {
           <div className="h-44 bg-[#fbf9f7] relative overflow-hidden">
             <img src={banner.imageUrl} alt={banner.title || 'Slide Banner'} className="w-full h-full object-cover" />
             <div className="absolute top-4 right-4 flex gap-2">
-              <button onClick={() => openDrawerForEdit(banner)} className="p-2 bg-white/90 hover:bg-white text-[#0e6877] rounded-xl transition-colors shadow-lg"><Edit3 size={13} /></button>
+              <button onClick={(e) => openDrawerForEdit(banner, e)} className="p-2 bg-white/90 hover:bg-white text-[#0e6877] rounded-xl transition-colors shadow-lg"><Edit3 size={13} /></button>
               <button onClick={() => handleDeleteRecord(banner.id)} className="p-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition-colors shadow-lg"><Trash2 size={13} /></button>
             </div>
           </div>
@@ -437,7 +462,7 @@ export const DatabaseManager: React.FC = () => {
                   <td className="py-3.5 px-4 text-right">
                     <div className="flex justify-end gap-2">
                       <button
-                        onClick={() => openDrawerForEdit(record)}
+                        onClick={(e) => openDrawerForEdit(record, e)}
                         className="p-1.5 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 rounded-lg transition-colors"
                         title="Sửa"
                       >
@@ -507,7 +532,7 @@ export const DatabaseManager: React.FC = () => {
         </div>
 
         <button
-          onClick={openDrawerForAdd}
+          onClick={(e) => openDrawerForAdd(e)}
           className="bg-[#0e6877] hover:bg-[#0a4c57] text-white font-semibold py-2.5 px-5 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 shadow-md shadow-[#0e6877]/10"
         >
           <Plus size={16} />
@@ -557,16 +582,15 @@ export const DatabaseManager: React.FC = () => {
             onClick={closeDrawer}
           />
 
-          {/* Floating Panel */}
+          {/* Floating Panel — anchored to the button that triggered it */}
           <div
             className="fixed z-50 animate-popIn"
             style={{
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '100%',
-              maxWidth: '520px',
-              maxHeight: '90vh',
+              top: panelAnchor?.top ?? '50%',
+              left: panelAnchor?.left ?? '50%',
+              transform: panelAnchor ? 'none' : 'translate(-50%, -50%)',
+              width: '420px',
+              maxHeight: `${Math.min(560, window.innerHeight * 0.85)}px`,
               display: 'flex',
               flexDirection: 'column',
             }}
