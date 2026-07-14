@@ -1041,12 +1041,12 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
       {/* 3. Voucher Wallet Modal */}
       {isVoucherModalOpen && (
         <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-end justify-center p-0">
-          <div className="bg-white w-full max-w-sm rounded-t-3xl p-6 border-t border-[#f0edeb] shadow-2xl space-y-4 animate-slide-up max-h-[75vh] flex flex-col">
-            <div className="flex items-center justify-between">
+          <div className="bg-white w-full max-w-sm rounded-t-3xl border-t border-[#f0edeb] shadow-2xl animate-slide-up max-h-[70vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 pt-5 pb-3 shrink-0">
               <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">🎟️ Ví Voucher của tôi</h3>
               <span className="text-[10px] text-textColor-variant">{userVouchers.length} mã khả dụng</span>
             </div>
-            <div className="overflow-y-auto flex-1 space-y-2.5 pr-0.5">
+            <div className="overflow-y-auto flex-1 space-y-2.5 px-6 pb-2">
               {userVouchers.length === 0 ? (
                 <div className="text-center py-8 space-y-2">
                   <span className="text-4xl">🏷️</span>
@@ -1083,12 +1083,15 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
                 ))
               )}
             </div>
-            <button
-              onClick={() => setIsVoucherModalOpen(false)}
-              className="w-full h-10 bg-neutral-100 text-textColor font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-neutral-200"
-            >
-              Đóng
-            </button>
+            {/* Sticky close button always visible at bottom, outside scroll area */}
+            <div className="shrink-0 px-6 pt-3 pb-8 bg-white border-t border-neutral-100">
+              <button
+                onClick={() => setIsVoucherModalOpen(false)}
+                className="w-full h-11 bg-neutral-100 text-textColor font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-neutral-200 active:scale-95 transition-transform"
+              >
+                Đóng
+              </button>
+            </div>
           </div>
         </div>
       )}
