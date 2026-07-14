@@ -4,7 +4,7 @@ import { tokenStorage } from '../auth';
 // @ts-ignore
 const _envBase = import.meta.env.VITE_API_BASE_URL;
 export const API_BASE_URL =
-  _envBase || (typeof window !== 'undefined' ? `${window.location.origin}/api` : 'http://localhost:3000/api');
+  _envBase || (typeof window !== 'undefined' ? `${window.location.origin}/api/v1` : 'http://localhost:3000/api/v1');
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
