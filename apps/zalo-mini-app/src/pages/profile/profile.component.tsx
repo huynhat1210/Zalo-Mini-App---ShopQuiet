@@ -49,6 +49,8 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
+  const [userVouchers, setUserVouchers] = useState<any[]>([]);
   const [usersList, setUsersList] = useState<any[]>([]);
   const [cmsSettings, setCmsSettings] = useState<Record<string, string>>({});
   const [staticPages, setStaticPages] = useState<CmsStaticPage[]>([]);
@@ -596,9 +598,9 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
           </span>
           <span className="text-[10px] text-[#526069]/65 font-bold uppercase tracking-wider mt-1">Giỏ hàng</span>
         </button>
-        <button onClick={() => setIsPaymentModalOpen(true)} className="flex flex-col items-center justify-center border-none bg-transparent cursor-pointer active:scale-95 transition-transform">
-          <span className="text-base font-extrabold text-teal-600">10%</span>
-          <span className="text-[10px] text-[#526069]/65 font-bold uppercase tracking-wider mt-1">Ưu đãi</span>
+        <button onClick={() => setActiveTab('orders')} className="flex flex-col items-center justify-center border-none bg-transparent cursor-pointer active:scale-95 transition-transform">
+          <span className="text-base font-extrabold text-teal-600">{orders.length}</span>
+          <span className="text-[10px] text-[#526069]/65 font-bold uppercase tracking-wider mt-1">Đơn hàng</span>
         </button>
       </div>
 
@@ -661,18 +663,27 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
             </button>
             
             <button 
-              onClick={() => setIsPaymentModalOpen(true)}
+              onClick={async () => {
+                try {
+                  const res = await apiRequest<any[]>('/vouchers');
+                  setUserVouchers(Array.isArray(res) ? res : []);
+                } catch { setUserVouchers([]); }
+                setIsVoucherModalOpen(true);
+              }}
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
                 <svg className="w-5 h-5 text-textColor/60" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185zM9.75 9h.008v.008H9.75V9zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 4.5h.008v.008h-.008V13.5zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                 </svg>
-                <span className="font-semibold text-textColor">Phương thức thanh toán</span>
+                <span className="font-semibold text-textColor">Ví Voucher</span>
               </div>
-              <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-              </svg>
+              <div className="flex items-center gap-1.5">
+                <span className="bg-teal-50 text-teal-600 font-bold text-[10px] px-2 py-0.5 rounded-full">{userVouchers.length > 0 ? `${userVouchers.length} mã` : ''}</span>
+                <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </div>
             </button>
           </div>
         </div>
@@ -1027,28 +1038,54 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
         </div>
       )}
 
-      {/* 3. Payment Methods Modal */}
-      {isPaymentModalOpen && (
-        <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-center justify-center p-6">
-          <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up">
-            <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">Phương thức thanh toán</h3>
-            
-            <div className="space-y-3">
-              <div className="p-3 border border-neutral-100 rounded-2xl flex items-center gap-3 bg-neutral-50/50">
-                <span className="w-8 h-8 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center text-xs">💳</span>
-                <div className="text-xs">
-                  <p className="font-semibold text-textColor">Visa ending in 4242</p>
-                  <p className="text-[10px] text-textColor-variant">Mặc định • Hạn dùng 12/28</p>
-                </div>
-              </div>
-              <div className="p-3 border border-dashed border-neutral-200 rounded-2xl flex items-center justify-center text-xs text-neutral-400 py-4 font-semibold">
-                + Thêm thẻ tín dụng mới
-              </div>
+      {/* 3. Voucher Wallet Modal */}
+      {isVoucherModalOpen && (
+        <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-end justify-center p-0">
+          <div className="bg-white w-full max-w-sm rounded-t-3xl p-6 border-t border-[#f0edeb] shadow-2xl space-y-4 animate-slide-up max-h-[75vh] flex flex-col">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">🎟️ Ví Voucher của tôi</h3>
+              <span className="text-[10px] text-textColor-variant">{userVouchers.length} mã khả dụng</span>
             </div>
-
+            <div className="overflow-y-auto flex-1 space-y-2.5 pr-0.5">
+              {userVouchers.length === 0 ? (
+                <div className="text-center py-8 space-y-2">
+                  <span className="text-4xl">🏷️</span>
+                  <p className="text-xs text-textColor-variant font-medium">Chưa có voucher nào<br/>Hãy tham gia các chương trình khuyến mãi!</p>
+                </div>
+              ) : (
+                userVouchers.map((v: any) => (
+                  <div key={v.code} className="border border-dashed border-teal-200 rounded-2xl overflow-hidden flex">
+                    <div className="bg-gradient-to-br from-teal-500 to-teal-700 text-white px-3 py-3 flex flex-col items-center justify-center min-w-[72px] gap-0.5">
+                      <span className="text-[10px] font-black uppercase tracking-wider">
+                        {v.type === 'PERCENT' ? `${v.value}%` : v.type === 'FREESHIP' ? '🚚' : `${(v.value/1000).toFixed(0)}K`}
+                      </span>
+                      <span className="text-[8px] font-bold opacity-80">{v.type === 'FREESHIP' ? 'Freeship' : 'Giảm'}</span>
+                    </div>
+                    <div className="flex-1 px-3 py-2.5 flex flex-col justify-center gap-0.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-black text-xs text-textColor tracking-widest">{v.code}</span>
+                        <button
+                          onClick={() => { navigator.clipboard?.writeText(v.code).catch(()=>{}); showToast(`Đã sao chép mã ${v.code}!`, 'success'); }}
+                          className="text-[9px] bg-teal-50 text-teal-600 font-bold px-2 py-0.5 rounded-full border-none cursor-pointer"
+                        >Sao chép</button>
+                      </div>
+                      <p className="text-[10px] text-textColor-variant">
+                        {v.type === 'PERCENT' ? `Giảm ${v.value}%` : v.type === 'FIXED' ? `Giảm ${v.value.toLocaleString('vi-VN')}đ` : 'Miễn phí vận chuyển'}
+                        {v.minOrderVal > 0 ? ` • Đơn tối thiểu ${v.minOrderVal.toLocaleString('vi-VN')}đ` : ''}
+                      </p>
+                      {v.expiresAt && (
+                        <p className="text-[9px] text-amber-500 font-semibold">
+                          HSD: {new Date(v.expiresAt).toLocaleDateString('vi-VN')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
             <button
-              onClick={() => setIsPaymentModalOpen(false)}
-              className="w-full h-10 bg-neutral-100 text-textColor font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-neutral-200 mt-2"
+              onClick={() => setIsVoucherModalOpen(false)}
+              className="w-full h-10 bg-neutral-100 text-textColor font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-neutral-200"
             >
               Đóng
             </button>
