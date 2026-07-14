@@ -38,13 +38,20 @@ import { LoggerModule } from './common/logger/logger.module';
       useFactory: async () => {
         // Only use Redis if REDIS_HOST is provided (for production)
         if (process.env.REDIS_HOST) {
+          const redisConfig: any = {
+            socket: {
+              host: process.env.REDIS_HOST,
+              port: parseInt(process.env.REDIS_PORT || '6379', 10),
+            },
+          };
+          
+          // Add password if provided
+          if (process.env.REDIS_PASSWORD) {
+            redisConfig.password = process.env.REDIS_PASSWORD;
+          }
+          
           return {
-            store: await redisStore({
-              socket: {
-                host: process.env.REDIS_HOST,
-                port: parseInt(process.env.REDIS_PORT || '6379', 10),
-              },
-            }),
+            store: await redisStore(redisConfig),
           };
         }
         // Use in-memory cache for development/Render without Redis
