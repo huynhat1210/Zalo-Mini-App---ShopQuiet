@@ -3,7 +3,9 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { SuccessResponseDto, ErrorResponseDto } from './common/dto/api-response.dto';
 import { PinoLogger } from './common/logger/logger.service';
 
 import * as fs from 'fs';
@@ -22,6 +24,9 @@ async function bootstrap() {
 
   // Enable global exception filter
   app.useGlobalFilters(new HttpExceptionFilter());
+
+  // Enable global response transformation interceptor
+  app.useGlobalInterceptors(new TransformInterceptor());
 
   // Enable global validation pipe
   app.useGlobalPipes(
@@ -55,7 +60,9 @@ async function bootstrap() {
     .addTag('banners', 'Banner management')
     .addBearerAuth()
     .build();
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(app, config, {
+    extraModels: [SuccessResponseDto, ErrorResponseDto],
+  });
   SwaggerModule.setup('api/docs', app, document);
 
   app.use((req: Request, res: Response, next: NextFunction) => {

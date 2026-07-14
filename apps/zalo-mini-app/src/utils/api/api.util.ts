@@ -126,12 +126,33 @@ export async function apiRequest<T = unknown>(
     let errMsg = `API error: ${response.status} ${response.statusText}`;
     try {
       const errJson = await response.json();
-      if (errJson && errJson.message) {
-        errMsg = Array.isArray(errJson.message) ? errJson.message[0] : errJson.message;
+      if (errJson) {
+        if (Array.isArray(errJson.errors) && errJson.errors.length > 0) {
+          errMsg = errJson.errors[0].message;
+        } else if (errJson.message) {
+          errMsg = Array.isArray(errJson.message) ? errJson.message[0] : errJson.message;
+        }
       }
     } catch (e) { }
     throw new Error(errMsg);
   }
 
-  return response.json();
+  const json = await response.json();
+
+  // Handle standard success format wrapping
+  if (json && typeof json === 'object' && 'data' in json && 'message' in json && 'meta' in json) {
+    if (json.pagination) {
+      return {
+        ...json,
+        meta: {
+          ...json.meta,
+          ...json.pagination,
+          totalPages: json.pagination.total_pages, // map snake_case to camelCase
+        },
+      } as any;
+    }
+    return json.data;
+  }
+
+  return json;
 }
