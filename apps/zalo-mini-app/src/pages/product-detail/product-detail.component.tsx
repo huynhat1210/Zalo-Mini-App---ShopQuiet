@@ -465,7 +465,7 @@ export const ProductDetailComponent: React.FC<IProductDetailComponentProps> = (p
           disabled={stockCount <= 0}
           onClick={handleAdd}
           className="w-12 h-12 bg-primary-light hover:bg-[#e0f2f1] text-primary rounded-full shadow-xs flex items-center justify-center flex-shrink-0 active:scale-90 transition-all border-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Add to cart"
+          title="Thêm vào giỏ hàng"
         >
           <ShoppingBagIcon className="w-5.5 h-5.5 text-primary" strokeWidth={2.2} />
         </button>
@@ -477,7 +477,7 @@ export const ProductDetailComponent: React.FC<IProductDetailComponentProps> = (p
           onClick={handleBuyNow}
           className="flex-1 h-12 bg-primary hover:bg-primary-dark text-white font-bold text-xs uppercase tracking-widest rounded-full shadow-md flex items-center justify-center active:scale-[0.98] transition-all border-none cursor-pointer disabled:bg-neutral-300 disabled:cursor-not-allowed"
         >
-          {stockCount > 0 ? `Buy Now — $${(product.price * quantity).toFixed(2)}` : 'Hết hàng'}
+          {stockCount > 0 ? `Mua ngay — $${(product.price * quantity).toFixed(2)}` : 'Hết hàng'}
         </button>
       </div>
     </PageCast>

@@ -17,16 +17,16 @@ export const SavedItemsComponent: React.FC<ISavedItemsComponentProps> = (_props)
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </button>
-        <span className="text-xs font-bold uppercase tracking-widest text-textColor">Saved Items</span>
+        <span className="text-xs font-bold uppercase tracking-widest text-textColor">Sản phẩm đã lưu</span>
         <div className="w-8"></div>
       </div>
 
       <div className="flex-1 px-6 py-5.5 space-y-4 pb-28">
         {savedItems.length === 0 ? (
           <EmptyStateComponent
-            title="No saved items"
-            description="Tap the heart icon on any product to save it here for later."
-            actionText="Explore Products"
+            title="Chưa lưu sản phẩm nào"
+            description="Nhấn vào biểu tượng trái tim trên sản phẩm để lưu lại tại đây."
+            actionText="Khám phá ngay"
             onAction={() => setActiveTab('home')}
           />
         ) : (
@@ -37,7 +37,7 @@ export const SavedItemsComponent: React.FC<ISavedItemsComponentProps> = (_props)
               try {
                 const parsed = JSON.parse(prod.images);
                 if (parsed && parsed.length > 0) img = parsed[0];
-              } catch (e) {}
+              } catch (e) { }
 
               return (
                 <div
@@ -46,7 +46,7 @@ export const SavedItemsComponent: React.FC<ISavedItemsComponentProps> = (_props)
                   className="bg-white rounded-2xl overflow-hidden flex flex-col relative border border-[#f0edeb] shadow-xs group hover:shadow-md cursor-pointer transition-all duration-300"
                 >
                   {/* Remove Button */}
-                  <button 
+                  <button
                     onClick={(e) => { e.stopPropagation(); toggleSavedItem(prod); }}
                     className="absolute top-2.5 right-2.5 z-10 w-7.5 h-7.5 rounded-full bg-white/95 shadow-sm flex items-center justify-center text-red-500 hover:bg-red-50 active:scale-90 transition-all"
                   >
@@ -66,14 +66,14 @@ export const SavedItemsComponent: React.FC<ISavedItemsComponentProps> = (_props)
                       <span className="text-[9px] text-[#526069]/60 uppercase font-bold tracking-wider">{prod.category?.name}</span>
                       <h3 className="text-xs font-semibold text-textColor mt-0.5 line-clamp-1">{prod.name}</h3>
                     </div>
-                    
+
                     <div className="flex justify-between items-center mt-3.5">
                       <span className="text-xs font-bold text-textColor">${prod.price.toFixed(2)}</span>
                       <button
                         onClick={(e) => { e.stopPropagation(); addToCart(prod); }}
                         className="text-[9px] font-bold uppercase tracking-wider text-primary hover:text-primary-dark active:scale-95 transition-transform"
                       >
-                        Add to Cart
+                        Thêm vào giỏ
                       </button>
                     </div>
                   </div>

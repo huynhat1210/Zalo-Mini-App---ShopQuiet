@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -42,8 +42,8 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
   const [shippingMethod, setShippingMethod] = useState('standard');
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [shippingMethods, setShippingMethods] = useState<CmsShippingMethod[]>([
-    { code: 'standard', name: 'Standard Shipping', description: 'Delivery in 3-5 business days', price: 0 },
-    { code: 'express', name: 'Express Shipping', description: 'Delivery in 1-2 business days', price: 5 },
+    { code: 'standard', name: 'Giao hàng tiêu chuẩn', description: 'Nhận hàng trong 3-5 ngày làm việc', price: 0 },
+    { code: 'express', name: 'Giao hàng hỏa tốc', description: 'Nhận hàng trong 1-2 ngày làm việc', price: 5 },
   ]);
   const [paymentMethods, setPaymentMethods] = useState<CmsPaymentMethod[]>([
     { code: 'cod', name: 'Thanh toán khi nhận hàng (COD)', description: 'Thanh toán bằng tiền mặt khi giao hàng', provider: 'COD' },
@@ -493,7 +493,7 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </button>
-        <span className="text-xs font-bold uppercase tracking-widest text-textColor">Checkout</span>
+        <span className="text-xs font-bold uppercase tracking-widest text-textColor">Đặt hàng</span>
         <div className="w-8"></div>
       </div>
 
@@ -502,24 +502,24 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
         <div className="bg-white rounded-2xl border border-[#f0edeb] p-4 flex justify-between items-center text-[9px] font-bold uppercase tracking-wider text-textColor-variant shadow-xs">
           <div className="flex items-center gap-2 text-primary">
             <span className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center text-[9px]">1</span>
-            <span>Shipping</span>
+            <span>Vận chuyển</span>
           </div>
           <div className="w-8 h-[1px] bg-[#f0edeb]"></div>
           <div className="flex items-center gap-2 text-textColor/35">
             <span className="w-5 h-5 rounded-full bg-[#f0edeb] text-textColor/35 flex items-center justify-center text-[9px]">2</span>
-            <span>Payment</span>
+            <span>Thanh toán</span>
           </div>
           <div className="w-8 h-[1px] bg-[#f0edeb]"></div>
           <div className="flex items-center gap-2 text-textColor/35">
             <span className="w-5 h-5 rounded-full bg-[#f0edeb] text-textColor/35 flex items-center justify-center text-[9px]">3</span>
-            <span>Review</span>
+            <span>Xác nhận</span>
           </div>
         </div>
 
         {/* Shipping Address Section */}
         <div className="space-y-2.5">
           <div className="flex justify-between items-center px-1">
-            <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70">Shipping Address</h2>
+            <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70">Địa chỉ giao hàng</h2>
             {!isEnteringCustomAddress && addresses.length > 0 && (
               <button
                 onClick={() => {
@@ -615,7 +615,7 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
 
         {/* Shipping Method Section */}
         <div className="space-y-2.5">
-          <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">Shipping Method</h2>
+          <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">Phương thức vận chuyển</h2>
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-1 shadow-xs divide-y divide-[#f0edeb]">
             {shippingMethods.map((method, index) => (
               <label
@@ -645,7 +645,7 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
 
         {/* Payment Method Section */}
         <div className="space-y-2.5">
-          <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">Payment Method</h2>
+          <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">Phương thức thanh toán</h2>
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-1 shadow-xs divide-y divide-[#f0edeb]">
             {paymentMethods.map((method, index) => (
               <label
@@ -723,7 +723,7 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
 
         {/* IOrder Review Section */}
         <div className="space-y-2.5">
-          <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">Order Review</h2>
+          <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">Chi tiết đơn hàng</h2>
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 shadow-xs divide-y divide-[#f0edeb] space-y-3">
             <div className="space-y-3.5">
               {checkoutItems.map((item) => {
@@ -742,7 +742,7 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
                       <div className="text-xs min-w-0">
                         <p className="font-semibold text-textColor line-clamp-1 max-w-[160px]">{item.product.name}</p>
                         <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-textColor-variant">
-                          <span>Qty: {item.quantity}</span>
+                          <span>SL: {item.quantity}</span>
                           {selectedSize && (
                             <>
                               <span className="text-[#d8d2ce]">|</span>
@@ -786,7 +786,7 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
       {/* Sticky Footer Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 h-[80px] bg-white border-t border-[#f0edeb] flex justify-between items-center px-4.5 z-40 shadow-lg">
         <div className="flex flex-col">
-          <span className="text-[9px] font-bold text-textColor-variant uppercase tracking-wider">Total Due</span>
+          <span className="text-[9px] font-bold text-textColor-variant uppercase tracking-wider">Tổng cộng</span>
           <span className="text-lg font-extrabold text-textColor">${total.toFixed(2)}</span>
         </div>
 
@@ -794,7 +794,7 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
           onClick={handleSubmit(() => void handlePlaceOrder())}
           className="h-11 px-8 bg-primary hover:bg-primary-dark text-white font-bold text-xs uppercase tracking-widest rounded-full shadow-md active:scale-95 transition-all"
         >
-          Place Order
+          Đặt hàng
         </button>
       </div>
 

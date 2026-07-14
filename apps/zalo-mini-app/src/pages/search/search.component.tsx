@@ -25,7 +25,7 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
       const cached = localStorage.getItem('search_history');
       if (cached) return JSON.parse(cached);
     }
-    return ['Linen', 'Boots', 'Coat', 'Walnut'];
+    return ['Vải lanh', 'Giày bốt', 'Áo khoác', 'Gỗ óc chó'];
   });
 
   const saveSearchToHistory = (term: string) => {
@@ -39,7 +39,7 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
     });
   };
 
-  const filterTags = ['Price < $50', 'Home Goods', 'In Stock'];
+  const filterTags = ['Giá < $50', 'Đồ gia dụng', 'Còn hàng'];
 
   // Filtering
   const filteredProducts = (Array.isArray(products) ? products : []).filter(p => {
@@ -52,13 +52,13 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
         p.category.slug.toLowerCase().includes(query)
       ));
     
-    if (activeFilter === 'In Stock') {
+    if (activeFilter === 'Còn hàng') {
       return matchesSearch;
     }
-    if (activeFilter === 'Price < $50') {
+    if (activeFilter === 'Giá < $50') {
       return matchesSearch && p.price < 50;
     }
-    if (activeFilter === 'Home Goods') {
+    if (activeFilter === 'Đồ gia dụng') {
       return matchesSearch && p.category?.slug === 'home';
     }
     return matchesSearch;
@@ -74,7 +74,7 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
           </svg>
           <input
             type="text"
-            placeholder="Search for minimal goods..."
+            placeholder="Tìm kiếm sản phẩm tối giản..."
             className="bg-transparent w-full text-xs outline-none text-textColor placeholder-[#747873]"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -116,7 +116,7 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
         </div>
         {searchQuery && (
           <button onClick={() => setSearchQuery('')} className="text-xs font-semibold text-textColor-variant hover:text-textColor active:scale-95 transition-all">
-            Cancel
+            Hủy
           </button>
         )}
       </div>
@@ -130,7 +130,7 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.59l-5.432 5.432a2.25 2.25 0 00-.659 1.59v3.414a2.25 2.25 0 01-.659 1.59l-1.87 1.87a.75.75 0 01-1.28-.53v-6.344a2.25 2.25 0 00-.659-1.59L3.659 7.408A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A50.06 50.06 0 0112 3z" />
             </svg>
-            <span>Filter</span>
+            <span>Bộ lọc</span>
           </button>
 
           {filterTags.map(tag => {
@@ -157,7 +157,7 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
             {/* Recent Searches */}
             <div className="space-y-3.5">
               <div className="flex justify-between items-center px-1">
-                <h3 className="text-[10px] font-extrabold text-[#526069]/60 uppercase tracking-widest">Recent Searches</h3>
+                <h3 className="text-[10px] font-extrabold text-[#526069]/60 uppercase tracking-widest">Tìm kiếm gần đây</h3>
                 {history.length > 0 && (
                   <button
                     onClick={() => {
@@ -191,7 +191,7 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
 
             {/* Categories */}
             <div className="space-y-3.5">
-              <h3 className="text-[10px] font-extrabold text-[#526069]/60 uppercase tracking-widest px-1">Categories</h3>
+              <h3 className="text-[10px] font-extrabold text-[#526069]/60 uppercase tracking-widest px-1">Danh mục</h3>
               <div className="grid grid-cols-2 gap-3.5">
                 {categories.map(cat => (
                   <button
@@ -209,13 +209,13 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
           /* Search Results Grid */
           <div className="space-y-4">
             <div className="flex justify-between items-center px-1">
-              <h3 className="text-[10px] font-extrabold text-[#526069]/60 uppercase tracking-widest">Search Results</h3>
-              <span className="text-[10px] text-textColor/45 font-medium">{filteredProducts.length} Goods Found</span>
+              <h3 className="text-[10px] font-extrabold text-[#526069]/60 uppercase tracking-widest">Kết quả tìm kiếm</h3>
+              <span className="text-[10px] text-textColor/45 font-medium">Tìm thấy {filteredProducts.length} sản phẩm</span>
             </div>
 
             {filteredProducts.length === 0 ? (
               <div className="text-center py-16 bg-white rounded-2xl border border-[#f0edeb] text-xs text-textColor-variant shadow-xs">
-                No products found matching "{debouncedSearchQuery}"
+                Không tìm thấy sản phẩm nào phù hợp với "{debouncedSearchQuery}"
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-x-5 gap-y-7">

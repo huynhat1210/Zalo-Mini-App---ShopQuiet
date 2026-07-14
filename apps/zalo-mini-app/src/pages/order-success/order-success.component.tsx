@@ -52,7 +52,7 @@ export const OrderSuccessComponent: React.FC<IOrderSuccessComponentProps> = (_pr
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <span className="text-xs font-bold uppercase tracking-widest text-textColor">IOrder Confirmed</span>
+        <span className="text-xs font-bold uppercase tracking-widest text-textColor">Đã xác nhận đơn hàng</span>
         <div className="w-8"></div>
       </div>
 
@@ -65,9 +65,9 @@ export const OrderSuccessComponent: React.FC<IOrderSuccessComponentProps> = (_pr
             </svg>
           </div>
           <div className="space-y-1.5">
-            <h2 className="text-base font-bold text-textColor leading-tight">Thank you for your order!</h2>
+            <h2 className="text-base font-bold text-textColor leading-tight">Cảm ơn bạn đã đặt hàng!</h2>
             <p className="text-xs text-textColor-variant leading-relaxed max-w-[270px] mx-auto">
-              Your order <span className="font-semibold text-textColor">#{activeOrder.orderNumber}</span> has been placed and is being prepared for shipping.
+              Đơn hàng <span className="font-semibold text-textColor">#{activeOrder.orderNumber}</span> của bạn đã được ghi nhận và đang chuẩn bị giao.
             </p>
           </div>
         </div>
@@ -81,8 +81,8 @@ export const OrderSuccessComponent: React.FC<IOrderSuccessComponentProps> = (_pr
               </svg>
             </div>
             <div className="text-xs">
-              <p className="text-[#526069]/60 font-semibold uppercase tracking-wider text-[9px]">Estimated Delivery</p>
-              <p className="font-bold text-textColor mt-0.5">Oct 24 - Oct 26</p>
+              <p className="text-[#526069]/60 font-semibold uppercase tracking-wider text-[9px]">Dự kiến giao hàng</p>
+              <p className="font-bold text-textColor mt-0.5">3 - 5 ngày làm việc</p>
             </div>
           </div>
         </div>
@@ -90,8 +90,8 @@ export const OrderSuccessComponent: React.FC<IOrderSuccessComponentProps> = (_pr
         {/* IOrder Summary Bento Card */}
         <div className="bg-white rounded-2xl border border-[#f0edeb] overflow-hidden shadow-xs">
           <div className="px-4.5 py-4 bg-neutral-50 border-b border-[#f0edeb] flex justify-between items-center text-[9px] font-bold uppercase tracking-wider text-textColor-variant">
-            <span>IOrder Summary</span>
-            <span>{activeOrder.itemsCount} Items</span>
+            <span>Tóm tắt đơn hàng</span>
+            <span>{activeOrder.itemsCount} Sản phẩm</span>
           </div>
 
           <div className="px-4.5 py-2 divide-y divide-[#f0edeb]">
@@ -108,7 +108,7 @@ export const OrderSuccessComponent: React.FC<IOrderSuccessComponentProps> = (_pr
                     <img src={img} alt={item.name} className="w-12 h-12 object-cover rounded-lg border border-[#f0edeb]" />
                     <div className="text-xs">
                       <p className="font-semibold text-textColor line-clamp-1 max-w-[170px] pr-2">{item.name}</p>
-                      <p className="text-[10px] text-textColor-variant mt-0.5 font-medium">Qty: {item.quantity}</p>
+                      <p className="text-[10px] text-textColor-variant mt-0.5 font-medium">SL: {item.quantity}</p>
                     </div>
                   </div>
                   <span className="text-xs font-bold text-textColor">${(item.price * item.quantity).toFixed(2)}</span>
@@ -118,7 +118,7 @@ export const OrderSuccessComponent: React.FC<IOrderSuccessComponentProps> = (_pr
           </div>
 
           <div className="px-4.5 py-4 bg-neutral-50 border-t border-[#f0edeb] flex justify-between items-center text-xs font-bold text-textColor">
-            <span className="uppercase tracking-wider text-[10px] text-textColor-variant font-extrabold">Total Paid</span>
+            <span className="uppercase tracking-wider text-[10px] text-textColor-variant font-extrabold">Tổng thanh toán</span>
             <span className="text-base font-extrabold text-primary">${activeOrder.total.toFixed(2)}</span>
           </div>
         </div>
@@ -129,14 +129,14 @@ export const OrderSuccessComponent: React.FC<IOrderSuccessComponentProps> = (_pr
             onClick={() => setActiveTab('orders')}
             className="w-full h-11.5 rounded-full text-xs font-bold uppercase tracking-wider bg-primary text-white hover:bg-primary-dark active:scale-[0.98] transition-all shadow-sm"
           >
-            Track IOrder
+            Theo dõi đơn hàng
           </button>
           
           <button
             onClick={() => setActiveTab('home')}
             className="w-full h-11.5 rounded-full text-xs font-bold uppercase tracking-wider border border-[#eae8e6] text-[#526069] bg-white hover:bg-neutral-50 active:scale-[0.98] transition-all"
           >
-            Continue Shopping
+            Tiếp tục mua sắm
           </button>
         </div>
       </div>

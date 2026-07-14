@@ -472,7 +472,7 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
                           <span>•</span>
                           <span>{prod.category?.name}</span>
                           <span>•</span>
-                          <span className="text-green-600">In Stock</span>
+                          <span className="text-green-600">Còn hàng</span>
                         </div>
                       </div>
 
@@ -480,10 +480,10 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
                       <div className="flex justify-between items-end mt-2">
                         <div className="flex gap-1.5">
                           <span className="text-[8px] font-bold text-primary bg-primary-light px-2 py-0.5 rounded-md">
-                            Free Ship
+                            Freeship
                           </span>
                           <span className="text-[8px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
-                            10% Off
+                            Giảm 10%
                           </span>
                         </div>
                         <span className="text-xs font-extrabold text-textColor">${prod.price.toFixed(2)}</span>

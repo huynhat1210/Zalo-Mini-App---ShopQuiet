@@ -205,7 +205,7 @@ export default function App() {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                               </svg>
                             </button>
-                            <span className="text-xs font-bold uppercase tracking-widest text-textColor">Your Cart</span>
+                            <span className="text-xs font-bold uppercase tracking-widest text-textColor">Giỏ hàng của bạn</span>
                           </div>
                           <div className="flex-1 overflow-y-auto bg-[#fbf9f7]">
                             <CartComponent />

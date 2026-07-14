@@ -189,7 +189,7 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
         {/* Categories Section - Clean horizontal capsule scrolling */}
         <BoxCast className="my-6">
           <div className="flex justify-between items-center px-6 mb-3">
-            <TextCast className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/80">Categories</TextCast>
+            <TextCast className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/80">Danh mục</TextCast>
           </div>
 
           {isFetchingCategories && categories.length === 0 ? (
@@ -203,7 +203,7 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
                 : 'border-[#f0edeb] bg-white text-textColor-variant hover:bg-neutral-50'
                 }`}
             >
-              All Goods
+              Tất cả
             </button>
             {categories.map((cat) => {
               const isActive = selectedCategory === cat.slug;
@@ -228,7 +228,7 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
         {/* Featured Products - High-fidelity borderless grid cards */}
         <BoxCast className="my-6">
           <div className="px-6 mb-4">
-            <TextCast className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/80">Featured Products</TextCast>
+            <TextCast className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/80">Sản phẩm nổi bật</TextCast>
           </div>
 
           {isFetchingProducts && products.length === 0 ? (

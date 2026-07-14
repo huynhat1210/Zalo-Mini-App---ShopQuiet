@@ -41,9 +41,9 @@ export const CartComponent: React.FC<ICartComponentProps> = (_props) => {
       <div className="flex-1 flex flex-col overflow-y-auto px-6 py-5.5 pb-28">
         {cart.length === 0 ? (
           <EmptyStateComponent
-            title="Cart is empty"
-            description="Looks like you haven't added anything to your bag yet. Let's find some minimal goods!"
-            actionText="Start Shopping"
+            title="Giỏ hàng trống"
+            description="Có vẻ như bạn chưa thêm bất kỳ sản phẩm nào vào giỏ hàng. Hãy cùng khám phá các sản phẩm tối giản của chúng tôi!"
+            actionText="Bắt đầu mua sắm"
             onAction={() => { setIsCartOpen(false); setActiveTab('home'); }}
           />
         ) : (
@@ -116,7 +116,7 @@ export const CartComponent: React.FC<ICartComponentProps> = (_props) => {
                       <button
                         onClick={() => updateQuantity(item.product.id, 0, item.size)}
                         className="text-red-400 hover:text-red-600 p-1.5 rounded-full hover:bg-red-50 transition-colors border-none bg-transparent cursor-pointer"
-                        title="Remove"
+                        title="Xóa"
                       >
                         <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -133,20 +133,20 @@ export const CartComponent: React.FC<ICartComponentProps> = (_props) => {
         {/* IOrder Summary Section */}
         {cart.length > 0 && (
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 space-y-3.5 shadow-xs">
-            <h3 className="text-[10px] font-bold uppercase text-[#526069]/70 tracking-widest">IOrder Summary</h3>
+            <h3 className="text-[10px] font-bold uppercase text-[#526069]/70 tracking-widest">Tóm tắt đơn hàng</h3>
             
             <div className="space-y-2.5 text-xs">
               <div className="flex justify-between text-textColor-variant font-medium">
-                <span>Subtotal</span>
+                <span>Tạm tính</span>
                 <span>${subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-textColor-variant font-medium">
-                <span>Shipping</span>
+                <span>Phí vận chuyển</span>
                 <span>${shipping.toFixed(2)}</span>
               </div>
               <hr className="border-[#f0edeb] my-1" />
               <div className="flex justify-between font-bold text-textColor">
-                <span>Total</span>
+                <span>Tổng cộng</span>
                 <span>${total.toFixed(2)}</span>
               </div>
             </div>
@@ -161,7 +161,7 @@ export const CartComponent: React.FC<ICartComponentProps> = (_props) => {
             onClick={handleProceedCheckout}
             className="w-full h-12 rounded-full text-xs font-bold uppercase tracking-widest bg-primary text-white hover:bg-primary-dark active:scale-[0.98] transition-all shadow-md flex items-center justify-center border-none"
           >
-            Proceed to Checkout
+            Tiến hành đặt hàng
           </button>
         </div>
       )}
