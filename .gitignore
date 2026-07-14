@@ -10,6 +10,3 @@ coverage/
 *.local
 .vscode/
 .idea/
-# Seed files (database seed data)
-apps/backend/seed-more.ts
-apps/backend/prisma/seed.ts
