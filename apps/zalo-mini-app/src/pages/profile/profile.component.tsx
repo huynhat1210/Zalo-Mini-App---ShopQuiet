@@ -35,7 +35,7 @@ type ProfileAddressFormValues = z.infer<typeof profileAddressSchema>;
 
 export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
   const { initialSubPage = 'profile' } = props;
-  const { setActiveTab, setSelectedProductDetail, showToast, zaloUser, updateZaloUser, setSelectedOrder, savedItems, setIsCartOpen, cart } = useCart();
+  const { setActiveTab, setSelectedProductDetail, showToast, zaloUser, updateZaloUser, setSelectedOrder, savedItems, setIsCartOpen, cart, logout } = useCart();
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [recommendationProducts, setRecommendationProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +46,6 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
   // Modals state
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
@@ -131,15 +130,6 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
     setEditPhone(zaloUser?.phone || '');
     setEditBirthday(zaloUser?.birthday || '');
   }, [zaloUser]);
-
-
-
-  const presetAvatars = [
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
-    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
-    'https://images.unsplash.com/photo-1628157582853-a796fa650a6a?auto=format&fit=crop&w=200&q=80'
-  ];
 
   useEffect(() => {
     async function fetchCmsProfileConfig() {
@@ -250,10 +240,9 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
     }
   }, [isAdminModalOpen]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('zalo_profile_custom');
-    localStorage.removeItem('shipping_address');
-    showToast('Đã đăng xuất tài khoản và xóa bộ nhớ cache!', 'info');
+  const handleLogout = async () => {
+    await logout();
+    showToast('Đã đăng xuất tài khoản!', 'info');
     setTimeout(() => {
       window.location.reload();
     }, 1500);

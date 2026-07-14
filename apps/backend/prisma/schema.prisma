@@ -55,6 +55,7 @@ model User {
   addresses     UserAddress[]
   notifications Notification[]
   favorites     Favorite[]
+  refreshTokens RefreshToken[]
 
   @@index([name])
   @@index([role])
@@ -173,6 +174,19 @@ model Favorite {
   @@index([zaloUserId])
   @@index([productId])
   @@index([createdAt])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  zaloUserId String
+  user      User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([zaloUserId])
+  @@index([expiresAt])
 }
 
 model Voucher {

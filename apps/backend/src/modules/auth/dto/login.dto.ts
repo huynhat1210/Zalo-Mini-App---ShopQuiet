@@ -16,3 +16,8 @@ export class VerifyTokenDto {
   @IsString()
   token: string;
 }
+
+export class RefreshTokenDto {
+  @IsString()
+  refresh_token: string;
+}

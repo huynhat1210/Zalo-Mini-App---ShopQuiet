@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import api from 'zmp-sdk';
 import { apiRequest } from '../utils/api';
+import { tokenStorage } from '../utils/auth';
 import type { ICartItem, INotification, IOrder, IProduct, IToastState, TToastType, IZaloUser } from '../App.type';
 
 type AppState = {
@@ -32,9 +33,10 @@ type AppState = {
   updateItemSize: (productId: number, oldSize: string, newSize: string) => void;
   toggleSavedItem: (product: IProduct) => void;
   isSavedItem: (productId: number) => boolean;
-  syncUserFromStorage: () => void;
+  syncUserFromStorage: () => Promise<void>;
   fetchFavorites: () => Promise<void>;
   fetchCart: () => Promise<void>;
+  logout: () => Promise<void>;
 };
 
 export const useAppStore = create<AppState>()(
@@ -164,14 +166,29 @@ export const useAppStore = create<AppState>()(
         }
       },
       isSavedItem: (productId) => get().savedItems.some((item) => item.id === productId),
-      syncUserFromStorage: () => {
+      syncUserFromStorage: async () => {
         const cached = localStorage.getItem('zalo_profile_custom');
         if (cached) {
           const parsed = JSON.parse(cached);
           if (parsed?.name && parsed.name !== 'Alex Johnson') {
             set({ zaloUser: parsed });
             if (parsed.id) {
-              apiRequest('/users/sync', 'POST', { zaloId: parsed.id, name: parsed.name, avatar: parsed.avatar }).catch(console.error);
+              // Login to get tokens
+              try {
+                const authData: any = await apiRequest('/auth/login', 'POST', {
+                  zaloId: parsed.id,
+                  name: parsed.name,
+                  avatar: parsed.avatar,
+                });
+                tokenStorage.setTokens({
+                  access_token: authData.access_token,
+                  refresh_token: authData.refresh_token,
+                });
+                set({ zaloUser: authData.user });
+                localStorage.setItem('zalo_profile_custom', JSON.stringify(authData.user));
+              } catch (error) {
+                console.error('Login failed:', error);
+              }
             }
             return;
           }
@@ -181,16 +198,32 @@ export const useAppStore = create<AppState>()(
         const apiAny = api as any;
         if (typeof window !== 'undefined' && apiAny && apiAny.getUserInfo) {
           apiAny.getUserInfo({
-            success: (data: any) => {
+            success: async (data: any) => {
               if (data?.userInfo?.name) {
-                const user = {
-                  name: data.userInfo.name,
-                  avatar: data.userInfo.avatar,
-                  id: data.userInfo.id,
-                };
-                set({ zaloUser: user });
-                localStorage.setItem('zalo_profile_custom', JSON.stringify(user));
-                apiRequest('/users/sync', 'POST', { zaloId: user.id, name: user.name, avatar: user.avatar }).catch(console.error);
+                try {
+                  const authData: any = await apiRequest('/auth/login', 'POST', {
+                    zaloId: data.userInfo.id,
+                    name: data.userInfo.name,
+                    avatar: data.userInfo.avatar,
+                  });
+                  tokenStorage.setTokens({
+                    access_token: authData.access_token,
+                    refresh_token: authData.refresh_token,
+                  });
+                  set({ zaloUser: authData.user });
+                  localStorage.setItem('zalo_profile_custom', JSON.stringify(authData.user));
+                } catch (error) {
+                  console.error('Login failed:', error);
+                  // Fallback to old sync method
+                  const user = {
+                    name: data.userInfo.name,
+                    avatar: data.userInfo.avatar,
+                    id: data.userInfo.id,
+                  };
+                  set({ zaloUser: user });
+                  localStorage.setItem('zalo_profile_custom', JSON.stringify(user));
+                  apiRequest('/users/sync', 'POST', { zaloId: user.id, name: user.name, avatar: user.avatar }).catch(console.error);
+                }
               }
             },
             fail: (err: any) => {
@@ -234,6 +267,20 @@ export const useAppStore = create<AppState>()(
           }
         } catch (e) {
           console.error('Failed to fetch cart from backend:', e);
+        }
+      },
+      logout: async () => {
+        try {
+          const refreshToken = tokenStorage.getRefreshToken();
+          if (refreshToken) {
+            await apiRequest('/auth/logout', 'POST', { refresh_token: refreshToken });
+          }
+        } catch (error) {
+          console.error('Logout failed:', error);
+        } finally {
+          tokenStorage.clearTokens();
+          localStorage.removeItem('zalo_profile_custom');
+          set({ zaloUser: null, cart: [], savedItems: [] });
         }
       },
 

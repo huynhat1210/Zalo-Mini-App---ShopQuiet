@@ -80,6 +80,7 @@ export default function App() {
   const fetchFavorites = useAppStore((state) => state.fetchFavorites);
   const fetchCart = useAppStore((state) => state.fetchCart);
   const syncUserFromStorage = useAppStore((state) => state.syncUserFromStorage);
+  const logout = useAppStore((state) => state.logout);
 
   // TanStack React Query for Notifications
   const { data: notificationsData, refetch: fetchNotifications } = useNotifications();
@@ -156,7 +157,8 @@ export default function App() {
             setBuyNowItem,
             notifications,
             setNotifications: setNotifications as any,
-            fetchNotifications: fetchNotifications as any
+            fetchNotifications: fetchNotifications as any,
+            logout
           }}
         >
           <ZMPRouterCast>

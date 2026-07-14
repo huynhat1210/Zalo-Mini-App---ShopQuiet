@@ -98,4 +98,5 @@ export interface ICartContextType {
   notifications: INotification[];
   setNotifications: Dispatch<SetStateAction<INotification[]>>;
   fetchNotifications: () => Promise<void>;
+  logout: () => Promise<void>;
 }

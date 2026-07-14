@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
-import { LoginDto, VerifyTokenDto } from './dto/login.dto';
+import { LoginDto, VerifyTokenDto, RefreshTokenDto } from './dto/login.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -16,6 +16,21 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Login successful' })
   async login(@Body() body: LoginDto) {
     return this.authService.login(body.zaloId, body.name, body.avatar);
+  }
+
+  @Post('refresh')
+  @ApiOperation({ summary: 'Refresh access token' })
+  @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
+  @ApiResponse({ status: 401, description: 'Invalid refresh token' })
+  async refresh(@Body() body: RefreshTokenDto) {
+    return this.authService.refreshTokens(body.refresh_token);
+  }
+
+  @Post('logout')
+  @ApiOperation({ summary: 'Logout user' })
+  @ApiResponse({ status: 200, description: 'Logout successful' })
+  async logout(@Body() body: RefreshTokenDto) {
+    return this.authService.logout(body.refresh_token);
   }
 
   @Post('verify')
