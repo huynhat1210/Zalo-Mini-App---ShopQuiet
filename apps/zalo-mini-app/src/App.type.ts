@@ -67,6 +67,8 @@ export interface IZaloUser {
   name: string;
   avatar: string;
   id?: string;
+  birthday?: string;
+  phone?: string;
 }
 
 export interface ICartContextType {

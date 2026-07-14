@@ -80,9 +80,10 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
   // Profile details dynamically linked to Zalo User Auth
   const profile = {
     name: zaloUser?.name || cmsSettings['profile.defaultName'] || 'Alex Johnson',
-    phone: cmsSettings['profile.defaultPhone'] || '0987654321',
+    phone: zaloUser?.phone || cmsSettings['profile.defaultPhone'] || '0987654321',
     avatar: zaloUser?.avatar || cmsSettings['profile.defaultAvatar'] || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
     zaloId: zaloUser?.id || 'cust-zalo-id-1',
+    birthday: zaloUser?.birthday || '',
   };
 
   const handleSelectAddress = async (id: number) => {
@@ -99,6 +100,15 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
   // Edit fields states
   const [editName, setEditName] = useState(profile.name);
   const [editAvatar, setEditAvatar] = useState(profile.avatar);
+  const [editPhone, setEditPhone] = useState(zaloUser?.phone || '');
+  const [editBirthday, setEditBirthday] = useState(zaloUser?.birthday || '');
+
+  useEffect(() => {
+    setEditName(zaloUser?.name || profile.name);
+    setEditAvatar(zaloUser?.avatar || profile.avatar);
+    setEditPhone(zaloUser?.phone || '');
+    setEditBirthday(zaloUser?.birthday || '');
+  }, [zaloUser]);
 
 
 
@@ -150,10 +160,11 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
     try {
       const [fetchedOrders, fetchedProducts] = await Promise.all([
         apiRequest<IOrder[]>('/orders'),
-        apiRequest<IProduct[]>('/products')
+        apiRequest<any>('/products?page=1&limit=10')
       ]);
       setOrders(fetchedOrders);
-      const recs = Array.isArray(fetchedProducts) ? fetchedProducts.slice(0, 3) : [];
+      const productList = Array.isArray(fetchedProducts) ? fetchedProducts : (fetchedProducts?.data || []);
+      const recs = productList.slice(0, 3);
       setRecommendationProducts(recs);
 
       // Save fresh data to cache
@@ -235,6 +246,10 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
     (o) => o.status === 'DELIVERED' || o.status === 'CANCELLED'
   );
 
+  const reviewsOrdersList = orders.filter(
+    (o) => o.status === 'DELIVERED'
+  );
+
   const draftOrdersList = orders.filter(
     (o) => o.status === 'PENDING_PAYMENT'
   );
@@ -242,6 +257,7 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
   const displayedOrders = 
     ordersTab === 'active' ? activeOrdersList :
     ordersTab === 'history' ? historyOrdersList :
+    ordersTab === 'reviews' ? reviewsOrdersList :
     ordersTab === 'drafts' ? draftOrdersList : [];
   const activeStaticPage =
     staticPages.find((page) => page.slug === activeStaticPageSlug) ||
@@ -487,87 +503,101 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
 
   // Profile View
   return (
-    <PageCast className="bg-surface relative flex flex-col w-full h-full overscroll-none scrollbar-none">
-      {/* Header */}
-      <div className="bg-white px-6 py-4.5 flex items-center justify-between border-b border-[#f0edeb] sticky top-0 z-30">
-        <button onClick={() => setActiveTab('home')} className="p-1 hover:bg-[#f0edeb] rounded-full transition-colors">
-          <svg className="w-5.5 h-5.5 text-textColor" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-          </svg>
-        </button>
-        <span className="text-sm font-bold uppercase tracking-wider text-textColor">Profile</span>
-        <button onClick={() => setIsEditProfileOpen(true)} className="p-1 hover:bg-[#f0edeb] rounded-full transition-colors border-none bg-transparent cursor-pointer">
-          <svg className="w-5.5 h-5.5 text-textColor" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.99l1.005.831a1.125 1.125 0 01.26 1.43l-1.297 2.247a1.125 1.125 0 01-1.37.491l-1.216-.456c-.356-.133-.751-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.43l1.004-.83c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.831a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        </button>
-      </div>
- 
-      {/* User Card */}
-      <div className="bg-white p-6 border-b border-[#f0edeb] flex flex-col items-center text-center space-y-3">
-        <img
-          src={profile.avatar}
-          alt={profile.name}
-          className="w-18 h-18 rounded-full object-cover border border-[#f0edeb] shadow-sm"
-        />
-        <div>
-          <TextCast className="text-base font-bold text-textColor">{profile.name}</TextCast>
-          {zaloUser?.name ? (
-            <button onClick={() => setIsEditProfileOpen(true)} className="text-xs text-[#526069]/70 font-semibold mt-1 hover:underline border-none bg-transparent cursor-pointer">
-              ✓ Sửa hồ sơ
-            </button>
-          ) : (
-            <button 
-              onClick={() => {
-                const apiAny = api as any;
-                if (typeof window !== 'undefined' && apiAny) {
-                  apiAny.authorize({
-                    scopes: ['scope.userInfo'],
-                    success: () => {
-                      apiAny.getUserInfo({
-                        success: (data: any) => {
-                          if (data?.userInfo?.name) {
-                            updateZaloUser({
-                              name: data.userInfo.name,
-                              avatar: data.userInfo.avatar,
-                              id: data.userInfo.id,
-                            });
-                            showToast('Đăng nhập Zalo thành công!', 'success');
-                          } else {
-                            showToast('Không lấy được thông tin Zalo, vui lòng thử lại!', 'warning');
-                          }
-                        },
-                        fail: () => {
-                          showToast('Vui lòng cấp quyền xem thông tin cá nhân!', 'warning');
-                        }
-                      });
-                    },
-                    fail: () => {
-                      showToast('Không thể kết nối Zalo!', 'warning');
-                    }
-                  });
-                }
-              }} 
-              className="text-xs text-primary font-bold mt-1.5 hover:underline border-none bg-transparent cursor-pointer flex items-center gap-1 mx-auto"
-            >
-              <span>🔗 Đăng nhập bằng Zalo</span>
-            </button>
-          )}
+    <PageCast className="bg-[#f7f7f7] relative flex flex-col w-full h-full overscroll-none scrollbar-none">
+      {/* Top Banner (ShopeeFood style / custom teal brand gradient) */}
+      <div className="bg-gradient-to-br from-teal-900 via-teal-800 to-primary text-white pt-6 pb-9 px-6 relative rounded-b-[32px] shadow-md">
+        {/* Navigation Bar */}
+        <div className="flex justify-between items-center mb-6">
+          <button onClick={() => setActiveTab('home')} className="p-2 -ml-2 bg-white/10 hover:bg-white/20 active:scale-95 rounded-full transition-colors border-none text-white cursor-pointer">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+          <span className="text-xs font-black uppercase tracking-[0.2em] font-sans">ShopQuiet ID</span>
+          <button onClick={() => setIsEditProfileOpen(true)} className="p-2 -mr-2 bg-white/10 hover:bg-white/20 active:scale-95 rounded-full transition-colors border-none text-white cursor-pointer">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+            </svg>
+          </button>
+        </div>
+
+        {/* User Card Row */}
+        <div className="flex items-center gap-4.5">
+          <div className="relative">
+            <img
+              src={profile.avatar}
+              alt={profile.name}
+              className="w-19 h-19 rounded-full object-cover border-3 border-white/90 shadow-md"
+            />
+            {/* Verified Badge */}
+            <span className="absolute bottom-0 right-0 w-5 h-5 bg-amber-400 text-teal-950 rounded-full flex items-center justify-center font-bold text-[9px] border-2 border-white shadow-xs">✓</span>
+          </div>
+
+          <div className="flex-1 text-left space-y-1.5">
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold tracking-tight line-clamp-1">{profile.name}</h2>
+              {/* Member Level Badge */}
+              <span className="bg-amber-400 text-teal-950 font-black tracking-widest text-[8px] uppercase px-2 py-0.5 rounded flex items-center gap-1 shadow-xs animate-pulse">
+                ★ BẠC
+              </span>
+            </div>
+
+            <div className="space-y-0.5 text-[10.5px] text-white/80 font-medium">
+              <p className="flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 opacity-75" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.387a12.035 12.035 0 01-7.108-7.108c-.155-.44.01-1.03.387-1.312l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.318A2.25 2.25 0 002.1 4.5v2.25z" />
+                </svg>
+                <span>{profile.phone}</span>
+              </p>
+              <p className="flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 opacity-75" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.87c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.473 18 10.608v2.513M12 8.25v5.25m0 0l-3-3m3 3l3-3M3.375 19.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                </svg>
+                <span>
+                  {profile.birthday
+                    ? new Date(profile.birthday).toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' })
+                    : 'Chưa cập nhật ngày sinh'}
+                </span>
+              </p>
+            </div>
+          </div>
         </div>
       </div>
- 
-      {/* Menu Sections (Figma structure) */}
-      <div className="px-6 py-5.5 space-y-5 pb-28">
+
+      {/* Quick Dashboard Counter Stats Card (Overlapping like ShopeeFood) */}
+      <div className="mx-6 -mt-5 bg-white rounded-2xl p-4 shadow-sm border border-[#f0edeb] grid grid-cols-3 divide-x divide-neutral-100 z-10 relative text-center">
+        <button onClick={() => setActiveTab('saved-items')} className="flex flex-col items-center justify-center border-none bg-transparent cursor-pointer active:scale-95 transition-transform">
+          <span className="text-base font-extrabold text-textColor">{savedItems.length}</span>
+          <span className="text-[10px] text-[#526069]/65 font-bold uppercase tracking-wider mt-1">Yêu thích</span>
+        </button>
+        <button onClick={() => setIsCartOpen(true)} className="flex flex-col items-center justify-center border-none bg-transparent cursor-pointer active:scale-95 transition-transform">
+          <span className="text-base font-extrabold text-textColor">
+            {cart.reduce((sum, item) => sum + item.quantity, 0)}
+          </span>
+          <span className="text-[10px] text-[#526069]/65 font-bold uppercase tracking-wider mt-1">Giỏ hàng</span>
+        </button>
+        <button onClick={() => setIsPaymentModalOpen(true)} className="flex flex-col items-center justify-center border-none bg-transparent cursor-pointer active:scale-95 transition-transform">
+          <span className="text-base font-extrabold text-teal-600">10%</span>
+          <span className="text-[10px] text-[#526069]/65 font-bold uppercase tracking-wider mt-1">Ưu đãi</span>
+        </button>
+      </div>
+
+      {/* Profile menu categories list */}
+      <div className="flex-1 overflow-y-auto px-6 py-5.5 space-y-5 pb-28">
         {/* Section 1: Shopping */}
-        <div className="space-y-2">
-          <h3 className="text-[10px] font-extrabold text-[#526069]/50 uppercase tracking-wider px-2">Shopping</h3>
-          <div className="bg-white rounded-2xl border border-[#f0edeb] overflow-hidden shadow-sm divide-y divide-[#f0edeb]">
+        <div className="space-y-2.5">
+          <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-2">Giao dịch & Mua sắm</h3>
+          <div className="bg-white rounded-2xl border border-[#f0edeb] overflow-hidden shadow-xs divide-y divide-[#f0edeb]">
             <button 
               onClick={() => setActiveTab('orders')}
-              className="w-full px-4 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
+              className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
-              <span>My Orders</span>
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-textColor/60" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                </svg>
+                <span className="font-semibold text-textColor">Đơn hàng của tôi</span>
+              </div>
               <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
@@ -575,25 +605,36 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
             
             <button 
               onClick={() => setActiveTab('saved-items')}
-              className="w-full px-4 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
+              className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
-              <span>Saved Items</span>
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-textColor/60" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                </svg>
+                <span className="font-semibold text-textColor">Sản phẩm yêu thích</span>
+              </div>
               <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
             </button>
           </div>
         </div>
- 
+
         {/* Section 2: Account */}
-        <div className="space-y-2">
-          <h3 className="text-[10px] font-extrabold text-[#526069]/50 uppercase tracking-wider px-2">Account</h3>
-          <div className="bg-white rounded-2xl border border-[#f0edeb] overflow-hidden shadow-sm divide-y divide-[#f0edeb]">
+        <div className="space-y-2.5">
+          <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-2">Thiết lập & Cá nhân</h3>
+          <div className="bg-white rounded-2xl border border-[#f0edeb] overflow-hidden shadow-xs divide-y divide-[#f0edeb]">
             <button 
               onClick={() => setIsAddressModalOpen(true)}
-              className="w-full px-4 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
+              className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
-              <span>Shipping Address</span>
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-textColor/60" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                </svg>
+                <span className="font-semibold text-textColor">Địa chỉ nhận hàng</span>
+              </div>
               <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
@@ -601,25 +642,35 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
             
             <button 
               onClick={() => setIsPaymentModalOpen(true)}
-              className="w-full px-4 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
+              className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
-              <span>Payment Methods</span>
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-textColor/60" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                </svg>
+                <span className="font-semibold text-textColor">Phương thức thanh toán</span>
+              </div>
               <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
             </button>
           </div>
         </div>
- 
+
         {/* Section 3: General */}
-        <div className="space-y-2">
-          <h3 className="text-[10px] font-extrabold text-[#526069]/50 uppercase tracking-wider px-2">General</h3>
-          <div className="bg-white rounded-2xl border border-[#f0edeb] overflow-hidden shadow-sm divide-y divide-[#f0edeb]">
+        <div className="space-y-2.5">
+          <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-2">Thông tin ứng dụng</h3>
+          <div className="bg-white rounded-2xl border border-[#f0edeb] overflow-hidden shadow-xs divide-y divide-[#f0edeb]">
             <button 
               onClick={() => setActiveTab('notifications')}
-              className="w-full px-4 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
+              className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
-              <span>Notifications</span>
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-textColor/60" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a9.04 9.04 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0M3.124 7.5A8.969 8.969 0 015.292 3m13.416 0a8.969 8.969 0 012.168 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="font-semibold text-textColor">Thông báo</span>
+              </div>
               <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
@@ -630,9 +681,14 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
                 setActiveStaticPageSlug('help-support');
                 setIsHelpModalOpen(true);
               }}
-              className="w-full px-4 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
+              className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
-              <span>Help & Support</span>
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-textColor/60" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+                </svg>
+                <span className="font-semibold text-textColor">Trung tâm hỗ trợ</span>
+              </div>
               <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
@@ -643,24 +699,27 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
                 setActiveStaticPageSlug('about-shopquiet');
                 setIsHelpModalOpen(true);
               }}
-              className="w-full px-4 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
+              className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
-              <span>About ShopQuiet</span>
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-textColor/60" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 111.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                </svg>
+                <span className="font-semibold text-textColor">Về ShopQuiet</span>
+              </div>
               <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
             </button>
-
-
           </div>
         </div>
- 
+
         {/* Logout Button */}
         <button
           onClick={handleLogout}
-          className="w-full h-11 bg-white border border-[#eae8e6] text-red-500 font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-red-50 transition-all flex items-center justify-center shadow-sm cursor-pointer"
+          className="w-full h-11 bg-white border border-[#eae8e6] text-red-500 font-extrabold text-xs uppercase tracking-wider rounded-2xl hover:bg-red-50 transition-all flex items-center justify-center shadow-xs cursor-pointer"
         >
-          Logout
+          Đăng xuất tài khoản
         </button>
       </div>
 
@@ -671,19 +730,40 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
           <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up">
 <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">Chỉnh sửa thông tin</h3>
             
-            <div className="space-y-3">
+            <div className="space-y-3 text-left">
               <div>
-                <label className="text-[9px] font-bold text-textColor-variant uppercase tracking-wider block mb-1">Họ tên</label>
+                <label className="text-[9px] font-extrabold text-textColor-variant uppercase tracking-wider block mb-1">Họ tên</label>
                 <input
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-primary"
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor"
+                />
+              </div>
+
+              <div>
+                <label className="text-[9px] font-extrabold text-textColor-variant uppercase tracking-wider block mb-1">Số điện thoại</label>
+                <input
+                  type="tel"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  placeholder="Chưa cập nhật SĐT"
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor"
+                />
+              </div>
+
+              <div>
+                <label className="text-[9px] font-extrabold text-textColor-variant uppercase tracking-wider block mb-1">Ngày sinh</label>
+                <input
+                  type="date"
+                  value={editBirthday}
+                  onChange={(e) => setEditBirthday(e.target.value)}
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor"
                 />
               </div>
               
               <div>
-                <label className="text-[9px] font-bold text-textColor-variant uppercase tracking-wider block mb-2">Ảnh đại diện</label>
+                <label className="text-[9px] font-extrabold text-textColor-variant uppercase tracking-wider block mb-2">Ảnh đại diện</label>
                 <div className="flex gap-3 justify-center py-2">
                   {presetAvatars.map((av, index) => (
                     <img
@@ -702,7 +782,13 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
             <div className="flex gap-3 pt-2">
               <button
                 onClick={() => {
-                  updateZaloUser({ name: editName, avatar: editAvatar, id: profile.zaloId });
+                  updateZaloUser({
+                    name: editName,
+                    avatar: editAvatar,
+                    id: profile.zaloId,
+                    phone: editPhone,
+                    birthday: editBirthday,
+                  });
                   setIsEditProfileOpen(false);
                   showToast('Cập nhật thông tin thành công!', 'success');
                 }}
