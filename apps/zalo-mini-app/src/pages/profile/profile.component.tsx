@@ -101,6 +101,28 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
   const [editPhone, setEditPhone] = useState(zaloUser?.phone || '');
   const [editBirthday, setEditBirthday] = useState(zaloUser?.birthday || '');
 
+  // Birthday split state for 3-select picker
+  const parseBirthday = (val: string) => {
+    if (!val) return { d: '', m: '', y: '' };
+    const parts = val.split('-');
+    if (parts.length === 3) return { d: parts[2], m: parts[1], y: parts[0] };
+    return { d: '', m: '', y: '' };
+  };
+  const bday = parseBirthday(editBirthday);
+  const [bdDay, setBdDay] = useState(bday.d);
+  const [bdMonth, setBdMonth] = useState(bday.m);
+  const [bdYear, setBdYear] = useState(bday.y);
+
+  useEffect(() => {
+    const b = parseBirthday(editBirthday);
+    setBdDay(b.d); setBdMonth(b.m); setBdYear(b.y);
+  }, [editBirthday]);
+
+  const handleBirthdayChange = (d: string, m: string, y: string) => {
+    if (d && m && y) setEditBirthday(`${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`);
+    else setEditBirthday('');
+  };
+
   useEffect(() => {
     setEditName(zaloUser?.name || profile.name);
     setEditAvatar(zaloUser?.avatar || profile.avatar);
@@ -751,13 +773,39 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
               </div>
 
               <div>
-                <label className="text-[9px] font-extrabold text-textColor-variant uppercase tracking-wider block mb-1">Ngày sinh</label>
-                <input
-                  type="date"
-                  value={editBirthday}
-                  onChange={(e) => setEditBirthday(e.target.value)}
-                  className="w-full block max-w-full min-w-0 box-border bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor"
-                />
+                <label className="text-[9px] font-extrabold text-textColor-variant uppercase tracking-wider block mb-2">Ngày sinh</label>
+                <div className="grid grid-cols-3 gap-2">
+                  <select
+                    value={bdDay}
+                    onChange={e => { setBdDay(e.target.value); handleBirthdayChange(e.target.value, bdMonth, bdYear); }}
+                    className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-2 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor"
+                  >
+                    <option value="">Ngày</option>
+                    {Array.from({length:31},(_,i)=>i+1).map(d=>(
+                      <option key={d} value={String(d).padStart(2,'0')}>{d}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={bdMonth}
+                    onChange={e => { setBdMonth(e.target.value); handleBirthdayChange(bdDay, e.target.value, bdYear); }}
+                    className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-2 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor"
+                  >
+                    <option value="">Tháng</option>
+                    {Array.from({length:12},(_,i)=>i+1).map(m=>(
+                      <option key={m} value={String(m).padStart(2,'0')}>Tháng {m}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={bdYear}
+                    onChange={e => { setBdYear(e.target.value); handleBirthdayChange(bdDay, bdMonth, e.target.value); }}
+                    className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-2 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor"
+                  >
+                    <option value="">Năm</option>
+                    {Array.from({length:60},(_,i)=>new Date().getFullYear()-i).map(y=>(
+                      <option key={y} value={String(y)}>{y}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               
               <div>

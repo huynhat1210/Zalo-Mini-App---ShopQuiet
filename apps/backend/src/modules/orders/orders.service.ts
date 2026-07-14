@@ -194,6 +194,9 @@ export class OrdersService {
 
     // Create custom dynamic notification for the user
     try {
+      // Ensure user exists before creating notification (FK constraint)
+      await this.ensureUserExists(filterUserId, dto.shippingName || undefined);
+
       const itemsText = order.items
         .map(
           (i) =>
@@ -225,8 +228,8 @@ export class OrdersService {
           read: false,
         },
       });
-    } catch (e) {
-      console.error('Error creating post-order notification:', e);
+    } catch (e: any) {
+      console.error('Error creating post-order notification:', e?.message || e);
     }
 
     // Simulate ZNS dispatch
