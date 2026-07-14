@@ -818,22 +818,6 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
                   </select>
                 </div>
               </div>
-              
-              <div>
-                <label className="text-[9px] font-extrabold text-textColor-variant uppercase tracking-wider block mb-2">Ảnh đại diện</label>
-                <div className="flex gap-3 justify-center py-2">
-                  {presetAvatars.map((av, index) => (
-                    <img
-                      key={index}
-                      src={av}
-                      onClick={() => setEditAvatar(av)}
-                      className={`w-12 h-12 rounded-full object-cover border-2 cursor-pointer transition-all ${
-                        editAvatar === av ? 'border-primary scale-105 shadow-md' : 'border-transparent opacity-65'
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
             </div>
 
             <div className="flex gap-3 pt-2">
@@ -1040,13 +1024,20 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
 
       {/* 3. Voucher Wallet Modal */}
       {isVoucherModalOpen && (
-        <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-end justify-center p-0">
-          <div className="bg-white w-full max-w-sm rounded-t-3xl border-t border-[#f0edeb] shadow-2xl animate-slide-up max-h-[70vh] flex flex-col">
-            <div className="flex items-center justify-between px-6 pt-5 pb-3 shrink-0">
+        <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-center justify-center p-6">
+          <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up max-h-[70vh] flex flex-col">
+            <div className="flex items-center justify-between shrink-0">
               <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">🎟️ Ví Voucher của tôi</h3>
-              <span className="text-[10px] text-textColor-variant">{userVouchers.length} mã khả dụng</span>
+              <button
+                onClick={() => setIsVoucherModalOpen(false)}
+                className="p-2 -mr-2 bg-neutral-100 hover:bg-neutral-200 rounded-full transition-colors border-none cursor-pointer"
+              >
+                <svg className="w-4 h-4 text-textColor" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            <div className="overflow-y-auto flex-1 space-y-2.5 px-6 pb-2">
+            <div className="overflow-y-auto flex-1 space-y-2.5">
               {userVouchers.length === 0 ? (
                 <div className="text-center py-8 space-y-2">
                   <span className="text-4xl">🏷️</span>
@@ -1082,15 +1073,6 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
                   </div>
                 ))
               )}
-            </div>
-            {/* Sticky close button always visible at bottom, outside scroll area */}
-            <div className="shrink-0 px-6 pt-3 pb-8 bg-white border-t border-neutral-100">
-              <button
-                onClick={() => setIsVoucherModalOpen(false)}
-                className="w-full h-11 bg-neutral-100 text-textColor font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-neutral-200 active:scale-95 transition-transform"
-              >
-                Đóng
-              </button>
             </div>
           </div>
         </div>
