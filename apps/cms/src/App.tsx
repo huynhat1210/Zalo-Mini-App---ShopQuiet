@@ -8,6 +8,7 @@ import Products from './pages/Products';
 import Orders from './pages/Orders';
 import Vouchers from './pages/Vouchers';
 import Banners from './pages/Banners';
+import DatabaseManager from './pages/DatabaseManager';
 import './App.css';
 
 export const App: React.FC = () => {
@@ -48,6 +49,7 @@ export const App: React.FC = () => {
           <Route path="/orders" element={<Orders />} />
           <Route path="/vouchers" element={<Vouchers />} />
           <Route path="/banners" element={<Banners />} />
+          <Route path="/database/:modelName" element={<DatabaseManager />} />
           {/* Catch-all fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 export type CmsContentType =
@@ -410,5 +410,87 @@ export class CmsService implements OnModuleInit {
         create: item,
       });
     }
+  }
+
+  private getModelKey(modelName: string): string {
+    const prismaKeys = Object.keys(this.prisma).filter(
+      (k) => !k.startsWith('_') && !k.startsWith('$')
+    );
+    const matched = prismaKeys.find((k) => k.toLowerCase() === modelName.toLowerCase());
+    if (!matched) {
+      throw new NotFoundException(`Model ${modelName} does not exist`);
+    }
+    return matched;
+  }
+
+  private getParsedId(id: string): string | number {
+    const num = Number(id);
+    if (!isNaN(num) && /^\d+$/.test(id)) {
+      return num;
+    }
+    return id;
+  }
+
+  async getDatabaseSummary() {
+    const keys = Object.keys(this.prisma).filter(
+      (k) =>
+        !k.startsWith('_') &&
+        !k.startsWith('$') &&
+        typeof (this.prisma as any)[k]?.count === 'function'
+    );
+
+    const summary = await Promise.all(
+      keys.map(async (key) => {
+        const count = await (this.prisma as any)[key].count();
+        return {
+          model: key.charAt(0).toUpperCase() + key.slice(1),
+          count,
+        };
+      })
+    );
+    return summary;
+  }
+
+  async getRecords(modelName: string) {
+    const modelKey = this.getModelKey(modelName);
+    return (this.prisma as any)[modelKey].findMany({
+      orderBy: { createdAt: 'desc' },
+    }).catch(() => {
+      return (this.prisma as any)[modelKey].findMany();
+    });
+  }
+
+  async createRecord(modelName: string, data: any) {
+    const modelKey = this.getModelKey(modelName);
+    const cleanData = { ...data };
+    delete cleanData.id;
+    delete cleanData.createdAt;
+    delete cleanData.updatedAt;
+
+    return (this.prisma as any)[modelKey].create({
+      data: cleanData,
+    });
+  }
+
+  async updateRecord(modelName: string, id: string, data: any) {
+    const modelKey = this.getModelKey(modelName);
+    const parsedId = this.getParsedId(id);
+    const cleanData = { ...data };
+    delete cleanData.id;
+    delete cleanData.createdAt;
+    delete cleanData.updatedAt;
+
+    return (this.prisma as any)[modelKey].update({
+      where: { id: parsedId },
+      data: cleanData,
+    });
+  }
+
+  async deleteRecord(modelName: string, id: string) {
+    const modelKey = this.getModelKey(modelName);
+    const parsedId = this.getParsedId(id);
+    return (this.prisma as any)[modelKey].delete({
+      where: { id: parsedId },
+    });
   }
 }

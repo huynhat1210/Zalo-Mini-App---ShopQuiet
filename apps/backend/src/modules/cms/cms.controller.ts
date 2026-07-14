@@ -1,5 +1,6 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { CmsService, CmsContentType } from './cms.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('cms')
 export class CmsController {
@@ -12,7 +13,6 @@ export class CmsController {
 
   @Get('content/:type')
   async getContent(@Param('type') type: string, @Query('limit') limit?: string) {
-    // Cast incoming string to CmsContentType; the service will handle unknown types gracefully.
     return this.cmsService.getContent(type as CmsContentType, limit);
   }
 
@@ -44,5 +44,47 @@ export class CmsController {
   @Get('payment-methods')
   async getPaymentMethods() {
     return this.cmsService.getPaymentMethods();
+  }
+
+  // --- Dynamic Database Manager CRUD ---
+
+  @Get('database/summary')
+  @UseGuards(JwtAuthGuard)
+  async getDatabaseSummary() {
+    return this.cmsService.getDatabaseSummary();
+  }
+
+  @Get('database/models/:modelName')
+  @UseGuards(JwtAuthGuard)
+  async getRecords(@Param('modelName') modelName: string) {
+    return this.cmsService.getRecords(modelName);
+  }
+
+  @Post('database/models/:modelName')
+  @UseGuards(JwtAuthGuard)
+  async createRecord(
+    @Param('modelName') modelName: string,
+    @Body() body: any,
+  ) {
+    return this.cmsService.createRecord(modelName, body);
+  }
+
+  @Patch('database/models/:modelName/:id')
+  @UseGuards(JwtAuthGuard)
+  async updateRecord(
+    @Param('modelName') modelName: string,
+    @Param('id') id: string,
+    @Body() body: any,
+  ) {
+    return this.cmsService.updateRecord(modelName, id, body);
+  }
+
+  @Delete('database/models/:modelName/:id')
+  @UseGuards(JwtAuthGuard)
+  async deleteRecord(
+    @Param('modelName') modelName: string,
+    @Param('id') id: string,
+  ) {
+    return this.cmsService.deleteRecord(modelName, id);
   }
 }
