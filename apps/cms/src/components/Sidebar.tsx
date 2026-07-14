@@ -3,17 +3,16 @@ import { NavLink } from 'react-router-dom';
 import { apiRequest } from '../utils/api';
 import { 
   LayoutDashboard, 
-  ShoppingBag, 
-  ReceiptText, 
-  Ticket, 
-  Image as ImageIcon, 
   LogOut, 
   Store,
-  Database
+  Database,
+  X
 } from 'lucide-react';
 
 interface SidebarProps {
   onLogout: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 interface ModelSummary {
@@ -21,7 +20,7 @@ interface ModelSummary {
   count: number;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ onLogout, isOpen, onClose }) => {
   const [models, setModels] = useState<ModelSummary[]>([]);
 
   useEffect(() => {
@@ -29,7 +28,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
       try {
         const res = await apiRequest('/cms/database/summary');
         if (Array.isArray(res)) {
-          // Sort models alphabetically
           const sorted = res.sort((a, b) => a.model.localeCompare(b.model));
           setModels(sorted);
         }
@@ -41,59 +39,59 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
     fetchModelsSummary();
   }, []);
 
-  const menuItems = [
-    { name: 'Tổng quan', path: '/', icon: LayoutDashboard },
-    { name: 'Sản phẩm', path: '/products', icon: ShoppingBag },
-    { name: 'Đơn hàng', path: '/orders', icon: ReceiptText },
-    { name: 'Ví Voucher', path: '/vouchers', icon: Ticket },
-    { name: 'Quản lý Banners', path: '/banners', icon: ImageIcon },
-  ];
-
   return (
-    <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-screen sticky top-0">
+    <aside 
+      className={`fixed inset-y-0 left-0 z-50 bg-white border-r border-slate-200 flex flex-col h-screen transition-all duration-300 ease-in-out shrink-0 ${
+        isOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full overflow-hidden'
+      }`}
+    >
       {/* Brand Header */}
-      <div className="h-16 flex items-center px-6 border-b border-slate-800 gap-3">
-        <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">
-          <Store size={20} />
+      <div className="h-16 flex items-center justify-between px-6 border-b border-slate-250/60">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-[#ecf6f7] text-[#0e6877] rounded-xl border border-[#0e6877]/10">
+            <Store size={20} />
+          </div>
+          <div>
+            <h1 className="font-bold text-[#1b1c1b] tracking-wide text-sm">ShopQuiet CMS</h1>
+            <p className="text-[10px] text-[#526069] font-medium">Bảng Quản Trị</p>
+          </div>
         </div>
-        <div>
-          <h1 className="font-bold text-white tracking-wide text-sm">ShopQuiet CMS</h1>
-          <p className="text-[10px] text-slate-400 font-medium">Bảng Quản Trị Hệ Thống</p>
-        </div>
+        
+        {/* Toggle Close Button */}
+        <button 
+          onClick={onClose}
+          className="p-1.5 text-slate-400 hover:text-[#0e6877] hover:bg-slate-100 rounded-lg transition-colors"
+        >
+          <X size={16} />
+        </button>
       </div>
 
       {/* Main Pages Menu */}
       <div className="px-4 pt-6 space-y-1">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 ${
-                  isActive
-                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/10'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-                }`
-              }
-            >
-              <Icon size={16} />
-              <span>{item.name}</span>
-            </NavLink>
-          );
-        })}
+        <NavLink
+          to="/"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              isActive
+                ? 'bg-[#0e6877] text-white shadow-md shadow-[#0e6877]/10'
+                : 'text-[#526069] hover:bg-[#ecf6f7] hover:text-[#0e6877]'
+            }`
+          }
+        >
+          <LayoutDashboard size={16} />
+          <span>Tổng quan</span>
+        </NavLink>
       </div>
 
       {/* Divider */}
       <div className="px-6 py-4">
-        <div className="border-t border-slate-800"></div>
+        <div className="border-t border-slate-100"></div>
       </div>
 
       {/* Dynamic Database Models List */}
       <div className="flex-1 flex flex-col min-h-0">
         <div className="px-6 mb-2">
-          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">
+          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
             Tất cả bảng dữ liệu (Models)
           </span>
         </div>
@@ -105,18 +103,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
               key={m.model}
               to={`/database/${m.model}`}
               className={({ isActive }) =>
-                `flex items-center justify-between px-4 py-2 rounded-xl text-xs transition-all duration-200 ${
+                `flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 ${
                   isActive
-                    ? 'bg-slate-800 text-emerald-400 font-semibold'
-                    : 'text-slate-400 hover:bg-slate-850 hover:text-slate-200'
+                    ? 'bg-[#ecf6f7] text-[#0e6877] font-semibold border-l-4 border-[#0e6877] rounded-l-none'
+                    : 'text-[#526069] hover:bg-[#ecf6f7]/60 hover:text-[#0e6877]'
                 }`
               }
             >
               <div className="flex items-center gap-2 truncate">
-                <Database size={13} className="text-slate-550 shrink-0" />
+                <Database size={13} className="text-slate-400 shrink-0" />
                 <span className="truncate">{m.model}</span>
               </div>
-              <span className="px-1.5 py-0.5 text-[9px] font-bold bg-slate-950 text-slate-400 rounded-full border border-slate-800 group-hover:border-slate-700 shrink-0 ml-2">
+              <span className="px-2 py-0.5 text-[9px] font-bold bg-slate-100 text-slate-500 rounded-full border border-slate-200 shrink-0 ml-2">
                 {m.count}
               </span>
             </NavLink>
@@ -125,10 +123,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout }) => {
       </div>
 
       {/* Logout Footer */}
-      <div className="p-4 border-t border-slate-800">
+      <div className="p-4 border-t border-slate-100">
         <button
           onClick={onLogout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-all duration-200"
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-all duration-200"
         >
           <LogOut size={16} />
           <span>Đăng xuất</span>
