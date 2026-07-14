@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiRequest } from '../utils/api';
 import { 
@@ -16,7 +16,8 @@ import {
   Truck,
   User as UserIcon,
   Star,
-  Ticket
+  Ticket,
+  ChevronRight
 } from 'lucide-react';
 
 export const DatabaseManager: React.FC = () => {
@@ -25,9 +26,10 @@ export const DatabaseManager: React.FC = () => {
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any | null>(null);
   const [error, setError] = useState('');
+  const drawerRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState<Record<string, any>>({});
 
@@ -48,9 +50,18 @@ export const DatabaseManager: React.FC = () => {
     setRecords([]);
     setSearchTerm('');
     fetchRecords();
-    setIsModalOpen(false);
+    setIsDrawerOpen(false);
     setEditingRecord(null);
   }, [modelName]);
+
+  // Close drawer on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsDrawerOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const getColumns = () => {
     if (records.length === 0) return ['id'];
@@ -61,27 +72,22 @@ export const DatabaseManager: React.FC = () => {
 
   const columns = getColumns();
 
-  const handleOpenAddModal = () => {
+  const openDrawerForAdd = () => {
     setEditingRecord(null);
     const initialForm: Record<string, any> = {};
     columns.forEach((col) => {
       if (col === 'id' || col === 'createdAt' || col === 'updatedAt') return;
-      
       const sampleVal = records[0]?.[col];
-      if (typeof sampleVal === 'number') {
-        initialForm[col] = 0;
-      } else if (typeof sampleVal === 'boolean') {
-        initialForm[col] = true;
-      } else {
-        initialForm[col] = '';
-      }
+      if (typeof sampleVal === 'number') initialForm[col] = 0;
+      else if (typeof sampleVal === 'boolean') initialForm[col] = true;
+      else initialForm[col] = '';
     });
     setFormData(initialForm);
-    setIsModalOpen(true);
     setError('');
+    setIsDrawerOpen(true);
   };
 
-  const handleOpenEditModal = (record: any) => {
+  const openDrawerForEdit = (record: any) => {
     setEditingRecord(record);
     const initialForm: Record<string, any> = {};
     columns.forEach((col) => {
@@ -89,7 +95,13 @@ export const DatabaseManager: React.FC = () => {
       initialForm[col] = record[col] ?? '';
     });
     setFormData(initialForm);
-    setIsModalOpen(true);
+    setError('');
+    setIsDrawerOpen(true);
+  };
+
+  const closeDrawer = () => {
+    setIsDrawerOpen(false);
+    setEditingRecord(null);
     setError('');
   };
 
@@ -118,18 +130,13 @@ export const DatabaseManager: React.FC = () => {
     e.preventDefault();
     if (!modelName) return;
     setError('');
-
     try {
       const castedData: Record<string, any> = {};
       Object.keys(formData).forEach((key) => {
         const originalVal = records[0]?.[key];
-        if (typeof originalVal === 'number') {
-          castedData[key] = Number(formData[key]);
-        } else if (typeof originalVal === 'boolean') {
-          castedData[key] = formData[key] === 'true' || formData[key] === true;
-        } else {
-          castedData[key] = formData[key];
-        }
+        if (typeof originalVal === 'number') castedData[key] = Number(formData[key]);
+        else if (typeof originalVal === 'boolean') castedData[key] = formData[key] === 'true' || formData[key] === true;
+        else castedData[key] = formData[key];
       });
 
       if (editingRecord) {
@@ -137,8 +144,8 @@ export const DatabaseManager: React.FC = () => {
       } else {
         await apiRequest(`/cms/database/models/${modelName}`, 'POST', castedData);
       }
-      fetchRecords();
-      setIsModalOpen(false);
+      await fetchRecords();
+      closeDrawer();
     } catch (err: any) {
       setError(err.message || 'Lỗi khi lưu dữ liệu bản ghi.');
     }
@@ -155,7 +162,7 @@ export const DatabaseManager: React.FC = () => {
     });
   });
 
-  // --- Specialized Custom Renderers ---
+  // ── Specialized Custom Renderers ──
 
   const renderProductView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -180,7 +187,13 @@ export const DatabaseManager: React.FC = () => {
                 )}
               </div>
               <div className="flex gap-2">
-                <button onClick={() => handleOpenEditModal(product)} className="p-2 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 rounded-xl transition-all"><Edit3 size={12} /></button>
+                <button
+                  onClick={() => openDrawerForEdit(product)}
+                  className="p-2 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 rounded-xl transition-all flex items-center gap-1 text-xs font-semibold"
+                  title="Sửa sản phẩm"
+                >
+                  <Edit3 size={12} /> Sửa
+                </button>
                 <button onClick={() => handleDeleteRecord(product.id)} className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl transition-all"><Trash2 size={12} /></button>
               </div>
             </div>
@@ -252,7 +265,6 @@ export const DatabaseManager: React.FC = () => {
               <p className="text-[9px] font-bold text-[#526069] uppercase tracking-wider">Sản phẩm đã mua</p>
               <div className="divide-y divide-slate-150/60">
                 {order.items.map((item: any, idx: number) => {
-                  // If product images is JSON string or array
                   let imgUrl = '';
                   try {
                     const parsed = typeof item.product?.images === 'string' ? JSON.parse(item.product.images) : item.product?.images;
@@ -266,9 +278,7 @@ export const DatabaseManager: React.FC = () => {
                         {imgUrl ? (
                           <img src={imgUrl} alt={item.product?.name} className="w-8 h-8 rounded-lg object-cover border border-slate-200" />
                         ) : (
-                          <div className="w-8 h-8 bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-center text-slate-400 font-bold text-[10px]">
-                            SP
-                          </div>
+                          <div className="w-8 h-8 bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-center text-slate-400 font-bold text-[10px]">SP</div>
                         )}
                         <div>
                           <p className="font-bold text-[#1b1c1b]">{item.product?.name || 'Sản phẩm không tên'}</p>
@@ -310,7 +320,10 @@ export const DatabaseManager: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <button onClick={() => handleDeleteRecord(v.id)} className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg transition-colors"><Trash2 size={12} /></button>
+              <div className="flex gap-2">
+                <button onClick={() => openDrawerForEdit(v)} className="p-1.5 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 rounded-lg transition-colors"><Edit3 size={12} /></button>
+                <button onClick={() => handleDeleteRecord(v.id)} className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg transition-colors"><Trash2 size={12} /></button>
+              </div>
             </div>
             <div className="space-y-2 border-t border-dashed border-slate-100 pt-4 text-xs font-semibold">
               <p className="text-[#526069] font-medium text-xs">{v.description || 'Không có mô tả.'}</p>
@@ -329,7 +342,10 @@ export const DatabaseManager: React.FC = () => {
         <div key={banner.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col hover:shadow-md transition-all duration-200 group">
           <div className="h-44 bg-[#fbf9f7] relative overflow-hidden">
             <img src={banner.imageUrl} alt={banner.title || 'Slide Banner'} className="w-full h-full object-cover" />
-            <button onClick={() => handleDeleteRecord(banner.id)} className="absolute top-4 right-4 p-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition-colors shadow-lg"><Trash2 size={13} /></button>
+            <div className="absolute top-4 right-4 flex gap-2">
+              <button onClick={() => openDrawerForEdit(banner)} className="p-2 bg-white/90 hover:bg-white text-[#0e6877] rounded-xl transition-colors shadow-lg"><Edit3 size={13} /></button>
+              <button onClick={() => handleDeleteRecord(banner.id)} className="p-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition-colors shadow-lg"><Trash2 size={13} /></button>
+            </div>
           </div>
           <div className="p-5 space-y-2 flex-1">
             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">ID: {banner.id}</span>
@@ -349,7 +365,7 @@ export const DatabaseManager: React.FC = () => {
             <div className="p-3 bg-[#ecf6f7] text-[#0e6877] rounded-full shrink-0 border border-[#0e6877]/10">
               <UserIcon size={20} />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <h4 className="font-bold text-[#1b1c1b] text-sm truncate">{user.name}</h4>
               <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full uppercase tracking-wider ${
                 user.role === 'admin' ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' : 'text-slate-600 bg-slate-50 border border-slate-200'
@@ -389,17 +405,16 @@ export const DatabaseManager: React.FC = () => {
     </div>
   );
 
-  // Fallback simplified table rendering (for Category, MenuItem, SiteSetting, StaticPage, etc.)
+  // Generic table for ProductVariant, Category, etc. - WITH edit button opening drawer
   const renderDefaultTableView = () => {
-    // Columns to exclude from simplified view to make it extremely easy to read
     const excludedColumns = ['description', 'images', 'link', 'createdAt', 'updatedAt', 'materialCare', 'shippingReturn', 'avatar'];
     const simpleColumns = columns.filter(col => !excludedColumns.includes(col));
 
     return (
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 overflow-hidden shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-700 whitespace-nowrap">
-            <thead className="bg-[#fbf9f7] text-[#526069] text-[10px] font-bold uppercase tracking-wider sticky top-0 z-10">
+            <thead className="bg-[#fbf9f7] text-[#526069] text-[10px] font-bold uppercase tracking-wider">
               <tr>
                 {simpleColumns.map((col) => (
                   <th key={col} className="py-3.5 px-4 bg-[#fbf9f7] border-b border-slate-200">{col}</th>
@@ -413,9 +428,7 @@ export const DatabaseManager: React.FC = () => {
                   {simpleColumns.map((col) => {
                     const val = record[col];
                     let displayVal = String(val ?? 'NULL');
-                    if (typeof val === 'boolean') {
-                      displayVal = val ? 'TRUE' : 'FALSE';
-                    }
+                    if (typeof val === 'boolean') displayVal = val ? 'TRUE' : 'FALSE';
                     return (
                       <td key={col} className="py-3.5 px-4 max-w-xs truncate text-[#1b1c1b] font-medium" title={displayVal}>
                         {displayVal}
@@ -425,7 +438,7 @@ export const DatabaseManager: React.FC = () => {
                   <td className="py-3.5 px-4 text-right">
                     <div className="flex justify-end gap-2">
                       <button
-                        onClick={() => handleOpenEditModal(record)}
+                        onClick={() => openDrawerForEdit(record)}
                         className="p-1.5 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 rounded-lg transition-colors"
                         title="Sửa"
                       >
@@ -471,7 +484,7 @@ export const DatabaseManager: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fadeIn text-[#1b1c1b]">
+    <div className="space-y-6 animate-fadeIn text-[#1b1c1b] relative">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-4">
@@ -482,15 +495,20 @@ export const DatabaseManager: React.FC = () => {
             <ArrowLeft size={16} />
           </button>
           <div>
-            <h2 className="text-3xl font-bold text-[#1b1c1b] tracking-tight">Dữ liệu bảng: {modelName}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-3xl font-bold text-[#1b1c1b] tracking-tight">Bảng: {modelName}</h2>
+              <span className="px-2.5 py-0.5 text-xs font-bold text-[#0e6877] bg-[#ecf6f7] border border-[#0e6877]/10 rounded-full">
+                {records.length} bản ghi
+              </span>
+            </div>
             <p className="text-[#526069] text-sm mt-1">
-              Quản lý và thực hiện chỉnh sửa cơ sở dữ liệu trực tiếp
+              Quản lý và chỉnh sửa cơ sở dữ liệu trực tiếp
             </p>
           </div>
         </div>
 
         <button
-          onClick={handleOpenAddModal}
+          onClick={openDrawerForAdd}
           className="bg-[#0e6877] hover:bg-[#0a4c57] text-white font-semibold py-2.5 px-5 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 shadow-md shadow-[#0e6877]/10"
         >
           <Plus size={16} />
@@ -506,7 +524,7 @@ export const DatabaseManager: React.FC = () => {
           </span>
           <input
             type="text"
-            placeholder={`Tìm kiếm trong các cột của bảng ${modelName}...`}
+            placeholder={`Tìm kiếm trong bảng ${modelName}...`}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-[#0e6877] focus:ring-1 focus:ring-[#0e6877] rounded-xl py-2.5 pl-10 pr-4 text-xs text-[#1b1c1b] placeholder-slate-400 focus:outline-none transition-all"
@@ -514,7 +532,7 @@ export const DatabaseManager: React.FC = () => {
         </div>
       </div>
 
-      {/* Tailored Layout List */}
+      {/* Data Layout */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <div className="w-10 h-10 border-4 border-[#0e6877] border-t-transparent rounded-full animate-spin"></div>
@@ -524,91 +542,134 @@ export const DatabaseManager: React.FC = () => {
         getBespokeLayout()
       )}
 
-      {/* Dynamic Edit/Add Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-slideUp">
-            {/* Header */}
-            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-[#1b1c1b]">
-                {editingRecord ? `Chỉnh sửa: ${modelName}` : `Thêm bản ghi mới: ${modelName}`}
-              </h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-[#1b1c1b] transition-colors"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {error && (
-              <div className="p-4 mx-6 mt-4 bg-rose-50 border border-rose-100 text-rose-700 text-xs rounded-xl flex items-start gap-2.5">
-                <AlertCircle size={15} className="shrink-0 mt-0.5" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[450px] overflow-y-auto">
-              {Object.keys(formData).map((key) => {
-                const sampleVal = records[0]?.[key];
-                return (
-                  <div key={key}>
-                    <label className="block text-[#526069] text-[10px] font-bold mb-1.5 uppercase tracking-wider">
-                      {key}
-                    </label>
-                    
-                    {typeof sampleVal === 'boolean' ? (
-                      <select
-                        value={formData[key] ? 'true' : 'false'}
-                        onChange={(e) => setFormData({ ...formData, [key]: e.target.value === 'true' })}
-                        className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-[#0e6877] rounded-xl py-2 px-3 text-xs text-[#1b1c1b] focus:outline-none transition-all"
-                      >
-                        <option value="true">TRUE</option>
-                        <option value="false">FALSE</option>
-                      </select>
-                    ) : typeof sampleVal === 'number' ? (
-                      <input
-                        type="number"
-                        required
-                        value={formData[key]}
-                        onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
-                        className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-[#0e6877] rounded-xl py-2 px-3 text-xs text-[#1b1c1b] focus:outline-none transition-all"
-                      />
-                    ) : (
-                      <input
-                        type="text"
-                        value={formData[key]}
-                        onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
-                        placeholder={`Nhập ${key}...`}
-                        className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-[#0e6877] rounded-xl py-2 px-3 text-xs text-[#1b1c1b] focus:outline-none transition-all"
-                      />
-                    )}
-                  </div>
-                );
-              })}
-
-              {/* Actions */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-[#526069] font-bold rounded-xl text-xs transition-colors"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-[#0e6877] hover:bg-[#0a4c57] text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md shadow-[#0e6877]/10"
-                >
-                  <Save size={14} />
-                  Lưu bản ghi
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* ── RIGHT SIDE DRAWER (Edit / Add) ── */}
+      {/* Backdrop */}
+      {isDrawerOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-40 transition-opacity"
+          onClick={closeDrawer}
+        />
       )}
+
+      {/* Drawer Panel - slides in from right, overlays content without pushing layout */}
+      <div
+        ref={drawerRef}
+        className={`fixed top-0 right-0 h-full w-full max-w-md bg-white border-l border-slate-200 shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out ${
+          isDrawerOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        {/* Drawer Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-[#ecf6f7] text-[#0e6877] rounded-xl border border-[#0e6877]/10">
+              {editingRecord ? <Edit3 size={15} /> : <Plus size={15} />}
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[#1b1c1b]">
+                {editingRecord ? `Chỉnh sửa bản ghi` : `Thêm mới`}
+              </h3>
+              <p className="text-[10px] text-[#526069] font-medium">Bảng: {modelName}</p>
+            </div>
+          </div>
+          <button
+            onClick={closeDrawer}
+            className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-[#1b1c1b] transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Drawer breadcrumb */}
+        {editingRecord && (
+          <div className="px-6 py-2.5 bg-[#fbf9f7] border-b border-slate-100 shrink-0 flex items-center gap-1.5 text-[10px] text-[#526069] font-medium">
+            <Database size={11} />
+            <span>{modelName}</span>
+            <ChevronRight size={10} />
+            <span className="font-bold text-[#1b1c1b] truncate">
+              {editingRecord.id || editingRecord.zaloId || editingRecord.code || 'Bản ghi'}
+            </span>
+          </div>
+        )}
+
+        {/* Error */}
+        {error && (
+          <div className="px-6 pt-4 shrink-0">
+            <div className="p-3.5 bg-rose-50 border border-rose-100 text-rose-700 text-xs rounded-2xl flex items-start gap-2.5">
+              <AlertCircle size={14} className="shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Form - scrollable */}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+            {Object.keys(formData).map((key) => {
+              const sampleVal = records[0]?.[key];
+              const isLongText = key === 'description' || key === 'content' || key === 'images' || key === 'materialCare' || key === 'shippingReturn';
+              return (
+                <div key={key}>
+                  <label className="block text-[#526069] text-[10px] font-bold mb-2 uppercase tracking-wider">
+                    {key}
+                  </label>
+                  {typeof sampleVal === 'boolean' ? (
+                    <select
+                      value={formData[key] ? 'true' : 'false'}
+                      onChange={(e) => setFormData({ ...formData, [key]: e.target.value === 'true' })}
+                      className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-[#0e6877] focus:ring-1 focus:ring-[#0e6877] rounded-xl py-2.5 px-3.5 text-xs text-[#1b1c1b] focus:outline-none transition-all"
+                    >
+                      <option value="true">TRUE</option>
+                      <option value="false">FALSE</option>
+                    </select>
+                  ) : isLongText ? (
+                    <textarea
+                      rows={4}
+                      value={formData[key]}
+                      onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                      placeholder={`Nhập ${key}...`}
+                      className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-[#0e6877] focus:ring-1 focus:ring-[#0e6877] rounded-xl py-2.5 px-3.5 text-xs text-[#1b1c1b] focus:outline-none transition-all resize-y"
+                    />
+                  ) : typeof sampleVal === 'number' ? (
+                    <input
+                      type="number"
+                      required
+                      value={formData[key]}
+                      onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                      className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-[#0e6877] focus:ring-1 focus:ring-[#0e6877] rounded-xl py-2.5 px-3.5 text-xs text-[#1b1c1b] focus:outline-none transition-all"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      value={formData[key]}
+                      onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                      placeholder={`Nhập ${key}...`}
+                      className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-[#0e6877] focus:ring-1 focus:ring-[#0e6877] rounded-xl py-2.5 px-3.5 text-xs text-[#1b1c1b] focus:outline-none transition-all"
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Drawer Footer Actions - always visible at bottom */}
+          <div className="shrink-0 px-6 py-4 border-t border-slate-100 bg-[#fbf9f7] flex gap-3">
+            <button
+              type="button"
+              onClick={closeDrawer}
+              className="flex-1 px-4 py-2.5 bg-white hover:bg-slate-100 text-[#526069] font-bold rounded-xl text-xs transition-colors border border-slate-200"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              className="flex-1 px-5 py-2.5 bg-[#0e6877] hover:bg-[#0a4c57] text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-[#0e6877]/15"
+            >
+              <Save size={14} />
+              {editingRecord ? 'Cập nhật' : 'Lưu mới'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
