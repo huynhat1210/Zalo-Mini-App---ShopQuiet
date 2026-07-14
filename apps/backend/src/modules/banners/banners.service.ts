@@ -63,4 +63,26 @@ export class BannersService {
   async invalidateCache() {
     await this.cacheManager.del('banners_all');
   }
+
+  async create(data: { imageUrl: string; title?: string; description?: string; link?: string }) {
+    const banner = await this.prisma.banner.create({
+      data: {
+        imageUrl: data.imageUrl,
+        title: data.title,
+        description: data.description,
+        link: data.link,
+        active: true,
+      },
+    });
+    await this.invalidateCache();
+    return banner;
+  }
+
+  async remove(id: number) {
+    const banner = await this.prisma.banner.delete({
+      where: { id },
+    });
+    await this.invalidateCache();
+    return banner;
+  }
 }
