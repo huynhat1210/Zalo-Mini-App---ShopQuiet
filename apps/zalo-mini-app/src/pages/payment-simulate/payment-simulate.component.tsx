@@ -3,7 +3,7 @@ import { apiRequest } from '../../utils/api';
 import { IPaymentSimulateComponentProps } from './payment-simulate.type';
 
 export const PaymentSimulateComponent: React.FC<IPaymentSimulateComponentProps> = (_props) => {
-  const { selectedOrder, setActiveTab, showToast, clearCart, buyNowItem, setBuyNowItem } = useCart();
+  const { selectedOrder, setActiveTab, showToast, clearCart, buyNowItem, setBuyNowItem, fetchNotifications } = useCart();
 
   if (!selectedOrder) {
     return (
@@ -55,6 +55,9 @@ export const PaymentSimulateComponent: React.FC<IPaymentSimulateComponentProps> 
       }
 
       showToast('Thanh toán thành công!', 'success');
+      if (fetchNotifications) {
+        fetchNotifications();
+      }
       setActiveTab('order-success');
     } catch (e) {
       console.error(e);

@@ -34,7 +34,7 @@ const checkoutAddressSchema = z.object({
 type CheckoutAddressFormValues = z.infer<typeof checkoutAddressSchema>;
 
 export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => {
-  const { cart, clearCart, setActiveTab, showToast, zaloUser, buyNowItem, setBuyNowItem, setSelectedOrder } = useCart();
+  const { cart, clearCart, setActiveTab, showToast, zaloUser, buyNowItem, setBuyNowItem, setSelectedOrder, fetchNotifications } = useCart();
 
   // If buyNowItem exists, checkout only that item (direct buy); otherwise use full cart
   const checkoutItems = buyNowItem ? [buyNowItem] : cart;
@@ -371,6 +371,9 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
                           clearCart();
                         }
                         showToast('Thanh toán thành công!', 'success');
+                        if (fetchNotifications) {
+                          fetchNotifications();
+                        }
                         setActiveTab('order-success');
                       })
                       .catch((e) => {
@@ -475,6 +478,9 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
         clearCart();
       }
       showToast(`Đặt hàng #${orderNumber} thành công!`, 'success');
+      if (fetchNotifications) {
+        fetchNotifications();
+      }
       setActiveTab('order-success');
 
     } catch (error: any) {
