@@ -100,6 +100,7 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
   const [editName, setEditName] = useState(profile.name);
   const [editAvatar, setEditAvatar] = useState(profile.avatar);
   const [editPhone, setEditPhone] = useState(zaloUser?.phone || '');
+  const [editEmail, setEditEmail] = useState(zaloUser?.email || '');
   const [editBirthday, setEditBirthday] = useState(zaloUser?.birthday || '');
 
   // Birthday split state for 3-select picker
@@ -128,6 +129,7 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
     setEditName(zaloUser?.name || profile.name);
     setEditAvatar(zaloUser?.avatar || profile.avatar);
     setEditPhone(zaloUser?.phone || '');
+    setEditEmail(zaloUser?.email || '');
     setEditBirthday(zaloUser?.birthday || '');
   }, [zaloUser]);
 
@@ -773,6 +775,17 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
               </div>
 
               <div>
+                <label className="text-[9px] font-extrabold text-textColor-variant uppercase tracking-wider block mb-1">Email</label>
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  placeholder="Chưa cập nhật email"
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor"
+                />
+              </div>
+
+              <div>
                 <label className="text-[9px] font-extrabold text-textColor-variant uppercase tracking-wider block mb-2">Ngày sinh</label>
                 <div className="grid grid-cols-3 gap-2">
                   <select
@@ -817,6 +830,7 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
                     avatar: editAvatar,
                     id: profile.zaloId,
                     phone: editPhone,
+                    email: editEmail,
                     birthday: editBirthday,
                   });
                   setIsEditProfileOpen(false);

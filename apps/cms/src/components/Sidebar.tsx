@@ -6,7 +6,8 @@ import {
   LogOut, 
   Store,
   Database,
-  X
+  X,
+  Users
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -80,6 +81,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, isOpen, onClose }) =
         >
           <LayoutDashboard size={16} />
           <span>Tổng quan</span>
+        </NavLink>
+        <NavLink
+          to="/users"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              isActive
+                ? 'bg-[#0e6877] text-white shadow-md shadow-[#0e6877]/10'
+                : 'text-[#526069] hover:bg-[#ecf6f7] hover:text-[#0e6877]'
+            }`
+          }
+        >
+          <Users size={16} />
+          <span>Quản lý người dùng</span>
         </NavLink>
       </div>
 

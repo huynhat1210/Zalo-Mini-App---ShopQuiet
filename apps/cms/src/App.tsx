@@ -9,7 +9,16 @@ import Orders from './pages/Orders';
 import Vouchers from './pages/Vouchers';
 import Banners from './pages/Banners';
 import DatabaseManager from './pages/DatabaseManager';
+import UserManagement from './pages/UserManagement';
+import { ToastProvider, useToast } from './contexts/ToastContext';
+import { ToastContainer } from './components/Toast';
+import { PermissionProvider } from './contexts/PermissionContext';
 import './App.css';
+
+const ToastContainerWrapper: React.FC = () => {
+  const { toasts, removeToast } = useToast();
+  return <ToastContainer toasts={toasts} onClose={removeToast} />;
+};
 
 export const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -41,20 +50,26 @@ export const App: React.FC = () => {
   }
 
   return (
-    <BrowserRouter>
-      <Layout onLogout={handleLogout}>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/vouchers" element={<Vouchers />} />
-          <Route path="/banners" element={<Banners />} />
-          <Route path="/database/:modelName" element={<DatabaseManager />} />
-          {/* Catch-all fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Layout>
-    </BrowserRouter>
+    <PermissionProvider>
+      <ToastProvider>
+        <BrowserRouter>
+          <Layout onLogout={handleLogout}>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/products" element={<Products />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/vouchers" element={<Vouchers />} />
+              <Route path="/banners" element={<Banners />} />
+              <Route path="/database/:modelName" element={<DatabaseManager />} />
+              <Route path="/users" element={<UserManagement />} />
+              {/* Catch-all fallback */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Layout>
+          <ToastContainerWrapper />
+        </BrowserRouter>
+      </ToastProvider>
+    </PermissionProvider>
   );
 };
 export default App;

@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiRequest } from '../utils/api';
+import { useToast } from '../contexts/ToastContext';
+import { validateField, validateRecord, checkDataQuality, type DataQualityIssue } from '../utils/validation';
 import { 
   Plus, 
   Edit3, 
@@ -17,43 +19,35 @@ import {
   User as UserIcon,
   Star,
   Ticket,
-  ChevronRight
+  ChevronRight,
+  Filter,
+  CheckSquare,
+  Square,
+  X as CloseIcon,
+  PackageSearch,
+  ShieldCheck,
+  AlertTriangle,
+  FileCheck
 } from 'lucide-react';
 
 export const DatabaseManager: React.FC = () => {
   const { modelName } = useParams<{ modelName: string }>();
   const navigate = useNavigate();
+  const { success, error: toastError } = useToast();
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any | null>(null);
   const [error, setError] = useState('');
-  // Position of the floating panel — computed from the triggering button rect
-  const [panelAnchor, setPanelAnchor] = useState<{ top: number; left: number } | null>(null);
+  const [selectedRecords, setSelectedRecords] = useState<Set<string | number>>(new Set());
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [showQualityPanel, setShowQualityPanel] = useState(false);
 
   const [formData, setFormData] = useState<Record<string, any>>({});
 
-  // Compute smart position: near the button, clamped inside viewport
-  const computeAnchor = (e: React.MouseEvent<HTMLButtonElement>): { top: number; left: number } => {
-    const PANEL_W = 420;
-    const PANEL_H = Math.min(560, window.innerHeight * 0.85);
-    const MARGIN = 12;
-    const rect = e.currentTarget.getBoundingClientRect();
-
-    // Try to appear to the LEFT of the button first, then right
-    let left = rect.left - PANEL_W - MARGIN;
-    if (left < MARGIN) left = rect.right + MARGIN;
-    // If still overflows on right, clamp
-    if (left + PANEL_W > window.innerWidth - MARGIN) left = window.innerWidth - PANEL_W - MARGIN;
-
-    // Vertically: align to the button top, clamped
-    let top = rect.top;
-    if (top + PANEL_H > window.innerHeight - MARGIN) top = window.innerHeight - PANEL_H - MARGIN;
-    if (top < MARGIN) top = MARGIN;
-
-    return { top, left };
-  };
 
   const fetchRecords = async () => {
     if (!modelName) return;
@@ -71,6 +65,9 @@ export const DatabaseManager: React.FC = () => {
   useEffect(() => {
     setRecords([]);
     setSearchTerm('');
+    setSelectedRecords(new Set());
+    setColumnFilters({});
+    setIsFilterPanelOpen(false);
     fetchRecords();
     setIsDrawerOpen(false);
     setEditingRecord(null);
@@ -94,8 +91,7 @@ export const DatabaseManager: React.FC = () => {
 
   const columns = getColumns();
 
-  const openDrawerForAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
-    setPanelAnchor(computeAnchor(e));
+  const openDrawerForAdd = () => {
     setEditingRecord(null);
     const initialForm: Record<string, any> = {};
     columns.forEach((col) => {
@@ -110,8 +106,7 @@ export const DatabaseManager: React.FC = () => {
     setIsDrawerOpen(true);
   };
 
-  const openDrawerForEdit = (record: any, e: React.MouseEvent<HTMLButtonElement>) => {
-    setPanelAnchor(computeAnchor(e));
+  const openDrawerForEdit = (record: any) => {
     setEditingRecord(record);
     const initialForm: Record<string, any> = {};
     columns.forEach((col) => {
@@ -135,8 +130,9 @@ export const DatabaseManager: React.FC = () => {
     try {
       await apiRequest(`/cms/database/models/${modelName}/${id}`, 'DELETE');
       setRecords(records.filter((r) => r.id !== id));
+      success('Đã xóa', `Bản ghi đã được xóa thành công khỏi bảng ${modelName}`);
     } catch (err: any) {
-      alert(err.message || 'Không thể xóa bản ghi do ràng buộc dữ liệu.');
+      toastError('Lỗi xóa', err.message || 'Không thể xóa bản ghi do ràng buộc dữ liệu.');
     }
   };
 
@@ -145,8 +141,9 @@ export const DatabaseManager: React.FC = () => {
     try {
       await apiRequest(`/cms/database/models/Order/${orderId}`, 'PATCH', { status });
       setRecords(records.map(r => r.id === orderId ? { ...r, status } : r));
+      success('Cập nhật thành công', `Trạng thái đơn hàng đã được cập nhật thành ${status}`);
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi cập nhật trạng thái đơn hàng.');
+      toastError('Lỗi cập nhật', err.message || 'Lỗi khi cập nhật trạng thái đơn hàng.');
     }
   };
 
@@ -154,6 +151,17 @@ export const DatabaseManager: React.FC = () => {
     e.preventDefault();
     if (!modelName) return;
     setError('');
+    
+    // Validate form data
+    const validationErrors = validateRecord(modelName, formData);
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors);
+      toastError('Lỗi validation', 'Vui lòng kiểm tra lại các trường có lỗi.');
+      return;
+    }
+    
+    setFieldErrors({});
+    
     try {
       const castedData: Record<string, any> = {};
       Object.keys(formData).forEach((key) => {
@@ -170,8 +178,26 @@ export const DatabaseManager: React.FC = () => {
       }
       await fetchRecords();
       closeDrawer();
+      success(editingRecord ? 'Cập nhật thành công' : 'Thêm mới thành công', `Bản ghi đã được ${editingRecord ? 'cập nhật' : 'thêm'} vào bảng ${modelName}`);
     } catch (err: any) {
       setError(err.message || 'Lỗi khi lưu dữ liệu bản ghi.');
+      toastError('Lỗi lưu', err.message || 'Lỗi khi lưu dữ liệu bản ghi.');
+    }
+  };
+
+  const handleFieldChange = (fieldName: string, value: any) => {
+    setFormData({ ...formData, [fieldName]: value });
+    
+    // Real-time validation
+    const errors = validateField(modelName, fieldName, value);
+    if (errors.length > 0) {
+      setFieldErrors(prev => ({ ...prev, [fieldName]: errors }));
+    } else {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
     }
   };
 
@@ -180,46 +206,150 @@ export const DatabaseManager: React.FC = () => {
   };
 
   const filteredRecords = records.filter((r) => {
-    return columns.some((col) => {
+    // Global search
+    const matchesSearch = columns.some((col) => {
       const val = r[col];
       return val !== null && String(val).toLowerCase().includes(searchTerm.toLowerCase());
     });
+    
+    // Column filters
+    const matchesColumnFilters = Object.entries(columnFilters).every(([col, filterValue]) => {
+      if (!filterValue) return true;
+      const val = r[col];
+      return val !== null && String(val).toLowerCase().includes(filterValue.toLowerCase());
+    });
+    
+    return matchesSearch && matchesColumnFilters;
   });
+
+  const toggleRecordSelection = (id: string | number) => {
+    setSelectedRecords(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedRecords.size === filteredRecords.length) {
+      setSelectedRecords(new Set());
+    } else {
+      setSelectedRecords(new Set(filteredRecords.map(r => r.id || r.zaloId || r.code)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedRecords.size === 0) return;
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa ${selectedRecords.size} bản ghi đã chọn?`)) return;
+    
+    try {
+      await Promise.all(
+        Array.from(selectedRecords).map(id => 
+          apiRequest(`/cms/database/models/${modelName}/${id}`, 'DELETE')
+        )
+      );
+      setRecords(records.filter(r => !selectedRecords.has(r.id || r.zaloId || r.code)));
+      setSelectedRecords(new Set());
+      success('Đã xóa', `${selectedRecords.size} bản ghi đã được xóa thành công`);
+    } catch (err: any) {
+      toastError('Lỗi xóa hàng loạt', err.message || 'Không thể xóa một số bản ghi do ràng buộc dữ liệu.');
+    }
+  };
+
+  const clearColumnFilters = () => {
+    setColumnFilters({});
+  };
+
+  // Data quality check
+  const qualityIssues = useMemo(() => {
+    if (!modelName) return [];
+    return checkDataQuality(modelName, records);
+  }, [modelName, records]);
+
+  const qualityStats = useMemo(() => {
+    const total = qualityIssues.length;
+    const high = qualityIssues.filter(i => i.severity === 'high').length;
+    const medium = qualityIssues.filter(i => i.severity === 'medium').length;
+    const low = qualityIssues.filter(i => i.severity === 'low').length;
+    return { total, high, medium, low };
+  }, [qualityIssues]);
 
   // ── Specialized Custom Renderers ──
 
   const renderProductView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {filteredRecords.map((product) => (
-        <div key={product.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-200 group">
-          <div className="h-44 bg-[#fbf9f7] relative">
-            <img src={product.image || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400'} alt={product.name} className="w-full h-full object-cover" />
-            <span className="absolute top-3 left-3 bg-[#ecf6f7] text-[#0e6877] border border-[#0e6877]/10 px-2 py-0.5 rounded-full text-[10px] font-bold">
-              ID: {product.id}
-            </span>
+        <div key={product.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col hover:shadow-lg transition-all duration-300 group">
+          {/* Product Image */}
+          <div className="h-52 bg-[#fbf9f7] relative overflow-hidden">
+            <img 
+              src={product.image || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400'} 
+              alt={product.name} 
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+            />
+            <div className="absolute top-3 left-3 flex gap-2">
+              <span className="bg-[#ecf6f7] text-[#0e6877] border border-[#0e6877]/10 px-2.5 py-1 rounded-full text-[10px] font-bold">
+                ID: {product.id}
+              </span>
+              {product.stock !== undefined && (
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                  product.stock > 10 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                  product.stock > 0 ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                  'bg-rose-50 text-rose-700 border border-rose-200'
+                }`}>
+                  Tồn: {product.stock}
+                </span>
+              )}
+            </div>
+            {product.originalPrice && product.originalPrice > product.price && (
+              <div className="absolute top-3 right-3 bg-rose-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold">
+                -{Math.round((1 - product.price / product.originalPrice) * 100)}%
+              </div>
+            )}
           </div>
-          <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-            <div className="space-y-1.5">
-              <h4 className="text-sm font-bold text-[#1b1c1b] line-clamp-1">{product.name}</h4>
+
+          {/* Product Details */}
+          <div className="p-5 flex-1 flex flex-col space-y-4">
+            <div className="space-y-2">
+              <h4 className="text-sm font-bold text-[#1b1c1b] line-clamp-2 leading-tight">{product.name}</h4>
               <p className="text-[#526069] text-xs line-clamp-2 leading-relaxed">{product.description || 'Không có mô tả.'}</p>
             </div>
-            <div className="flex items-center justify-between border-t border-slate-100 pt-4">
-              <div>
-                <p className="text-[#0e6877] font-bold text-sm">{formatPrice(product.price)}</p>
+
+            {/* Price and Category */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-[#0e6877] font-bold text-lg">{formatPrice(product.price)}</p>
                 {product.originalPrice && product.originalPrice > product.price && (
-                  <p className="text-[10px] text-slate-400 line-through">{formatPrice(product.originalPrice)}</p>
+                  <p className="text-[11px] text-slate-400 line-through">{formatPrice(product.originalPrice)}</p>
                 )}
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={(e) => openDrawerForEdit(product, e)}
-                  className="p-2 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 rounded-xl transition-all flex items-center gap-1 text-xs font-semibold"
-                  title="Sửa sản phẩm"
-                >
-                  <Edit3 size={12} /> Sửa
-                </button>
-                <button onClick={() => handleDeleteRecord(product.id)} className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl transition-all"><Trash2 size={12} /></button>
-              </div>
+              {product.categoryId && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Danh mục:</span>
+                  <span className="text-[10px] font-semibold text-[#0e6877] bg-[#ecf6f7] px-2 py-0.5 rounded-full">#{product.categoryId}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2 pt-3 border-t border-slate-100">
+              <button
+                onClick={() => openDrawerForEdit(product)}
+                className="flex-1 py-2.5 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 hover:border-[#0e6877]/30 rounded-xl transition-all flex items-center justify-center gap-1.5 text-xs font-semibold"
+              >
+                <Edit3 size={12} /> Sửa
+              </button>
+              <button 
+                onClick={() => handleDeleteRecord(product.id)} 
+                className="p-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl transition-all"
+                title="Xóa"
+              >
+                <Trash2 size={12} />
+              </button>
             </div>
           </div>
         </div>
@@ -345,7 +475,7 @@ export const DatabaseManager: React.FC = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button onClick={(e) => openDrawerForEdit(v, e)} className="p-1.5 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 rounded-lg transition-colors"><Edit3 size={12} /></button>
+                <button onClick={() => openDrawerForEdit(v)} className="p-1.5 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 rounded-lg transition-colors"><Edit3 size={12} /></button>
                 <button onClick={() => handleDeleteRecord(v.id)} className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg transition-colors"><Trash2 size={12} /></button>
               </div>
             </div>
@@ -367,7 +497,7 @@ export const DatabaseManager: React.FC = () => {
           <div className="h-44 bg-[#fbf9f7] relative overflow-hidden">
             <img src={banner.imageUrl} alt={banner.title || 'Slide Banner'} className="w-full h-full object-cover" />
             <div className="absolute top-4 right-4 flex gap-2">
-              <button onClick={(e) => openDrawerForEdit(banner, e)} className="p-2 bg-white/90 hover:bg-white text-[#0e6877] rounded-xl transition-colors shadow-lg"><Edit3 size={13} /></button>
+              <button onClick={() => openDrawerForEdit(banner)} className="p-2 bg-white/90 hover:bg-white text-[#0e6877] rounded-xl transition-colors shadow-lg"><Edit3 size={13} /></button>
               <button onClick={() => handleDeleteRecord(banner.id)} className="p-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition-colors shadow-lg"><Trash2 size={13} /></button>
             </div>
           </div>
@@ -408,6 +538,134 @@ export const DatabaseManager: React.FC = () => {
     </div>
   );
 
+  const renderProductVariantView = () => {
+    // Group variants by productId
+    const groupedVariants = filteredRecords.reduce((acc, variant) => {
+      const productId = variant.productId;
+      if (!acc[productId]) {
+        acc[productId] = [];
+      }
+      acc[productId].push(variant);
+      return acc;
+    }, {} as Record<number, any[]>);
+
+    return (
+      <div className="space-y-6">
+        {Object.entries(groupedVariants).map(([productId, variants]) => {
+          const variantArray = variants as any[];
+          return (
+            <div key={productId} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+              {/* Product Header */}
+              <div className="bg-[#fbf9f7] px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-[#ecf6f7] rounded-xl">
+                    <PackageSearch size={18} className="text-[#0e6877]" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[#1b1c1b]">Sản phẩm ID: {productId}</h3>
+                    <p className="text-[10px] text-[#526069] font-medium">{variantArray.length} biến thể</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                    variantArray.every((v: any) => (v.stock || 0) > 10) ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                    variantArray.some((v: any) => (v.stock || 0) > 0) ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                    'bg-rose-50 text-rose-700 border border-rose-200'
+                  }`}>
+                    Tổng tồn: {variantArray.reduce((sum: number, v: any) => sum + (v.stock || 0), 0)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Variants Grid */}
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {variantArray.map((variant) => (
+                  <div 
+                    key={variant.id} 
+                    className={`border rounded-2xl p-4 transition-all hover:shadow-md ${
+                      (variant.stock || 0) === 0 ? 'border-rose-200 bg-rose-50/30' :
+                      (variant.stock || 0) < 10 ? 'border-amber-200 bg-amber-50/30' :
+                      'border-slate-200 bg-white'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                          ID: {variant.id}
+                        </span>
+                        {(variant.stock || 0) === 0 && (
+                          <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">
+                            Hết hàng
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex gap-1.5">
+                        <button
+                          onClick={() => openDrawerForEdit(variant)}
+                          className="p-1.5 bg-slate-50 hover:bg-[#ecf6f7] text-slate-500 hover:text-[#0e6877] rounded-lg transition-colors"
+                          title="Sửa"
+                        >
+                          <Edit3 size={11} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteRecord(variant.id)}
+                          className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-lg transition-colors"
+                          title="Xóa"
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Variant Details */}
+                    <div className="space-y-2">
+                      {variant.size && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-slate-500 font-medium uppercase">Size:</span>
+                          <span className="text-[11px] font-semibold text-[#1b1c1b] bg-slate-100 px-2 py-0.5 rounded">{variant.size}</span>
+                        </div>
+                      )}
+                      {variant.color && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-slate-500 font-medium uppercase">Màu:</span>
+                          <div className="flex items-center gap-1.5">
+                            <div 
+                              className="w-4 h-4 rounded-full border border-slate-300"
+                              style={{ backgroundColor: variant.color }}
+                            />
+                            <span className="text-[11px] font-semibold text-[#1b1c1b]">{variant.color}</span>
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-200">
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-medium uppercase block">Tồn kho:</span>
+                          <span className={`text-sm font-bold ${
+                            (variant.stock || 0) > 10 ? 'text-emerald-600' :
+                            (variant.stock || 0) > 0 ? 'text-amber-600' :
+                            'text-rose-600'
+                          }`}>
+                            {variant.stock || 0}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] text-slate-500 font-medium uppercase block">Giá:</span>
+                          <span className="text-sm font-bold text-[#0e6877]">{formatPrice(variant.price || 0)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const renderCommentView = () => (
     <div className="space-y-4">
       {filteredRecords.map((c) => (
@@ -440,6 +698,18 @@ export const DatabaseManager: React.FC = () => {
           <table className="w-full text-left text-xs text-slate-700 whitespace-nowrap">
             <thead className="bg-[#fbf9f7] text-[#526069] text-[10px] font-bold uppercase tracking-wider">
               <tr>
+                <th className="py-3.5 px-4 bg-[#fbf9f7] border-b border-slate-200 w-10">
+                  <button
+                    onClick={toggleSelectAll}
+                    className="text-slate-500 hover:text-[#0e6877] transition-colors"
+                  >
+                    {selectedRecords.size === filteredRecords.length && filteredRecords.length > 0 ? (
+                      <CheckSquare size={14} className="text-[#0e6877]" />
+                    ) : (
+                      <Square size={14} />
+                    )}
+                  </button>
+                </th>
                 {simpleColumns.map((col) => (
                   <th key={col} className="py-3.5 px-4 bg-[#fbf9f7] border-b border-slate-200">{col}</th>
                 ))}
@@ -447,38 +717,57 @@ export const DatabaseManager: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-mono text-xs">
-              {filteredRecords.map((record) => (
-                <tr key={record.id || record.zaloId || record.code} className="hover:bg-slate-50 transition-colors">
-                  {simpleColumns.map((col) => {
-                    const val = record[col];
-                    let displayVal = String(val ?? 'NULL');
-                    if (typeof val === 'boolean') displayVal = val ? 'TRUE' : 'FALSE';
-                    return (
-                      <td key={col} className="py-3.5 px-4 max-w-xs truncate text-[#1b1c1b] font-medium" title={displayVal}>
-                        {displayVal}
-                      </td>
-                    );
-                  })}
-                  <td className="py-3.5 px-4 text-right">
-                    <div className="flex justify-end gap-2">
+              {filteredRecords.map((record) => {
+                const recordId = record.id || record.zaloId || record.code;
+                const isSelected = selectedRecords.has(recordId);
+                return (
+                  <tr 
+                    key={recordId} 
+                    className={`hover:bg-slate-50 transition-colors ${isSelected ? 'bg-[#ecf6f7]/30' : ''}`}
+                  >
+                    <td className="py-3.5 px-4">
                       <button
-                        onClick={(e) => openDrawerForEdit(record, e)}
-                        className="p-1.5 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 rounded-lg transition-colors"
-                        title="Sửa"
+                        onClick={() => toggleRecordSelection(recordId)}
+                        className="text-slate-500 hover:text-[#0e6877] transition-colors"
                       >
-                        <Edit3 size={11} />
+                        {isSelected ? (
+                          <CheckSquare size={14} className="text-[#0e6877]" />
+                        ) : (
+                          <Square size={14} />
+                        )}
                       </button>
-                      <button
-                        onClick={() => handleDeleteRecord(record.id || record.zaloId || record.code)}
-                        className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg transition-colors"
-                        title="Xóa"
-                      >
-                        <Trash2 size={11} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    {simpleColumns.map((col) => {
+                      const val = record[col];
+                      let displayVal = String(val ?? 'NULL');
+                      if (typeof val === 'boolean') displayVal = val ? 'TRUE' : 'FALSE';
+                      return (
+                        <td key={col} className="py-3.5 px-4 max-w-xs truncate text-[#1b1c1b] font-medium" title={displayVal}>
+                          {displayVal}
+                        </td>
+                      );
+                    })}
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => openDrawerForEdit(record)}
+                          className="p-1.5 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 rounded-lg transition-colors"
+                          title="Sửa"
+                        >
+                          <Edit3 size={11} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteRecord(recordId)}
+                          className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg transition-colors"
+                          title="Xóa"
+                        >
+                          <Trash2 size={11} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -498,6 +787,7 @@ export const DatabaseManager: React.FC = () => {
     
     switch (modelName) {
       case 'Product': return renderProductView();
+      case 'ProductVariant': return renderProductVariantView();
       case 'Order': return renderOrderView();
       case 'Voucher': return renderVoucherView();
       case 'Banner': return renderBannerView();
@@ -531,29 +821,206 @@ export const DatabaseManager: React.FC = () => {
           </div>
         </div>
 
-        <button
-          onClick={(e) => openDrawerForAdd(e)}
-          className="bg-[#0e6877] hover:bg-[#0a4c57] text-white font-semibold py-2.5 px-5 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 shadow-md shadow-[#0e6877]/10"
-        >
-          <Plus size={16} />
-          <span>Thêm bản ghi mới</span>
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowQualityPanel(!showQualityPanel)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              showQualityPanel || qualityStats.total > 0
+                ? qualityStats.high > 0 ? 'bg-rose-500 text-white' : qualityStats.medium > 0 ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+            }`}
+          >
+            <FileCheck size={16} />
+            Chất lượng dữ liệu
+            {qualityStats.total > 0 && (
+              <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">
+                {qualityStats.total}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => openDrawerForAdd()}
+            className="bg-[#0e6877] hover:bg-[#0a4c57] text-white font-semibold py-2.5 px-5 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 shadow-md shadow-[#0e6877]/10"
+          >
+            <Plus size={16} />
+            <span>Thêm bản ghi mới</span>
+          </button>
+        </div>
       </div>
 
-      {/* Filter and Search */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-4 flex flex-col md:flex-row gap-4 items-center shadow-sm">
-        <div className="relative flex-1 w-full">
-          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
-            <Search size={16} />
-          </span>
-          <input
-            type="text"
-            placeholder={`Tìm kiếm trong bảng ${modelName}...`}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-[#0e6877] focus:ring-1 focus:ring-[#0e6877] rounded-xl py-2.5 pl-10 pr-4 text-xs text-[#1b1c1b] placeholder-slate-400 focus:outline-none transition-all"
-          />
+      {/* Data Quality Panel */}
+      {showQualityPanel && (
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-xl ${
+                qualityStats.high > 0 ? 'bg-rose-50' : qualityStats.medium > 0 ? 'bg-amber-50' : 'bg-emerald-50'
+              }`}>
+                {qualityStats.high > 0 ? (
+                  <AlertTriangle size={18} className="text-rose-600" />
+                ) : qualityStats.medium > 0 ? (
+                  <AlertTriangle size={18} className="text-amber-600" />
+                ) : (
+                  <ShieldCheck size={18} className="text-emerald-600" />
+                )}
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-[#1b1c1b]">Báo cáo chất lượng dữ liệu</h3>
+                <p className="text-[10px] text-[#526069]">Phân tích và kiểm tra dữ liệu bảng {modelName}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowQualityPanel(false)}
+              className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          {/* Quality Stats */}
+          <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="bg-slate-50 rounded-xl p-4 text-center">
+              <p className="text-2xl font-bold text-[#1b1c1b]">{qualityStats.total}</p>
+              <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Tổng vấn đề</p>
+            </div>
+            <div className="bg-rose-50 rounded-xl p-4 text-center">
+              <p className="text-2xl font-bold text-rose-600">{qualityStats.high}</p>
+              <p className="text-[10px] text-rose-500 font-medium uppercase tracking-wider">Nghiêm trọng</p>
+            </div>
+            <div className="bg-amber-50 rounded-xl p-4 text-center">
+              <p className="text-2xl font-bold text-amber-600">{qualityStats.medium}</p>
+              <p className="text-[10px] text-amber-500 font-medium uppercase tracking-wider">Trung bình</p>
+            </div>
+            <div className="bg-emerald-50 rounded-xl p-4 text-center">
+              <p className="text-2xl font-bold text-emerald-600">{qualityStats.low}</p>
+              <p className="text-[10px] text-emerald-500 font-medium uppercase tracking-wider">Thấp</p>
+            </div>
+          </div>
+
+          {/* Issues List */}
+          {qualityIssues.length > 0 ? (
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {qualityIssues.map((issue, index) => (
+                <div key={index} className={`flex items-start gap-3 p-3 rounded-xl border ${
+                  issue.severity === 'high' ? 'bg-rose-50 border-rose-200' :
+                  issue.severity === 'medium' ? 'bg-amber-50 border-amber-200' :
+                  'bg-emerald-50 border-emerald-200'
+                }`}>
+                  <div className={`p-1.5 rounded-lg ${
+                    issue.severity === 'high' ? 'bg-rose-100 text-rose-600' :
+                    issue.severity === 'medium' ? 'bg-amber-100 text-amber-600' :
+                    'bg-emerald-100 text-emerald-600'
+                  }`}>
+                    {issue.type === 'duplicate' && <AlertTriangle size={12} />}
+                    {issue.type === 'missing' && <AlertCircle size={12} />}
+                    {issue.type === 'invalid' && <XCircle size={12} />}
+                    {issue.type === 'inconsistent' && <AlertTriangle size={12} />}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-[#1b1c1b]">{issue.message}</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      Bản ghi ID: {issue.recordId} • Trường: {issue.field}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-emerald-600">
+              <ShieldCheck size={32} className="mx-auto mb-2" />
+              <p className="text-sm font-semibold">Dữ liệu chất lượng tốt!</p>
+              <p className="text-xs text-slate-500">Không phát hiện vấn đề nào</p>
+            </div>
+          )}
         </div>
+      )}
+
+      {/* Filter and Search */}
+      <div className="bg-white border border-slate-200 rounded-3xl p-4 space-y-4 shadow-sm">
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <div className="relative flex-1 w-full">
+            <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+              <Search size={16} />
+            </span>
+            <input
+              type="text"
+              placeholder={`Tìm kiếm trong bảng ${modelName}...`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-[#0e6877] focus:ring-1 focus:ring-[#0e6877] rounded-xl py-2.5 pl-10 pr-4 text-xs text-[#1b1c1b] placeholder-slate-400 focus:outline-none transition-all"
+            />
+          </div>
+          <button
+            onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+              isFilterPanelOpen || Object.keys(columnFilters).length > 0
+                ? 'bg-[#0e6877] text-white'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+            }`}
+          >
+            <Filter size={14} />
+            Bộ lọc nâng cao
+            {Object.keys(columnFilters).length > 0 && (
+              <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">
+                {Object.keys(columnFilters).length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Advanced Filter Panel */}
+        {isFilterPanelOpen && (
+          <div className="border-t border-slate-100 pt-4 space-y-3">
+            <div className="flex justify-between items-center">
+              <p className="text-xs font-bold text-[#526069]">Lọc theo cột</p>
+              {Object.keys(columnFilters).length > 0 && (
+                <button
+                  onClick={clearColumnFilters}
+                  className="text-[10px] font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1"
+                >
+                  <CloseIcon size={10} /> Xóa tất cả bộ lọc
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {columns.filter(col => col !== 'id' && col !== 'createdAt' && col !== 'updatedAt').slice(0, 8).map((col) => (
+                <div key={col}>
+                  <label className="text-[10px] font-semibold text-slate-500 mb-1 block">{col}</label>
+                  <input
+                    type="text"
+                    placeholder={`Nhập ${col}...`}
+                    value={columnFilters[col] || ''}
+                    onChange={(e) => setColumnFilters(prev => ({ ...prev, [col]: e.target.value }))}
+                    className="w-full bg-[#fbf9f7] border border-slate-200 rounded-lg py-2 px-3 text-xs text-[#1b1c1b] placeholder-slate-400 focus:outline-none focus:border-[#0e6877] transition-all"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Bulk Actions Bar */}
+        {selectedRecords.size > 0 && (
+          <div className="bg-[#ecf6f7] border border-[#0e6877]/20 rounded-xl p-3 flex items-center justify-between">
+            <p className="text-xs font-semibold text-[#0e6877]">
+              Đã chọn {selectedRecords.size} bản ghi
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setSelectedRecords(new Set())}
+                className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all"
+              >
+                Bỏ chọn
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="px-3 py-1.5 bg-rose-500 text-white rounded-lg text-xs font-semibold hover:bg-rose-600 transition-all flex items-center gap-1"
+              >
+                <Trash2 size={12} /> Xóa đã chọn
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Data Layout */}
@@ -567,26 +1034,14 @@ export const DatabaseManager: React.FC = () => {
       )}
 
       {/* ══════════════════════════════════════════════
-          PREMIUM GLASSMORPHISM FLOATING EDIT PANEL
+          RIGHT-SIDE DRAWER PANEL
           ══════════════════════════════════════════════ */}
       {isDrawerOpen && (
         <>
-          {/* Backdrop - rất nhẹ, không làm mờ nội dung */}
+          {/* Right-side Drawer Panel */}
           <div
-            className="fixed inset-0 z-40"
-            style={{ background: 'rgba(0,0,0,0.04)' }}
-            onClick={closeDrawer}
-          />
-
-          {/* Floating Panel — anchored to the button that triggered it */}
-          <div
-            className="fixed z-50 animate-popIn"
+            className="fixed z-50 right-0 top-0 h-full w-full max-w-md animate-slideInRight"
             style={{
-              top: panelAnchor?.top ?? '50%',
-              left: panelAnchor?.left ?? '50%',
-              transform: panelAnchor ? 'none' : 'translate(-50%, -50%)',
-              width: '420px',
-              maxHeight: `${Math.min(560, window.innerHeight * 0.85)}px`,
               display: 'flex',
               flexDirection: 'column',
             }}
@@ -672,6 +1127,7 @@ export const DatabaseManager: React.FC = () => {
                   {Object.keys(formData).map((key, idx) => {
                     const sampleVal = records[0]?.[key];
                     const isLongText = ['description', 'content', 'images', 'materialCare', 'shippingReturn'].includes(key);
+                    const fieldErrorsList = fieldErrors[key] || [];
                     return (
                       <div key={key} className="space-y-1.5">
                         <label className="flex items-center gap-2 text-[10px] font-bold text-[#526069] uppercase tracking-widest">
@@ -682,6 +1138,9 @@ export const DatabaseManager: React.FC = () => {
                             {idx + 1}
                           </span>
                           {key}
+                          {fieldErrorsList.length > 0 && (
+                            <span className="text-rose-500 text-[9px]">*</span>
+                          )}
                         </label>
 
                         {typeof sampleVal === 'boolean' ? (
@@ -690,7 +1149,7 @@ export const DatabaseManager: React.FC = () => {
                               <button
                                 key={v}
                                 type="button"
-                                onClick={() => setFormData({ ...formData, [key]: v === 'true' })}
+                                onClick={() => handleFieldChange(key, v === 'true')}
                                 className="py-2 rounded-xl text-xs font-bold transition-all border"
                                 style={
                                   String(formData[key]) === v
@@ -706,15 +1165,20 @@ export const DatabaseManager: React.FC = () => {
                           <textarea
                             rows={3}
                             value={formData[key]}
-                            onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                            onChange={(e) => handleFieldChange(key, e.target.value)}
                             placeholder={`Nhập ${key}...`}
-                            className="w-full rounded-2xl py-3 px-4 text-xs text-[#1b1c1b] placeholder-slate-300 resize-none focus:outline-none transition-all"
+                            className={`w-full rounded-2xl py-3 px-4 text-xs text-[#1b1c1b] placeholder-slate-300 resize-none focus:outline-none transition-all ${
+                              fieldErrorsList.length > 0 ? 'border-rose-400' : ''
+                            }`}
                             style={{
                               background: '#f8fafc',
                               border: '1.5px solid #e2e8f0',
                               transition: 'border-color 0.2s, box-shadow 0.2s',
                             }}
-                            onFocus={e => { e.target.style.borderColor = '#0e6877'; e.target.style.boxShadow = '0 0 0 3px rgba(14,104,119,0.08)'; }}
+                            onFocus={e => { 
+                              e.target.style.borderColor = fieldErrorsList.length > 0 ? '#f87171' : '#0e6877'; 
+                              e.target.style.boxShadow = fieldErrorsList.length > 0 ? '0 0 0 3px rgba(248,113,113,0.08)' : '0 0 0 3px rgba(14,104,119,0.08)'; 
+                            }}
                             onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
                           />
                         ) : typeof sampleVal === 'number' ? (
@@ -722,23 +1186,43 @@ export const DatabaseManager: React.FC = () => {
                             type="number"
                             required
                             value={formData[key]}
-                            onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
-                            className="w-full rounded-2xl py-3 px-4 text-xs text-[#1b1c1b] focus:outline-none transition-all"
+                            onChange={(e) => handleFieldChange(key, e.target.value)}
+                            className={`w-full rounded-2xl py-3 px-4 text-xs text-[#1b1c1b] focus:outline-none transition-all ${
+                              fieldErrorsList.length > 0 ? 'border-rose-400' : ''
+                            }`}
                             style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0' }}
-                            onFocus={e => { e.target.style.borderColor = '#0e6877'; e.target.style.boxShadow = '0 0 0 3px rgba(14,104,119,0.08)'; }}
+                            onFocus={e => { 
+                              e.target.style.borderColor = fieldErrorsList.length > 0 ? '#f87171' : '#0e6877'; 
+                              e.target.style.boxShadow = fieldErrorsList.length > 0 ? '0 0 0 3px rgba(248,113,113,0.08)' : '0 0 0 3px rgba(14,104,119,0.08)'; 
+                            }}
                             onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
                           />
                         ) : (
                           <input
                             type="text"
                             value={formData[key]}
-                            onChange={(e) => setFormData({ ...formData, [key]: e.target.value })}
+                            onChange={(e) => handleFieldChange(key, e.target.value)}
                             placeholder={`Nhập ${key}...`}
-                            className="w-full rounded-2xl py-3 px-4 text-xs text-[#1b1c1b] placeholder-slate-300 focus:outline-none transition-all"
+                            className={`w-full rounded-2xl py-3 px-4 text-xs text-[#1b1c1b] placeholder-slate-300 focus:outline-none transition-all ${
+                              fieldErrorsList.length > 0 ? 'border-rose-400' : ''
+                            }`}
                             style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0' }}
-                            onFocus={e => { e.target.style.borderColor = '#0e6877'; e.target.style.boxShadow = '0 0 0 3px rgba(14,104,119,0.08)'; }}
+                            onFocus={e => { 
+                              e.target.style.borderColor = fieldErrorsList.length > 0 ? '#f87171' : '#0e6877'; 
+                              e.target.style.boxShadow = fieldErrorsList.length > 0 ? '0 0 0 3px rgba(248,113,113,0.08)' : '0 0 0 3px rgba(14,104,119,0.08)'; 
+                            }}
                             onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
                           />
+                        )}
+                        {fieldErrorsList.length > 0 && (
+                          <div className="flex items-start gap-1.5 mt-1">
+                            <AlertCircle size={10} className="text-rose-500 shrink-0 mt-0.5" />
+                            <div className="flex-1">
+                              {fieldErrorsList.map((error, errorIdx) => (
+                                <p key={errorIdx} className="text-[10px] text-rose-600">{error}</p>
+                              ))}
+                            </div>
+                          </div>
                         )}
                       </div>
                     );

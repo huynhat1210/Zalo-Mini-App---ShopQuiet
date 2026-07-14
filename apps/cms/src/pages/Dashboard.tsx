@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiRequest } from '../utils/api';
 import { 
@@ -12,8 +12,10 @@ import {
   Tag,
   Plus,
   ArrowRight,
-  ShoppingCart
+  ShoppingCart,
+  BarChart3
 } from 'lucide-react';
+import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface DashboardStats {
   totalProducts: number;
@@ -21,6 +23,8 @@ interface DashboardStats {
   totalRevenue: number;
   totalVouchers: number;
   recentOrders: any[];
+  allOrders: any[];
+  allProducts: any[];
 }
 
 export const Dashboard: React.FC = () => {
@@ -30,7 +34,9 @@ export const Dashboard: React.FC = () => {
     totalOrders: 0,
     totalRevenue: 0,
     totalVouchers: 0,
-    recentOrders: []
+    recentOrders: [],
+    allOrders: [],
+    allProducts: []
   });
   const [loading, setLoading] = useState(true);
 
@@ -58,7 +64,9 @@ export const Dashboard: React.FC = () => {
           totalOrders: orderList.length,
           totalRevenue: revenue,
           totalVouchers: voucherList.length,
-          recentOrders: orderList.slice(0, 5)
+          recentOrders: orderList.slice(0, 5),
+          allOrders: orderList,
+          allProducts: productList
         });
       } catch (err) {
         console.error('Failed to load dashboard statistics:', err);
@@ -90,6 +98,81 @@ export const Dashboard: React.FC = () => {
         return <span className="px-2.5 py-1 text-xs font-semibold text-slate-700 bg-slate-100 rounded-full">{status}</span>;
     }
   };
+
+  // Prepare chart data
+  const revenueChartData = useMemo(() => {
+    const last7Days = [];
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+      
+      const dayRevenue = stats.allOrders
+        .filter((o: any) => {
+          const orderDate = new Date(o.createdAt);
+          return orderDate.toDateString() === date.toDateString() && 
+                 (o.status === 'COMPLETED' || o.status === 'PROCESSING');
+        })
+        .reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0);
+      
+      last7Days.push({ date: dateStr, revenue: dayRevenue });
+    }
+    return last7Days;
+  }, [stats.allOrders]);
+
+  const orderStatusData = useMemo(() => {
+    const statusCounts = {
+      COMPLETED: 0,
+      PROCESSING: 0,
+      SHIPPED: 0,
+      PENDING: 0,
+      CANCELLED: 0
+    };
+    
+    stats.allOrders.forEach((order: any) => {
+      if (statusCounts.hasOwnProperty(order.status)) {
+        statusCounts[order.status as keyof typeof statusCounts]++;
+      }
+    });
+    
+    return [
+      { name: 'Hoàn thành', value: statusCounts.COMPLETED, color: '#10b981' },
+      { name: 'Đang xử lý', value: statusCounts.PROCESSING, color: '#3b82f6' },
+      { name: 'Đang giao', value: statusCounts.SHIPPED, color: '#6366f1' },
+      { name: 'Chờ thanh toán', value: statusCounts.PENDING, color: '#f59e0b' },
+      { name: 'Đã hủy', value: statusCounts.CANCELLED, color: '#ef4444' }
+    ].filter(item => item.value > 0);
+  }, [stats.allOrders]);
+
+  const topSellingProducts = useMemo(() => {
+    const productSales: Record<number, { name: string; revenue: number; quantity: number }> = {};
+    
+    stats.allOrders.forEach((order: any) => {
+      if (order.status === 'COMPLETED' && Array.isArray(order.items)) {
+        order.items.forEach((item: any) => {
+          const productId = item.product?.id;
+          const productName = item.product?.name || 'Sản phẩm không tên';
+          const price = item.price || 0;
+          const quantity = item.quantity || 1;
+          
+          if (productId) {
+            if (!productSales[productId]) {
+              productSales[productId] = { name: productName, revenue: 0, quantity: 0 };
+            }
+            productSales[productId].revenue += price * quantity;
+            productSales[productId].quantity += quantity;
+          }
+        });
+      }
+    });
+    
+    return Object.values(productSales)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+  }, [stats.allOrders]);
+
+  const COLORS = ['#10b981', '#3b82f6', '#6366f1', '#f59e0b', '#ef4444'];
 
   if (loading) {
     return (
@@ -207,6 +290,90 @@ export const Dashboard: React.FC = () => {
         })}
       </div>
 
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Revenue Chart */}
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-sm">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-bold text-[#1b1c1b]">Doanh thu 7 ngày qua</h3>
+              <p className="text-[#526069] text-xs">Tổng doanh thu từ đơn hoàn thành & đang xử lý</p>
+            </div>
+            <div className="p-2 bg-[#ecf6f7] rounded-xl">
+              <DollarSign size={18} className="text-[#0e6877]" />
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={revenueChartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="date" stroke="#94a3b8" fontSize={11} tick={{ fill: '#64748b' }} />
+              <YAxis stroke="#94a3b8" fontSize={11} tick={{ fill: '#64748b' }} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'rgba(255,255,255,0.95)', 
+                  border: '1px solid #e2e8f0', 
+                  borderRadius: '12px',
+                  fontSize: '12px'
+                }}
+                formatter={(value: number) => formatPrice(value)}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="revenue" 
+                stroke="#0e6877" 
+                strokeWidth={2.5}
+                dot={{ fill: '#0e6877', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, stroke: '#0e6877', strokeWidth: 2 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Order Status Distribution */}
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-sm">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-bold text-[#1b1c1b]">Phân phối đơn hàng</h3>
+              <p className="text-[#526069] text-xs">Theo trạng thái đơn hàng</p>
+            </div>
+            <div className="p-2 bg-[#ecf6f7] rounded-xl">
+              <BarChart3 size={18} className="text-[#0e6877]" />
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={orderStatusData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={90}
+                paddingAngle={2}
+                dataKey="value"
+              >
+                {orderStatusData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'rgba(255,255,255,0.95)', 
+                  border: '1px solid #e2e8f0', 
+                  borderRadius: '12px',
+                  fontSize: '12px'
+                }}
+              />
+              <Legend 
+                verticalAlign="bottom" 
+                height={36}
+                iconType="circle"
+                formatter={(value: string) => <span className="text-xs text-slate-700">{value}</span>}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
       {/* Details Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Orders Table */}
@@ -248,11 +415,9 @@ export const Dashboard: React.FC = () => {
                         #{typeof order.id === 'string' ? order.id.slice(-6).toUpperCase() : String(order.id)}
                       </td>
                       <td className="py-4 px-4">
-                        {/* Fixed: use shippingName/shippingPhone instead of customerName/phone */}
                         <div className="font-semibold text-slate-800">{order.shippingName || 'Zalo User'}</div>
                         <div className="text-[10px] text-[#526069] font-medium">{order.shippingPhone || 'Không có SĐT'}</div>
                       </td>
-                      {/* Fixed: use totalAmount instead of total */}
                       <td className="py-4 px-4 text-[#0e6877] font-bold">{formatPrice(order.totalAmount || 0)}</td>
                       <td className="py-4 px-4">{getStatusBadge(order.status)}</td>
                     </tr>
@@ -267,44 +432,41 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Quick Actions Panel */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-5 shadow-sm">
-          <div>
-            <h3 className="text-lg font-bold text-[#1b1c1b]">Lối tắt thao tác nhanh</h3>
-            <p className="text-[#526069] text-xs">Các hoạt động quản trị phổ biến</p>
+        {/* Top Selling Products */}
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-sm">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-bold text-[#1b1c1b]">Top sản phẩm bán chạy</h3>
+              <p className="text-[#526069] text-xs">Theo doanh thu</p>
+            </div>
+            <div className="p-2 bg-[#ecf6f7] rounded-xl">
+              <ShoppingBag size={18} className="text-[#0e6877]" />
+            </div>
           </div>
 
           <div className="space-y-3">
-            {quickActions.map((action, i) => {
-              const Icon = action.icon;
-              const ActionIcon = action.actionIcon;
-              return (
-                <button
-                  key={i}
-                  onClick={action.onClick}
-                  className="w-full flex items-center gap-3.5 p-3.5 rounded-2xl bg-[#fbf9f7] border border-slate-100 hover:border-[#0e6877]/25 hover:bg-[#ecf6f7]/40 transition-all text-left group"
-                >
-                  <div className={`p-2.5 rounded-xl shrink-0 ${action.iconBg}`}>
-                    <Icon size={16} />
+            {topSellingProducts.length > 0 ? (
+              topSellingProducts.map((product, index) => (
+                <div key={index} className="flex items-center gap-3 p-3 bg-[#fbf9f7] rounded-xl border border-slate-100">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                    index === 0 ? 'bg-[#0e6877]' : index === 1 ? 'bg-[#0a9bb5]' : index === 2 ? 'bg-[#14b8a6]' : 'bg-slate-400'
+                  }`}>
+                    {index + 1}
                   </div>
-                  <div className="text-left flex-1 min-w-0">
-                    <p className="text-xs font-bold text-[#1b1c1b] group-hover:text-[#0e6877] transition-colors">{action.title}</p>
-                    <p className="text-[10px] text-[#526069] font-medium mt-0.5 line-clamp-1">{action.desc}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-[#1b1c1b] truncate">{product.name}</p>
+                    <p className="text-[10px] text-[#526069]">Đã bán: {product.quantity}</p>
                   </div>
-                  <div className="shrink-0">
-                    {action.badge !== null ? (
-                      <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-full border ${action.badgeColor}`}>
-                        {action.badge}
-                      </span>
-                    ) : ActionIcon ? (
-                      <span className="flex items-center gap-1 text-[10px] font-bold text-[#0e6877]">
-                        {action.actionLabel} <ActionIcon size={11} />
-                      </span>
-                    ) : null}
+                  <div className="text-right">
+                    <p className="text-xs font-bold text-[#0e6877]">{formatPrice(product.revenue)}</p>
                   </div>
-                </button>
-              );
-            })}
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-[#526069] text-xs">
+                Chưa có dữ liệu bán hàng
+              </div>
+            )}
           </div>
         </div>
       </div>
