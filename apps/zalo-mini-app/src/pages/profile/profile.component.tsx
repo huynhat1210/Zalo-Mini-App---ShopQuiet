@@ -2,15 +2,13 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Page, Text } from 'zmp-ui';
+import { Page } from 'zmp-ui';
 import { useCart, IProduct, IOrder } from '../../App';
 import { apiRequest } from '../../utils/api';
-import api from 'zmp-sdk';
 import { EmptyStateComponent } from '../../components';
 import { IProfileComponentProps } from './profile.type';
 
 const PageCast = Page as any;
-const TextCast = Text as any;
 
 type CmsStaticPage = {
   slug: string;
@@ -37,7 +35,7 @@ type ProfileAddressFormValues = z.infer<typeof profileAddressSchema>;
 
 export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
   const { initialSubPage = 'profile' } = props;
-  const { setActiveTab, setSelectedProductDetail, showToast, zaloUser, updateZaloUser, setSelectedOrder } = useCart();
+  const { setActiveTab, setSelectedProductDetail, showToast, zaloUser, updateZaloUser, setSelectedOrder, savedItems, setIsCartOpen, cart } = useCart();
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [recommendationProducts, setRecommendationProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -572,7 +570,7 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
         </button>
         <button onClick={() => setIsCartOpen(true)} className="flex flex-col items-center justify-center border-none bg-transparent cursor-pointer active:scale-95 transition-transform">
           <span className="text-base font-extrabold text-textColor">
-            {cart.reduce((sum, item) => sum + item.quantity, 0)}
+            {cart.reduce((sum: number, item: any) => sum + item.quantity, 0)}
           </span>
           <span className="text-[10px] text-[#526069]/65 font-bold uppercase tracking-wider mt-1">Giỏ hàng</span>
         </button>
