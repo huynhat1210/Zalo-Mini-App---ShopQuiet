@@ -58,6 +58,7 @@ export async function apiRequest<T = unknown>(
       if (cached) {
         const parsed = JSON.parse(cached);
         if (parsed?.id) zaloUserId = parsed.id;
+        else if (parsed?.zaloId) zaloUserId = parsed.zaloId;
       }
     } catch (e) { }
   }

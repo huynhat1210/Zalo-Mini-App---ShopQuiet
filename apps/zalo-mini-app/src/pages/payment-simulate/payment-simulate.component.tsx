@@ -27,9 +27,8 @@ export const PaymentSimulateComponent: React.FC<IPaymentSimulateComponentProps> 
       await apiRequest(`/orders/${selectedOrder.id}/status`, 'PATCH', { status: 'PROCESSING' });
       
       // Update local storage order cache as well
-      const userId = localStorage.getItem('zalo_profile_custom') 
-        ? JSON.parse(localStorage.getItem('zalo_profile_custom')!).id || 'cust-zalo-id-1'
-        : 'cust-zalo-id-1';
+      const userObj = localStorage.getItem('zalo_profile_custom') ? JSON.parse(localStorage.getItem('zalo_profile_custom')!) : null;
+      const userId = userObj ? (userObj.zaloId || userObj.id || 'cust-zalo-id-1') : 'cust-zalo-id-1';
       const offlineOrders = JSON.parse(localStorage.getItem(`offline_orders_${userId}`) || '[]');
       const updated = offlineOrders.map((o: any) => o.id === selectedOrder.id ? { ...o, status: 'PROCESSING' } : o);
       localStorage.setItem(`offline_orders_${userId}`, JSON.stringify(updated));
