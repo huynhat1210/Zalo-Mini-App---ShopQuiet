@@ -543,19 +543,25 @@ export const DatabaseManager: React.FC = () => {
       )}
 
       {/* ── RIGHT SIDE DRAWER (Edit / Add) ── */}
-      {/* Backdrop */}
-      {isDrawerOpen && (
-        <div
-          className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-40 transition-opacity"
-          onClick={closeDrawer}
-        />
-      )}
+      {/* Subtle backdrop - fades in/out, no heavy blur or dark overlay */}
+      <div
+        className={`fixed inset-0 z-40 transition-all duration-300 ease-in-out pointer-events-none ${
+          isDrawerOpen
+            ? 'bg-slate-800/10 pointer-events-auto'
+            : 'bg-transparent'
+        }`}
+        onClick={closeDrawer}
+        aria-hidden="true"
+      />
 
-      {/* Drawer Panel - slides in from right, overlays content without pushing layout */}
+      {/* Drawer Panel - fixed right, hidden off-screen when closed */}
       <div
         ref={drawerRef}
-        className={`fixed top-0 right-0 h-full w-full max-w-md bg-white border-l border-slate-200 shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out ${
-          isDrawerOpen ? 'translate-x-0' : 'translate-x-full'
+        style={{ boxShadow: isDrawerOpen ? '-8px 0 40px rgba(0,0,0,0.08)' : 'none' }}
+        className={`fixed top-0 right-0 h-full w-full max-w-md bg-white z-50 flex flex-col transition-all duration-300 ease-in-out ${
+          isDrawerOpen
+            ? 'translate-x-0 border-l border-slate-200'
+            : 'translate-x-full border-l-0'
         }`}
       >
         {/* Drawer Header */}
