@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Request, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -11,6 +11,12 @@ import { SuccessResponseDto, ErrorResponseDto } from '../../common/dto/api-respo
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
+
+  @Get('test-zalo')
+  @ApiOperation({ summary: 'Test Zalo token verification' })
+  async testZalo(@Query('token') token: string) {
+    return this.authService.testZaloVerification(token);
+  }
 
   @Post('login')
   @ApiOperation({ summary: 'Login with Zalo ID' })

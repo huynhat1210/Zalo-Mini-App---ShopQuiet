@@ -244,4 +244,39 @@ export class AuthService {
     // Only allow if the token contains a pre-verified real phone (set by real Zalo webhook)
     return { success: false, message: 'Phone decryption requires Zalo merchant keys configuration' };
   }
+
+  async testZaloVerification(accessToken: string) {
+    const secretKey = process.env.ZALO_APP_SECRET || '';
+    const headers: Record<string, string> = {
+      access_token: accessToken,
+    };
+    let appsecretProof = '';
+    if (secretKey) {
+      appsecretProof = createHmac('sha256', secretKey)
+        .update(accessToken)
+        .digest('hex');
+      headers['appsecret_proof'] = appsecretProof;
+    }
+
+    try {
+      const response = await fetch('https://graph.zalo.me/v2.0/me?fields=id,name,picture', {
+        method: 'GET',
+        headers,
+      });
+
+      const data = await response.json();
+      return {
+        status: response.status,
+        ok: response.ok,
+        secretKeyLength: secretKey.length,
+        appsecretProof,
+        zaloResponse: data,
+      };
+    } catch (e: any) {
+      return {
+        error: e.message,
+        stack: e.stack,
+      };
+    }
+  }
 }
