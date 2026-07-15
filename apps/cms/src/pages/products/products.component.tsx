@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiRequest } from '../utils/api';
+import { apiRequest } from '../../utils/api';
 import { 
   Plus, 
   Edit3, 
@@ -21,7 +21,9 @@ interface Product {
   stock?: number;
 }
 
-export const Products: React.FC = () => {
+import type { IProductsComponentProps } from './products.type';
+
+export const ProductsComponent: React.FC<IProductsComponentProps> = (_props) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -340,4 +342,4 @@ export const Products: React.FC = () => {
     </div>
   );
 };
-export default Products;
+

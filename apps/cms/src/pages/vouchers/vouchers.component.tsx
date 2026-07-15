@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiRequest } from '../utils/api';
+import { apiRequest } from '../../utils/api';
 import { 
   Plus, 
   Trash2, 
@@ -22,7 +22,9 @@ interface Voucher {
   endDate?: string;
 }
 
-export const Vouchers: React.FC = () => {
+import type { IVouchersComponentProps } from './vouchers.type';
+
+export const VouchersComponent: React.FC<IVouchersComponentProps> = (_props) => {
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -352,4 +354,4 @@ export const Vouchers: React.FC = () => {
     </div>
   );
 };
-export default Vouchers;
+

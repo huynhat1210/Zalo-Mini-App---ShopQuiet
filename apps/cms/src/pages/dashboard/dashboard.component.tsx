@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiRequest } from '../utils/api';
+import { apiRequest } from '../../utils/api';
 import { 
   ShoppingBag, 
   ReceiptText, 
@@ -22,7 +22,9 @@ interface DashboardStats {
   allProducts: any[];
 }
 
-export const Dashboard: React.FC = () => {
+import type { IDashboardComponentProps } from './dashboard.type';
+
+export const DashboardComponent: React.FC<IDashboardComponentProps> = (_props) => {
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     totalProducts: 0,
@@ -216,7 +218,7 @@ export const Dashboard: React.FC = () => {
       {/* Header */}
       <div>
         <h2 className="text-3xl font-bold text-[#1b1c1b] tracking-tight">Tổng quan hệ thống</h2>
-        <p className="text-[#526069] text-sm mt-1">Theo dõi hoạt động kinh doanh của SoftShop</p>
+        <p className="text-[#526069] text-sm mt-1">Theo dõi hoạt động kinh doanh của ShopQuiet</p>
       </div>
 
       {/* Stats Grid */}
@@ -423,4 +425,4 @@ export const Dashboard: React.FC = () => {
     </div>
   );
 };
-export default Dashboard;
+

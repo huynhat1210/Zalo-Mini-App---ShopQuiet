@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { apiRequest } from '../utils/api';
-import { useToast } from '../contexts/ToastContext';
-import { usePermissions } from '../contexts/PermissionContext';
-import type { Role } from '../utils/permissions';
+import { apiRequest } from '../../utils/api';
+import { useToast } from '../../contexts/ToastContext';
+import { usePermissions } from '../../contexts/PermissionContext';
+import type { Role } from '../../utils/permissions';
 import { 
   User as UserIcon, 
   Trash2, 
@@ -11,7 +11,9 @@ import {
   Square
 } from 'lucide-react';
 
-const UserManagement: React.FC = () => {
+import type { IUserManagementComponentProps } from './user-management.type';
+
+export const UserManagementComponent: React.FC<IUserManagementComponentProps> = (_props) => {
   const { success, error: toastError } = useToast();
   const { userRole: currentUserRole, canEdit, canDelete } = usePermissions();
   const [users, setUsers] = useState<any[]>([]);
@@ -249,4 +251,4 @@ const UserManagement: React.FC = () => {
   );
 };
 
-export default UserManagement;
+

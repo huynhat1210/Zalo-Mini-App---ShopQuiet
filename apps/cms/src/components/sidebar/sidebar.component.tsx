@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { apiRequest } from '../utils/api';
-import logo from '../assets/logo.png';
+import { apiRequest } from '../../utils/api';
+import logo from '../../assets/logo.png';
 import { 
   LayoutDashboard, 
   LogOut, 
@@ -10,18 +10,17 @@ import {
   Users
 } from 'lucide-react';
 
-interface SidebarProps {
-  onLogout: () => void;
-  isOpen: boolean;
-  onClose: () => void;
-}
+
 
 interface ModelSummary {
   model: string;
   count: number;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ onLogout, isOpen, onClose }) => {
+import type { ISidebarComponentProps } from './sidebar.type';
+
+export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
+  const { onLogout, isOpen, onClose } = props;
   const [models, setModels] = useState<ModelSummary[]>([]);
 
   useEffect(() => {
@@ -53,7 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, isOpen, onClose }) =
             <img src={logo} alt="Logo" className="w-8 h-8 object-contain" />
           </div>
           <div>
-            <h1 className="font-bold text-[#1b1c1b] tracking-wide text-sm">SoftShop CMS</h1>
+            <h1 className="font-bold text-[#1b1c1b] tracking-wide text-sm">ShopQuiet CMS</h1>
             <p className="text-[10px] text-[#526069] font-medium">Bảng Quản Trị</p>
           </div>
         </div>
@@ -149,4 +148,4 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, isOpen, onClose }) =
     </aside>
   );
 };
-export default Sidebar;
+

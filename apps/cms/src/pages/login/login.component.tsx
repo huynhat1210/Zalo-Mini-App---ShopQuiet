@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { apiRequest, tokenStorage } from '../utils/api';
-import logo from '../assets/logo.png';
+import { apiRequest, tokenStorage } from '../../utils/api';
+import logo from '../../assets/logo.png';
 import { Lock, User, AlertCircle } from 'lucide-react';
+import type { ILoginComponentProps } from './login.type';
 
-interface LoginProps {
-  onLoginSuccess: () => void;
-}
-
-export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
+export const LoginComponent: React.FC<ILoginComponentProps> = (props) => {
+  const { onLoginSuccess } = props;
   const [zaloId, setZaloId] = useState('admin-zalo-id-1');
   const [name, setName] = useState('admin');
   const [loading, setLoading] = useState(false);
@@ -58,7 +56,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           <div className="w-16 h-16 overflow-hidden rounded-2xl border border-slate-200 flex items-center justify-center bg-white mb-4 shadow-sm">
             <img src={logo} alt="Logo" className="w-12 h-12 object-contain" />
           </div>
-          <h2 className="text-2xl font-bold text-[#1b1c1b] tracking-tight">SoftShop CMS</h2>
+          <h2 className="text-2xl font-bold text-[#1b1c1b] tracking-tight">ShopQuiet CMS</h2>
           <p className="text-[#526069] text-sm mt-1">Đăng nhập cổng quản trị cửa hàng</p>
         </div>
 
@@ -123,4 +121,3 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     </div>
   );
 };
-export default Login;

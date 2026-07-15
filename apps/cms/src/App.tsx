@@ -1,23 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { tokenStorage } from './utils/api';
-import Layout from './components/Layout';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Products from './pages/Products';
-import Orders from './pages/Orders';
-import Vouchers from './pages/Vouchers';
-import Banners from './pages/Banners';
-import DatabaseManager from './pages/DatabaseManager';
-import UserManagement from './pages/UserManagement';
+import { tokenStorage } from './utils';
+import { LayoutComponent, ToastContainerComponent } from './components';
+import { 
+  LoginComponent, 
+  DashboardComponent, 
+  ProductsComponent, 
+  OrdersComponent, 
+  VouchersComponent, 
+  BannersComponent, 
+  DatabaseManagerComponent, 
+  UserManagementComponent 
+} from './pages';
 import { ToastProvider, useToast } from './contexts/ToastContext';
-import { ToastContainer } from './components/Toast';
 import { PermissionProvider } from './contexts/PermissionContext';
 import './App.css';
 
 const ToastContainerWrapper: React.FC = () => {
   const { toasts, removeToast } = useToast();
-  return <ToastContainer toasts={toasts} onClose={removeToast} />;
+  return <ToastContainerComponent toasts={toasts} onClose={removeToast} />;
 };
 
 export const App: React.FC = () => {
@@ -46,26 +47,26 @@ export const App: React.FC = () => {
   }
 
   if (!isAuthenticated) {
-    return <Login onLoginSuccess={() => setIsAuthenticated(true)} />;
+    return <LoginComponent onLoginSuccess={() => setIsAuthenticated(true)} />;
   }
 
   return (
     <PermissionProvider>
       <ToastProvider>
         <BrowserRouter>
-          <Layout onLogout={handleLogout}>
+          <LayoutComponent onLogout={handleLogout}>
             <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/orders" element={<Orders />} />
-              <Route path="/vouchers" element={<Vouchers />} />
-              <Route path="/banners" element={<Banners />} />
-              <Route path="/database/:modelName" element={<DatabaseManager />} />
-              <Route path="/users" element={<UserManagement />} />
+              <Route path="/" element={<DashboardComponent />} />
+              <Route path="/products" element={<ProductsComponent />} />
+              <Route path="/orders" element={<OrdersComponent />} />
+              <Route path="/vouchers" element={<VouchersComponent />} />
+              <Route path="/banners" element={<BannersComponent />} />
+              <Route path="/database/:modelName" element={<DatabaseManagerComponent />} />
+              <Route path="/users" element={<UserManagementComponent />} />
               {/* Catch-all fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-          </Layout>
+          </LayoutComponent>
           <ToastContainerWrapper />
         </BrowserRouter>
       </ToastProvider>

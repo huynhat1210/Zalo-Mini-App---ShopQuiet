@@ -1,12 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sidebar } from './Sidebar';
+import { SidebarComponent } from '../sidebar';
 import { User, Bell, Menu, Check, Clock } from 'lucide-react';
-import { apiRequest } from '../utils/api';
+import { apiRequest } from '../../utils/api';
 
-interface LayoutProps {
-  children: React.ReactNode;
-  onLogout: () => void;
-}
+
 
 interface Notification {
   id: number;
@@ -17,7 +14,10 @@ interface Notification {
   read: boolean;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
+import type { ILayoutComponentProps } from './layout.type';
+
+export const LayoutComponent: React.FC<ILayoutComponentProps> = (props) => {
+  const { children, onLogout } = props;
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [adminUser, setAdminUser] = useState<any>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -82,7 +82,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#fbf9f7] text-[#1b1c1b] overscroll-behavior-none">
       {/* Sidebar Navigation */}
-      <Sidebar 
+      <SidebarComponent 
         onLogout={onLogout} 
         isOpen={isSidebarOpen} 
         onClose={() => setIsSidebarOpen(false)} 
@@ -200,4 +200,4 @@ export const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
     </div>
   );
 };
-export default Layout;
+

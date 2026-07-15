@@ -1,11 +1,11 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-}
-
-generator client {
-  provider = "prisma-client-js"
 }
 
 model Category {
@@ -16,23 +16,23 @@ model Category {
 }
 
 model Product {
-  id          Int              @id @default(autoincrement())
-  name        String
-  description String
-  price       Float
-  tags        String?
-  images      String // Stores JSON array of image strings
-  categoryId  Int
+  id             Int              @id @default(autoincrement())
+  name           String
+  description    String
+  price          Float
+  tags           String?
+  images         String
+  categoryId     Int
   materialCare   String?
   shippingReturn String?
-  category       Category         @relation(fields: [categoryId], references: [id])
-  orderItems     OrderItem[]
-  cartItems      CartItem[]
-  variants       ProductVariant[]
-  comments       Comment[]
-  favorites      Favorite[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @default(now()) @updatedAt
+  cartItems      CartItem[]
+  comments       Comment[]
+  favorites      Favorite[]
+  orderItems     OrderItem[]
+  category       Category         @relation(fields: [categoryId], references: [id])
+  variants       ProductVariant[]
 
   @@index([categoryId])
   @@index([name])
@@ -44,19 +44,19 @@ model User {
   zaloId        String         @id
   name          String
   avatar        String?
-  phone         String?
-  email         String?
-  birthday      String?
-  role          String         @default("user") // user, admin
+  role          String         @default("user")
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  orders        Order[]
+  birthday      String?
+  phone         String?
+  email         String?
   cartItems     CartItem[]
   comments      Comment[]
-  addresses     UserAddress[]
-  notifications Notification[]
   favorites     Favorite[]
+  notifications Notification[]
+  orders        Order[]
   refreshTokens RefreshToken[]
+  addresses     UserAddress[]
 
   @@index([name])
   @@index([role])
@@ -67,13 +67,13 @@ model User {
 model CartItem {
   id         Int      @id @default(autoincrement())
   zaloUserId String
-  user       User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
   productId  Int
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   size       String   @default("DEFAULT")
   quantity   Int
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
 
   @@unique([zaloUserId, productId, size])
 }
@@ -81,9 +81,9 @@ model CartItem {
 model ProductVariant {
   id        Int     @id @default(autoincrement())
   productId Int
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  size      String  // e.g., "S", "M", "L" for clothing, "39", "40" for shoes, "DEFAULT" for others
+  size      String
   stock     Int     @default(0)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([productId, size])
 }
@@ -91,13 +91,13 @@ model ProductVariant {
 model Comment {
   id         Int      @id @default(autoincrement())
   productId  Int
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   zaloUserId String
-  user       User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
   content    String
-  rating     Int      @default(5) // Rating 1-5 stars
+  rating     Int      @default(5)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
 
   @@index([productId])
   @@index([zaloUserId])
@@ -108,28 +108,28 @@ model Comment {
 model UserAddress {
   id         Int     @id @default(autoincrement())
   zaloUserId String
-  user       User    @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
-  label      String  // e.g., "Nhà riêng", "Văn phòng"
-  phone      String  // phone number
-  street     String  // street details
-  city       String  // city/state
+  label      String
+  phone      String
+  street     String
+  city       String
   isDefault  Boolean @default(false)
+  user       User    @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
 }
 
 model Order {
-  id              String      @id // Custom order ID format SQ-XXXXX
+  id              String      @id
   totalAmount     Float
-  status          String      @default("PROCESSING") // PROCESSING, SHIPPED, DELIVERED, PENDING_PAYMENT
+  status          String      @default("PROCESSING")
   zaloUserId      String?
-  user            User?       @relation(fields: [zaloUserId], references: [zaloId])
   createdAt       DateTime    @default(now())
-  items           OrderItem[]
-  paymentMethod   String      @default("COD") // COD, ZALOPAY
+  paymentMethod   String      @default("COD")
   voucherCode     String?
   discountAmount  Float       @default(0)
   shippingAddress String?
   shippingPhone   String?
   shippingName    String?
+  user            User?       @relation(fields: [zaloUserId], references: [zaloId])
+  items           OrderItem[]
 
   @@index([zaloUserId])
   @@index([status])
@@ -142,21 +142,21 @@ model OrderItem {
   quantity  Int
   price     Float
   productId Int
-  product   Product @relation(fields: [productId], references: [id])
   size      String  @default("DEFAULT")
   orderId   String
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
 }
 
 model Notification {
-  id         Int      @id @default(autoincrement())
+  id         Int     @id @default(autoincrement())
   zaloUserId String?
-  user       User?    @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
   title      String
   content    String
-  type       String // PROMOTION, SHIPPING, ORDER
+  type       String
   date       String
-  read       Boolean  @default(false)
+  read       Boolean @default(false)
+  user       User?   @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
 
   @@index([zaloUserId])
   @@index([read])
@@ -167,10 +167,10 @@ model Notification {
 model Favorite {
   id         Int      @id @default(autoincrement())
   zaloUserId String
-  user       User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
   productId  Int
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
 
   @@unique([zaloUserId, productId])
   @@index([zaloUserId])
@@ -179,12 +179,12 @@ model Favorite {
 }
 
 model RefreshToken {
-  id        String   @id @default(uuid())
-  token     String   @unique
+  id         String   @id @default(uuid())
+  token      String   @unique
   zaloUserId String
-  user      User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
 
   @@index([token])
   @@index([zaloUserId])
@@ -193,7 +193,7 @@ model RefreshToken {
 
 model Voucher {
   code        String    @id
-  type        String    // PERCENT, FIXED, FREESHIP
+  type        String
   value       Float
   minOrderVal Float     @default(0)
   maxDiscount Float?
@@ -224,7 +224,7 @@ model SiteSetting {
   key         String   @unique
   label       String
   value       String
-  type        String   @default("TEXT") // TEXT, NUMBER, BOOLEAN, URL, EMAIL, PHONE, JSON
+  type        String   @default("TEXT")
   group       String   @default("general")
   description String?
   active      Boolean  @default(true)
@@ -234,9 +234,9 @@ model SiteSetting {
 
 model MenuItem {
   id          Int      @id @default(autoincrement())
-  section     String   @default("collections") // collections, materials, footer
+  section     String   @default("collections")
   label       String
-  targetType  String   @default("CATEGORY") // CATEGORY, URL, STATIC_PAGE, TOAST
+  targetType  String   @default("CATEGORY")
   target      String?
   description String?
   imageUrl    String?
@@ -247,29 +247,29 @@ model MenuItem {
 }
 
 model StaticPage {
-  id          Int      @id @default(autoincrement())
-  slug        String   @unique
-  title       String
-  excerpt     String?
-  content     String
+  id           Int      @id @default(autoincrement())
+  slug         String   @unique
+  title        String
+  excerpt      String?
+  content      String
   contactPhone String?
   contactEmail String?
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model ShippingMethod {
-  id          Int      @id @default(autoincrement())
-  code        String   @unique
-  name        String
-  description String?
-  price       Float    @default(0)
+  id            Int      @id @default(autoincrement())
+  code          String   @unique
+  name          String
+  description   String?
+  price         Float    @default(0)
   estimatedDays String?
-  sortOrder   Int      @default(0)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  sortOrder     Int      @default(0)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model PaymentMethod {

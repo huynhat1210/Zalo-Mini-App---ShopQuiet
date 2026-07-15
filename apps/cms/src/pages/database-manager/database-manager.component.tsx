@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { apiRequest } from '../utils/api';
-import { useToast } from '../contexts/ToastContext';
-import { validateField, validateRecord } from '../utils/validation';
-import { 
-  Plus, 
-  Edit3, 
-  Trash2, 
-  Search, 
-  X, 
-  Save, 
+import { apiRequest } from '../../utils/api';
+import { useToast } from '../../contexts/ToastContext';
+import { validateField, validateRecord } from '../../utils/validation';
+import {
+  Plus,
+  Edit3,
+  Trash2,
+  Search,
+  X,
+  Save,
   Database,
   ArrowLeft,
   AlertCircle,
@@ -27,7 +27,9 @@ import {
   PackageSearch
 } from 'lucide-react';
 
-export const DatabaseManager: React.FC = () => {
+import type { IDatabaseManagerComponentProps } from './database-manager.type';
+
+export const DatabaseManagerComponent: React.FC<IDatabaseManagerComponentProps> = (_props) => {
   const { modelName } = useParams<{ modelName: string }>();
   const navigate = useNavigate();
   const { success, error: toastError } = useToast();
@@ -148,7 +150,7 @@ export const DatabaseManager: React.FC = () => {
     e.preventDefault();
     if (!modelName) return;
     setError('');
-    
+
     // Validate form data
     const validationErrors = validateRecord(modelName, formData);
     if (Object.keys(validationErrors).length > 0) {
@@ -156,9 +158,9 @@ export const DatabaseManager: React.FC = () => {
       toastError('Lỗi validation', 'Vui lòng kiểm tra lại các trường có lỗi.');
       return;
     }
-    
+
     setFieldErrors({});
-    
+
     try {
       const castedData: Record<string, any> = {};
       Object.keys(formData).forEach((key) => {
@@ -184,7 +186,7 @@ export const DatabaseManager: React.FC = () => {
 
   const handleFieldChange = (fieldName: string, value: any) => {
     setFormData({ ...formData, [fieldName]: value });
-    
+
     // Real-time validation
     const errors = validateField(modelName || '', fieldName, value);
     if (errors.length > 0) {
@@ -208,14 +210,14 @@ export const DatabaseManager: React.FC = () => {
       const val = r[col];
       return val !== null && String(val).toLowerCase().includes(searchTerm.toLowerCase());
     });
-    
+
     // Column filters
     const matchesColumnFilters = Object.entries(columnFilters).every(([col, filterValue]) => {
       if (!filterValue) return true;
       const val = r[col];
       return val !== null && String(val).toLowerCase().includes(filterValue.toLowerCase());
     });
-    
+
     return matchesSearch && matchesColumnFilters;
   });
 
@@ -242,10 +244,10 @@ export const DatabaseManager: React.FC = () => {
   const handleBulkDelete = async () => {
     if (selectedRecords.size === 0) return;
     if (!window.confirm(`Bạn có chắc chắn muốn xóa ${selectedRecords.size} bản ghi đã chọn?`)) return;
-    
+
     try {
       await Promise.all(
-        Array.from(selectedRecords).map(id => 
+        Array.from(selectedRecords).map(id =>
           apiRequest(`/cms/database/models/${modelName}/${id}`, 'DELETE')
         )
       );
@@ -285,77 +287,76 @@ export const DatabaseManager: React.FC = () => {
           <div key={product.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col hover:shadow-lg transition-all duration-300 group">
             {/* Product Image */}
             <div className="h-52 bg-[#fbf9f7] relative overflow-hidden">
-              <img 
-                src={imgUrl} 
-                alt={product.name} 
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+              <img
+                src={imgUrl}
+                alt={product.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
-            <div className="absolute top-3 left-3 flex gap-2">
-              <span className="bg-[#ecf6f7] text-[#0e6877] border border-[#0e6877]/10 px-2.5 py-1 rounded-full text-[10px] font-bold">
-                ID: {product.id}
-              </span>
-              {product.stock !== undefined && (
-                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                  product.stock > 10 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                  product.stock > 0 ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                  'bg-rose-50 text-rose-700 border border-rose-200'
-                }`}>
-                  Tồn: {product.stock}
+              <div className="absolute top-3 left-3 flex gap-2">
+                <span className="bg-[#ecf6f7] text-[#0e6877] border border-[#0e6877]/10 px-2.5 py-1 rounded-full text-[10px] font-bold">
+                  ID: {product.id}
                 </span>
-              )}
-            </div>
-            {product.originalPrice && product.originalPrice > product.price && (
-              <div className="absolute top-3 right-3 bg-rose-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold">
-                -{Math.round((1 - product.price / product.originalPrice) * 100)}%
-              </div>
-            )}
-          </div>
-
-          {/* Product Details */}
-          <div className="p-5 flex-1 flex flex-col space-y-4">
-            <div className="space-y-2">
-              <h4 className="text-sm font-bold text-[#1b1c1b] line-clamp-2 leading-tight">{product.name}</h4>
-              <p className="text-[#526069] text-xs line-clamp-2 leading-relaxed">{product.description || 'Không có mô tả.'}</p>
-            </div>
-
-            {/* Price and Category */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-[#0e6877] font-bold text-lg">{formatPrice(product.price)}</p>
-                {product.originalPrice && product.originalPrice > product.price && (
-                  <p className="text-[11px] text-slate-400 line-through">{formatPrice(product.originalPrice)}</p>
+                {product.stock !== undefined && (
+                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${product.stock > 10 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                      product.stock > 0 ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                        'bg-rose-50 text-rose-700 border border-rose-200'
+                    }`}>
+                    Tồn: {product.stock}
+                  </span>
                 )}
               </div>
-              {product.categoryId && (
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Danh mục:</span>
-                  <span className="text-[10px] font-semibold text-[#0e6877] bg-[#ecf6f7] px-2 py-0.5 rounded-full">#{product.categoryId}</span>
+              {product.originalPrice && product.originalPrice > product.price && (
+                <div className="absolute top-3 right-3 bg-rose-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold">
+                  -{Math.round((1 - product.price / product.originalPrice) * 100)}%
                 </div>
               )}
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-2 pt-3 border-t border-slate-100">
-              <button
-                onClick={() => openDrawerForEdit(product)}
-                className="flex-1 py-2.5 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 hover:border-[#0e6877]/30 rounded-xl transition-all flex items-center justify-center gap-1.5 text-xs font-semibold"
-              >
-                <Edit3 size={12} /> Sửa
-              </button>
-              <button 
-                onClick={() => handleDeleteRecord(product.id)} 
-                className="p-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl transition-all"
-                title="Xóa"
-              >
-                <Trash2 size={12} />
-              </button>
+            {/* Product Details */}
+            <div className="p-5 flex-1 flex flex-col space-y-4">
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-[#1b1c1b] line-clamp-2 leading-tight">{product.name}</h4>
+                <p className="text-[#526069] text-xs line-clamp-2 leading-relaxed">{product.description || 'Không có mô tả.'}</p>
+              </div>
+
+              {/* Price and Category */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-[#0e6877] font-bold text-lg">{formatPrice(product.price)}</p>
+                  {product.originalPrice && product.originalPrice > product.price && (
+                    <p className="text-[11px] text-slate-400 line-through">{formatPrice(product.originalPrice)}</p>
+                  )}
+                </div>
+                {product.categoryId && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Danh mục:</span>
+                    <span className="text-[10px] font-semibold text-[#0e6877] bg-[#ecf6f7] px-2 py-0.5 rounded-full">#{product.categoryId}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-3 border-t border-slate-100">
+                <button
+                  onClick={() => openDrawerForEdit(product)}
+                  className="flex-1 py-2.5 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 hover:border-[#0e6877]/30 rounded-xl transition-all flex items-center justify-center gap-1.5 text-xs font-semibold"
+                >
+                  <Edit3 size={12} /> Sửa
+                </button>
+                <button
+                  onClick={() => handleDeleteRecord(product.id)}
+                  className="p-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl transition-all"
+                  title="Xóa"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      );
-    })}
-  </div>
-);
+        );
+      })}
+    </div>
+  );
 
   const getOrderStatusBadge = (status: string) => {
     switch (status) {
@@ -521,9 +522,8 @@ export const DatabaseManager: React.FC = () => {
             </div>
             <div className="min-w-0 flex-1">
               <h4 className="font-bold text-[#1b1c1b] text-sm truncate">{user.name}</h4>
-              <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full uppercase tracking-wider ${
-                user.role === 'admin' ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' : 'text-slate-600 bg-slate-50 border border-slate-200'
-              }`}>
+              <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full uppercase tracking-wider ${user.role === 'admin' ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' : 'text-slate-600 bg-slate-50 border border-slate-200'
+                }`}>
                 {user.role}
               </span>
             </div>
@@ -567,11 +567,10 @@ export const DatabaseManager: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                    variantArray.every((v: any) => (v.stock || 0) > 10) ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                    variantArray.some((v: any) => (v.stock || 0) > 0) ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                    'bg-rose-50 text-rose-700 border border-rose-200'
-                  }`}>
+                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${variantArray.every((v: any) => (v.stock || 0) > 10) ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                      variantArray.some((v: any) => (v.stock || 0) > 0) ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                        'bg-rose-50 text-rose-700 border border-rose-200'
+                    }`}>
                     Tổng tồn: {variantArray.reduce((sum: number, v: any) => sum + (v.stock || 0), 0)}
                   </span>
                 </div>
@@ -581,85 +580,83 @@ export const DatabaseManager: React.FC = () => {
               <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {variantArray.map((variant) => (
-                  <div 
-                    key={variant.id} 
-                    className={`border rounded-2xl p-4 transition-all hover:shadow-md ${
-                      (variant.stock || 0) === 0 ? 'border-rose-200 bg-rose-50/30' :
-                      (variant.stock || 0) < 10 ? 'border-amber-200 bg-amber-50/30' :
-                      'border-slate-200 bg-white'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                          ID: {variant.id}
-                        </span>
-                        {(variant.stock || 0) === 0 && (
-                          <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">
-                            Hết hàng
+                    <div
+                      key={variant.id}
+                      className={`border rounded-2xl p-4 transition-all hover:shadow-md ${(variant.stock || 0) === 0 ? 'border-rose-200 bg-rose-50/30' :
+                          (variant.stock || 0) < 10 ? 'border-amber-200 bg-amber-50/30' :
+                            'border-slate-200 bg-white'
+                        }`}
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                            ID: {variant.id}
                           </span>
-                        )}
-                      </div>
-                      <div className="flex gap-1.5">
-                        <button
-                          onClick={() => openDrawerForEdit(variant)}
-                          className="p-1.5 bg-slate-50 hover:bg-[#ecf6f7] text-slate-500 hover:text-[#0e6877] rounded-lg transition-colors"
-                          title="Sửa"
-                        >
-                          <Edit3 size={11} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteRecord(variant.id)}
-                          className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-lg transition-colors"
-                          title="Xóa"
-                        >
-                          <Trash2 size={11} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Variant Details */}
-                    <div className="space-y-2">
-                      {variant.size && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-slate-500 font-medium uppercase">Size:</span>
-                          <span className="text-[11px] font-semibold text-[#1b1c1b] bg-slate-100 px-2 py-0.5 rounded">{variant.size}</span>
+                          {(variant.stock || 0) === 0 && (
+                            <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">
+                              Hết hàng
+                            </span>
+                          )}
                         </div>
-                      )}
-                      {variant.color && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-slate-500 font-medium uppercase">Màu:</span>
-                          <div className="flex items-center gap-1.5">
-                            <div 
-                              className="w-4 h-4 rounded-full border border-slate-300"
-                              style={{ backgroundColor: variant.color }}
-                            />
-                            <span className="text-[11px] font-semibold text-[#1b1c1b]">{variant.color}</span>
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={() => openDrawerForEdit(variant)}
+                            className="p-1.5 bg-slate-50 hover:bg-[#ecf6f7] text-slate-500 hover:text-[#0e6877] rounded-lg transition-colors"
+                            title="Sửa"
+                          >
+                            <Edit3 size={11} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteRecord(variant.id)}
+                            className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-lg transition-colors"
+                            title="Xóa"
+                          >
+                            <Trash2 size={11} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Variant Details */}
+                      <div className="space-y-2">
+                        {variant.size && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] text-slate-500 font-medium uppercase">Size:</span>
+                            <span className="text-[11px] font-semibold text-[#1b1c1b] bg-slate-100 px-2 py-0.5 rounded">{variant.size}</span>
+                          </div>
+                        )}
+                        {variant.color && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] text-slate-500 font-medium uppercase">Màu:</span>
+                            <div className="flex items-center gap-1.5">
+                              <div
+                                className="w-4 h-4 rounded-full border border-slate-300"
+                                style={{ backgroundColor: variant.color }}
+                              />
+                              <span className="text-[11px] font-semibold text-[#1b1c1b]">{variant.color}</span>
+                            </div>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-200">
+                          <div>
+                            <span className="text-[10px] text-slate-500 font-medium uppercase block">Tồn kho:</span>
+                            <span className={`text-sm font-bold ${(variant.stock || 0) > 10 ? 'text-emerald-600' :
+                                (variant.stock || 0) > 0 ? 'text-amber-600' :
+                                  'text-rose-600'
+                              }`}>
+                              {variant.stock || 0}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] text-slate-500 font-medium uppercase block">Giá:</span>
+                            <span className="text-sm font-bold text-[#0e6877]">{formatPrice(variant.price || 0)}</span>
                           </div>
                         </div>
-                      )}
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-200">
-                        <div>
-                          <span className="text-[10px] text-slate-500 font-medium uppercase block">Tồn kho:</span>
-                          <span className={`text-sm font-bold ${
-                            (variant.stock || 0) > 10 ? 'text-emerald-600' :
-                            (variant.stock || 0) > 0 ? 'text-amber-600' :
-                            'text-rose-600'
-                          }`}>
-                            {variant.stock || 0}
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-[10px] text-slate-500 font-medium uppercase block">Giá:</span>
-                          <span className="text-sm font-bold text-[#0e6877]">{formatPrice(variant.price || 0)}</span>
-                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
           );
         })}
       </div>
@@ -721,8 +718,8 @@ export const DatabaseManager: React.FC = () => {
                 const recordId = record.id || record.zaloId || record.code;
                 const isSelected = selectedRecords.has(recordId);
                 return (
-                  <tr 
-                    key={recordId} 
+                  <tr
+                    key={recordId}
                     className={`hover:bg-slate-50 transition-colors ${isSelected ? 'bg-[#ecf6f7]/30' : ''}`}
                   >
                     <td className="py-3.5 px-4">
@@ -784,7 +781,7 @@ export const DatabaseManager: React.FC = () => {
         </div>
       );
     }
-    
+
     switch (modelName) {
       case 'Product': return renderProductView();
       case 'ProductVariant': return renderProductVariantView();
@@ -850,11 +847,10 @@ export const DatabaseManager: React.FC = () => {
           </div>
           <button
             onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-              isFilterPanelOpen || Object.keys(columnFilters).length > 0
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all ${isFilterPanelOpen || Object.keys(columnFilters).length > 0
                 ? 'bg-[#0e6877] text-white'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
+              }`}
           >
             <Filter size={14} />
             Bộ lọc nâng cao
@@ -1065,17 +1061,16 @@ export const DatabaseManager: React.FC = () => {
                             value={formData[key]}
                             onChange={(e) => handleFieldChange(key, e.target.value)}
                             placeholder={`Nhập ${key}...`}
-                            className={`w-full rounded-2xl py-3 px-4 text-xs text-[#1b1c1b] placeholder-slate-300 resize-none focus:outline-none transition-all ${
-                              fieldErrorsList.length > 0 ? 'border-rose-400' : ''
-                            }`}
+                            className={`w-full rounded-2xl py-3 px-4 text-xs text-[#1b1c1b] placeholder-slate-300 resize-none focus:outline-none transition-all ${fieldErrorsList.length > 0 ? 'border-rose-400' : ''
+                              }`}
                             style={{
                               background: '#f8fafc',
                               border: '1.5px solid #e2e8f0',
                               transition: 'border-color 0.2s, box-shadow 0.2s',
                             }}
-                            onFocus={e => { 
-                              e.target.style.borderColor = fieldErrorsList.length > 0 ? '#f87171' : '#0e6877'; 
-                              e.target.style.boxShadow = fieldErrorsList.length > 0 ? '0 0 0 3px rgba(248,113,113,0.08)' : '0 0 0 3px rgba(14,104,119,0.08)'; 
+                            onFocus={e => {
+                              e.target.style.borderColor = fieldErrorsList.length > 0 ? '#f87171' : '#0e6877';
+                              e.target.style.boxShadow = fieldErrorsList.length > 0 ? '0 0 0 3px rgba(248,113,113,0.08)' : '0 0 0 3px rgba(14,104,119,0.08)';
                             }}
                             onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
                           />
@@ -1085,13 +1080,12 @@ export const DatabaseManager: React.FC = () => {
                             required
                             value={formData[key]}
                             onChange={(e) => handleFieldChange(key, e.target.value)}
-                            className={`w-full rounded-2xl py-3 px-4 text-xs text-[#1b1c1b] focus:outline-none transition-all ${
-                              fieldErrorsList.length > 0 ? 'border-rose-400' : ''
-                            }`}
+                            className={`w-full rounded-2xl py-3 px-4 text-xs text-[#1b1c1b] focus:outline-none transition-all ${fieldErrorsList.length > 0 ? 'border-rose-400' : ''
+                              }`}
                             style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0' }}
-                            onFocus={e => { 
-                              e.target.style.borderColor = fieldErrorsList.length > 0 ? '#f87171' : '#0e6877'; 
-                              e.target.style.boxShadow = fieldErrorsList.length > 0 ? '0 0 0 3px rgba(248,113,113,0.08)' : '0 0 0 3px rgba(14,104,119,0.08)'; 
+                            onFocus={e => {
+                              e.target.style.borderColor = fieldErrorsList.length > 0 ? '#f87171' : '#0e6877';
+                              e.target.style.boxShadow = fieldErrorsList.length > 0 ? '0 0 0 3px rgba(248,113,113,0.08)' : '0 0 0 3px rgba(14,104,119,0.08)';
                             }}
                             onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
                           />
@@ -1101,13 +1095,12 @@ export const DatabaseManager: React.FC = () => {
                             value={formData[key]}
                             onChange={(e) => handleFieldChange(key, e.target.value)}
                             placeholder={`Nhập ${key}...`}
-                            className={`w-full rounded-2xl py-3 px-4 text-xs text-[#1b1c1b] placeholder-slate-300 focus:outline-none transition-all ${
-                              fieldErrorsList.length > 0 ? 'border-rose-400' : ''
-                            }`}
+                            className={`w-full rounded-2xl py-3 px-4 text-xs text-[#1b1c1b] placeholder-slate-300 focus:outline-none transition-all ${fieldErrorsList.length > 0 ? 'border-rose-400' : ''
+                              }`}
                             style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0' }}
-                            onFocus={e => { 
-                              e.target.style.borderColor = fieldErrorsList.length > 0 ? '#f87171' : '#0e6877'; 
-                              e.target.style.boxShadow = fieldErrorsList.length > 0 ? '0 0 0 3px rgba(248,113,113,0.08)' : '0 0 0 3px rgba(14,104,119,0.08)'; 
+                            onFocus={e => {
+                              e.target.style.borderColor = fieldErrorsList.length > 0 ? '#f87171' : '#0e6877';
+                              e.target.style.boxShadow = fieldErrorsList.length > 0 ? '0 0 0 3px rgba(248,113,113,0.08)' : '0 0 0 3px rgba(14,104,119,0.08)';
                             }}
                             onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
                           />
@@ -1162,4 +1155,4 @@ export const DatabaseManager: React.FC = () => {
     </div>
   );
 };
-export default DatabaseManager;
+

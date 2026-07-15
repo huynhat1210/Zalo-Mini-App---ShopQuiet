@@ -2,10 +2,7 @@
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 
-export interface TokenPair {
-  access_token: string;
-  refresh_token: string;
-}
+import { ITokenPair } from './auth.type';
 
 export const tokenStorage = {
   // Get access token
@@ -21,7 +18,7 @@ export const tokenStorage = {
   },
 
   // Set tokens
-  setTokens(tokens: TokenPair): void {
+  setTokens(tokens: ITokenPair): void {
     if (typeof window === 'undefined') return;
     localStorage.setItem(ACCESS_TOKEN_KEY, tokens.access_token);
     localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);

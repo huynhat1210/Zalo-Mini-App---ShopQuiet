@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiRequest } from '../utils/api';
+import { apiRequest } from '../../utils/api';
 import { 
   Plus, 
   Trash2, 
@@ -18,7 +18,9 @@ interface Banner {
   active: boolean;
 }
 
-export const Banners: React.FC = () => {
+import type { IBannersComponentProps } from './banners.type';
+
+export const BannersComponent: React.FC<IBannersComponentProps> = (_props) => {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -260,4 +262,4 @@ export const Banners: React.FC = () => {
     </div>
   );
 };
-export default Banners;
+

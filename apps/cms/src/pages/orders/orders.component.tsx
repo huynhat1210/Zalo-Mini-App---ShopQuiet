@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiRequest } from '../utils/api';
+import { apiRequest } from '../../utils/api';
 import { 
   Search, 
   Eye, 
@@ -34,7 +34,9 @@ interface Order {
   items: OrderItem[];
 }
 
-export const Orders: React.FC = () => {
+import type { IOrdersComponentProps } from './orders.type';
+
+export const OrdersComponent: React.FC<IOrdersComponentProps> = (_props) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -277,4 +279,4 @@ export const Orders: React.FC = () => {
     </div>
   );
 };
-export default Orders;
+

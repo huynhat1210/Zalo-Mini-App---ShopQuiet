@@ -1,22 +1,15 @@
 import React, { useEffect } from 'react';
 import { Check, XCircle, AlertCircle, Info, X } from 'lucide-react';
-
-export type ToastType = 'success' | 'error' | 'warning' | 'info';
-
-export interface Toast {
-  id: string;
-  type: ToastType;
-  title: string;
-  message?: string;
-  duration?: number;
-}
+import type { Toast, ToastType, IToastComponentProps } from './toast.type';
 
 interface ToastProps {
   toast: Toast;
   onClose: (id: string) => void;
 }
 
-const ToastItem: React.FC<ToastProps> = ({ toast, onClose }) => {
+const ToastItem: React.FC<ToastProps> = (props) => {
+  const { toast, onClose } = props;
+
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose(toast.id);
@@ -24,14 +17,14 @@ const ToastItem: React.FC<ToastProps> = ({ toast, onClose }) => {
     return () => clearTimeout(timer);
   }, [toast.id, toast.duration, onClose]);
 
-  const icons = {
+  const icons: Record<ToastType, React.ReactNode> = {
     success: <Check size={18} className="text-emerald-600" />,
     error: <XCircle size={18} className="text-rose-600" />,
     warning: <AlertCircle size={18} className="text-amber-600" />,
     info: <Info size={18} className="text-blue-600" />,
   };
 
-  const colors = {
+  const colors: Record<ToastType, string> = {
     success: 'bg-emerald-50 border-emerald-200',
     error: 'bg-rose-50 border-rose-200',
     warning: 'bg-amber-50 border-amber-200',
@@ -60,12 +53,9 @@ const ToastItem: React.FC<ToastProps> = ({ toast, onClose }) => {
   );
 };
 
-interface ToastContainerProps {
-  toasts: Toast[];
-  onClose: (id: string) => void;
-}
+export const ToastContainerComponent: React.FC<IToastComponentProps> = (props) => {
+  const { toasts, onClose } = props;
 
-export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onClose }) => {
   return (
     <div className="fixed top-4 right-4 z-[100] flex flex-col gap-3 pointer-events-none">
       {toasts.map((toast) => (
