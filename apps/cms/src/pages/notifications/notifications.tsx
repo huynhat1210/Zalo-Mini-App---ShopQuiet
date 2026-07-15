@@ -18,6 +18,7 @@ import type { INotificationsProps } from './notifications.type';
 interface NotificationHistory {
   id: number;
   title: string;
+  
   content: string;
   type: string;
   zaloUserId: string | null;
