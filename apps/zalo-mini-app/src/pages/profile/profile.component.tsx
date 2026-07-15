@@ -60,8 +60,9 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
   const [addresses, setAddresses] = useState<any[]>([]);
   const [activeAddressId, setActiveAddressId] = useState<string>('');
 
-  // Add Address Form state
+  // Add/Edit Address Form state
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState<number | null>(null);
   const {
     register: registerAddress,
     handleSubmit: handleAddressSubmit,
@@ -160,23 +161,13 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
             }
           }
         },
-        fail: async (err: any) => {
+        fail: (err: any) => {
+          // Zalo SDK failed - leave phone field empty, user will enter manually
           console.error('getPhoneNumber fail', err);
-          try {
-            const mockToken = 'mock_phone_token_' + Math.random().toString(36).substring(7);
-            await handleDecrypt(mockToken);
-          } catch { /* silent */ }
         }
       });
-    } else {
-      // Browser fallback
-      try {
-        const mockToken = 'mock_phone_token_' + Math.random().toString(36).substring(7);
-        await handleDecrypt(mockToken);
-      } catch {
-        if (!silentFail) showToast('Không thể lấy SĐT từ Zalo.', 'warning');
-      }
     }
+    // No browser/mock fallback - only fill from real Zalo SDK
   };
 
   useEffect(() => {
@@ -275,6 +266,7 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
         street: '',
         city: '',
       });
+      setEditingAddressId(null);
     }
   }, [showAddForm, resetAddressForm]);
 
@@ -940,21 +932,39 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
                       <p className="text-textColor-variant/80 font-semibold">SĐT: {addr.phone}</p>
                     </div>
                     
-                    <button
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        try {
-                          await apiRequest(`/addresses/${addr.id}`, 'DELETE');
-                          await fetchAddresses();
-                          showToast('Đã xóa địa chỉ!', 'info');
-                        } catch (e) {
-                          showToast('Xóa địa chỉ thất bại!', 'warning');
-                        }
-                      }}
-                      className="text-red-500 hover:text-red-700 p-1 border-none bg-transparent cursor-pointer font-bold text-[10px] uppercase tracking-wider"
-                    >
-                      Xóa
-                    </button>
+                    <div className="flex flex-col items-end gap-1.5">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingAddressId(addr.id);
+                          resetAddressForm({
+                            label: addr.label || '',
+                            phone: addr.phone || '',
+                            street: addr.street || '',
+                            city: addr.city || '',
+                          });
+                          setShowAddForm(true);
+                        }}
+                        className="text-primary hover:text-primary-dark p-1 border-none bg-transparent cursor-pointer font-bold text-[10px] uppercase tracking-wider"
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            await apiRequest(`/addresses/${addr.id}`, 'DELETE');
+                            await fetchAddresses();
+                            showToast('Đã xóa địa chỉ!', 'info');
+                          } catch (e) {
+                            showToast('Xóa địa chỉ thất bại!', 'warning');
+                          }
+                        }}
+                        className="text-red-500 hover:text-red-700 p-1 border-none bg-transparent cursor-pointer font-bold text-[10px] uppercase tracking-wider"
+                      >
+                        Xóa
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
@@ -970,7 +980,9 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
               </button>
             ) : (
               <div className="border border-neutral-100 bg-neutral-50/50 p-4 rounded-2xl space-y-3 mt-2 animate-fade-in text-left">
-                <div className="text-[9px] font-extrabold text-[#526069]/70 uppercase tracking-widest border-b border-neutral-100 pb-1">Địa chỉ mới</div>
+                <div className="text-[9px] font-extrabold text-[#526069]/70 uppercase tracking-widest border-b border-neutral-100 pb-1">
+                  {editingAddressId ? 'Chỉnh sửa địa chỉ' : 'Địa chỉ mới'}
+                </div>
                 
                 <div>
                   <label className="text-[9px] font-bold text-textColor-variant uppercase tracking-wider block mb-1">Tên nhãn (ví dụ: Nhà riêng, Văn phòng)</label>
@@ -1021,31 +1033,40 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
                     type="button"
                     onClick={handleAddressSubmit(async (values) => {
                       try {
-                        const saved = await apiRequest<any>('/addresses', 'POST', {
-                          label: values.label,
-                          phone: values.phone,
-                          street: values.street,
-                          city: values.city,
-                          isDefault: addresses.length === 0,
-                        });
-                        if (saved) {
+                        if (editingAddressId) {
+                          // Update existing address
+                          await apiRequest(`/addresses/${editingAddressId}`, 'PATCH', {
+                            label: values.label,
+                            phone: values.phone,
+                            street: values.street,
+                            city: values.city,
+                          });
                           await fetchAddresses();
                           setShowAddForm(false);
-                          resetAddressForm({
-                            label: '',
-                            phone: '',
-                            street: '',
-                            city: '',
+                          showToast('Đã cập nhật địa chỉ!', 'success');
+                        } else {
+                          // Add new address
+                          const saved = await apiRequest<any>('/addresses', 'POST', {
+                            label: values.label,
+                            phone: values.phone,
+                            street: values.street,
+                            city: values.city,
+                            isDefault: addresses.length === 0,
                           });
-                          showToast('Đã thêm địa chỉ mới!', 'success');
+                          if (saved) {
+                            await fetchAddresses();
+                            setShowAddForm(false);
+                            resetAddressForm({ label: '', phone: '', street: '', city: '' });
+                            showToast('Đã thêm địa chỉ mới!', 'success');
+                          }
                         }
                       } catch (e) {
-                        showToast('Thêm địa chỉ thất bại!', 'warning');
+                        showToast(editingAddressId ? 'Cập nhật địa chỉ thất bại!' : 'Thêm địa chỉ thất bại!', 'warning');
                       }
                     })}
                     className="flex-1 h-9 bg-primary text-white font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-primary-dark"
                   >
-                    Lưu địa chỉ
+                    {editingAddressId ? 'Cập nhật' : 'Lưu địa chỉ'}
                   </button>
                   <button
                     type="button"

@@ -160,26 +160,14 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
             }
           }
         },
-        fail: async (error: any) => {
+        fail: (error: any) => {
+          // Zalo SDK failed - leave phone empty, user enters manually
           console.error('getPhoneNumber fail', error);
-          try {
-            const mockToken = 'mock_phone_token_' + Math.random().toString(36).substring(7);
-            const ok = await handleDecrypt(mockToken);
-            if (ok && !silentFail) showToast('Đã lấy SĐT (môi trường giả lập)', 'success');
-          } catch {
-            if (!silentFail) showToast('Không thể lấy số điện thoại từ Zalo.', 'warning');
-          }
+          if (!silentFail) showToast('Không thể lấy SĐT từ Zalo. Vui lòng nhập thủ công.', 'warning');
         }
       });
-    } else {
-      // In browser: always try mock fallback silently
-      try {
-        const mockToken = 'mock_phone_token_' + Math.random().toString(36).substring(7);
-        await handleDecrypt(mockToken);
-      } catch {
-        if (!silentFail) showToast('Zalo SDK không khả dụng trong trình duyệt.', 'warning');
-      }
     }
+    // No mock/browser fallback - only real Zalo SDK
   };
 
   // Auto-fetch phone when checkout opens and phone field is empty
@@ -192,6 +180,78 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Location feature
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+
+  const handleGetLocation = async () => {
+    const apiAny = api as any;
+    setIsLoadingLocation(true);
+
+    const processCoords = async (lat: number, lng: number) => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=vi`,
+          { headers: { 'User-Agent': 'ShopQuiet-MiniApp/1.0' } }
+        );
+        const data = await res.json();
+        const addr = data.address || {};
+        const road = addr.road || addr.pedestrian || addr.footway || '';
+        const houseNumber = addr.house_number || '';
+        const street = [houseNumber, road].filter(Boolean).join(' ')
+          || addr.neighbourhood
+          || addr.suburb
+          || '';
+        const city = addr.city || addr.town || addr.county || addr.state || '';
+
+        reset({
+          ...watchedAddress,
+          street: street || watchedAddress.street,
+          city: city || watchedAddress.city,
+        });
+        showToast('Đã điền địa chỉ từ vị trí hiện tại!', 'success');
+      } catch (err) {
+        console.error(err);
+        showToast('Không thể lấy địa chỉ từ toạ độ.', 'warning');
+      } finally {
+        setIsLoadingLocation(false);
+      }
+    };
+
+    if (apiAny && apiAny.getLocation) {
+      apiAny.getLocation({
+        success: (data: any) => {
+          const lat = data.latitude ?? data.lat;
+          const lng = data.longitude ?? data.lon ?? data.lng;
+          if (lat != null && lng != null) {
+            processCoords(Number(lat), Number(lng));
+          } else {
+            showToast('Không nhận được toạ độ vị trí.', 'warning');
+            setIsLoadingLocation(false);
+          }
+        },
+        fail: (err: any) => {
+          console.error('getLocation fail', err);
+          showToast('Không thể lấy vị trí. Vui lòng cấp quyền vị trí cho app.', 'warning');
+          setIsLoadingLocation(false);
+        }
+      });
+    } else if (navigator.geolocation) {
+      // Browser fallback
+      navigator.geolocation.getCurrentPosition(
+        (pos) => processCoords(pos.coords.latitude, pos.coords.longitude),
+        (err) => {
+          console.error(err);
+          showToast('Không thể lấy vị trí.', 'warning');
+          setIsLoadingLocation(false);
+        }
+      );
+    } else {
+      showToast('Thiết bị không hỗ trợ lấy vị trí.', 'warning');
+      setIsLoadingLocation(false);
+    }
+  };
+
 
   const decodeMojibakeText = (text: string | null | undefined) => {
     if (!text || typeof text !== 'string') return text || '';
@@ -610,12 +670,28 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
                   <p className="text-textColor-variant">{formatAddressText(address.city, '')}</p>
                   <p className="text-textColor-variant/80 font-bold">SĐT: {formatAddressText(address.phone, '')}</p>
                 </div>
-                <button
-                  onClick={() => setIsSelectorOpen(true)}
-                  className="text-xs text-primary font-bold hover:underline border-none bg-transparent cursor-pointer"
-                >
-                  Thay đổi
-                </button>
+                <div className="flex flex-col items-end gap-2">
+                  <button
+                    onClick={() => setIsSelectorOpen(true)}
+                    className="text-xs text-primary font-bold hover:underline border-none bg-transparent cursor-pointer"
+                  >
+                    Thay đổi
+                  </button>
+                  <button
+                    onClick={() => {
+                      reset({
+                        name: address.name,
+                        phone: address.phone,
+                        street: address.street,
+                        city: address.city,
+                      });
+                      setIsEnteringCustomAddress(true);
+                    }}
+                    className="text-xs text-[#526069] font-bold hover:underline border-none bg-transparent cursor-pointer"
+                  >
+                    Chỉnh sửa
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="space-y-3 animate-fade-in">
@@ -659,12 +735,30 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
                     {errors.phone && <p className="mt-1 text-[10px] text-red-500">{errors.phone.message}</p>}
                   </div>
                   <div>
-                    <input
-                      type="text"
-                      placeholder="Địa chỉ (Số nhà, tên đường)"
-                      {...register('street')}
-                      className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-[#f0edeb] bg-[#fbf9f7] text-textColor focus:border-primary focus:outline-none"
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Địa chỉ (Số nhà, tên đường)"
+                        {...register('street')}
+                        className="w-full text-xs px-3.5 py-2.5 pr-28 rounded-xl border border-[#f0edeb] bg-[#fbf9f7] text-textColor focus:border-primary focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleGetLocation}
+                        disabled={isLoadingLocation}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 px-2.5 py-1.5 bg-[#f0edeb] text-[#526069] text-[8px] font-extrabold uppercase tracking-wider rounded-lg border-none cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors disabled:opacity-50"
+                      >
+                        {isLoadingLocation ? (
+                          <span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin inline-block" />
+                        ) : (
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+                          </svg>
+                        )}
+                        Vị trí
+                      </button>
+                    </div>
                     {errors.street && <p className="mt-1 text-[10px] text-red-500">{errors.street.message}</p>}
                   </div>
                   <div>
