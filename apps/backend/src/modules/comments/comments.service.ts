@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Comment, User } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
-type CommentWithUser = Comment & { user: User };
+type CommentWithUser = Comment & { user: User; product?: { id: number; name: string; images: string } };
 
 @Injectable()
 export class CommentsService {
@@ -13,6 +13,21 @@ export class CommentsService {
       where: { productId },
       include: {
         user: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async findByUser(zaloUserId: string): Promise<CommentWithUser[]> {
+    return (this.prisma.comment as any).findMany({
+      where: { zaloUserId },
+      include: {
+        user: true,
+        product: {
+          select: { id: true, name: true, images: true },
+        },
       },
       orderBy: {
         createdAt: 'desc',

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Page } from 'zmp-ui';
-import { useCart, IProduct } from '../../App';
+import { useCart } from '../../App';
 import { useDebounce } from '../../utils';
 import { useAllProducts, useCategories } from '../../hooks';
 import { ISearchProps } from './search.type';
@@ -205,7 +205,49 @@ export const Search: React.FC<ISearchProps> = (_props) => {
                 ))}
               </div>
             </div>
+
+            {/* Suggested Products */}
+            <div className="space-y-3.5">
+              <h3 className="text-[10px] font-extrabold text-[#526069]/60 uppercase tracking-widest px-1">Gợi ý sản phẩm</h3>
+              <div className="grid grid-cols-2 gap-x-5 gap-y-7">
+                {(Array.isArray(products) ? products : []).slice(0, 10).map(prod => {
+                  let img = 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80';
+                  try {
+                    const parsed = JSON.parse(prod.images);
+                    if (parsed && parsed.length > 0) img = parsed[0];
+                  } catch (e) {}
+
+                  return (
+                    <div
+                      key={prod.id}
+                      onClick={() => setSelectedProductDetail(prod)}
+                      className="bg-white rounded-2xl overflow-hidden flex flex-col relative border border-[#f0edeb] shadow-xs cursor-pointer group hover:shadow-md transition-all duration-300"
+                    >
+                      <div className="h-[135px] w-full overflow-hidden bg-neutral-50 border-b border-[#f0edeb]">
+                        <LazyImageComponent src={img} alt={prod.name} className="w-full h-full" />
+                      </div>
+                      <div className="p-3.5 flex-1 flex flex-col justify-between">
+                        <div>
+                          <span className="text-[9px] text-[#526069]/60 uppercase font-bold tracking-wider">{prod.category?.name}</span>
+                          <h3 className="text-xs font-semibold text-textColor mt-0.5 line-clamp-1 group-hover:text-primary transition-colors">{prod.name}</h3>
+                        </div>
+                        <div className="flex justify-between items-center mt-3.5">
+                          <span className="text-xs font-bold text-textColor">{prod.price.toLocaleString('vi-VN')} đ</span>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); addToCart(prod); }}
+                            className="w-7.5 h-7.5 rounded-full bg-primary-light text-primary flex items-center justify-center font-bold text-sm active:scale-90 transition-transform"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </>
+
         ) : (
           /* Search Results Grid */
           <div className="space-y-4">

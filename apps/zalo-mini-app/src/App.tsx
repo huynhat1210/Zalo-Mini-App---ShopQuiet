@@ -205,6 +205,7 @@ export default function App() {
                     {activeTab === 'orders' && <Profile initialSubPage="orders" />}
                     {activeTab === 'notifications' && <Notifications />}
                     {activeTab === 'profile' && <Profile />}
+                    {activeTab === 'ranking' && <Profile initialSubPage="ranking" />}
                     {activeTab === 'saved-items' && <SavedItems />}
                     {activeTab === 'checkout' && <Checkout />}
                     {activeTab === 'order-success' && <OrderSuccess />}

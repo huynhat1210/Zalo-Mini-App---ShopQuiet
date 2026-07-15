@@ -1,13 +1,17 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Headers, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { SyncUserDto, DecryptPhoneDto } from './dto/sync-user.dto';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   @Post('sync')
   async syncUser(@Body() body: SyncUserDto) {
@@ -19,6 +23,20 @@ export class UsersController {
   @Roles('admin')
   async getAllUsers() {
     return this.usersService.getAllUsers();
+  }
+
+  @Get('me/reviews')
+  async getMyReviews(@Headers('x-zalo-user-id') zaloUserId?: string) {
+    const userId = zaloUserId || 'cust-zalo-id-1';
+    return (this.prisma.comment as any).findMany({
+      where: { zaloUserId: userId },
+      include: {
+        product: {
+          select: { id: true, name: true, images: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   @Post('decrypt-phone')

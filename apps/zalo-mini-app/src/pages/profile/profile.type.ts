@@ -1,3 +1,3 @@
 export interface IProfileProps {
-  initialSubPage?: 'profile' | 'orders';
+  initialSubPage?: 'profile' | 'orders' | 'ranking';
 }

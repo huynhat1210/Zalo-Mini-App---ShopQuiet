@@ -44,6 +44,13 @@ export const Profile: React.FC<IProfileProps> = (props) => {
   // ShopeeFood style tabs state
   const [ordersTab, setOrdersTab] = useState<'active' | 'history' | 'reviews'>('active');
 
+  // User reviews state (for reviews tab)
+  const [userReviews, setUserReviews] = useState<any[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+
+  // Show ranking info modal state on the ranking page
+  const [showRankingInfo, setShowRankingInfo] = useState(false);
+
   // Review Modal state
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [reviewOrderId, setReviewOrderId] = useState('');
@@ -305,6 +312,19 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     }
   };
 
+  const fetchUserReviews = async () => {
+    setLoadingReviews(true);
+    try {
+      const res = await apiRequest<any[]>('/users/me/reviews');
+      setUserReviews(Array.isArray(res) ? res : []);
+    } catch (e) {
+      console.error('Failed to fetch user reviews:', e);
+      setUserReviews([]);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
   useEffect(() => {
     const userId = zaloUser?.id || 'cust-zalo-id-1';
     if (typeof window !== 'undefined') {
@@ -324,6 +344,13 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     fetchOrdersAndProducts();
     fetchAddresses();
   }, [zaloUser?.id]);
+
+  // Fetch user reviews when the reviews tab is selected
+  useEffect(() => {
+    if (ordersTab === 'reviews') {
+      fetchUserReviews();
+    }
+  }, [ordersTab]);
 
   useEffect(() => {
     if (!showAddForm) {
@@ -382,6 +409,123 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     staticPages.find((page) => page.slug === activeStaticPageSlug) ||
     staticPages.find((page) => page.slug === 'help-support');
 
+  if (initialSubPage === 'ranking') {
+    return (
+      <PageCast className="bg-[#f7f7f7] relative flex flex-col w-full h-full overscroll-none scrollbar-none animate-fade-in text-left">
+        {/* Header */}
+        <div className="bg-white px-6 py-4 flex items-center justify-between border-b border-[#f0edeb] sticky top-0 z-30 shadow-xs">
+          <button onClick={() => setActiveTab('profile')} className="p-1.5 -ml-1.5 hover:bg-[#f0edeb] rounded-full transition-colors border-none bg-transparent cursor-pointer">
+            <svg className="w-5.5 h-5.5 text-textColor" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+          <span className="text-xs font-bold uppercase tracking-widest text-textColor">Hạng thành viên</span>
+          <button 
+            onClick={() => setShowRankingInfo(true)} 
+            className="p-1.5 -mr-1.5 hover:bg-[#f0edeb] rounded-full transition-colors border-none bg-transparent cursor-pointer relative"
+          >
+            <svg className="w-5.5 h-5.5 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 111.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Info Explanatory Overlay if open */}
+        {showRankingInfo && (
+          <div className="fixed inset-0 z-50 bg-black/45 backdrop-blur-xs flex items-center justify-center p-6" onClick={() => setShowRankingInfo(false)}>
+            <div className="bg-white rounded-3xl p-6 border border-[#f0edeb] shadow-2xl max-w-xs space-y-4 animate-scale-up" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-wider">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 111.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                </svg>
+                <span>Quy chế hoạt động</span>
+              </div>
+              <p className="text-xs text-textColor leading-relaxed font-medium">
+                Hạng thành viên được tự động nâng cấp dựa trên tổng chi tiêu tích lũy của bạn tại hệ thống ShopQuiet.
+              </p>
+              <p className="text-xs text-textColor leading-relaxed font-medium">
+                Mỗi khi hoàn thành một đơn hàng, giá trị đơn hàng sẽ được cộng trực tiếp vào tổng chi tiêu tích lũy của bạn để xét hạng.
+              </p>
+              <button 
+                onClick={() => setShowRankingInfo(false)} 
+                className="w-full h-9 bg-primary text-white text-[11px] font-bold uppercase tracking-wider rounded-xl border-none cursor-pointer active:scale-95 transition-all"
+              >
+                Đồng ý
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="flex-1 overflow-y-auto px-6 py-5.5 space-y-6 pb-28">
+          {/* User Current Tier Status Card */}
+          <div className="bg-gradient-to-br from-teal-900 via-teal-800 to-primary text-white rounded-3xl p-5 shadow-md relative overflow-hidden">
+            <div className="absolute inset-0 opacity-15" style={{backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fff' fill-opacity='0.4' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E\")"}} />
+            
+            <div className="flex items-center gap-4 relative z-10">
+              <img src={profile.avatar} alt={profile.name} className="w-14 h-14 rounded-full border-2 border-white/80 object-cover shadow-sm" />
+              <div className="flex-1 text-left space-y-0.5">
+                <p className="text-xs font-semibold text-white/70">Thành viên hiện tại</p>
+                <h3 className="text-base font-bold tracking-tight">{profile.name}</h3>
+                <span className="inline-block mt-1 bg-amber-400 text-teal-950 font-black text-[9px] uppercase px-2.5 py-0.5 rounded shadow-xs">★ BẠC</span>
+              </div>
+            </div>
+
+            {/* Spent progress bar */}
+            <div className="mt-5 space-y-1.5 relative z-10 text-left">
+              <div className="flex justify-between items-center text-[10px] text-white/85 font-medium">
+                <span>Chi tiêu: 2.500.000 đ</span>
+                <span>Mục tiêu Gold: 10.000.000 đ</span>
+              </div>
+              <div className="w-full h-2.5 bg-white/20 rounded-full overflow-hidden">
+                <div className="h-full bg-amber-400 rounded-full transition-all duration-500" style={{ width: '25%' }}></div>
+              </div>
+              <p className="text-[10px] text-white/70 italic text-center mt-1">Cần mua thêm 7.500.000 đ để lên hạng Vàng</p>
+            </div>
+          </div>
+
+          {/* Member tiers list */}
+          <div className="space-y-4 text-left">
+            <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-1">Danh sách phân hạng</h3>
+            {[
+              { level: 'Đồng', color: 'bg-white text-textColor border-[#f0edeb]', badge: '🥉', min: '0đ', max: '1.999.999đ', perks: ['Tích điểm x1', 'Ưu đãi sản phẩm cơ bản', 'Hỗ trợ tiêu chuẩn'] },
+              { level: 'Bạc', color: 'bg-white text-textColor border-[#f0edeb]', badge: '🥈', min: '2.000.000đ', max: '9.999.999đ', perks: ['Tích điểm x1.5', 'Miễn phí vận chuyển đơn >200k', 'Ưu đãi thành viên hàng tháng', 'Hỗ trợ ưu tiên'], current: true },
+              { level: 'Vàng', color: 'bg-white text-textColor border-[#f0edeb]', badge: '🥇', min: '10.000.000đ', max: '49.999.999đ', perks: ['Tích điểm x2', 'Miễn phí vận chuyển mọi đơn', 'Flash sale độc quyền', 'Hoàn tiền 5%', 'Hỗ trợ 24/7'] },
+              { level: 'Kim cương', color: 'bg-white text-textColor border-[#f0edeb]', badge: '💎', min: '50.000.000đ', max: 'Không giới hạn', perks: ['Tích điểm x3', 'Miễn phí ship & đổi trả tự do', 'Early access sản phẩm mới', 'Hoàn tiền 10%', 'Quản lý tài khoản cá nhân'] },
+            ].map(tier => (
+              <div key={tier.level} className={`border rounded-2xl p-4.5 space-y-3 bg-white relative transition-all shadow-xs ${tier.current ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
+                {tier.current && (
+                  <span className="absolute top-4 right-4 bg-primary text-white font-extrabold text-[8px] uppercase px-2 py-0.5 rounded-full tracking-wider">Hạng hiện tại</span>
+                )}
+                <div className="flex justify-between items-center pb-2 border-b border-[#f0edeb]">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xl">{tier.badge}</span>
+                    <div>
+                      <p className="font-bold text-xs text-textColor">Hạng {tier.level}</p>
+                      <p className="text-[10px] text-textColor-variant/70 mt-0.5">Yêu cầu tích lũy: {tier.min} – {tier.max}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-[9px] font-extrabold text-[#526069]/55 uppercase tracking-widest">Đặc quyền nhận được:</p>
+                  <ul className="grid grid-cols-1 gap-2">
+                    {tier.perks.map(perk => (
+                      <li key={perk} className="text-xs text-textColor-variant flex items-center gap-2">
+                        <svg className="w-3.5 h-3.5 text-primary flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-medium">{perk}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </PageCast>
+    );
+  }
+
   if (initialSubPage === 'orders') {
     return (
       <PageCast className="bg-surface relative flex flex-col w-full h-full overscroll-none scrollbar-none">
@@ -428,12 +572,68 @@ export const Profile: React.FC<IProfileProps> = (props) => {
         {/* Scrollable container content */}
         <div className="flex-1 overflow-y-auto px-6 py-5.5 space-y-7 pb-28">
           {/* Main Display List */}
-          {loading ? (
+          {ordersTab === 'reviews' ? (
+            /* REVIEWS TAB - show user's submitted reviews */
+            loadingReviews ? (
+              <div className="text-center py-10 text-textColor-variant text-xs font-medium">Đang tải đánh giá...</div>
+            ) : userReviews.length === 0 ? (
+              <EmptyStateComponent
+                title="Chưa có đánh giá nào"
+                description="Sau khi mua hàng hoàn tất, bạn có thể đánh giá sản phẩm tại tab Lịch sử."
+                actionText="Xem lịch sử mua hàng"
+                onAction={() => setOrdersTab('history')}
+              />
+            ) : (
+              <div className="space-y-4 animate-fade-in">
+                {userReviews.map((review) => {
+                  let img = 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80';
+                  try {
+                    const parsed = JSON.parse(review.product?.images || '[]');
+                    if (parsed && parsed.length > 0) img = parsed[0];
+                  } catch (e) {}
+                  return (
+                    <div
+                      key={review.id}
+                      onClick={() => {
+                        const prod = { id: review.product?.id, name: review.product?.name, images: review.product?.images };
+                        if (prod.id) setSelectedProductDetail(prod as any);
+                      }}
+                      className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 space-y-3 shadow-xs hover:border-primary/30 transition-all cursor-pointer"
+                    >
+                      {/* Product row */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden border border-[#f0edeb] bg-neutral-50 flex-shrink-0">
+                          <img src={img} alt={review.product?.name} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-semibold text-textColor line-clamp-1">{review.product?.name || 'Sản phẩm'}</p>
+                          <p className="text-[10px] text-textColor-variant mt-0.5">
+                            {new Date(review.createdAt).toLocaleDateString('vi-VN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                          </p>
+                        </div>
+                        {/* Stars */}
+                        <div className="flex items-center gap-0.5 flex-shrink-0">
+                          {[1,2,3,4,5].map(star => (
+                            <svg key={star} className={`w-3.5 h-3.5 ${star <= (review.rating || 5) ? 'text-amber-400' : 'text-neutral-200'}`} viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Review content */}
+                      <div className="bg-neutral-50 rounded-xl px-4 py-3">
+                        <p className="text-xs text-textColor leading-relaxed">{review.content}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )
+          ) : loading ? (
             <div className="text-center py-10 text-textColor-variant text-xs font-medium">Đang tải đơn hàng...</div>
           ) : displayedOrders.length === 0 ? (
             <EmptyStateComponent
-              title={ordersTab === 'active' ? 'Quên chưa đặt sản phẩm rồi nè bạn ơi?' :
-                     ordersTab === 'history' ? 'Chưa có lịch sử mua hàng' : 'Chưa có đánh giá nào'}
+              title={ordersTab === 'active' ? 'Quên chưa đặt sản phẩm rồi nè bạn ơi?' : 'Chưa có lịch sử mua hàng'}
               description={ordersTab === 'active'
                 ? 'Bạn sẽ nhìn thấy các đơn hàng đang được chuẩn bị hoặc giao đi tại đây để kiểm tra đơn hàng nhanh hơn!'
                 : 'Khám phá các sản phẩm tối giản cao cấp của chúng tôi để mua sắm ngay.'}
@@ -835,6 +1035,25 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
             </button>
+
+            {/* Ranking section button */}
+            <button
+              onClick={() => setActiveTab('ranking')}
+              className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0" />
+                </svg>
+                <span className="font-semibold text-textColor">Hạng thành viên</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="bg-amber-400 text-teal-950 font-black text-[9px] uppercase px-2 py-0.5 rounded">★ BẠC</span>
+                <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </div>
+            </button>
           </div>
         </div>
 
@@ -953,6 +1172,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
       {/* MODALS RENDER SECTION */}
       {/* 1. Edit Profile Modal */}
       {isEditProfileOpen && (
+
         <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-center justify-center p-6">
           <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up">
 <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">Chỉnh sửa thông tin</h3>
