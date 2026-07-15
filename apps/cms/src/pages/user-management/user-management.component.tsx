@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../utils/api';
-import { useToast } from '../../contexts/ToastContext';
-import { usePermissions } from '../../contexts/PermissionContext';
+import { useToast, usePermissions } from '../../contexts';
 import type { Role } from '../../utils/permissions';
 import { 
   User as UserIcon, 

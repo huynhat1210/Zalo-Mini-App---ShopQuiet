@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import api from 'zmp-sdk';
-import { apiRequest } from '../utils/api';
-import { tokenStorage } from '../utils/auth';
-import type { ICartItem, INotification, IOrder, IProduct, IToastState, TToastType, IZaloUser } from '../App.type';
+import { apiRequest } from '../../utils/api';
+import { tokenStorage } from '../../utils/auth';
+import type { ICartItem, INotification, IOrder, IProduct, IToastState, TToastType, IZaloUser } from '../../App.type';
 
 type AppState = {
   cart: ICartItem[];

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Page } from 'zmp-ui';
 import { useCart, IProduct } from '../../App';
 import { useDebounce } from '../../utils';
-import { useAllProducts, useCategories } from '../../hooks/queries';
+import { useAllProducts, useCategories } from '../../hooks';
 import { ISearchComponentProps } from './search.type';
 
 const PageCast = Page as any;

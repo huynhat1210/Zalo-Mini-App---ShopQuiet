@@ -1,7 +1,7 @@
 import React, { createContext, useContext } from 'react';
 import type { ReactNode } from 'react';
-import type { Role, Permission } from '../utils/permissions';
-import { hasPermission, hasAnyPermission, hasAllPermissions, roleDefinitions } from '../utils/permissions';
+import type { Role, Permission } from '../../utils/permissions';
+import { hasPermission, hasAnyPermission, hasAllPermissions, roleDefinitions } from '../../utils/permissions';
 
 interface PermissionContextType {
   userRole: Role;
@@ -24,12 +24,12 @@ export const usePermissions = () => {
   return context;
 };
 
-interface PermissionProviderProps {
-  children: ReactNode;
-  initialRole?: Role;
-}
 
-export const PermissionProvider: React.FC<PermissionProviderProps> = ({ children, initialRole = 'admin' }) => {
+
+import type { IPermissionComponentProps } from './permission.type';
+
+export const PermissionProviderComponent: React.FC<IPermissionComponentProps> = (props) => {
+  const { children, initialRole = 'admin' } = props;
   const [userRole, setUserRole] = React.useState<Role>(initialRole);
 
   const setRole = (role: Role) => {

@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Page, Box, Text } from 'zmp-ui';
 import { useCart, IProduct } from '../../App';
-import { useAppStore } from '../../store/useAppStore';
+import { useAppStore } from '../../store';
 import { apiRequest } from '../../utils/api';
-import { useInfiniteProducts, useCategories, useBanners } from '../../hooks/queries';
+import { useInfiniteProducts, useCategories, useBanners } from '../../hooks';
 import { Bars3Icon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 // @ts-ignore
 import logoIcon from '../../assets/logo.png';

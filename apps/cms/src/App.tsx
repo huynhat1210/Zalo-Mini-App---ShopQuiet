@@ -12,8 +12,7 @@ import {
   DatabaseManagerComponent, 
   UserManagementComponent 
 } from './pages';
-import { ToastProvider, useToast } from './contexts/ToastContext';
-import { PermissionProvider } from './contexts/PermissionContext';
+import { ToastProviderComponent, useToast, PermissionProviderComponent } from './contexts';
 import './App.css';
 
 const ToastContainerWrapper: React.FC = () => {
@@ -51,8 +50,8 @@ export const App: React.FC = () => {
   }
 
   return (
-    <PermissionProvider>
-      <ToastProvider>
+    <PermissionProviderComponent>
+      <ToastProviderComponent>
         <BrowserRouter>
           <LayoutComponent onLogout={handleLogout}>
             <Routes>
@@ -69,8 +68,8 @@ export const App: React.FC = () => {
           </LayoutComponent>
           <ToastContainerWrapper />
         </BrowserRouter>
-      </ToastProvider>
-    </PermissionProvider>
+      </ToastProviderComponent>
+    </PermissionProviderComponent>
   );
 };
 export default App;

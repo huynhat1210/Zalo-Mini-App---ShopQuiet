@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { apiRequest } from '../utils/api';
-import type { IProduct, IProductCategory, INotification } from '../App.type';
+import { apiRequest } from '../../utils/api';
+import type { IProduct, IProductCategory, INotification } from '../../App.type';
 
 export function useInfiniteProducts(limit = 10) {
   return useInfiniteQuery({

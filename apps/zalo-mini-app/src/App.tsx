@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef } from 'react';
 import { App as ZaloApp, ZMPRouter, SnackbarProvider } from 'zmp-ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { useNotifications } from './hooks/queries';
+import { useNotifications } from './hooks';
 import { HomeComponent } from './pages/home';
 import { CartComponent } from './pages/cart';
 import { ProfileComponent } from './pages/profile';
@@ -15,7 +15,7 @@ import { OrderDetailComponent } from './pages/order-detail';
 import { PaymentSimulateComponent } from './pages/payment-simulate';
 import { ToastComponent, BottomNavBarComponent, ErrorBoundaryComponent } from './components';
 import type { ICartContextType } from './App.type';
-import { useAppStore } from './store/useAppStore';
+import { useAppStore } from './store';
 
 export type {
   ICartContextType,
