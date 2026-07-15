@@ -42,7 +42,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
   const [loading, setLoading] = useState(true);
   
   // ShopeeFood style tabs state
-  const [ordersTab, setOrdersTab] = useState<'active' | 'history' | 'reviews' | 'drafts'>('active');
+  const [ordersTab, setOrdersTab] = useState<'active' | 'history' | 'reviews'>('active');
 
   // Review Modal state
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
@@ -363,26 +363,21 @@ export const Profile: React.FC<IProfileProps> = (props) => {
   };
 
   const activeOrdersList = orders.filter(
-    (o) => o.status === 'PROCESSING' || o.status === 'PENDING'
+    (o) => o.status === 'PROCESSING' || o.status === 'PENDING' || o.status === 'SHIPPED' || o.status === 'PENDING_PAYMENT'
   );
   
   const historyOrdersList = orders.filter(
-    (o) => o.status === 'SHIPPED' || o.status === 'COMPLETED' || o.status === 'DELIVERED' || o.status === 'CANCELLED'
+    (o) => o.status === 'COMPLETED' || o.status === 'DELIVERED' || o.status === 'CANCELLED'
   );
 
   const reviewsOrdersList = orders.filter(
-    (o) => o.status === 'SHIPPED' || o.status === 'COMPLETED' || o.status === 'DELIVERED'
-  );
-
-  const draftOrdersList = orders.filter(
-    (o) => o.status === 'PENDING_PAYMENT'
+    (o) => o.status === 'COMPLETED' || o.status === 'DELIVERED'
   );
 
   const displayedOrders = 
     ordersTab === 'active' ? activeOrdersList :
     ordersTab === 'history' ? historyOrdersList :
-    ordersTab === 'reviews' ? reviewsOrdersList :
-    ordersTab === 'drafts' ? draftOrdersList : [];
+    ordersTab === 'reviews' ? reviewsOrdersList : [];
   const activeStaticPage =
     staticPages.find((page) => page.slug === activeStaticPageSlug) ||
     staticPages.find((page) => page.slug === 'help-support');
@@ -410,8 +405,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
           {[
             { id: 'active', label: 'Đang đến' },
             { id: 'history', label: 'Lịch sử' },
-            { id: 'reviews', label: 'Đánh giá' },
-            { id: 'drafts', label: 'Đơn nháp' }
+            { id: 'reviews', label: 'Đánh giá' }
           ].map((tab) => {
             const isTabActive = ordersTab === tab.id;
             return (
@@ -439,8 +433,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
           ) : displayedOrders.length === 0 ? (
             <EmptyStateComponent
               title={ordersTab === 'active' ? 'Quên chưa đặt sản phẩm rồi nè bạn ơi?' :
-                     ordersTab === 'history' ? 'Chưa có lịch sử mua hàng' :
-                     ordersTab === 'reviews' ? 'Chưa có đánh giá nào' : 'Chưa có đơn nháp nào'}
+                     ordersTab === 'history' ? 'Chưa có lịch sử mua hàng' : 'Chưa có đánh giá nào'}
               description={ordersTab === 'active'
                 ? 'Bạn sẽ nhìn thấy các đơn hàng đang được chuẩn bị hoặc giao đi tại đây để kiểm tra đơn hàng nhanh hơn!'
                 : 'Khám phá các sản phẩm tối giản cao cấp của chúng tôi để mua sắm ngay.'}
@@ -496,7 +489,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                         </span>
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-textColor">{(item.price * item.quantity).toLocaleString('vi-VN')} đ</span>
-                          {(order.status === 'SHIPPED' || order.status === 'COMPLETED' || order.status === 'DELIVERED') && (
+                          {(order.status === 'COMPLETED' || order.status === 'DELIVERED') && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
