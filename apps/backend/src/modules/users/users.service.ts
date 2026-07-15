@@ -7,12 +7,15 @@ export class UsersService {
 
   async syncUser(zaloId: string, name: string, avatar?: string, phone?: string, birthday?: string, email?: string) {
     if (!zaloId) return null;
-    const role = zaloId.toLowerCase().includes('admin') ? 'admin' : 'user';
     
     // Check if the user already exists in the database
     const existingUser = await this.prisma.user.findUnique({
       where: { zaloId }
     });
+
+    const role = existingUser?.role 
+      ? existingUser.role 
+      : (zaloId.toLowerCase() === 'admin' || zaloId.toLowerCase() === 'admin-zalo-id-1' ? 'admin' : 'user');
 
     // If they already have a name in the DB, preserve it (don't let auto-sync overwrite it)
     const finalName = existingUser?.name ? existingUser.name : name;

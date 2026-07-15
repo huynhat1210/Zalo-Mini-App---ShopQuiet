@@ -13,10 +13,14 @@ describe('AuthController', () => {
     name: 'Test User',
     avatar: 'avatar.jpg',
     role: 'user',
+    phone: '',
+    email: '',
+    birthday: '',
   };
 
   const mockLoginResponse = {
     access_token: 'mock-jwt-token',
+    refresh_token: 'mock-refresh-token',
     user: mockUser,
   };
 

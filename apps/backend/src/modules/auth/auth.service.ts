@@ -20,7 +20,14 @@ export class AuthService {
     return user;
   }
 
-  async login(zaloId: string, name: string, avatar?: string) {
+  async login(zaloId: string, name: string, avatar?: string, password?: string) {
+    const isAdminId = zaloId.toLowerCase().includes('admin') || zaloId.toLowerCase() === 'admin-zalo-id-1';
+    if (isAdminId) {
+      const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+      if (!password || password !== adminPassword) {
+        throw new UnauthorizedException('Mật khẩu quản trị viên không chính xác');
+      }
+    }
     const user = await this.usersService.syncUser(zaloId, name, avatar);
     if (!user) {
       throw new UnauthorizedException();

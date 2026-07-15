@@ -10,6 +10,10 @@ export class LoginDto {
   @IsOptional()
   @IsString()
   avatar?: string;
+
+  @IsOptional()
+  @IsString()
+  password?: string;
 }
 
 export class VerifyTokenDto {

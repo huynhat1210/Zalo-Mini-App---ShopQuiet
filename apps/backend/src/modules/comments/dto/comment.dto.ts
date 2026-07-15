@@ -10,4 +10,8 @@ export class CreateCommentDto {
   @IsString()
   @IsOptional()
   orderId?: string;
+
+  @IsString()
+  @IsOptional()
+  images?: string;
 }

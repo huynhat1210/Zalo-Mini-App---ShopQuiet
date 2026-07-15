@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Page } from 'zmp-ui';
 import { useCart, IProduct, IOrder } from '../../App';
-import { apiRequest } from '../../utils/api';
+import { apiRequest, API_BASE_URL } from '../../utils/api';
 import { EmptyStateComponent } from '../../components';
 import { IProfileProps } from './profile.type';
 import api from 'zmp-sdk';
@@ -61,6 +61,8 @@ export const Profile: React.FC<IProfileProps> = (props) => {
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewImageUrls, setReviewImageUrls] = useState<string[]>([]);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const handleOpenReviewModal = (orderId: string, productId: number, productName: string, size?: string, quantity?: number) => {
     setReviewOrderId(orderId);
@@ -70,7 +72,44 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     setReviewProductQuantity(quantity || 1);
     setReviewRating(5);
     setReviewComment('');
+    setReviewImageUrls([]);
     setIsReviewModalOpen(true);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingImage(true);
+    try {
+      const urls: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const res = await fetch(`${API_BASE_URL}/products/${reviewProductId}/comments/upload-image`, {
+          method: 'POST',
+          headers: {
+            'ngrok-skip-browser-warning': 'true',
+            'x-zalo-user-id': zaloUser?.id || 'cust-zalo-id-1',
+          },
+          body: formData
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.url) {
+            urls.push(data.url);
+          }
+        }
+      }
+      setReviewImageUrls(prev => [...prev, ...urls]);
+      showToast('Tải ảnh lên thành công!', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Không thể tải ảnh lên!', 'warning');
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleSubmitReview = async () => {
@@ -86,7 +125,8 @@ export const Profile: React.FC<IProfileProps> = (props) => {
       const res = await apiRequest<any>(`/products/${reviewProductId}/comments`, 'POST', {
         content: formattedComment,
         rating: reviewRating,
-        orderId: reviewOrderId
+        orderId: reviewOrderId,
+        images: JSON.stringify(reviewImageUrls)
       });
       
       if (res) {
@@ -621,8 +661,25 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                         </div>
                       </div>
                       {/* Review content */}
-                      <div className="bg-neutral-50 rounded-xl px-4 py-3">
+                      <div className="bg-neutral-50 rounded-xl px-4 py-3 space-y-3">
                         <p className="text-xs text-textColor leading-relaxed">{review.content}</p>
+                        {(() => {
+                          try {
+                            const parsedImages = JSON.parse(review.images || '[]');
+                            if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+                              return (
+                                <div className="flex flex-wrap gap-2 pt-1">
+                                  {parsedImages.map((u, i) => (
+                                    <div key={i} className="w-14 h-14 rounded-lg border border-neutral-250/60 overflow-hidden bg-white flex-shrink-0">
+                                      <img src={u.startsWith('http') ? u : `${API_BASE_URL.replace('/api/v1', '')}${u}`} alt="Đánh giá" className="w-full h-full object-cover" />
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            }
+                          } catch(e) {}
+                          return null;
+                        })()}
                       </div>
                     </div>
                   );
@@ -888,6 +945,46 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                   className="w-full text-xs p-3 bg-neutral-50 rounded-xl border border-neutral-200 focus:border-primary outline-none resize-none font-medium text-textColor leading-relaxed"
                   required
                 />
+              </div>
+
+              {/* Image Upload Area */}
+              <div className="space-y-2">
+                <label className="text-[9px] font-extrabold text-[#526069]/70 uppercase tracking-widest block">Hình ảnh thực tế</label>
+                <div className="flex flex-wrap gap-2.5">
+                  {reviewImageUrls.map((url, idx) => (
+                    <div key={idx} className="w-16 h-16 rounded-xl border border-neutral-200 overflow-hidden bg-neutral-50 relative">
+                      <img src={url.startsWith('http') ? url : `${API_BASE_URL.replace('/api/v1', '')}${url}`} alt="Review image" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setReviewImageUrls(prev => prev.filter((_, i) => i !== idx))}
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-xs border border-white active:scale-90"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  
+                  {reviewImageUrls.length < 5 && (
+                    <label className="w-16 h-16 rounded-xl border-2 border-dashed border-neutral-350 hover:border-primary flex flex-col items-center justify-center cursor-pointer bg-neutral-50 transition-colors">
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        multiple 
+                        className="hidden" 
+                        onChange={handleImageUpload}
+                        disabled={uploadingImage}
+                      />
+                      {uploadingImage ? (
+                        <div className="w-4.5 h-4.5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <>
+                          <span className="text-lg font-bold text-neutral-450">+</span>
+                          <span className="text-[8px] text-neutral-450 font-bold uppercase mt-0.5">Ảnh</span>
+                        </>
+                      )}
+                    </label>
+                  )}
+                </div>
               </div>
 
               <div className="flex gap-3 pt-2">

@@ -7,7 +7,7 @@ import type { ILoginProps } from './login.type';
 export const Login: React.FC<ILoginProps> = (props) => {
   const { onLoginSuccess } = props;
   const [zaloId, setZaloId] = useState('');
-  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -17,6 +17,10 @@ export const Login: React.FC<ILoginProps> = (props) => {
       setError('Vui lòng nhập Zalo ID Quản trị viên');
       return;
     }
+    if (!password.trim()) {
+      setError('Vui lòng nhập Mật khẩu truy cập');
+      return;
+    }
 
     setLoading(true);
     setError('');
@@ -24,11 +28,16 @@ export const Login: React.FC<ILoginProps> = (props) => {
     try {
       const authData: any = await apiRequest('/auth/login', 'POST', {
         zaloId: zaloId.trim(),
-        name: name.trim() || 'Admin User',
+        name: 'Admin User',
         avatar: '',
+        password: password.trim(),
       });
 
       if (authData.access_token) {
+        if (authData.user.role !== 'admin') {
+          setError('Tài khoản của bạn không có quyền truy cập trang quản trị!');
+          return;
+        }
         tokenStorage.setAccessToken(authData.access_token);
         // Save authData.user in localStorage to synchronize with dynamic header display
         localStorage.setItem('zalo_profile_custom', JSON.stringify(authData.user));
@@ -38,7 +47,7 @@ export const Login: React.FC<ILoginProps> = (props) => {
       }
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Kết nối đến Backend thất bại. Vui lòng kiểm tra lại server backend.');
+      setError(err.message || 'Mật khẩu hoặc tài khoản quản trị không chính xác.');
     } finally {
       setLoading(false);
     }
@@ -74,13 +83,13 @@ export const Login: React.FC<ILoginProps> = (props) => {
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
-                <Lock size={16} />
+                <User size={16} />
               </span>
               <input
                 type="text"
                 value={zaloId}
                 onChange={(e) => setZaloId(e.target.value)}
-                placeholder="Nhập zalo ID..."
+                placeholder="Nhập zalo ID (Ví dụ: admin)..."
                 className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-[#0e6877] focus:ring-1 focus:ring-[#0e6877] rounded-xl py-3 pl-10 pr-4 text-sm text-[#1b1c1b] placeholder-slate-400 focus:outline-none transition-all"
                 required
               />
@@ -89,17 +98,17 @@ export const Login: React.FC<ILoginProps> = (props) => {
 
           <div>
             <label className="block text-[#526069] text-xs font-bold mb-2 uppercase tracking-wider">
-              Tên hiển thị
+              Mật khẩu truy cập
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
-                <User size={16} />
+                <Lock size={16} />
               </span>
               <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Nhập tên của bạn"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Nhập mật khẩu..."
                 className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-[#0e6877] focus:ring-1 focus:ring-[#0e6877] rounded-xl py-3 pl-10 pr-4 text-sm text-[#1b1c1b] placeholder-slate-400 focus:outline-none transition-all"
                 required
               />
@@ -118,3 +127,4 @@ export const Login: React.FC<ILoginProps> = (props) => {
     </div>
   );
 };
+
