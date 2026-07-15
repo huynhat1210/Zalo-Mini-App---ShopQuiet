@@ -3,43 +3,10 @@ import { persist } from 'zustand/middleware';
 import api from 'zmp-sdk';
 import { apiRequest } from '../../utils/api';
 import { tokenStorage } from '../../utils/auth';
-import type { ICartItem, INotification, IOrder, IProduct, IToastState, TToastType, IZaloUser } from '../../App.type';
+import type { IAppState } from './app-store.type';
+import type { IProduct, ICartItem } from '../../App.type';
 
-type AppState = {
-  cart: ICartItem[];
-  activeTab: string;
-  selectedProductDetail: IProduct | null;
-  savedItems: IProduct[];
-  isCartOpen: boolean;
-  toast: IToastState | null;
-  zaloUser: IZaloUser | null;
-  selectedOrder: IOrder | null;
-  buyNowItem: ICartItem | null;
-  notifications: INotification[];
-  toastTimerRef: ReturnType<typeof setTimeout> | null;
-
-  setActiveTab: (tab: string) => void;
-  setSelectedProductDetail: (product: IProduct | null) => void;
-  setIsCartOpen: (open: boolean) => void;
-  setToast: (toast: IToastState | null) => void;
-  showToast: (message: string, type?: TToastType) => void;
-  updateZaloUser: (user: IZaloUser) => void;
-  setSelectedOrder: (order: IOrder | null) => void;
-  setBuyNowItem: (item: ICartItem | null) => void;
-  addToCart: (product: IProduct, quantity?: number, size?: string) => void;
-  removeFromCart: (productId: number, size?: string) => void;
-  updateQuantity: (productId: number, qty: number, size?: string) => void;
-  clearCart: () => void;
-  updateItemSize: (productId: number, oldSize: string, newSize: string) => void;
-  toggleSavedItem: (product: IProduct) => void;
-  isSavedItem: (productId: number) => boolean;
-  syncUserFromStorage: () => Promise<void>;
-  fetchFavorites: () => Promise<void>;
-  fetchCart: () => Promise<void>;
-  logout: () => Promise<void>;
-};
-
-export const useAppStore = create<AppState>()(
+export const useAppStore = create<IAppState>()(
   persist(
     (set, get) => ({
       cart: [],
