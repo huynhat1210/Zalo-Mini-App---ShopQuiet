@@ -147,7 +147,6 @@ export const validationRules: Record<string, FieldValidation[]> = {
     {
       fieldName: 'name',
       rules: [
-        { type: 'required', message: 'Tên là bắt buộc' },
         { type: 'minLength', value: 2, message: 'Tên phải có ít nhất 2 ký tự' }
       ]
     },
@@ -176,8 +175,8 @@ export const validationRules: Record<string, FieldValidation[]> = {
         { type: 'required', message: 'Vai trò là bắt buộc' },
         { 
           type: 'custom',
-          validator: (value: string) => ['admin', 'editor', 'viewer', 'user'].includes(value),
-          message: 'Vai trò không hợp lệ'
+          validator: (value: string) => ['admin', 'user'].includes(value),
+          message: 'Vai trò phải là admin hoặc user'
         }
       ]
     }
