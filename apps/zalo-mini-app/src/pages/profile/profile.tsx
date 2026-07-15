@@ -88,7 +88,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
             if (o.id === reviewOrderId) {
               return {
                 ...o,
-                items: o.items.map((item: any) => {
+                items: (o.items || []).map((item: any) => {
                   if (item.product?.id === reviewProductId) {
                     return { ...item, isReviewed: true };
                   }
@@ -203,7 +203,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
   }, [zaloUser]);
 
   // Auto-fetch phone from Zalo when edit profile modal opens and phone is empty
-  const fetchZaloPhone = async (silentFail = false) => {
+  const fetchZaloPhone = async () => {
     const apiAny = api as any;
     const handleDecrypt = async (token: string) => {
       const res = await apiRequest<{ success: boolean; phone?: string }>('/auth/decrypt-phone', 'POST', {
@@ -239,7 +239,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
 
   useEffect(() => {
     if (isEditProfileOpen && !editPhone) {
-      fetchZaloPhone(true);
+      fetchZaloPhone();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEditProfileOpen]);
@@ -497,7 +497,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                                   showToast('Sản phẩm đã được đánh giá!', 'info');
                                   return;
                                 }
-                                handleOpenReviewModal(order.id, item.product?.id, item.product?.name, item.size, item.quantity);
+                                handleOpenReviewModal(String(order.id), item.product?.id, item.product?.name, item.size, item.quantity);
                               }}
                               className={`px-2 py-1 rounded-lg text-[9px] font-bold border transition-all cursor-pointer ${
                                 item.isReviewed

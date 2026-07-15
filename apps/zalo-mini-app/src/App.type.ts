@@ -4,8 +4,9 @@ export interface IOrderItem {
   id?: number;
   quantity: number;
   price: number;
-  product: { name: string; images?: string };
+  product: { id: number; name: string; images?: string };
   size?: string;
+  isReviewed?: boolean;
 }
 
 export interface IOrder {
