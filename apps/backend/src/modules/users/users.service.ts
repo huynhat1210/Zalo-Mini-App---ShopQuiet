@@ -5,7 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async syncUser(zaloId: string, name: string, avatar?: string, phone?: string, birthday?: string) {
+  async syncUser(zaloId: string, name: string, avatar?: string, phone?: string, birthday?: string, email?: string) {
     if (!zaloId) return null;
     const role = zaloId.toLowerCase().includes('admin') ? 'admin' : 'user';
     
@@ -24,9 +24,10 @@ export class UsersService {
         avatar, 
         role, 
         ...(phone !== undefined && { phone }), 
-        ...(birthday !== undefined && { birthday }) 
+        ...(birthday !== undefined && { birthday }),
+        ...(email !== undefined && { email })
       },
-      create: { zaloId, name, avatar, phone, birthday, role },
+      create: { zaloId, name, avatar, phone, birthday, email, role },
     });
   }
 

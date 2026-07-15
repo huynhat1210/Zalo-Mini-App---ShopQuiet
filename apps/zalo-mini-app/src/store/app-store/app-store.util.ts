@@ -43,6 +43,7 @@ export const useAppStore = create<IAppState>()(
             avatar: user.avatar,
             phone: user.phone || undefined,
             birthday: user.birthday || undefined,
+            email: user.email || undefined,
           }).catch(console.error);
         }
       },
