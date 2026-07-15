@@ -1,1 +1,1 @@
-export interface IUserManagementComponentProps {}
+export interface IUserManagementProps {}

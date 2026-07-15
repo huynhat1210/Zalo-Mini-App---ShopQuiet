@@ -5,13 +5,13 @@ import api from 'zmp-sdk';
 import { apiRequest } from '../../utils/api';
 import { ChevronLeftIcon, ShareIcon, ShoppingBagIcon, HeartIcon as HeartOutline } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
-import { IProductDetailComponentProps } from './product-detail.type';
+import { IProductDetailProps } from './product-detail.type';
 import { LazyImageComponent } from '../../components';
 
 const PageCast = Page as any;
 const BoxCast = Box as any;
 
-export const ProductDetailComponent: React.FC<IProductDetailComponentProps> = (props) => {
+export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
   const { product, onClose, onAddToCart } = props;
   const { toggleSavedItem, isSavedItem, setActiveTab, showToast, setBuyNowItem, setSelectedProductDetail } = useCart();
   const [quantity, setQuantity] = useState(1);

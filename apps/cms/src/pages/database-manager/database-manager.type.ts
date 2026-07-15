@@ -1,1 +1,1 @@
-export interface IDatabaseManagerComponentProps {}
+export interface IDatabaseManagerProps {}

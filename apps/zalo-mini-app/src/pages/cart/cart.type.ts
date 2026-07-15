@@ -1,1 +1,1 @@
-export interface ICartComponentProps {}
+export interface ICartProps {}

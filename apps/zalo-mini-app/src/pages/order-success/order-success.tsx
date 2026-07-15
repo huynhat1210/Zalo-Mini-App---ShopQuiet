@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Page } from 'zmp-ui';
 import { useCart } from '../../App';
-import { ISuccessOrder, IOrderSuccessComponentProps } from './order-success.type';
+import { ISuccessOrder, IOrderSuccessProps } from './order-success.type';
 
 const PageCast = Page as any;
 
-export const OrderSuccessComponent: React.FC<IOrderSuccessComponentProps> = (_props) => {
+export const OrderSuccess: React.FC<IOrderSuccessProps> = (_props) => {
   const { setActiveTab } = useCart();
   const [order, setOrder] = useState<ISuccessOrder | null>(null);
 

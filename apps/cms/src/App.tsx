@@ -3,14 +3,14 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { tokenStorage } from './utils';
 import { LayoutComponent, ToastContainerComponent } from './components';
 import { 
-  LoginComponent, 
-  DashboardComponent, 
-  ProductsComponent, 
-  OrdersComponent, 
-  VouchersComponent, 
-  BannersComponent, 
-  DatabaseManagerComponent, 
-  UserManagementComponent 
+  Login, 
+  Dashboard, 
+  Products, 
+  Orders, 
+  Vouchers, 
+  Banners, 
+  DatabaseManager, 
+  UserManagement 
 } from './pages';
 import { ToastProviderComponent, useToast, PermissionProviderComponent } from './contexts';
 import './App.css';
@@ -46,7 +46,7 @@ export const App: React.FC = () => {
   }
 
   if (!isAuthenticated) {
-    return <LoginComponent onLoginSuccess={() => setIsAuthenticated(true)} />;
+    return <Login onLoginSuccess={() => setIsAuthenticated(true)} />;
   }
 
   return (
@@ -55,13 +55,13 @@ export const App: React.FC = () => {
         <BrowserRouter>
           <LayoutComponent onLogout={handleLogout}>
             <Routes>
-              <Route path="/" element={<DashboardComponent />} />
-              <Route path="/products" element={<ProductsComponent />} />
-              <Route path="/orders" element={<OrdersComponent />} />
-              <Route path="/vouchers" element={<VouchersComponent />} />
-              <Route path="/banners" element={<BannersComponent />} />
-              <Route path="/database/:modelName" element={<DatabaseManagerComponent />} />
-              <Route path="/users" element={<UserManagementComponent />} />
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/products" element={<Products />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/vouchers" element={<Vouchers />} />
+              <Route path="/banners" element={<Banners />} />
+              <Route path="/database/:modelName" element={<DatabaseManager />} />
+              <Route path="/users" element={<UserManagement />} />
               {/* Catch-all fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

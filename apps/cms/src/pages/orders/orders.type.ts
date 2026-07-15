@@ -1,1 +1,1 @@
-export interface IOrdersComponentProps {}
+export interface IOrdersProps {}

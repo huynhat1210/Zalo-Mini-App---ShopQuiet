@@ -1,11 +1,11 @@
 import { Page } from 'zmp-ui';
 import { useCart } from '../../App';
 import { EmptyStateComponent, LazyImageComponent } from '../../components';
-import { ISavedItemsComponentProps } from './saved-items.type';
+import { ISavedItemsProps } from './saved-items.type';
 
 const PageCast = Page as any;
 
-export const SavedItemsComponent: React.FC<ISavedItemsComponentProps> = (_props) => {
+export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
   const { savedItems, toggleSavedItem, addToCart, setSelectedProductDetail, setActiveTab } = useCart();
 
   return (

@@ -27,9 +27,9 @@ import {
   PackageSearch
 } from 'lucide-react';
 
-import type { IDatabaseManagerComponentProps } from './database-manager.type';
+import type { IDatabaseManagerProps } from './database-manager.type';
 
-export const DatabaseManagerComponent: React.FC<IDatabaseManagerComponentProps> = (_props) => {
+export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
   const { modelName } = useParams<{ modelName: string }>();
   const navigate = useNavigate();
   const { success, error: toastError } = useToast();

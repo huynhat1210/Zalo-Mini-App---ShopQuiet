@@ -1,1 +1,1 @@
-export interface IBannersComponentProps {}
+export interface IBannersProps {}

@@ -1,3 +1,3 @@
-export interface ILoginComponentProps {
+export interface ILoginProps {
   onLoginSuccess: () => void;
 }

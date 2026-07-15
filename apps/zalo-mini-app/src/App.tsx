@@ -2,17 +2,17 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { App as ZaloApp, ZMPRouter, SnackbarProvider } from 'zmp-ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNotifications } from './hooks';
-import { HomeComponent } from './pages/home';
-import { CartComponent } from './pages/cart';
-import { ProfileComponent } from './pages/profile';
-import { ProductDetailComponent } from './pages/product-detail';
-import { SearchComponent } from './pages/search';
-import { CheckoutComponent } from './pages/checkout';
-import { OrderSuccessComponent } from './pages/order-success';
-import { SavedItemsComponent } from './pages/saved-items';
-import { NotificationsComponent } from './pages/notifications';
-import { OrderDetailComponent } from './pages/order-detail';
-import { PaymentSimulateComponent } from './pages/payment-simulate';
+import { Home } from './pages/home';
+import { Cart } from './pages/cart';
+import { Profile } from './pages/profile';
+import { ProductDetail } from './pages/product-detail';
+import { Search } from './pages/search';
+import { Checkout } from './pages/checkout';
+import { OrderSuccess } from './pages/order-success';
+import { SavedItems } from './pages/saved-items';
+import { Notifications } from './pages/notifications';
+import { OrderDetail } from './pages/order-detail';
+import { PaymentSimulate } from './pages/payment-simulate';
 import { ToastComponent, BottomNavBarComponent, ErrorBoundaryComponent, OfflineStateComponent } from './components';
 import type { ICartContextType } from './App.type';
 import { useAppStore } from './store';
@@ -200,22 +200,22 @@ export default function App() {
 
                   {/* Active Tab rendering */}
                   <div className="flex-1 flex flex-col relative overflow-hidden">
-                    {activeTab === 'home' && <HomeComponent />}
-                    {activeTab === 'search' && <SearchComponent />}
-                    {activeTab === 'orders' && <ProfileComponent initialSubPage="orders" />}
-                    {activeTab === 'notifications' && <NotificationsComponent />}
-                    {activeTab === 'profile' && <ProfileComponent />}
-                    {activeTab === 'saved-items' && <SavedItemsComponent />}
-                    {activeTab === 'checkout' && <CheckoutComponent />}
-                    {activeTab === 'order-success' && <OrderSuccessComponent />}
-                    {activeTab === 'order-detail' && <OrderDetailComponent />}
-                    {activeTab === 'payment-simulate' && <PaymentSimulateComponent />}
+                    {activeTab === 'home' && <Home />}
+                    {activeTab === 'search' && <Search />}
+                    {activeTab === 'orders' && <Profile initialSubPage="orders" />}
+                    {activeTab === 'notifications' && <Notifications />}
+                    {activeTab === 'profile' && <Profile />}
+                    {activeTab === 'saved-items' && <SavedItems />}
+                    {activeTab === 'checkout' && <Checkout />}
+                    {activeTab === 'order-success' && <OrderSuccess />}
+                    {activeTab === 'order-detail' && <OrderDetail />}
+                    {activeTab === 'payment-simulate' && <PaymentSimulate />}
                   </div>
 
 
                   {/* Product Detail Modal Overlay */}
                   {selectedProductDetail && (
-                    <ProductDetailComponent
+                    <ProductDetail
                       product={selectedProductDetail}
                       onClose={() => setSelectedProductDetail(null)}
                       onAddToCart={addToCart}
@@ -239,7 +239,7 @@ export default function App() {
                             <span className="text-xs font-bold uppercase tracking-widest text-textColor">Giỏ hàng của bạn</span>
                           </div>
                           <div className="flex-1 overflow-y-auto bg-[#fbf9f7]">
-                            <CartComponent />
+                            <Cart />
                           </div>
                         </div>
                       </div>

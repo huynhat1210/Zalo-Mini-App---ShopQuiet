@@ -1,4 +1,4 @@
-export interface ISearchComponentProps {}
+export interface ISearchProps {}
 
 export interface ICategoryItem {
   id: number;

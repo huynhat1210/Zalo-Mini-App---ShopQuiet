@@ -4,12 +4,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCart, IOrder } from '../../App';
 import { apiRequest } from '../../utils/api';
 import { EmptyStateComponent } from '../../components';
-import { INotificationsComponentProps } from './notifications.type';
+import { INotificationsProps } from './notifications.type';
 
 const PageCast = Page as any;
 
 
-export const NotificationsComponent: React.FC<INotificationsComponentProps> = (_props) => {
+export const Notifications: React.FC<INotificationsProps> = (_props) => {
   const { setActiveTab, showToast, setSelectedOrder, notifications, setNotifications, fetchNotifications } = useCart();
   const [activeCategory, setActiveCategory] = useState<'order' | 'system'>('order');
   const queryClient = useQueryClient();

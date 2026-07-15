@@ -34,9 +34,9 @@ interface Order {
   items: OrderItem[];
 }
 
-import type { IOrdersComponentProps } from './orders.type';
+import type { IOrdersProps } from './orders.type';
 
-export const OrdersComponent: React.FC<IOrdersComponentProps> = (_props) => {
+export const Orders: React.FC<IOrdersProps> = (_props) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

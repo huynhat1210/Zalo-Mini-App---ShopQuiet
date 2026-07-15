@@ -1,1 +1,1 @@
-export interface IPaymentSimulateComponentProps {}
+export interface IPaymentSimulateProps {}

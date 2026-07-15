@@ -1,1 +1,1 @@
-export interface IVouchersComponentProps {}
+export interface IVouchersProps {}

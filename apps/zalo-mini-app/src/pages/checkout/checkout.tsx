@@ -8,7 +8,7 @@ import { apiRequest } from '../../utils/api';
 import { Payment } from 'zmp-sdk/apis';
 import api from 'zmp-sdk';
 const PageCast = Page as any;
-import { ICheckoutComponentProps } from './checkout.type';
+import { ICheckoutProps } from './checkout.type';
 
 type CmsShippingMethod = {
   code: string;
@@ -34,7 +34,7 @@ const checkoutAddressSchema = z.object({
 
 type CheckoutAddressFormValues = z.infer<typeof checkoutAddressSchema>;
 
-export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => {
+export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   const { cart, clearCart, setActiveTab, showToast, zaloUser, buyNowItem, setBuyNowItem, setSelectedOrder, fetchNotifications } = useCart();
 
   // If buyNowItem exists, checkout only that item (direct buy); otherwise use full cart

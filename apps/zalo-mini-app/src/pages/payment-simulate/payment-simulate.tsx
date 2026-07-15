@@ -1,8 +1,8 @@
 import { useCart, IOrderItem } from '../../App';
 import { apiRequest } from '../../utils/api';
-import { IPaymentSimulateComponentProps } from './payment-simulate.type';
+import { IPaymentSimulateProps } from './payment-simulate.type';
 
-export const PaymentSimulateComponent: React.FC<IPaymentSimulateComponentProps> = (_props) => {
+export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
   const { selectedOrder, setActiveTab, showToast, clearCart, buyNowItem, setBuyNowItem, fetchNotifications } = useCart();
 
   if (!selectedOrder) {

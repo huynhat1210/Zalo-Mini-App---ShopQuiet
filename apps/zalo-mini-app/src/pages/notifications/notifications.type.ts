@@ -1,1 +1,1 @@
-export interface INotificationsComponentProps {}
+export interface INotificationsProps {}

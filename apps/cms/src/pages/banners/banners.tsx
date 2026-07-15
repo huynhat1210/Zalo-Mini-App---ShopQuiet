@@ -18,9 +18,9 @@ interface Banner {
   active: boolean;
 }
 
-import type { IBannersComponentProps } from './banners.type';
+import type { IBannersProps } from './banners.type';
 
-export const BannersComponent: React.FC<IBannersComponentProps> = (_props) => {
+export const Banners: React.FC<IBannersProps> = (_props) => {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);

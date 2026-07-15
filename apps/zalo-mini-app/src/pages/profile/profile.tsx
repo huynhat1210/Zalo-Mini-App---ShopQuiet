@@ -6,7 +6,7 @@ import { Page } from 'zmp-ui';
 import { useCart, IProduct, IOrder } from '../../App';
 import { apiRequest } from '../../utils/api';
 import { EmptyStateComponent } from '../../components';
-import { IProfileComponentProps } from './profile.type';
+import { IProfileProps } from './profile.type';
 import api from 'zmp-sdk';
 
 const PageCast = Page as any;
@@ -34,7 +34,7 @@ const profileAddressSchema = z.object({
 
 type ProfileAddressFormValues = z.infer<typeof profileAddressSchema>;
 
-export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
+export const Profile: React.FC<IProfileProps> = (props) => {
   const { initialSubPage = 'profile' } = props;
   const { setActiveTab, setSelectedProductDetail, showToast, zaloUser, updateZaloUser, setSelectedOrder, savedItems, setIsCartOpen, cart, logout } = useCart();
   const [orders, setOrders] = useState<IOrder[]>([]);

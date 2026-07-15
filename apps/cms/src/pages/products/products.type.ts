@@ -1,1 +1,1 @@
-export interface IProductsComponentProps {}
+export interface IProductsProps {}

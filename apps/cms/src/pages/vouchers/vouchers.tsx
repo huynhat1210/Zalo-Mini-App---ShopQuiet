@@ -22,9 +22,9 @@ interface Voucher {
   endDate?: string;
 }
 
-import type { IVouchersComponentProps } from './vouchers.type';
+import type { IVouchersProps } from './vouchers.type';
 
-export const VouchersComponent: React.FC<IVouchersComponentProps> = (_props) => {
+export const Vouchers: React.FC<IVouchersProps> = (_props) => {
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);

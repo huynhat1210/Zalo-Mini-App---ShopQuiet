@@ -8,13 +8,13 @@ import { Bars3Icon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 // @ts-ignore
 import logoIcon from '../../assets/logo.png';
 import { MenuDrawerComponent, BannerSkeleton, CategorySkeleton, ProductGridSkeleton, LazyImageComponent } from '../../components';
-import { IHomeComponentProps } from './home.type';
+import { IHomeProps } from './home.type';
 
 const PageCast = Page as any;
 const BoxCast = Box as any;
 const TextCast = Text as any;
 
-export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
+export const Home: React.FC<IHomeProps> = (_props) => {
   const { addToCart, setSelectedProductDetail, cart, setIsCartOpen, toggleSavedItem, isSavedItem, showToast } = useCart();
   
   const { data: productsData, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading: isLoadingProducts, refetch: refetchProducts } = useInfiniteProducts();

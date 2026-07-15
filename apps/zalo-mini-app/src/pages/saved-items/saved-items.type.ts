@@ -1,1 +1,1 @@
-export interface ISavedItemsComponentProps {}
+export interface ISavedItemsProps {}

@@ -1,3 +1,3 @@
-export interface IProfileComponentProps {
+export interface IProfileProps {
   initialSubPage?: 'profile' | 'orders';
 }

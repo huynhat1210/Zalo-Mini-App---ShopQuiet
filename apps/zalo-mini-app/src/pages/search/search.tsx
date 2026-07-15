@@ -3,12 +3,12 @@ import { Page } from 'zmp-ui';
 import { useCart, IProduct } from '../../App';
 import { useDebounce } from '../../utils';
 import { useAllProducts, useCategories } from '../../hooks';
-import { ISearchComponentProps } from './search.type';
+import { ISearchProps } from './search.type';
 import { LazyImageComponent } from '../../components';
 
 const PageCast = Page as any;
 
-export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
+export const Search: React.FC<ISearchProps> = (_props) => {
   const { setSelectedProductDetail, addToCart } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);

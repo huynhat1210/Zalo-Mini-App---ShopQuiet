@@ -1,4 +1,4 @@
-export interface IHomeComponentProps {}
+export interface IHomeProps {}
 
 export interface ICategoryItem {
   id: number;

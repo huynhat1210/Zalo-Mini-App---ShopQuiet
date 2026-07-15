@@ -21,9 +21,9 @@ interface Product {
   stock?: number;
 }
 
-import type { IProductsComponentProps } from './products.type';
+import type { IProductsProps } from './products.type';
 
-export const ProductsComponent: React.FC<IProductsComponentProps> = (_props) => {
+export const Products: React.FC<IProductsProps> = (_props) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

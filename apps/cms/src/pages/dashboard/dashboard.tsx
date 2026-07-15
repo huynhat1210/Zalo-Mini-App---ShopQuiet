@@ -22,9 +22,9 @@ interface DashboardStats {
   allProducts: any[];
 }
 
-import type { IDashboardComponentProps } from './dashboard.type';
+import type { IDashboardProps } from './dashboard.type';
 
-export const DashboardComponent: React.FC<IDashboardComponentProps> = (_props) => {
+export const Dashboard: React.FC<IDashboardProps> = (_props) => {
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     totalProducts: 0,

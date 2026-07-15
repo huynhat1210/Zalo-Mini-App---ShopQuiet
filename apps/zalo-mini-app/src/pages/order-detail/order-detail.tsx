@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Page } from 'zmp-ui';
 import { useCart, IOrderItem } from '../../App';
 import { apiRequest } from '../../utils/api';
-import { IOrderDetailComponentProps } from './order-detail.type';
+import { IOrderDetailProps } from './order-detail.type';
 import { Payment } from 'zmp-sdk/apis';
 
 const PageCast = Page as any;
@@ -23,7 +23,7 @@ const STATUS_CLASS: Record<string, string> = {
   PENDING_PAYMENT: 'bg-orange-50 text-orange-600',
 };
 
-export const OrderDetailComponent: React.FC<IOrderDetailComponentProps> = (_props) => {
+export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
   const { selectedOrder, setSelectedOrder, setActiveTab, showToast } = useCart();
   const [cancelling, setCancelling] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);

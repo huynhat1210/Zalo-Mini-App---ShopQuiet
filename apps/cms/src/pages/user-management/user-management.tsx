@@ -10,9 +10,9 @@ import {
   Square
 } from 'lucide-react';
 
-import type { IUserManagementComponentProps } from './user-management.type';
+import type { IUserManagementProps } from './user-management.type';
 
-export const UserManagementComponent: React.FC<IUserManagementComponentProps> = (_props) => {
+export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
   const { success, error: toastError } = useToast();
   const { userRole: currentUserRole, canEdit, canDelete } = usePermissions();
   const [users, setUsers] = useState<any[]>([]);

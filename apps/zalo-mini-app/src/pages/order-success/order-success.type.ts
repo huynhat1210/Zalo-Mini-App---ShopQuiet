@@ -1,4 +1,4 @@
-export interface IOrderSuccessComponentProps {}
+export interface IOrderSuccessProps {}
 
 export interface ISuccessOrder {
   orderNumber: string;

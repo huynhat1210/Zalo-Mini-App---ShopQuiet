@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { apiRequest, tokenStorage } from '../../utils/api';
 import logo from '../../assets/logo.png';
 import { Lock, User, AlertCircle } from 'lucide-react';
-import type { ILoginComponentProps } from './login.type';
+import type { ILoginProps } from './login.type';
 
-export const LoginComponent: React.FC<ILoginComponentProps> = (props) => {
+export const Login: React.FC<ILoginProps> = (props) => {
   const { onLoginSuccess } = props;
   const [zaloId, setZaloId] = useState('admin-zalo-id-1');
   const [name, setName] = useState('admin');

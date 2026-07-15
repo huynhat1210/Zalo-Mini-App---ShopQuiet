@@ -1,1 +1,1 @@
-export interface IDashboardComponentProps {}
+export interface IDashboardProps {}

@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { useCart } from '../../App';
 import { apiRequest } from '../../utils/api';
 import { EmptyStateComponent } from '../../components';
-import { ICartComponentProps } from './cart.type';
+import { ICartProps } from './cart.type';
 
-export const CartComponent: React.FC<ICartComponentProps> = (_props) => {
+export const Cart: React.FC<ICartProps> = (_props) => {
   const { cart, updateQuantity, updateItemSize, setActiveTab, setIsCartOpen, showToast } = useCart();
   const [estimatedShipping, setEstimatedShipping] = useState(5);
 
