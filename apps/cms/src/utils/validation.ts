@@ -175,8 +175,8 @@ export const validationRules: Record<string, FieldValidation[]> = {
         { type: 'required', message: 'Vai trò là bắt buộc' },
         { 
           type: 'custom',
-          validator: (value: string) => ['admin', 'editor', 'viewer', 'user'].includes(value),
-          message: 'Vai trò không hợp lệ'
+          validator: (value: string) => ['admin', 'user'].includes(value),
+          message: 'Vai trò phải là admin hoặc user'
         }
       ]
     }

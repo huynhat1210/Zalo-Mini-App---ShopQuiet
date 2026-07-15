@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../utils/api';
 import { useToast } from '../contexts/ToastContext';
 import { usePermissions } from '../contexts/PermissionContext';
-import { roleDefinitions, type Role } from '../utils/permissions';
+import type { Role } from '../utils/permissions';
 import { 
   User as UserIcon, 
   Trash2, 
@@ -35,21 +35,21 @@ const UserManagement: React.FC = () => {
     fetchUsers();
   }, []);
 
-  const handleDeleteUser = async (userId: string | number) => {
+  const handleDeleteUser = async (zaloId: string) => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) return;
     try {
-      await apiRequest(`/users/${userId}`, 'DELETE');
-      setUsers(users.filter(u => u.id !== userId));
+      await apiRequest(`/users/${zaloId}`, 'DELETE');
+      setUsers(users.filter(u => u.zaloId !== zaloId));
       success('Đã xóa', 'Người dùng đã được xóa thành công');
     } catch (err: any) {
       toastError('Lỗi xóa', err.message || 'Không thể xóa người dùng');
     }
   };
 
-  const handleRoleChange = async (userId: string | number, newRole: Role) => {
+  const handleRoleChange = async (zaloId: string, newRole: Role) => {
     try {
-      await apiRequest(`/users/${userId}`, 'PATCH', { role: newRole });
-      setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+      await apiRequest(`/users/${zaloId}`, 'PATCH', { role: newRole });
+      setUsers(users.map(u => u.zaloId === zaloId ? { ...u, role: newRole } : u));
       success('Cập nhật thành công', `Vai trò người dùng đã được thay đổi thành ${newRole}`);
     } catch (err: any) {
       toastError('Lỗi cập nhật', err.message || 'Không thể thay đổi vai trò');
@@ -63,13 +63,13 @@ const UserManagement: React.FC = () => {
            user.zaloId?.includes(searchTerm);
   });
 
-  const toggleUserSelection = (userId: string | number) => {
+  const toggleUserSelection = (zaloId: string) => {
     setSelectedUsers(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(userId)) {
-        newSet.delete(userId);
+      if (newSet.has(zaloId)) {
+        newSet.delete(zaloId);
       } else {
-        newSet.add(userId);
+        newSet.add(zaloId);
       }
       return newSet;
     });
@@ -79,26 +79,8 @@ const UserManagement: React.FC = () => {
     if (selectedUsers.size === filteredUsers.length) {
       setSelectedUsers(new Set());
     } else {
-      setSelectedUsers(new Set(filteredUsers.map(u => u.id)));
+      setSelectedUsers(new Set(filteredUsers.map(u => u.zaloId)));
     }
-  };
-
-  const getRoleBadge = (role: Role) => {
-    const colors = {
-      admin: 'bg-purple-50 text-purple-700 border-purple-200',
-      editor: 'bg-blue-50 text-blue-700 border-blue-200',
-      viewer: 'bg-slate-50 text-slate-700 border-slate-200'
-    };
-    const labels = {
-      admin: 'Admin',
-      editor: 'Editor',
-      viewer: 'Viewer'
-    };
-    return (
-      <span className={`px-3 py-1 rounded-full text-xs font-bold border ${colors[role]}`}>
-        {labels[role]}
-      </span>
-    );
   };
 
   if (loading) {
@@ -191,15 +173,15 @@ const UserManagement: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredUsers.map((user) => {
-                const isSelected = selectedUsers.has(user.id);
+                const isSelected = selectedUsers.has(user.zaloId);
                 return (
-                  <tr 
-                    key={user.id} 
+                  <tr
+                    key={user.zaloId}
                     className={`hover:bg-slate-50 transition-colors ${isSelected ? 'bg-[#ecf6f7]/30' : ''}`}
                   >
                     <td className="py-3.5 px-4">
                       <button
-                        onClick={() => toggleUserSelection(user.id)}
+                        onClick={() => toggleUserSelection(user.zaloId)}
                         className="text-slate-500 hover:text-[#0e6877] transition-colors"
                       >
                         {isSelected ? (
@@ -216,7 +198,7 @@ const UserManagement: React.FC = () => {
                         </div>
                         <div>
                           <p className="text-xs font-semibold text-[#1b1c1b]">{user.name || 'Không tên'}</p>
-                          <p className="text-[10px] text-slate-500">ID: {user.id}</p>
+                          <p className="text-[10px] text-slate-500">ID: {user.zaloId}</p>
                         </div>
                       </div>
                     </td>
@@ -226,23 +208,28 @@ const UserManagement: React.FC = () => {
                     <td className="py-3.5 px-4">
                       {canEdit('users') ? (
                         <select
-                          value={user.role || 'viewer'}
-                          onChange={(e) => handleRoleChange(user.id, e.target.value as Role)}
+                          value={user.role || 'user'}
+                          onChange={(e) => handleRoleChange(user.zaloId, e.target.value as Role)}
                           className="bg-transparent border-0 text-xs font-semibold cursor-pointer focus:outline-none"
                         >
-                          {(Object.keys(roleDefinitions) as Role[]).map((role) => (
-                            <option key={role} value={role}>{role}</option>
-                          ))}
+                          <option value="user">user</option>
+                          <option value="admin">admin</option>
                         </select>
                       ) : (
-                        getRoleBadge(user.role || 'viewer')
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                          user.role === 'admin' 
+                            ? 'bg-purple-50 text-purple-700 border-purple-200'
+                            : 'bg-slate-50 text-slate-700 border-slate-200'
+                        }`}>
+                          {user.role || 'user'}
+                        </span>
                       )}
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex justify-end gap-2">
                         {canDelete('users') && (
                           <button
-                            onClick={() => handleDeleteUser(user.id)}
+                            onClick={() => handleDeleteUser(user.zaloId)}
                             className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg transition-colors"
                             title="Xóa"
                           >
