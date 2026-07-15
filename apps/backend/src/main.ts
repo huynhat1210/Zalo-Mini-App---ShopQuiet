@@ -43,7 +43,7 @@ async function bootstrap() {
   // Enable rate limiting
   app.enableShutdownHooks();
 
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix('api/v1', { exclude: ['/'] });
 
   // Swagger API Documentation
   const config = new DocumentBuilder()
