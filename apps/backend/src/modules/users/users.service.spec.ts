@@ -4,7 +4,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 
 describe('UsersService', () => {
   let service: UsersService;
-  let prismaService: jest.Mocked<PrismaService>;
+  let prismaService: any;
 
   const mockUser = {
     zaloId: '123456',
