@@ -19,6 +19,8 @@ describe('AuthService', () => {
     birthday: '',
     phone: '',
     email: '',
+    totalSpent: 0,
+    membershipTier: 'Đồng',
   };
 
   beforeEach(async () => {

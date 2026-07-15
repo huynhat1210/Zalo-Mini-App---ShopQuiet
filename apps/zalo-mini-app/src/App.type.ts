@@ -71,6 +71,8 @@ export interface IZaloUser {
   birthday?: string;
   phone?: string;
   email?: string;
+  totalSpent?: number;
+  membershipTier?: string;
 }
 
 export interface ICartContextType {

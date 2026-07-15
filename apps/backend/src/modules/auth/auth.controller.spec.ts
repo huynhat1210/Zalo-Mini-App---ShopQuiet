@@ -16,6 +16,8 @@ describe('AuthController', () => {
     phone: '',
     email: '',
     birthday: '',
+    totalSpent: 0,
+    membershipTier: 'Đồng',
   };
 
   const mockLoginResponse = {

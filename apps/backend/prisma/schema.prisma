@@ -50,6 +50,8 @@ model User {
   birthday      String?
   phone         String?
   email         String?
+  totalSpent     Float          @default(0)
+  membershipTier String         @default("Đồng")
   cartItems     CartItem[]
   comments      Comment[]
   favorites     Favorite[]

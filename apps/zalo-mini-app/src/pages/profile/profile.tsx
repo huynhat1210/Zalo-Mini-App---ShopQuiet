@@ -51,6 +51,38 @@ export const Profile: React.FC<IProfileProps> = (props) => {
   // Show ranking info modal state on the ranking page
   const [showRankingInfo, setShowRankingInfo] = useState(false);
 
+  // Dynamic membership ranking calculations
+  const totalSpent = zaloUser?.totalSpent || 0;
+  const currentTier = zaloUser?.membershipTier || 'Đồng';
+
+  let nextTier = '';
+  let nextGoal = 0;
+  let tierBadge = 'ĐỒNG';
+  let badgeColor = 'bg-neutral-400 text-white'; // Bronze
+
+  if (currentTier === 'Kim cương') {
+    tierBadge = 'KIM CƯƠNG';
+    badgeColor = 'bg-cyan-400 text-teal-950';
+  } else if (currentTier === 'Vàng') {
+    tierBadge = 'VÀNG';
+    badgeColor = 'bg-yellow-400 text-teal-950';
+    nextTier = 'Kim cương';
+    nextGoal = 50000000;
+  } else if (currentTier === 'Bạc') {
+    tierBadge = 'BẠC';
+    badgeColor = 'bg-slate-300 text-teal-950';
+    nextTier = 'Vàng';
+    nextGoal = 10000000;
+  } else {
+    tierBadge = 'ĐỒNG';
+    badgeColor = 'bg-amber-600 text-white';
+    nextTier = 'Bạc';
+    nextGoal = 2000000;
+  }
+
+  const remaining = nextGoal > 0 ? Math.max(0, nextGoal - totalSpent) : 0;
+  const progressPercent = nextGoal > 0 ? Math.min(100, (totalSpent / nextGoal) * 100) : 100;
+
   // Review Modal state
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [reviewOrderId, setReviewOrderId] = useState('');
@@ -511,20 +543,28 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               <div className="flex-1 text-left space-y-0.5">
                 <p className="text-xs font-semibold text-white/70">Thành viên hiện tại</p>
                 <h3 className="text-base font-bold tracking-tight">{profile.name}</h3>
-                <span className="inline-block mt-1 bg-amber-400 text-teal-950 font-black text-[9px] uppercase px-2.5 py-0.5 rounded shadow-xs">★ BẠC</span>
+                <span className={`inline-block mt-1 font-black text-[9px] uppercase px-2.5 py-0.5 rounded shadow-xs ${badgeColor}`}>★ {tierBadge}</span>
               </div>
             </div>
 
             {/* Spent progress bar */}
             <div className="mt-5 space-y-1.5 relative z-10 text-left">
               <div className="flex justify-between items-center text-[10px] text-white/85 font-medium">
-                <span>Chi tiêu: 2.500.000 đ</span>
-                <span>Mục tiêu Gold: 10.000.000 đ</span>
+                <span>Chi tiêu: {totalSpent.toLocaleString('vi-VN')} đ</span>
+                {nextGoal > 0 ? (
+                  <span>Mục tiêu {nextTier}: {nextGoal.toLocaleString('vi-VN')} đ</span>
+                ) : (
+                  <span>Đã đạt hạng cao nhất!</span>
+                )}
               </div>
               <div className="w-full h-2.5 bg-white/20 rounded-full overflow-hidden">
-                <div className="h-full bg-amber-400 rounded-full transition-all duration-500" style={{ width: '25%' }}></div>
+                <div className="h-full bg-amber-400 rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }}></div>
               </div>
-              <p className="text-[10px] text-white/70 italic text-center mt-1">Cần mua thêm 7.500.000 đ để lên hạng Vàng</p>
+              {nextGoal > 0 ? (
+                <p className="text-[10px] text-white/70 italic text-center mt-1">Cần mua thêm {remaining.toLocaleString('vi-VN')} đ để lên hạng {nextTier}</p>
+              ) : (
+                <p className="text-[10px] text-white/70 italic text-center mt-1">Bạn đã đạt hạng thành viên cao nhất tại ShopQuiet</p>
+              )}
             </div>
           </div>
 
@@ -532,10 +572,10 @@ export const Profile: React.FC<IProfileProps> = (props) => {
           <div className="space-y-4 text-left">
             <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-1">Danh sách phân hạng</h3>
             {[
-              { level: 'Đồng', color: 'bg-white text-textColor border-[#f0edeb]', badge: '🥉', min: '0đ', max: '1.999.999đ', perks: ['Tích điểm x1', 'Ưu đãi sản phẩm cơ bản', 'Hỗ trợ tiêu chuẩn'] },
-              { level: 'Bạc', color: 'bg-white text-textColor border-[#f0edeb]', badge: '🥈', min: '2.000.000đ', max: '9.999.999đ', perks: ['Tích điểm x1.5', 'Miễn phí vận chuyển đơn >200k', 'Ưu đãi thành viên hàng tháng', 'Hỗ trợ ưu tiên'], current: true },
-              { level: 'Vàng', color: 'bg-white text-textColor border-[#f0edeb]', badge: '🥇', min: '10.000.000đ', max: '49.999.999đ', perks: ['Tích điểm x2', 'Miễn phí vận chuyển mọi đơn', 'Flash sale độc quyền', 'Hoàn tiền 5%', 'Hỗ trợ 24/7'] },
-              { level: 'Kim cương', color: 'bg-white text-textColor border-[#f0edeb]', badge: '💎', min: '50.000.000đ', max: 'Không giới hạn', perks: ['Tích điểm x3', 'Miễn phí ship & đổi trả tự do', 'Early access sản phẩm mới', 'Hoàn tiền 10%', 'Quản lý tài khoản cá nhân'] },
+              { level: 'Đồng', badge: '🥉', min: '0đ', max: '1.999.999đ', perks: ['Tích điểm x1', 'Ưu đãi sản phẩm cơ bản', 'Hỗ trợ tiêu chuẩn'], current: currentTier === 'Đồng' },
+              { level: 'Bạc', badge: '🥈', min: '2.000.000đ', max: '9.999.999đ', perks: ['Tích điểm x1.5', 'Miễn phí vận chuyển đơn >200k', 'Ưu đãi thành viên hàng tháng', 'Hỗ trợ ưu tiên'], current: currentTier === 'Bạc' },
+              { level: 'Vàng', badge: '🥇', min: '10.000.000đ', max: '49.999.999đ', perks: ['Tích điểm x2', 'Miễn phí vận chuyển mọi đơn', 'Flash sale độc quyền', 'Hoàn tiền 5%', 'Hỗ trợ 24/7'], current: currentTier === 'Vàng' },
+              { level: 'Kim cương', badge: '💎', min: '50.000.000đ', max: 'Không giới hạn', perks: ['Tích điểm x3', 'Miễn phí ship & đổi trả tự do', 'Early access sản phẩm mới', 'Hoàn tiền 10%', 'Quản lý tài khoản cá nhân'], current: currentTier === 'Kim cương' },
             ].map(tier => (
               <div key={tier.level} className={`border rounded-2xl p-4.5 space-y-3 bg-white relative transition-all shadow-xs ${tier.current ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
                 {tier.current && (
@@ -1149,7 +1189,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                 <span className="font-semibold text-textColor">Hạng thành viên</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="bg-amber-400 text-teal-950 font-black text-[9px] uppercase px-2 py-0.5 rounded">★ BẠC</span>
+                <span className={`font-black text-[9px] uppercase px-2.5 py-0.5 rounded shadow-xs ${badgeColor}`}>★ {tierBadge}</span>
                 <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                 </svg>

@@ -70,6 +70,8 @@ export class AuthService {
         phone: user.phone || '',
         email: user.email || '',
         birthday: user.birthday || '',
+        totalSpent: user.totalSpent || 0,
+        membershipTier: user.membershipTier || 'Đồng',
       },
     };
   }

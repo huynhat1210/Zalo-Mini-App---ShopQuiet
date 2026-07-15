@@ -160,6 +160,8 @@ export const useAppStore = create<IAppState>()(
                   phone: authData.user.phone || '',
                   email: authData.user.email || '',
                   birthday: authData.user.birthday || '',
+                  totalSpent: authData.user.totalSpent || 0,
+                  membershipTier: authData.user.membershipTier || 'Đồng',
                 };
                 set({ zaloUser: mappedUser });
                 localStorage.setItem('zalo_profile_custom', JSON.stringify(mappedUser));
@@ -195,6 +197,8 @@ export const useAppStore = create<IAppState>()(
                     phone: authData.user.phone || '',
                     email: authData.user.email || '',
                     birthday: authData.user.birthday || '',
+                    totalSpent: authData.user.totalSpent || 0,
+                    membershipTier: authData.user.membershipTier || 'Đồng',
                   };
                   set({ zaloUser: mappedUser });
                   localStorage.setItem('zalo_profile_custom', JSON.stringify(mappedUser));

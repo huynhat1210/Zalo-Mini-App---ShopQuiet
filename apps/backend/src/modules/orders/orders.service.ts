@@ -81,6 +81,40 @@ export class OrdersService {
     }
   }
 
+  async updateUserMembership(zaloUserId: string) {
+    if (!zaloUserId) return;
+    
+    // Sum totalAmount of all COMPLETED and DELIVERED orders
+    const completedOrders = await this.prisma.order.findMany({
+      where: {
+        zaloUserId,
+        status: { in: ['COMPLETED', 'DELIVERED'] }
+      },
+      select: { totalAmount: true }
+    });
+
+    const totalSpent = completedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+    
+    // Calculate tier
+    let membershipTier = 'Đồng';
+    if (totalSpent >= 50000000) {
+      membershipTier = 'Kim cương';
+    } else if (totalSpent >= 10000000) {
+      membershipTier = 'Vàng';
+    } else if (totalSpent >= 2000000) {
+      membershipTier = 'Bạc';
+    }
+
+    // Update user
+    await this.prisma.user.update({
+      where: { zaloId: zaloUserId },
+      data: {
+        totalSpent,
+        membershipTier
+      }
+    });
+  }
+
   async create(dto: CreateOrderDto, zaloUserId?: string) {
     // Generate a unique order ID matching SQ-XXXXX format
     let orderId = '';
@@ -244,6 +278,10 @@ export class OrdersService {
       }),
       status: 'SUCCESS',
     });
+
+    if (order.zaloUserId) {
+      await this.updateUserMembership(order.zaloUserId);
+    }
 
     return order;
   }
@@ -427,6 +465,10 @@ export class OrdersService {
       }),
       status: 'SUCCESS',
     });
+
+    if (order.zaloUserId) {
+      await this.updateUserMembership(order.zaloUserId);
+    }
 
     return order;
   }
