@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { App as ZaloApp, ZMPRouter, SnackbarProvider } from 'zmp-ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNotifications } from './hooks';
@@ -13,7 +13,7 @@ import { SavedItemsComponent } from './pages/saved-items';
 import { NotificationsComponent } from './pages/notifications';
 import { OrderDetailComponent } from './pages/order-detail';
 import { PaymentSimulateComponent } from './pages/payment-simulate';
-import { ToastComponent, BottomNavBarComponent, ErrorBoundaryComponent } from './components';
+import { ToastComponent, BottomNavBarComponent, ErrorBoundaryComponent, OfflineStateComponent } from './components';
 import type { ICartContextType } from './App.type';
 import { useAppStore } from './store';
 
@@ -98,6 +98,33 @@ export default function App() {
   };
 
   const prevNotificationsRef = useRef<any[]>([]);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const handleRetryConnection = () => {
+    const online = navigator.onLine;
+    setIsOffline(!online);
+    if (online) {
+      showToast('Đã kết nối lại internet thành công', 'success');
+      fetchCart();
+      fetchFavorites();
+      fetchNotifications();
+    } else {
+      showToast('Vẫn chưa có kết nối internet. Vui lòng kiểm tra lại.', 'warning');
+    }
+  };
 
   useEffect(() => {
     syncUserFromStorage();
@@ -167,8 +194,9 @@ export default function App() {
               const showNavbar = ['home', 'search', 'orders', 'notifications', 'profile'].includes(activeTab);
               return (
                 <div className={`flex flex-col h-screen overflow-hidden bg-surface overscroll-none relative ${showNavbar ? 'pb-[72px]' : 'pb-0'}`}>
-                  {/* Custom Premium Top Toast Notification */}
-                  <ToastComponent />
+                   {/* Custom Premium Top Toast Notification */}
+                   <ToastComponent />
+                   <OfflineStateComponent isOffline={isOffline} onRetry={handleRetryConnection} />
 
                   {/* Active Tab rendering */}
                   <div className="flex-1 flex flex-col relative overflow-hidden">

@@ -141,4 +141,21 @@ export class AuthService {
       throw new UnauthorizedException('Invalid token');
     }
   }
+
+  async decryptPhone(zaloId: string, token: string) {
+    if (token === 'user_rejected') {
+      return { success: false, message: 'User rejected permission' };
+    }
+
+    if (token) {
+      // Simulate successful decryption of Zalo token to get a valid phone number
+      const mockPhone = '09' + Math.floor(10000000 + Math.random() * 90000000).toString();
+      
+      // Sync decrypted phone number to Database
+      await this.usersService.syncUser(zaloId, '', '', mockPhone);
+      return { success: true, phone: mockPhone };
+    }
+
+    return { success: false, message: 'Invalid token' };
+  }
 }

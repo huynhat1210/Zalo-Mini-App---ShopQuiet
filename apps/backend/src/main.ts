@@ -109,6 +109,16 @@ async function bootstrap() {
     next();
   });
 
+  // Serve backend uploads directory statically
+  const uploadsDir = path.join(__dirname, '..', 'public', 'uploads');
+  if (!fs.existsSync(path.join(__dirname, '..', 'public'))) {
+    fs.mkdirSync(path.join(__dirname, '..', 'public'), { recursive: true });
+  }
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  app.use('/uploads', express.static(uploadsDir));
+
   app.use(
     express.static('d:\\Zalo Mini App e-commerce\\apps\\zalo-mini-app\\dist'),
   );

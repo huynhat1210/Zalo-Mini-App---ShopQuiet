@@ -21,3 +21,11 @@ export class RefreshTokenDto {
   @IsString()
   refresh_token: string;
 }
+
+export class DecryptPhoneDto {
+  @IsString()
+  token: string;
+
+  @IsString()
+  zaloId: string;
+}

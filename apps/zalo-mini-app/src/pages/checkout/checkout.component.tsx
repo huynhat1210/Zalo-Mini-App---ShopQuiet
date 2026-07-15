@@ -6,6 +6,7 @@ import { Page } from 'zmp-ui';
 import { useCart } from '../../App';
 import { apiRequest } from '../../utils/api';
 import { Payment } from 'zmp-sdk/apis';
+import api from 'zmp-sdk';
 const PageCast = Page as any;
 import { ICheckoutComponentProps } from './checkout.type';
 
@@ -129,6 +130,68 @@ export const CheckoutComponent: React.FC<ICheckoutComponentProps> = (_props) => 
   });
 
   const watchedAddress = watch();
+
+  // Shared helper: fetch phone from Zalo SDK and call onSuccess(phone)
+  const fetchZaloPhoneNumber = async (onSuccess: (phone: string) => void, silentFail = false) => {
+    const apiAny = api as any;
+    const handleDecrypt = async (token: string) => {
+      const res = await apiRequest<{ success: boolean; phone?: string }>('/auth/decrypt-phone', 'POST', {
+        zaloId: zaloUser?.id || 'guest',
+        token,
+      });
+      if (res.success && res.phone) {
+        onSuccess(res.phone);
+        return true;
+      }
+      return false;
+    };
+
+    if (apiAny && apiAny.getPhoneNumber) {
+      apiAny.getPhoneNumber({
+        success: async (data: any) => {
+          const token = data.token;
+          if (token) {
+            try {
+              const ok = await handleDecrypt(token);
+              if (!ok && !silentFail) showToast('Giải mã số điện thoại thất bại.', 'warning');
+            } catch (err) {
+              console.error(err);
+              if (!silentFail) showToast('Lỗi giải mã số điện thoại.', 'warning');
+            }
+          }
+        },
+        fail: async (error: any) => {
+          console.error('getPhoneNumber fail', error);
+          try {
+            const mockToken = 'mock_phone_token_' + Math.random().toString(36).substring(7);
+            const ok = await handleDecrypt(mockToken);
+            if (ok && !silentFail) showToast('Đã lấy SĐT (môi trường giả lập)', 'success');
+          } catch {
+            if (!silentFail) showToast('Không thể lấy số điện thoại từ Zalo.', 'warning');
+          }
+        }
+      });
+    } else {
+      // In browser: always try mock fallback silently
+      try {
+        const mockToken = 'mock_phone_token_' + Math.random().toString(36).substring(7);
+        await handleDecrypt(mockToken);
+      } catch {
+        if (!silentFail) showToast('Zalo SDK không khả dụng trong trình duyệt.', 'warning');
+      }
+    }
+  };
+
+  // Auto-fetch phone when checkout opens and phone field is empty
+  useEffect(() => {
+    const currentPhone = watchedAddress.phone || '';
+    if (!currentPhone) {
+      fetchZaloPhoneNumber((phone) => {
+        reset({ ...watchedAddress, phone });
+      }, true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const decodeMojibakeText = (text: string | null | undefined) => {
     if (!text || typeof text !== 'string') return text || '';

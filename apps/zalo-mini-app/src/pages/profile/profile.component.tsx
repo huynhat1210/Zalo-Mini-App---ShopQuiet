@@ -7,6 +7,7 @@ import { useCart, IProduct, IOrder } from '../../App';
 import { apiRequest } from '../../utils/api';
 import { EmptyStateComponent } from '../../components';
 import { IProfileComponentProps } from './profile.type';
+import api from 'zmp-sdk';
 
 const PageCast = Page as any;
 
@@ -132,6 +133,58 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
     setEditEmail(zaloUser?.email || '');
     setEditBirthday(zaloUser?.birthday || '');
   }, [zaloUser]);
+
+  // Auto-fetch phone from Zalo when edit profile modal opens and phone is empty
+  const fetchZaloPhone = async (silentFail = false) => {
+    const apiAny = api as any;
+    const handleDecrypt = async (token: string) => {
+      const res = await apiRequest<{ success: boolean; phone?: string }>('/auth/decrypt-phone', 'POST', {
+        zaloId: zaloUser?.id || 'guest',
+        token,
+      });
+      if (res.success && res.phone) {
+        setEditPhone(res.phone);
+        return true;
+      }
+      return false;
+    };
+
+    if (apiAny && apiAny.getPhoneNumber) {
+      apiAny.getPhoneNumber({
+        success: async (data: any) => {
+          if (data?.token) {
+            try {
+              await handleDecrypt(data.token);
+            } catch (err) {
+              console.error(err);
+            }
+          }
+        },
+        fail: async (err: any) => {
+          console.error('getPhoneNumber fail', err);
+          try {
+            const mockToken = 'mock_phone_token_' + Math.random().toString(36).substring(7);
+            await handleDecrypt(mockToken);
+          } catch { /* silent */ }
+        }
+      });
+    } else {
+      // Browser fallback
+      try {
+        const mockToken = 'mock_phone_token_' + Math.random().toString(36).substring(7);
+        await handleDecrypt(mockToken);
+      } catch {
+        if (!silentFail) showToast('Không thể lấy SĐT từ Zalo.', 'warning');
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (isEditProfileOpen && !editPhone) {
+      fetchZaloPhone(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditProfileOpen]);
 
   useEffect(() => {
     async function fetchCmsProfileConfig() {

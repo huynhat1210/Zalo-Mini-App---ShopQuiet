@@ -4,3 +4,5 @@ export * from './toast';
 export * from './skeleton';
 export * from './error-boundary';
 export * from './empty-state';
+export * from './offline-state';
+export * from './lazy-image';

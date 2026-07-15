@@ -6,6 +6,7 @@ import { apiRequest } from '../../utils/api';
 import { ChevronLeftIcon, ShareIcon, ShoppingBagIcon, HeartIcon as HeartOutline } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
 import { IProductDetailComponentProps } from './product-detail.type';
+import { LazyImageComponent } from '../../components';
 
 const PageCast = Page as any;
 const BoxCast = Box as any;
@@ -159,10 +160,10 @@ export const ProductDetailComponent: React.FC<IProductDetailComponentProps> = (p
 
       {/* Product Image Cover Section */}
       <div className="relative w-full h-[360px] bg-neutral-100">
-        <img
+        <LazyImageComponent
           src={img}
           alt={product.name}
-          className="w-full h-full object-cover"
+          className="w-full h-full"
         />
       </div>
 
@@ -436,10 +437,10 @@ export const ProductDetailComponent: React.FC<IProductDetailComponentProps> = (p
                       className="group cursor-pointer flex flex-col space-y-2 text-left"
                     >
                       <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden bg-neutral-50 border border-[#f0edeb]">
-                        <img
+                        <LazyImageComponent
                           src={imgUrl}
                           alt={prod.name}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102"
+                          className="w-full h-full"
                         />
                       </div>
                       <div className="px-1 flex flex-col">

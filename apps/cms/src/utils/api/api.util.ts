@@ -75,3 +75,34 @@ export async function apiRequest<T = any>(
   // Extract and return data directly, similar to apiRequest in zalo-mini-app
   return json.data;
 }
+
+export async function apiUploadRequest(file: File): Promise<string> {
+  const url = `${API_BASE_URL}/cms/upload`;
+  const headers: Record<string, string> = {};
+
+  const token = tokenStorage.getAccessToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  if (!response.ok) {
+    let errMsg = `Upload failed with status ${response.status}`;
+    try {
+      const errJson = await response.json();
+      errMsg = errJson.message || errMsg;
+    } catch { }
+    throw new Error(errMsg);
+  }
+
+  const json = await response.json();
+  return json.data.url;
+}

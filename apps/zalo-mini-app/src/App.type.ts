@@ -69,6 +69,7 @@ export interface IZaloUser {
   id?: string;
   birthday?: string;
   phone?: string;
+  email?: string;
 }
 
 export interface ICartContextType {

@@ -1,6 +1,6 @@
 import { Page } from 'zmp-ui';
 import { useCart } from '../../App';
-import { EmptyStateComponent } from '../../components';
+import { EmptyStateComponent, LazyImageComponent } from '../../components';
 import { ISavedItemsComponentProps } from './saved-items.type';
 
 const PageCast = Page as any;
@@ -57,7 +57,7 @@ export const SavedItemsComponent: React.FC<ISavedItemsComponentProps> = (_props)
 
                   {/* Image */}
                   <div className="h-[140px] w-full overflow-hidden bg-neutral-50 border-b border-[#f0edeb]">
-                    <img src={img} alt={prod.name} className="w-full h-full object-cover transition-transform duration-350 group-hover:scale-102" />
+                    <LazyImageComponent src={img} alt={prod.name} className="w-full h-full" />
                   </div>
 
                   {/* Info */}

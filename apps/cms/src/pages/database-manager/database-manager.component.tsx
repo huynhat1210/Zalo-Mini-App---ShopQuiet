@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { apiRequest } from '../../utils/api';
+import { apiRequest, apiUploadRequest } from '../../utils/api';
 import { useToast } from '../../contexts';
 import { validateField, validateRecord } from '../../utils/validation';
 import {
@@ -43,7 +43,31 @@ export const DatabaseManagerComponent: React.FC<IDatabaseManagerComponentProps> 
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
 
+  const handleFileUpload = async (key: string, file: File) => {
+    try {
+      setUploadingField(key);
+      const url = await apiUploadRequest(file);
+      
+      if (key === 'images') {
+        let currentImages: string[] = [];
+        try {
+          const parsed = JSON.parse(formData[key] || '[]');
+          if (Array.isArray(parsed)) currentImages = parsed;
+        } catch {}
+        currentImages.push(url);
+        handleFieldChange(key, JSON.stringify(currentImages));
+      } else {
+        handleFieldChange(key, url);
+      }
+      success('Tải ảnh lên thành công!');
+    } catch (err: any) {
+      toastError(err.message || 'Lỗi tải ảnh lên');
+    } finally {
+      setUploadingField(null);
+    }
+  };
 
   const [formData, setFormData] = useState<Record<string, any>>({});
 
@@ -1020,8 +1044,10 @@ export const DatabaseManagerComponent: React.FC<IDatabaseManagerComponentProps> 
                 <div className="overflow-y-auto px-6 py-5 space-y-4" style={{ flex: 1 }}>
                   {Object.keys(formData).map((key, idx) => {
                     const sampleVal = records[0]?.[key];
-                    const isLongText = ['description', 'content', 'images', 'materialCare', 'shippingReturn'].includes(key);
+                    const isLongText = ['description', 'content', 'materialCare', 'shippingReturn'].includes(key);
                     const fieldErrorsList = fieldErrors[key] || [];
+                    const apiOrigin = (import.meta.env.VITE_API_BASE_URL || 'https://zalo-mini-app-shopquiet.onrender.com/api/v1').replace('/api/v1', '');
+                    
                     return (
                       <div key={key} className="space-y-1.5">
                         <label className="flex items-center gap-2 text-[10px] font-bold text-[#526069] uppercase tracking-widest">
@@ -1037,7 +1063,74 @@ export const DatabaseManagerComponent: React.FC<IDatabaseManagerComponentProps> 
                           )}
                         </label>
 
-                        {typeof sampleVal === 'boolean' ? (
+                        {['image', 'imageUrl', 'images'].includes(key) ? (
+                          <div className="space-y-2 text-left">
+                            <div className="flex flex-wrap gap-2">
+                              {(() => {
+                                let urls: string[] = [];
+                                if (key === 'images') {
+                                  try {
+                                    const parsed = JSON.parse(formData[key] || '[]');
+                                    if (Array.isArray(parsed)) urls = parsed;
+                                  } catch {}
+                                } else if (formData[key]) {
+                                  urls = [formData[key]];
+                                }
+                                return urls.map((url, uIdx) => (
+                                  <div key={uIdx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-200 group">
+                                    <img src={url.startsWith('/') ? `${apiOrigin}${url}` : url} className="w-full h-full object-cover" alt="Preview" />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (key === 'images') {
+                                          const filtered = urls.filter((_, idx) => idx !== uIdx);
+                                          handleFieldChange(key, JSON.stringify(filtered));
+                                        } else {
+                                          handleFieldChange(key, '');
+                                        }
+                                      }}
+                                      className="absolute inset-0 bg-black/45 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity border-none cursor-pointer"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
+                                ));
+                              })()}
+                            </div>
+                            
+                            <label className="border-2 border-dashed border-slate-200 hover:border-[#0e6877]/40 rounded-2xl bg-[#f8fafc] p-4 flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-colors relative">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  if (e.target.files?.[0]) {
+                                    handleFileUpload(key, e.target.files[0]);
+                                  }
+                                }}
+                              />
+                              {uploadingField === key ? (
+                                <>
+                                  <div className="w-5 h-5 border-2 border-[#0e6877] border-t-transparent rounded-full animate-spin"></div>
+                                  <span className="text-[10px] text-slate-500 font-medium mt-1">Đang tải lên...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Plus size={16} className="text-[#0e6877]" />
+                                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Tải ảnh mới lên</span>
+                                  <span className="text-[8px] text-slate-400">Hỗ trợ định dạng PNG, JPG, WEBP</span>
+                                </>
+                              )}
+                            </label>
+                            <input
+                              type="text"
+                              value={formData[key] || ''}
+                              onChange={(e) => handleFieldChange(key, e.target.value)}
+                              placeholder="Hoặc nhập URL hình ảnh trực tiếp..."
+                              className="w-full rounded-2xl py-2.5 px-4 text-[10px] text-[#1b1c1b] placeholder-slate-350 focus:outline-none border border-slate-200 mt-2 bg-[#f8fafc]"
+                            />
+                          </div>
+                        ) : typeof sampleVal === 'boolean' ? (
                           <div className="grid grid-cols-2 gap-2">
                             {['true', 'false'].map(v => (
                               <button

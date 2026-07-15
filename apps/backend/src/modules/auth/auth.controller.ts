@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
-import { LoginDto, VerifyTokenDto, RefreshTokenDto } from './dto/login.dto';
+import { LoginDto, VerifyTokenDto, RefreshTokenDto, DecryptPhoneDto } from './dto/login.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -59,5 +59,12 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Profile retrieved' })
   getProfile(@Request() req: any) {
     return req.user;
+  }
+
+  @Post('decrypt-phone')
+  @ApiOperation({ summary: 'Decrypt Zalo phone number' })
+  @ApiResponse({ status: 200, description: 'Phone number decrypted' })
+  async decryptPhone(@Body() body: DecryptPhoneDto) {
+    return this.authService.decryptPhone(body.zaloId, body.token);
   }
 }

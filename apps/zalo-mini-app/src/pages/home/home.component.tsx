@@ -7,7 +7,7 @@ import { useInfiniteProducts, useCategories, useBanners } from '../../hooks';
 import { Bars3Icon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 // @ts-ignore
 import logoIcon from '../../assets/logo.png';
-import { MenuDrawerComponent, BannerSkeleton, CategorySkeleton, ProductGridSkeleton } from '../../components';
+import { MenuDrawerComponent, BannerSkeleton, CategorySkeleton, ProductGridSkeleton, LazyImageComponent } from '../../components';
 import { IHomeComponentProps } from './home.type';
 
 const PageCast = Page as any;
@@ -48,6 +48,7 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
   // Carousel Slide State
   const [currentSlide, setCurrentSlide] = useState(0);
   const [brandName, setBrandName] = useState('ShopQuiet');
+  const [isCartBouncing, setIsCartBouncing] = useState(false);
 
   useEffect(() => {
     // settings isn't cached yet, fetch independently
@@ -93,6 +94,8 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
   const handleAddToCart = (product: IProduct) => {
     addToCart(product);
     showToast(`Đã thêm ${product.name} vào giỏ hàng!`, 'success');
+    setIsCartBouncing(true);
+    setTimeout(() => setIsCartBouncing(false), 300);
   };
 
   const handleRefresh = async () => {
@@ -120,7 +123,7 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
           onClick={() => setIsCartOpen(true)}
           className="p-2 -mr-2 hover:bg-neutral-100 rounded-full transition-colors relative active:scale-95 border-none bg-transparent cursor-pointer"
         >
-          <ShoppingCartIcon className="w-5.5 h-5.5 text-textColor" strokeWidth={2} />
+          <ShoppingCartIcon className={`w-5.5 h-5.5 text-textColor ${isCartBouncing ? 'animate-cart-bounce' : ''}`} strokeWidth={2} />
           {cart.length > 0 && (
             <span className="absolute -top-0.5 -right-0.5 bg-primary text-white text-[8px] w-4.5 h-4.5 rounded-full flex items-center justify-center font-bold border border-white animate-pulse">
               {cart.reduce((sum, item) => sum + item.quantity, 0)}
@@ -144,10 +147,10 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
                 className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
                   }`}
               >
-                <img
+                <LazyImageComponent
                   src={slide.image}
-                  alt={slide.title}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-[6s] group-hover:scale-102"
+                  alt={slide.title || 'Banner'}
+                  className="absolute inset-0 w-full h-full"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/30 to-transparent"></div>
 
@@ -252,10 +255,10 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
                 >
                   {/* Image Wrapper Aspect Ratio 3:4 */}
                   <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden bg-neutral-50 shadow-xs border border-[#f0edeb]">
-                    <img
+                    <LazyImageComponent
                       src={img}
                       alt={prod.name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102"
+                      className="w-full h-full card-hover-zoom"
                     />
 
                     {/* Floating Heart Button */}

@@ -4,6 +4,7 @@ import { useCart, IProduct } from '../../App';
 import { useDebounce } from '../../utils';
 import { useAllProducts, useCategories } from '../../hooks';
 import { ISearchComponentProps } from './search.type';
+import { LazyImageComponent } from '../../components';
 
 const PageCast = Page as any;
 
@@ -233,7 +234,7 @@ export const SearchComponent: React.FC<ISearchComponentProps> = (_props) => {
                       className="bg-white rounded-2xl overflow-hidden flex flex-col relative border border-[#f0edeb] shadow-xs cursor-pointer group hover:shadow-md transition-all duration-300"
                     >
                       <div className="h-[135px] w-full overflow-hidden bg-neutral-50 border-b border-[#f0edeb]">
-                        <img src={img} alt={prod.name} className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300" />
+                        <LazyImageComponent src={img} alt={prod.name} className="w-full h-full" />
                       </div>
                       <div className="p-3.5 flex-1 flex flex-col justify-between">
                         <div>
