@@ -96,9 +96,10 @@ export const Profile: React.FC<IProfileProps> = (props) => {
           body: formData
         });
         if (res.ok) {
-          const data = await res.json();
-          if (data.success && data.url) {
-            urls.push(data.url);
+          const resJson = await res.json();
+          const actualData = resJson.data || resJson;
+          if (actualData.success && actualData.url) {
+            urls.push(actualData.url);
           }
         }
       }
