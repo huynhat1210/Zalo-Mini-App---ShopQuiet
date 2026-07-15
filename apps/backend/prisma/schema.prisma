@@ -128,6 +128,7 @@ model Order {
   shippingAddress String?
   shippingPhone   String?
   shippingName    String?
+  trackingNumber  String?
   user            User?       @relation(fields: [zaloUserId], references: [zaloId])
   items           OrderItem[]
 

@@ -16,6 +16,7 @@ import { BannersModule } from './modules/banners/banners.module';
 import { CmsModule } from './modules/cms/cms.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
+import { MediaModule } from './modules/media/media.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -23,6 +24,7 @@ import { LoggerModule } from './common/logger/logger.module';
 
 @Module({
   imports: [
+    MediaModule,
     LoggerModule,
     ThrottlerModule.forRoot([
       {

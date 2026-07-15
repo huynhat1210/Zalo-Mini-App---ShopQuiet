@@ -61,8 +61,8 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
   };
 
   const getOrderId = (title: string) => {
-    const match = title.match(/#SQ-\d+/);
-    return match ? match[0].substring(1) : undefined;
+    const match = title.match(/#?(SQ-\d+)/);
+    return match ? match[1] : undefined;
   };
 
   const getDiscountCode = (content: string) => {

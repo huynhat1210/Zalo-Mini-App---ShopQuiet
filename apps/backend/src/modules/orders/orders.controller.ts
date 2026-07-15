@@ -56,8 +56,12 @@ export class OrdersController {
   }
 
   @Patch(':id/status')
-  async updateStatus(@Param('id') id: string, @Body('status') status: string) {
-    return this.ordersService.updateStatus(id, status);
+  async updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: string,
+    @Body('trackingNumber') trackingNumber?: string,
+  ) {
+    return this.ordersService.updateStatus(id, status, trackingNumber);
   }
 
   @Post('zalopay-checkout')

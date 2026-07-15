@@ -6,3 +6,6 @@ export * from './orders';
 export * from './products';
 export * from './user-management';
 export * from './vouchers';
+export * from './analytics';
+export * from './media';
+export * from './notifications';

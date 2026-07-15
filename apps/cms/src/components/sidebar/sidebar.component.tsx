@@ -7,7 +7,14 @@ import {
   LogOut, 
   Database,
   X,
-  Users
+  Users,
+  BarChart3,
+  Image as ImageIcon,
+  Bell,
+  ShoppingBag,
+  Receipt,
+  Ticket,
+  Layers
 } from 'lucide-react';
 
 
@@ -67,32 +74,123 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
       </div>
 
       {/* Main Pages Menu */}
-      <div className="px-4 pt-6 space-y-1">
+      <div className="px-4 pt-4 space-y-0.5 overflow-y-auto max-h-[350px] scrollbar-thin border-b border-slate-100 pb-3">
         <NavLink
           to="/"
           className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+            `flex items-center gap-3 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
               isActive
                 ? 'bg-[#0e6877] text-white shadow-md shadow-[#0e6877]/10'
                 : 'text-[#526069] hover:bg-[#ecf6f7] hover:text-[#0e6877]'
             }`
           }
         >
-          <LayoutDashboard size={16} />
+          <LayoutDashboard size={15} />
           <span>Tổng quan</span>
+        </NavLink>
+        <NavLink
+          to="/analytics"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              isActive
+                ? 'bg-[#0e6877] text-white shadow-md shadow-[#0e6877]/10'
+                : 'text-[#526069] hover:bg-[#ecf6f7] hover:text-[#0e6877]'
+            }`
+          }
+        >
+          <BarChart3 size={15} />
+          <span>Báo cáo & Thống kê</span>
+        </NavLink>
+        <NavLink
+          to="/media"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              isActive
+                ? 'bg-[#0e6877] text-white shadow-md shadow-[#0e6877]/10'
+                : 'text-[#526069] hover:bg-[#ecf6f7] hover:text-[#0e6877]'
+            }`
+          }
+        >
+          <ImageIcon size={15} />
+          <span>Thư viện hình ảnh</span>
+        </NavLink>
+        <NavLink
+          to="/notifications"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              isActive
+                ? 'bg-[#0e6877] text-white shadow-md shadow-[#0e6877]/10'
+                : 'text-[#526069] hover:bg-[#ecf6f7] hover:text-[#0e6877]'
+            }`
+          }
+        >
+          <Bell size={15} />
+          <span>Gửi thông báo</span>
+        </NavLink>
+        <NavLink
+          to="/products"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              isActive
+                ? 'bg-[#0e6877] text-white shadow-md shadow-[#0e6877]/10'
+                : 'text-[#526069] hover:bg-[#ecf6f7] hover:text-[#0e6877]'
+            }`
+          }
+        >
+          <ShoppingBag size={15} />
+          <span>Sản phẩm</span>
+        </NavLink>
+        <NavLink
+          to="/orders"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              isActive
+                ? 'bg-[#0e6877] text-white shadow-md shadow-[#0e6877]/10'
+                : 'text-[#526069] hover:bg-[#ecf6f7] hover:text-[#0e6877]'
+            }`
+          }
+        >
+          <Receipt size={15} />
+          <span>Đơn hàng</span>
+        </NavLink>
+        <NavLink
+          to="/vouchers"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              isActive
+                ? 'bg-[#0e6877] text-white shadow-md shadow-[#0e6877]/10'
+                : 'text-[#526069] hover:bg-[#ecf6f7] hover:text-[#0e6877]'
+            }`
+          }
+        >
+          <Ticket size={15} />
+          <span>Vouchers</span>
+        </NavLink>
+        <NavLink
+          to="/banners"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
+              isActive
+                ? 'bg-[#0e6877] text-white shadow-md shadow-[#0e6877]/10'
+                : 'text-[#526069] hover:bg-[#ecf6f7] hover:text-[#0e6877]'
+            }`
+          }
+        >
+          <Layers size={15} />
+          <span>Banners</span>
         </NavLink>
         <NavLink
           to="/users"
           className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+            `flex items-center gap-3 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 ${
               isActive
                 ? 'bg-[#0e6877] text-white shadow-md shadow-[#0e6877]/10'
                 : 'text-[#526069] hover:bg-[#ecf6f7] hover:text-[#0e6877]'
             }`
           }
         >
-          <Users size={16} />
-          <span>Quản lý người dùng</span>
+          <Users size={15} />
+          <span>Khách hàng</span>
         </NavLink>
       </div>
 

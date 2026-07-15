@@ -10,7 +10,10 @@ import {
   Vouchers, 
   Banners, 
   DatabaseManager, 
-  UserManagement 
+  UserManagement,
+  Analytics,
+  Media,
+  Notifications
 } from './pages';
 import { ToastProviderComponent, useToast, PermissionProviderComponent } from './contexts';
 import './App.css';
@@ -56,6 +59,9 @@ export const App: React.FC = () => {
           <LayoutComponent onLogout={handleLogout}>
             <Routes>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/media" element={<Media />} />
+              <Route path="/notifications" element={<Notifications />} />
               <Route path="/products" element={<Products />} />
               <Route path="/orders" element={<Orders />} />
               <Route path="/vouchers" element={<Vouchers />} />

@@ -303,10 +303,13 @@ export class OrdersService {
     return order;
   }
 
-  async updateStatus(id: string, status: string) {
+  async updateStatus(id: string, status: string, trackingNumber?: string) {
     const order = await this.prisma.order.update({
       where: { id },
-      data: { status },
+      data: { 
+        status,
+        ...(trackingNumber !== undefined ? { trackingNumber } : {}),
+      },
       include: {
         items: {
           include: {
@@ -324,7 +327,8 @@ export class OrdersService {
       content = `Cửa hàng đang chuẩn bị sản phẩm cho đơn hàng #${id} của bạn.`;
       notifTitle = `Đơn hàng #${id} đang được xử lý`;
     } else if (status === 'SHIPPED') {
-      content = `Đơn hàng #${id} đã bàn giao cho đơn vị vận chuyển Zalo Express.`;
+      const trackingInfo = trackingNumber || order.trackingNumber;
+      content = `Đơn hàng #${id} đã bàn giao cho đơn vị vận chuyển.${trackingInfo ? ` Mã vận đơn của bạn: ${trackingInfo}` : ''}`;
       notifTitle = `Đơn hàng #${id} đang được giao`;
     } else if (status === 'DELIVERED') {
       content = `Đơn hàng #${id} đã giao thành công! Cảm ơn bạn đã tin dùng ShopQuiet.`;

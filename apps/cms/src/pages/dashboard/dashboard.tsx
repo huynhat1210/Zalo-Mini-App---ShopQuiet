@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiRequest } from '../../utils/api';
 import { 
@@ -7,10 +7,9 @@ import {
   Ticket, 
   DollarSign,
   TrendingUp,
-  ArrowRight,
-  BarChart3
+  ArrowRight
 } from 'lucide-react';
-import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import type { IDashboardProps } from './dashboard.type';
 
 interface DashboardStats {
   totalProducts: number;
@@ -19,10 +18,8 @@ interface DashboardStats {
   totalVouchers: number;
   recentOrders: any[];
   allOrders: any[];
-  allProducts: any[];
+  lowStockProducts: any[];
 }
-
-import type { IDashboardProps } from './dashboard.type';
 
 export const Dashboard: React.FC<IDashboardProps> = (_props) => {
   const navigate = useNavigate();
@@ -33,7 +30,7 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
     totalVouchers: 0,
     recentOrders: [],
     allOrders: [],
-    allProducts: []
+    lowStockProducts: []
   });
   const [loading, setLoading] = useState(true);
 
@@ -51,10 +48,18 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
         const productList = products && Array.isArray(products) ? products : (products?.data || []);
         const voucherList = Array.isArray(vouchers) ? vouchers : [];
 
-        // Use correct Prisma fields: totalAmount (not total)
+        // Calculate revenue for completed & processing orders
         const revenue = orderList
-          .filter((o: any) => o.status === 'COMPLETED' || o.status === 'PROCESSING')
+          .filter((o: any) => o.status === 'COMPLETED' || o.status === 'PROCESSING' || o.status === 'SHIPPED')
           .reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0);
+
+        // Find products with low stock variants (stock < 5)
+        const lowStock = productList.filter((prod: any) => {
+          if (Array.isArray(prod.variants)) {
+            return prod.variants.some((v: any) => v.stock < 5);
+          }
+          return false;
+        }).slice(0, 5);
 
         setStats({
           totalProducts: productList.length,
@@ -63,7 +68,7 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
           totalVouchers: voucherList.length,
           recentOrders: orderList.slice(0, 5),
           allOrders: orderList,
-          allProducts: productList
+          lowStockProducts: lowStock
         });
       } catch (err) {
         console.error('Failed to load dashboard statistics:', err);
@@ -95,79 +100,6 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
         return <span className="px-2.5 py-1 text-xs font-semibold text-slate-700 bg-slate-100 rounded-full">{status}</span>;
     }
   };
-
-  // Prepare chart data
-  const revenueChartData = useMemo(() => {
-    const last7Days = [];
-    const today = new Date();
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-      
-      const dayRevenue = stats.allOrders
-        .filter((o: any) => {
-          const orderDate = new Date(o.createdAt);
-          return orderDate.toDateString() === date.toDateString() && 
-                 (o.status === 'COMPLETED' || o.status === 'PROCESSING');
-        })
-        .reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0);
-      
-      last7Days.push({ date: dateStr, revenue: dayRevenue });
-    }
-    return last7Days;
-  }, [stats.allOrders]);
-
-  const orderStatusData = useMemo(() => {
-    const statusCounts = {
-      COMPLETED: 0,
-      PROCESSING: 0,
-      SHIPPED: 0,
-      PENDING: 0,
-      CANCELLED: 0
-    };
-    
-    stats.allOrders.forEach((order: any) => {
-      if (statusCounts.hasOwnProperty(order.status)) {
-        statusCounts[order.status as keyof typeof statusCounts]++;
-      }
-    });
-    
-    return [
-      { name: 'Hoàn thành', value: statusCounts.COMPLETED, color: '#10b981' },
-      { name: 'Đang xử lý', value: statusCounts.PROCESSING, color: '#3b82f6' },
-      { name: 'Đang giao', value: statusCounts.SHIPPED, color: '#6366f1' },
-      { name: 'Chờ thanh toán', value: statusCounts.PENDING, color: '#f59e0b' },
-      { name: 'Đã hủy', value: statusCounts.CANCELLED, color: '#ef4444' }
-    ].filter(item => item.value > 0);
-  }, [stats.allOrders]);
-
-  const topSellingProducts = useMemo(() => {
-    const productSales: Record<number, { name: string; revenue: number; quantity: number }> = {};
-    
-    stats.allOrders.forEach((order: any) => {
-      if (order.status === 'COMPLETED' && Array.isArray(order.items)) {
-        order.items.forEach((item: any) => {
-          const productId = item.product?.id;
-          const productName = item.product?.name || 'Sản phẩm không tên';
-          const price = item.price || 0;
-          const quantity = item.quantity || 1;
-          
-          if (productId) {
-            if (!productSales[productId]) {
-              productSales[productId] = { name: productName, revenue: 0, quantity: 0 };
-            }
-            productSales[productId].revenue += price * quantity;
-            productSales[productId].quantity += quantity;
-          }
-        });
-      }
-    });
-    
-    return Object.values(productSales)
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 5);
-  }, [stats.allOrders]);
 
   if (loading) {
     return (
@@ -214,10 +146,10 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
   ];
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-8 animate-fadeIn text-[#1b1c1b]">
       {/* Header */}
       <div>
-        <h2 className="text-3xl font-bold text-[#1b1c1b] tracking-tight">Tổng quan hệ thống</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Tổng quan hệ thống</h2>
         <p className="text-[#526069] text-sm mt-1">Theo dõi hoạt động kinh doanh của ShopQuiet</p>
       </div>
 
@@ -230,7 +162,7 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
               <div className="flex justify-between items-start">
                 <div className="space-y-2">
                   <span className="text-[#526069] text-xs font-bold uppercase tracking-wider">{card.title}</span>
-                  <h3 className="text-2xl font-bold text-[#1b1c1b] tracking-tight">{card.value}</h3>
+                  <h3 className="text-2xl font-bold tracking-tight">{card.value}</h3>
                   <p className="text-[#526069] text-xs font-medium">{card.desc}</p>
                 </div>
                 <div className={`p-3 rounded-2xl border ${card.color} transition-transform group-hover:scale-105 duration-300`}>
@@ -242,98 +174,14 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
         })}
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Revenue Chart */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-sm">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-bold text-[#1b1c1b]">Doanh thu 7 ngày qua</h3>
-              <p className="text-[#526069] text-xs">Tổng doanh thu từ đơn hoàn thành & đang xử lý</p>
-            </div>
-            <div className="p-2 bg-[#ecf6f7] rounded-xl">
-              <DollarSign size={18} className="text-[#0e6877]" />
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={revenueChartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="date" stroke="#94a3b8" fontSize={11} tick={{ fill: '#64748b' }} />
-              <YAxis stroke="#94a3b8" fontSize={11} tick={{ fill: '#64748b' }} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'rgba(255,255,255,0.95)', 
-                  border: '1px solid #e2e8f0', 
-                  borderRadius: '12px',
-                  fontSize: '12px'
-                }}
-                formatter={(value: any) => formatPrice(Number(value || 0))}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="revenue" 
-                stroke="#0e6877" 
-                strokeWidth={2.5}
-                dot={{ fill: '#0e6877', strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: '#0e6877', strokeWidth: 2 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Order Status Distribution */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-sm">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-bold text-[#1b1c1b]">Phân phối đơn hàng</h3>
-              <p className="text-[#526069] text-xs">Theo trạng thái đơn hàng</p>
-            </div>
-            <div className="p-2 bg-[#ecf6f7] rounded-xl">
-              <BarChart3 size={18} className="text-[#0e6877]" />
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={orderStatusData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={90}
-                paddingAngle={2}
-                dataKey="value"
-              >
-                {orderStatusData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'rgba(255,255,255,0.95)', 
-                  border: '1px solid #e2e8f0', 
-                  borderRadius: '12px',
-                  fontSize: '12px'
-                }}
-              />
-              <Legend 
-                verticalAlign="bottom" 
-                height={36}
-                iconType="circle"
-                formatter={(value: string) => <span className="text-xs text-slate-700">{value}</span>}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Details Section */}
+      {/* Main Sections Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Orders Table */}
         <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-sm">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-lg font-bold text-[#1b1c1b]">Đơn hàng gần đây</h3>
-              <p className="text-[#526069] text-xs">Danh sách 5 đơn hàng mới nhất</p>
+              <h3 className="text-lg font-bold">Đơn hàng cần xử lý</h3>
+              <p className="text-[#526069] text-xs">Danh sách các đơn hàng vừa tiếp nhận</p>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-[#0e6877] bg-[#ecf6f7] px-3 py-1 rounded-full flex items-center gap-1.5 border border-[#0e6877]/10">
@@ -350,7 +198,7 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-[#1b1c1b]">
+            <table className="w-full text-left text-sm">
               <thead className="bg-[#fbf9f7] text-[#526069] text-xs font-bold uppercase tracking-wider">
                 <tr>
                   <th className="py-3 px-4 rounded-l-xl">Mã đơn</th>
@@ -376,7 +224,7 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="py-8 text-center text-[#526069] text-xs font-medium">Chưa có đơn hàng nào trong hệ thống</td>
+                    <td colSpan={4} className="py-8 text-center text-[#526069] text-xs font-medium">Chưa có đơn hàng nào cần xử lý</td>
                   </tr>
                 )}
               </tbody>
@@ -384,39 +232,42 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
           </div>
         </div>
 
-        {/* Top Selling Products */}
+        {/* Low Stock Warning Panel */}
         <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-sm">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-lg font-bold text-[#1b1c1b]">Top sản phẩm bán chạy</h3>
-              <p className="text-[#526069] text-xs">Theo doanh thu</p>
+              <h3 className="text-lg font-bold">Cảnh báo tồn kho</h3>
+              <p className="text-[#526069] text-xs">Sản phẩm sắp hết hàng (kho dưới 5)</p>
             </div>
-            <div className="p-2 bg-[#ecf6f7] rounded-xl">
-              <ShoppingBag size={18} className="text-[#0e6877]" />
+            <div className="p-2 bg-amber-50 rounded-xl text-amber-600">
+              <ShoppingBag size={18} />
             </div>
           </div>
 
           <div className="space-y-3">
-            {topSellingProducts.length > 0 ? (
-              topSellingProducts.map((product, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 bg-[#fbf9f7] rounded-xl border border-slate-100">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white ${
-                    index === 0 ? 'bg-[#0e6877]' : index === 1 ? 'bg-[#0a9bb5]' : index === 2 ? 'bg-[#14b8a6]' : 'bg-slate-400'
-                  }`}>
-                    {index + 1}
+            {stats.lowStockProducts.length > 0 ? (
+              stats.lowStockProducts.map((product, index) => {
+                const lowVariants = product.variants.filter((v: any) => v.stock < 5);
+                return (
+                  <div key={index} className="flex items-center justify-between p-3 bg-amber-50/40 rounded-xl border border-amber-100/50">
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold truncate">{product.name}</p>
+                      <p className="text-[10px] text-[#526069] mt-0.5">
+                        Size: {lowVariants.map((v: any) => `${v.size} (${v.stock})`).join(', ')}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => navigate('/database/Product')}
+                      className="text-[10px] font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-2.5 py-1 rounded-lg transition-all border-none cursor-pointer flex-shrink-0"
+                    >
+                      Nhập hàng
+                    </button>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-[#1b1c1b] truncate">{product.name}</p>
-                    <p className="text-[10px] text-[#526069]">Đã bán: {product.quantity}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold text-[#0e6877]">{formatPrice(product.revenue)}</p>
-                  </div>
-                </div>
-              ))
+                );
+              })
             ) : (
-              <div className="text-center py-8 text-[#526069] text-xs">
-                Chưa có dữ liệu bán hàng
+              <div className="text-center py-12 text-[#526069] text-xs">
+                Không có sản phẩm nào sắp hết hàng. Rất tốt!
               </div>
             )}
           </div>
@@ -425,4 +276,4 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
     </div>
   );
 };
-
+export default Dashboard;

@@ -141,7 +141,7 @@ export const useAppStore = create<IAppState>()(
           if (parsed?.name && parsed.name !== 'Alex Johnson') {
             set({ zaloUser: parsed });
             if (parsed.id) {
-              // Login to get tokens
+              // Login to get tokens and fresh profile details
               try {
                 const authData: any = await apiRequest('/auth/login', 'POST', {
                   zaloId: parsed.id,
@@ -152,8 +152,17 @@ export const useAppStore = create<IAppState>()(
                   access_token: authData.access_token,
                   refresh_token: authData.refresh_token,
                 });
-                set({ zaloUser: authData.user });
-                localStorage.setItem('zalo_profile_custom', JSON.stringify(authData.user));
+                const mappedUser = {
+                  id: authData.user.zaloId || authData.user.id,
+                  name: authData.user.name,
+                  avatar: authData.user.avatar,
+                  role: authData.user.role,
+                  phone: authData.user.phone || '',
+                  email: authData.user.email || '',
+                  birthday: authData.user.birthday || '',
+                };
+                set({ zaloUser: mappedUser });
+                localStorage.setItem('zalo_profile_custom', JSON.stringify(mappedUser));
               } catch (error) {
                 console.error('Login failed:', error);
               }
@@ -178,8 +187,17 @@ export const useAppStore = create<IAppState>()(
                     access_token: authData.access_token,
                     refresh_token: authData.refresh_token,
                   });
-                  set({ zaloUser: authData.user });
-                  localStorage.setItem('zalo_profile_custom', JSON.stringify(authData.user));
+                  const mappedUser = {
+                    id: authData.user.zaloId || authData.user.id,
+                    name: authData.user.name,
+                    avatar: authData.user.avatar,
+                    role: authData.user.role,
+                    phone: authData.user.phone || '',
+                    email: authData.user.email || '',
+                    birthday: authData.user.birthday || '',
+                  };
+                  set({ zaloUser: mappedUser });
+                  localStorage.setItem('zalo_profile_custom', JSON.stringify(mappedUser));
                 } catch (error) {
                   console.error('Login failed:', error);
                   // Fallback to old sync method
@@ -187,6 +205,9 @@ export const useAppStore = create<IAppState>()(
                     name: data.userInfo.name,
                     avatar: data.userInfo.avatar,
                     id: data.userInfo.id,
+                    phone: '',
+                    email: '',
+                    birthday: '',
                   };
                   set({ zaloUser: user });
                   localStorage.setItem('zalo_profile_custom', JSON.stringify(user));

@@ -60,6 +60,9 @@ export class AuthService {
         name: user.name,
         avatar: user.avatar,
         role: user.role || 'user',
+        phone: user.phone || '',
+        email: user.email || '',
+        birthday: user.birthday || '',
       },
     };
   }
