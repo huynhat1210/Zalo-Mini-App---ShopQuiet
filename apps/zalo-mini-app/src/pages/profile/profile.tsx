@@ -102,8 +102,12 @@ export const Profile: React.FC<IProfileProps> = (props) => {
           }
         }
       }
-      setReviewImageUrls(prev => [...prev, ...urls]);
-      showToast('Tải ảnh lên thành công!', 'success');
+      if (urls.length > 0) {
+        setReviewImageUrls(prev => [...prev, ...urls]);
+        showToast('Tải ảnh lên thành công!', 'success');
+      } else {
+        showToast('Tải ảnh lên thất bại. Vui lòng kiểm tra lại!', 'warning');
+      }
     } catch (err) {
       console.error(err);
       showToast('Không thể tải ảnh lên!', 'warning');

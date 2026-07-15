@@ -38,30 +38,30 @@ export class CommentsController {
   }
 
   @Post('upload-image')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: path.join(__dirname, '..', '..', '..', 'public', 'uploads'),
-        filename: (req: any, file: any, cb: any) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = path.extname(file.originalname);
-          cb(null, `review-${uniqueSuffix}${ext}`);
-        },
-      }),
-      fileFilter: (req: any, file: any, cb: any) => {
-        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-          return cb(new Error('Chỉ chấp nhận các file ảnh!'), false);
-        }
-        cb(null, true);
-      },
-    }),
-  )
+  @UseInterceptors(FileInterceptor('file'))
   async uploadReviewImage(@UploadedFile() file: any) {
-    if (!file) return { success: false, message: 'No file' };
-    return {
-      success: true,
-      url: `/uploads/${file.filename}`,
-    };
+    if (!file) return { success: false, message: 'No file uploaded' };
+    
+    const fs = require('fs');
+    const path = require('path');
+    
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+      return { success: false, message: 'Chỉ chấp nhận các file ảnh!' };
+    }
+
+    const fileExtension = path.extname(file.originalname);
+    const fileName = `review-${Date.now()}-${Math.round(Math.random() * 1e9)}${fileExtension}`;
+    const filePath = path.join(uploadsDir, fileName);
+
+    fs.writeFileSync(filePath, file.buffer);
+
+    const fileUrl = `/uploads/${fileName}`;
+    return { success: true, url: fileUrl };
   }
 }
 
