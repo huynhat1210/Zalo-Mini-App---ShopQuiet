@@ -147,15 +147,14 @@ export class AuthService {
       return { success: false, message: 'User rejected permission' };
     }
 
-    if (token) {
-      // Simulate successful decryption of Zalo token to get a valid phone number
-      const mockPhone = '09' + Math.floor(10000000 + Math.random() * 90000000).toString();
-      
-      // Sync decrypted phone number to Database
-      await this.usersService.syncUser(zaloId, '', '', mockPhone);
-      return { success: true, phone: mockPhone };
+    if (!token) {
+      return { success: false, message: 'Invalid token' };
     }
 
-    return { success: false, message: 'Invalid token' };
+    // TODO: Integrate real Zalo merchant decryption here when keys are available
+    // Real integration: call Zalo API with merchant keys to decrypt the token
+    // For now: return failure so user must enter phone manually
+    // Only allow if the token contains a pre-verified real phone (set by real Zalo webhook)
+    return { success: false, message: 'Phone decryption requires Zalo merchant keys configuration' };
   }
 }
