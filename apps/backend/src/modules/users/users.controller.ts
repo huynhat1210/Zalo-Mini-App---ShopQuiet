@@ -32,7 +32,9 @@ export class UsersController {
       where: { zaloUserId: userId },
       include: {
         product: {
-          select: { id: true, name: true, images: true },
+          include: {
+            category: true,
+          },
         },
       },
       orderBy: { createdAt: 'desc' },

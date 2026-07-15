@@ -640,8 +640,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                     <div
                       key={review.id}
                       onClick={() => {
-                        const prod = { id: review.product?.id, name: review.product?.name, images: review.product?.images };
-                        if (prod.id) setSelectedProductDetail(prod as any);
+                        if (review.product) setSelectedProductDetail(review.product as any);
                       }}
                       className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 space-y-3 shadow-xs hover:border-primary/30 transition-all cursor-pointer"
                     >
