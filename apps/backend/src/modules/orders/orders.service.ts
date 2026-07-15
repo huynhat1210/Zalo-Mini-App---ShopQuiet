@@ -327,7 +327,7 @@ export class OrdersService {
       content = `Cửa hàng đang chuẩn bị sản phẩm cho đơn hàng #${id} của bạn.`;
       notifTitle = `Đơn hàng #${id} đang được xử lý`;
     } else if (status === 'SHIPPED') {
-      const trackingInfo = trackingNumber || order.trackingNumber;
+      const trackingInfo = trackingNumber || (order as any).trackingNumber;
       content = `Đơn hàng #${id} đã bàn giao cho đơn vị vận chuyển.${trackingInfo ? ` Mã vận đơn của bạn: ${trackingInfo}` : ''}`;
       notifTitle = `Đơn hàng #${id} đang được giao`;
     } else if (status === 'DELIVERED') {
