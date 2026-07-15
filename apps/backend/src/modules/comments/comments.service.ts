@@ -1,12 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { Comment, User } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 
 type CommentWithUser = Comment & { user: User; product?: { id: number; name: string; images: string } };
 
 @Injectable()
 export class CommentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
   async findByProduct(productId: number): Promise<CommentWithUser[]> {
     return this.prisma.comment.findMany({
@@ -58,7 +63,7 @@ export class CommentsService {
       });
     }
 
-    return this.prisma.comment.create({
+    const comment = await this.prisma.comment.create({
       data: {
         productId,
         zaloUserId,
@@ -71,5 +76,13 @@ export class CommentsService {
         user: true,
       },
     });
+
+    try {
+      await this.cacheManager.del(`product_${productId}`);
+    } catch (e) {
+      console.error('Failed to clear product cache:', e);
+    }
+
+    return comment;
   }
 }

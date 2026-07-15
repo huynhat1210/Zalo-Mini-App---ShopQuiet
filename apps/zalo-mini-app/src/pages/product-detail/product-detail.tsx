@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Page, Box } from 'zmp-ui';
 import { IProduct, useCart } from '../../App';
 import api from 'zmp-sdk';
-import { apiRequest } from '../../utils/api';
+import { apiRequest, API_BASE_URL } from '../../utils/api';
 import { ChevronLeftIcon, ShareIcon, ShoppingBagIcon, HeartIcon as HeartOutline } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
 import { IProductDetailProps } from './product-detail.type';
@@ -23,9 +23,6 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
   const [productDetails, setProductDetails] = useState<any>(null);
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [comments, setComments] = useState<any[]>([]);
-  const [newComment, setNewComment] = useState('');
-  const [newRating, setNewRating] = useState(5);
-  const [submittingComment, setSubmittingComment] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState<IProduct[]>([]);
 
   useEffect(() => {
@@ -345,6 +342,37 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                           {'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}
                         </div>
                         <p className="text-textColor-variant text-[11px] leading-relaxed">{rev.content}</p>
+                        
+                        {/* Review attached images */}
+                        {rev.images && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {(() => {
+                              try {
+                                const parsed = JSON.parse(rev.images);
+                                if (Array.isArray(parsed) && parsed.length > 0) {
+                                  return parsed.map((imgUrl: string, idx: number) => {
+                                    const fullUrl = imgUrl.startsWith('http') ? imgUrl : `${API_BASE_URL.replace('/api/v1', '')}${imgUrl}`;
+                                    return (
+                                      <div key={idx} className="w-16 h-16 rounded-lg overflow-hidden border border-[#f0edeb] bg-neutral-50">
+                                        <img src={fullUrl} className="w-full h-full object-cover" alt="" />
+                                      </div>
+                                    );
+                                  });
+                                }
+                              } catch (e) {
+                                if (typeof rev.images === 'string' && rev.images.trim()) {
+                                  const fullUrl = rev.images.startsWith('http') ? rev.images : `${API_BASE_URL.replace('/api/v1', '')}${rev.images}`;
+                                  return (
+                                    <div className="w-16 h-16 rounded-lg overflow-hidden border border-[#f0edeb] bg-neutral-50">
+                                      <img src={fullUrl} className="w-full h-full object-cover" alt="" />
+                                    </div>
+                                  );
+                                }
+                              }
+                              return null;
+                            })()}
+                          </div>
+                        )}
                       </div>
                     ))
                   )}
