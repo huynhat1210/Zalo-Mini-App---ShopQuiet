@@ -31,10 +31,12 @@ export class ProductsController {
     @Query('categoryId') categoryId?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('page_size') pageSize?: string,
+    @Query('sort') sort?: string,
   ) {
     const pageNum = page ? parseInt(page, 10) : 1;
-    const limitNum = limit ? parseInt(limit, 10) : 10;
-    return this.productsService.findAll(search, categoryId, pageNum, limitNum);
+    const limitNum = pageSize ? parseInt(pageSize, 10) : (limit ? parseInt(limit, 10) : 10);
+    return this.productsService.findAll(search, categoryId, pageNum, limitNum, sort);
   }
 
   @Get('products/:id')

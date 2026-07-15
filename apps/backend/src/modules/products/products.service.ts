@@ -11,8 +11,8 @@ export class ProductsService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  async findAll(search?: string, categoryId?: string, page: number = 1, limit: number = 10) {
-    const cacheKey = `products_${search || ''}_${categoryId || ''}_${page}_${limit}`;
+  async findAll(search?: string, categoryId?: string, page: number = 1, limit: number = 10, sort?: string) {
+    const cacheKey = `products_${search || ''}_${categoryId || ''}_${page}_${limit}_${sort || ''}`;
     const cachedData = await this.cacheManager.get(cacheKey);
     
     if (cachedData) {
@@ -34,6 +34,18 @@ export class ProductsService {
 
     const skip = (page - 1) * limit;
 
+    let orderBy: any = undefined;
+    if (sort) {
+      const parts = sort.split(':');
+      if (parts.length === 2) {
+        const order = parts[0] === 'desc' ? 'desc' : 'asc';
+        let field = parts[1];
+        if (field === 'updated_at') field = 'updatedAt';
+        if (field === 'created_at') field = 'createdAt';
+        orderBy = { [field]: order };
+      }
+    }
+
     const [products, total] = await Promise.all([
       this.prisma.product.findMany({
         where,
@@ -43,6 +55,7 @@ export class ProductsService {
         },
         skip,
         take: limit,
+        orderBy: orderBy || { id: 'asc' },
       }),
       this.prisma.product.count({ where }),
     ]);
@@ -54,6 +67,12 @@ export class ProductsService {
         page,
         limit,
         totalPages: Math.ceil(total / limit),
+      },
+      pagination: {
+        total,
+        page,
+        page_size: limit,
+        total_pages: Math.ceil(total / limit),
       },
     };
 
