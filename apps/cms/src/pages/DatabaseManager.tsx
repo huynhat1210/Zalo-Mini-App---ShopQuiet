@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiRequest } from '../utils/api';
 import { useToast } from '../contexts/ToastContext';
-import { validateField, validateRecord, checkDataQuality, type DataQualityIssue } from '../utils/validation';
+import { validateField, validateRecord } from '../utils/validation';
 import { 
   Plus, 
   Edit3, 
@@ -24,10 +24,7 @@ import {
   CheckSquare,
   Square,
   X as CloseIcon,
-  PackageSearch,
-  ShieldCheck,
-  AlertTriangle,
-  FileCheck
+  PackageSearch
 } from 'lucide-react';
 
 export const DatabaseManager: React.FC = () => {
@@ -44,7 +41,7 @@ export const DatabaseManager: React.FC = () => {
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [showQualityPanel, setShowQualityPanel] = useState(false);
+
 
   const [formData, setFormData] = useState<Record<string, any>>({});
 
@@ -189,7 +186,7 @@ export const DatabaseManager: React.FC = () => {
     setFormData({ ...formData, [fieldName]: value });
     
     // Real-time validation
-    const errors = validateField(modelName, fieldName, value);
+    const errors = validateField(modelName || '', fieldName, value);
     if (errors.length > 0) {
       setFieldErrors(prev => ({ ...prev, [fieldName]: errors }));
     } else {
@@ -264,19 +261,7 @@ export const DatabaseManager: React.FC = () => {
     setColumnFilters({});
   };
 
-  // Data quality check
-  const qualityIssues = useMemo(() => {
-    if (!modelName) return [];
-    return checkDataQuality(modelName, records);
-  }, [modelName, records]);
 
-  const qualityStats = useMemo(() => {
-    const total = qualityIssues.length;
-    const high = qualityIssues.filter(i => i.severity === 'high').length;
-    const medium = qualityIssues.filter(i => i.severity === 'medium').length;
-    const low = qualityIssues.filter(i => i.severity === 'low').length;
-    return { total, high, medium, low };
-  }, [qualityIssues]);
 
   // ── Specialized Custom Renderers ──
 
@@ -823,22 +808,6 @@ export const DatabaseManager: React.FC = () => {
 
         <div className="flex gap-3">
           <button
-            onClick={() => setShowQualityPanel(!showQualityPanel)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-              showQualityPanel || qualityStats.total > 0
-                ? qualityStats.high > 0 ? 'bg-rose-500 text-white' : qualityStats.medium > 0 ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            <FileCheck size={16} />
-            Chất lượng dữ liệu
-            {qualityStats.total > 0 && (
-              <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">
-                {qualityStats.total}
-              </span>
-            )}
-          </button>
-          <button
             onClick={() => openDrawerForAdd()}
             className="bg-[#0e6877] hover:bg-[#0a4c57] text-white font-semibold py-2.5 px-5 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 shadow-md shadow-[#0e6877]/10"
           >
@@ -848,92 +817,6 @@ export const DatabaseManager: React.FC = () => {
         </div>
       </div>
 
-      {/* Data Quality Panel */}
-      {showQualityPanel && (
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-xl ${
-                qualityStats.high > 0 ? 'bg-rose-50' : qualityStats.medium > 0 ? 'bg-amber-50' : 'bg-emerald-50'
-              }`}>
-                {qualityStats.high > 0 ? (
-                  <AlertTriangle size={18} className="text-rose-600" />
-                ) : qualityStats.medium > 0 ? (
-                  <AlertTriangle size={18} className="text-amber-600" />
-                ) : (
-                  <ShieldCheck size={18} className="text-emerald-600" />
-                )}
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-[#1b1c1b]">Báo cáo chất lượng dữ liệu</h3>
-                <p className="text-[10px] text-[#526069]">Phân tích và kiểm tra dữ liệu bảng {modelName}</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowQualityPanel(false)}
-              className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors"
-            >
-              <X size={16} />
-            </button>
-          </div>
-
-          {/* Quality Stats */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
-            <div className="bg-slate-50 rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-[#1b1c1b]">{qualityStats.total}</p>
-              <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Tổng vấn đề</p>
-            </div>
-            <div className="bg-rose-50 rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-rose-600">{qualityStats.high}</p>
-              <p className="text-[10px] text-rose-500 font-medium uppercase tracking-wider">Nghiêm trọng</p>
-            </div>
-            <div className="bg-amber-50 rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-amber-600">{qualityStats.medium}</p>
-              <p className="text-[10px] text-amber-500 font-medium uppercase tracking-wider">Trung bình</p>
-            </div>
-            <div className="bg-emerald-50 rounded-xl p-4 text-center">
-              <p className="text-2xl font-bold text-emerald-600">{qualityStats.low}</p>
-              <p className="text-[10px] text-emerald-500 font-medium uppercase tracking-wider">Thấp</p>
-            </div>
-          </div>
-
-          {/* Issues List */}
-          {qualityIssues.length > 0 ? (
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {qualityIssues.map((issue, index) => (
-                <div key={index} className={`flex items-start gap-3 p-3 rounded-xl border ${
-                  issue.severity === 'high' ? 'bg-rose-50 border-rose-200' :
-                  issue.severity === 'medium' ? 'bg-amber-50 border-amber-200' :
-                  'bg-emerald-50 border-emerald-200'
-                }`}>
-                  <div className={`p-1.5 rounded-lg ${
-                    issue.severity === 'high' ? 'bg-rose-100 text-rose-600' :
-                    issue.severity === 'medium' ? 'bg-amber-100 text-amber-600' :
-                    'bg-emerald-100 text-emerald-600'
-                  }`}>
-                    {issue.type === 'duplicate' && <AlertTriangle size={12} />}
-                    {issue.type === 'missing' && <AlertCircle size={12} />}
-                    {issue.type === 'invalid' && <XCircle size={12} />}
-                    {issue.type === 'inconsistent' && <AlertTriangle size={12} />}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-semibold text-[#1b1c1b]">{issue.message}</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">
-                      Bản ghi ID: {issue.recordId} • Trường: {issue.field}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-emerald-600">
-              <ShieldCheck size={32} className="mx-auto mb-2" />
-              <p className="text-sm font-semibold">Dữ liệu chất lượng tốt!</p>
-              <p className="text-xs text-slate-500">Không phát hiện vấn đề nào</p>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Filter and Search */}
       <div className="bg-white border border-slate-200 rounded-3xl p-4 space-y-4 shadow-sm">
