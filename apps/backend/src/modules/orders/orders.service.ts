@@ -246,12 +246,21 @@ export class OrdersService {
         ? ` được giao tới địa chỉ ${order.shippingAddress}`
         : '';
 
+      const isUnpaid = order.status === 'PENDING_PAYMENT';
+      const notifTitle = isUnpaid
+        ? `Đơn hàng #${order.id} chưa thanh toán`
+        : `Đơn hàng #${order.id} đặt thành công`;
+
+      const notifContent = isUnpaid
+        ? `Đơn hàng gồm [${itemsText}] đã được khởi tạo bằng phương thức ${pmName}. Vui lòng hoàn tất thanh toán.`
+        : `Cảm ơn bạn! Đơn hàng gồm [${itemsText}] đã được xác nhận bằng phương thức ${pmName}${shippingInfo}.`;
+
       await this.prisma.notification.create({
         data: {
           zaloUserId: filterUserId,
           type: 'order',
-          title: `Đơn hàng #${order.id} đặt thành công`,
-          content: `Cảm ơn bạn! Đơn hàng gồm [${itemsText}] đã được xác nhận bằng phương thức ${pmName}${shippingInfo}.`,
+          title: notifTitle,
+          content: notifContent,
           date:
             new Date().toLocaleTimeString('vi-VN', {
               hour: '2-digit',
