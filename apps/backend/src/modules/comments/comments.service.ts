@@ -25,6 +25,7 @@ export class CommentsService {
     zaloUserId: string,
     content: string,
     rating: number,
+    orderId?: string,
   ): Promise<CommentWithUser> {
     // Ensure user exists (safety fallback)
     const userExists = await this.prisma.user.findUnique({
@@ -47,6 +48,7 @@ export class CommentsService {
         zaloUserId,
         content,
         rating: rating || 5,
+        orderId: orderId || null,
       },
       include: {
         user: true,

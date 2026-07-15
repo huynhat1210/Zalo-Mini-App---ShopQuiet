@@ -6,8 +6,8 @@ import type { ILoginProps } from './login.type';
 
 export const Login: React.FC<ILoginProps> = (props) => {
   const { onLoginSuccess } = props;
-  const [zaloId, setZaloId] = useState('admin-zalo-id-1');
-  const [name, setName] = useState('admin');
+  const [zaloId, setZaloId] = useState('');
+  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -80,14 +80,11 @@ export const Login: React.FC<ILoginProps> = (props) => {
                 type="text"
                 value={zaloId}
                 onChange={(e) => setZaloId(e.target.value)}
-                placeholder="Nhập zalo ID (ví dụ: admin-zalo-id-1)"
+                placeholder="Nhập zalo ID..."
                 className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-[#0e6877] focus:ring-1 focus:ring-[#0e6877] rounded-xl py-3 pl-10 pr-4 text-sm text-[#1b1c1b] placeholder-slate-400 focus:outline-none transition-all"
                 required
               />
             </div>
-            <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">
-              Mặc định dùng tài khoản hạt giống: <code className="bg-slate-100 px-1 py-0.5 rounded text-[#0e6877] font-semibold">admin-zalo-id-1</code>
-            </p>
           </div>
 
           <div>

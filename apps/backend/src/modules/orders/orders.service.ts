@@ -250,21 +250,34 @@ export class OrdersService {
 
   async findAll(zaloUserId?: string) {
     const filterUserId = zaloUserId || 'cust-zalo-id-1';
-    return this.prisma.order.findMany({
-      where: {
-        zaloUserId: filterUserId,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      include: {
-        items: {
-          include: {
-            product: true,
+    const [orders, reviews] = await Promise.all([
+      this.prisma.order.findMany({
+        where: {
+          zaloUserId: filterUserId,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
           },
         },
-      },
-    });
+      }),
+      this.prisma.comment.findMany({
+        where: { zaloUserId: filterUserId }
+      })
+    ]);
+
+    return orders.map(order => ({
+      ...order,
+      items: order.items.map(item => ({
+        ...item,
+        isReviewed: reviews.some(r => r.orderId === order.id && r.productId === item.productId)
+      }))
+    }));
   }
 
   async findAllAdmin() {
@@ -284,23 +297,36 @@ export class OrdersService {
 
   async findOne(id: string, zaloUserId?: string) {
     const filterUserId = zaloUserId || 'cust-zalo-id-1';
-    const order = await this.prisma.order.findFirst({
-      where: {
-        id,
-        zaloUserId: filterUserId,
-      },
-      include: {
-        items: {
-          include: {
-            product: true,
+    const [order, reviews] = await Promise.all([
+      this.prisma.order.findFirst({
+        where: {
+          id,
+          zaloUserId: filterUserId,
+        },
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
           },
         },
-      },
-    });
+      }),
+      this.prisma.comment.findMany({
+        where: { zaloUserId: filterUserId }
+      })
+    ]);
+
     if (!order) {
       throw new NotFoundException(`Không tìm thấy đơn hàng #${id}`);
     }
-    return order;
+
+    return {
+      ...order,
+      items: order.items.map(item => ({
+        ...item,
+        isReviewed: reviews.some(r => r.orderId === order.id && r.productId === item.productId)
+      }))
+    };
   }
 
   async updateStatus(id: string, status: string, trackingNumber?: string) {

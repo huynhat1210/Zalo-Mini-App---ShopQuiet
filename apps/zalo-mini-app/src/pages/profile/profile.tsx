@@ -44,6 +44,72 @@ export const Profile: React.FC<IProfileProps> = (props) => {
   // ShopeeFood style tabs state
   const [ordersTab, setOrdersTab] = useState<'active' | 'history' | 'reviews' | 'drafts'>('active');
 
+  // Review Modal state
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [reviewOrderId, setReviewOrderId] = useState('');
+  const [reviewProductId, setReviewProductId] = useState<number | null>(null);
+  const [reviewProductName, setReviewProductName] = useState('');
+  const [reviewProductSize, setReviewProductSize] = useState('');
+  const [reviewProductQuantity, setReviewProductQuantity] = useState(1);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  const handleOpenReviewModal = (orderId: string, productId: number, productName: string, size?: string, quantity?: number) => {
+    setReviewOrderId(orderId);
+    setReviewProductId(productId);
+    setReviewProductName(productName);
+    setReviewProductSize(size || 'DEFAULT');
+    setReviewProductQuantity(quantity || 1);
+    setReviewRating(5);
+    setReviewComment('');
+    setIsReviewModalOpen(true);
+  };
+
+  const handleSubmitReview = async () => {
+    if (!reviewProductId || !reviewComment.trim()) {
+      showToast('Vui lòng nhập bình luận nhận xét!', 'warning');
+      return;
+    }
+    setSubmittingReview(true);
+    try {
+      const sizeText = reviewProductSize && reviewProductSize !== 'DEFAULT' ? ` - Size: ${reviewProductSize}` : '';
+      const formattedComment = `[Đã mua: ${reviewProductName} x${reviewProductQuantity}${sizeText}] ${reviewComment}`;
+      
+      const res = await apiRequest<any>(`/products/${reviewProductId}/comments`, 'POST', {
+        content: formattedComment,
+        rating: reviewRating,
+        orderId: reviewOrderId
+      });
+      
+      if (res) {
+        setOrders(prevOrders => 
+          prevOrders.map(o => {
+            if (o.id === reviewOrderId) {
+              return {
+                ...o,
+                items: o.items.map((item: any) => {
+                  if (item.product?.id === reviewProductId) {
+                    return { ...item, isReviewed: true };
+                  }
+                  return item;
+                })
+              };
+            }
+            return o;
+          })
+        );
+        setIsReviewModalOpen(false);
+        showToast('Đánh giá sản phẩm thành công!', 'success');
+      }
+    } catch (e: any) {
+      console.error(e);
+      showToast(e.message || 'Gửi đánh giá thất bại!', 'warning');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   // Modals state
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -296,17 +362,16 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     }, 1500);
   };
 
-  // Filter orders by active tab
   const activeOrdersList = orders.filter(
-    (o) => o.status === 'PROCESSING' || o.status === 'SHIPPED'
+    (o) => o.status === 'PROCESSING' || o.status === 'PENDING'
   );
   
   const historyOrdersList = orders.filter(
-    (o) => o.status === 'DELIVERED' || o.status === 'CANCELLED'
+    (o) => o.status === 'SHIPPED' || o.status === 'COMPLETED' || o.status === 'DELIVERED' || o.status === 'CANCELLED'
   );
 
   const reviewsOrdersList = orders.filter(
-    (o) => o.status === 'DELIVERED'
+    (o) => o.status === 'SHIPPED' || o.status === 'COMPLETED' || o.status === 'DELIVERED'
   );
 
   const draftOrdersList = orders.filter(
@@ -420,7 +485,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                   <div className="space-y-2">
                     {order.items?.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-center text-xs text-textColor-variant">
-                        <span className="line-clamp-1 max-w-[200px] text-left">
+                        <span className="line-clamp-1 max-w-[180px] text-left">
                           {item.product?.name}
                           {item.size && item.size !== 'DEFAULT' && (
                             <span className="ml-1.5 text-[9px] bg-neutral-100 text-[#526069] px-1 py-0.5 rounded font-bold uppercase">
@@ -429,7 +494,28 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                           )}
                           <span className="font-semibold text-textColor ml-1">x{item.quantity}</span>
                         </span>
-                        <span className="font-semibold text-textColor">{(item.price * item.quantity).toLocaleString('vi-VN')} đ</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-textColor">{(item.price * item.quantity).toLocaleString('vi-VN')} đ</span>
+                          {(order.status === 'SHIPPED' || order.status === 'COMPLETED' || order.status === 'DELIVERED') && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (item.isReviewed) {
+                                  showToast('Sản phẩm đã được đánh giá!', 'info');
+                                  return;
+                                }
+                                handleOpenReviewModal(order.id, item.product?.id, item.product?.name, item.size, item.quantity);
+                              }}
+                              className={`px-2 py-1 rounded-lg text-[9px] font-bold border transition-all cursor-pointer ${
+                                item.isReviewed
+                                  ? 'bg-neutral-100 text-neutral-450 border-neutral-200'
+                                  : 'bg-primary text-white border-primary active:scale-95'
+                              }`}
+                            >
+                              {item.isReviewed ? 'Đã đánh giá' : 'Đánh giá'}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1232,7 +1318,78 @@ export const Profile: React.FC<IProfileProps> = (props) => {
           </div>
         </div>
       )}
+      {/* 6. Review Product Modal */}
+      {isReviewModalOpen && (
+        <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-center justify-center p-6 text-left">
+          <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-5 animate-scale-up">
+            <div className="flex justify-between items-center pb-2 border-b border-neutral-100">
+              <h3 className="text-xs font-black text-textColor uppercase tracking-wider">Đánh giá sản phẩm</h3>
+              <button 
+                onClick={() => setIsReviewModalOpen(false)} 
+                className="text-neutral-400 hover:text-textColor border-none bg-transparent cursor-pointer font-bold text-xs p-1"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="space-y-1">
+              <span className="text-[9px] bg-primary-light text-primary px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                {reviewProductSize !== 'DEFAULT' ? `Size: ${reviewProductSize}` : 'Free Size'}
+              </span>
+              <h4 className="text-xs font-bold text-textColor leading-snug line-clamp-2 mt-1">{reviewProductName}</h4>
+              <p className="text-[10px] text-textColor-variant">
+                Số lượng mua: <span className="font-semibold text-textColor">x{reviewProductQuantity}</span>
+              </p>
+            </div>
 
+            {/* Rating Stars Select */}
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-extrabold text-[#526069]/70 uppercase tracking-widest block">Độ hài lòng (Chọn sao)</label>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setReviewRating(star)}
+                    className="p-0 border-none bg-transparent cursor-pointer text-xl text-amber-500 hover:scale-110 active:scale-95 transition-transform"
+                  >
+                    {star <= reviewRating ? '★' : '☆'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Comment Area */}
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-extrabold text-[#526069]/70 uppercase tracking-widest block">Nhận xét của bạn</label>
+              <textarea
+                rows={3}
+                placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+                className="w-full text-xs p-3 bg-neutral-50 rounded-xl border border-neutral-200 focus:border-primary outline-none resize-none font-medium text-textColor leading-relaxed"
+                required
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                disabled={submittingReview || !reviewComment.trim()}
+                onClick={handleSubmitReview}
+                className="flex-1 h-10 bg-primary text-white font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-primary-dark disabled:bg-neutral-300 active:scale-98 transition-all"
+              >
+                {submittingReview ? 'Đang gửi...' : 'Gửi đánh giá'}
+              </button>
+              <button
+                onClick={() => setIsReviewModalOpen(false)}
+                className="h-10 px-4 bg-neutral-100 text-textColor font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-neutral-200"
+              >
+                Hủy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </PageCast>
   );

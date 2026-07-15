@@ -32,6 +32,6 @@ export class CommentsController {
     @Headers('x-zalo-user-id') zaloUserId?: string,
   ): Promise<Comment> {
     const userId = zaloUserId || 'cust-zalo-id-1';
-    return this.commentsService.create(productId, userId, body.content, body.rating);
+    return this.commentsService.create(productId, userId, body.content, body.rating, body.orderId);
   }
 }

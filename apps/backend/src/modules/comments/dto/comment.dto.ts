@@ -1,4 +1,4 @@
-import { IsString, IsNumber } from 'class-validator';
+import { IsString, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateCommentDto {
   @IsString()
@@ -6,4 +6,8 @@ export class CreateCommentDto {
 
   @IsNumber()
   rating: number;
+
+  @IsString()
+  @IsOptional()
+  orderId?: string;
 }

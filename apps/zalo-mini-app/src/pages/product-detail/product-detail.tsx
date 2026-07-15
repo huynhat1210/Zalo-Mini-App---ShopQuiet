@@ -319,65 +319,6 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
             </button>
             {expandedSection === 'reviews' && (
               <div className="px-4.5 py-3.5 text-xs text-[#526069] border-t border-[#f0edeb] bg-white text-left space-y-4">
-                {/* Viết đánh giá mới */}
-                <div className="bg-[#fbf9f7] rounded-xl p-3 border border-[#f0edeb] space-y-3">
-                  <span className="font-extrabold text-[10px] uppercase text-[#526069]/80 tracking-wide block">Viết Đánh Giá Của Bạn</span>
-                  
-                  {/* Chọn sao */}
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] text-textColor-variant">Chọn số sao:</span>
-                    <div className="flex gap-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() => setNewRating(star)}
-                          className="p-0 border-none bg-transparent cursor-pointer text-base text-amber-500 hover:scale-110 active:scale-95 transition-transform"
-                        >
-                          {star <= newRating ? '★' : '☆'}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Nhập nội dung */}
-                  <textarea
-                    rows={2}
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Chia sẻ nhận xét của bạn về sản phẩm này..."
-                    className="w-full text-[11px] p-2 bg-white rounded-lg border border-[#eae8e6] focus:border-primary outline-none resize-none font-medium text-textColor"
-                  />
-
-                  {/* Nút gửi */}
-                  <button
-                    disabled={submittingComment || !newComment.trim()}
-                    onClick={async () => {
-                      if (!newComment.trim()) return;
-                      setSubmittingComment(true);
-                      try {
-                        const saved = await apiRequest<any>(`/products/${product.id}/comments`, 'POST', {
-                          content: newComment,
-                          rating: newRating,
-                        });
-                        if (saved) {
-                          setComments((prev) => [saved, ...prev]);
-                          setNewComment('');
-                          setNewRating(5);
-                          showToast('Gửi nhận xét thành công!', 'success');
-                        }
-                      } catch (e) {
-                        showToast('Gửi nhận xét thất bại!', 'warning');
-                      } finally {
-                        setSubmittingComment(false);
-                      }
-                    }}
-                    className="w-full py-2 bg-primary hover:bg-primary-dark text-white rounded-lg font-bold text-[10px] uppercase tracking-wider disabled:bg-neutral-300 disabled:cursor-not-allowed border-none active:scale-[0.98] transition-transform cursor-pointer"
-                  >
-                    {submittingComment ? 'Đang gửi...' : 'Gửi nhận xét'}
-                  </button>
-                </div>
-
                 {/* Danh sách nhận xét */}
                 <div className="divide-y divide-neutral-100 space-y-3.5">
                   {comments.length === 0 ? (
