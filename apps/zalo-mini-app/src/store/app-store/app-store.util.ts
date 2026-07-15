@@ -44,7 +44,54 @@ export const useAppStore = create<IAppState>()(
             phone: user.phone || undefined,
             birthday: user.birthday || undefined,
             email: user.email || undefined,
+          }).then((freshUser: any) => {
+            if (freshUser) {
+              const mappedUser = {
+                id: freshUser.zaloId || freshUser.id,
+                name: freshUser.name,
+                avatar: freshUser.avatar,
+                role: freshUser.role,
+                phone: freshUser.phone || '',
+                email: freshUser.email || '',
+                birthday: freshUser.birthday || '',
+                totalSpent: freshUser.totalSpent || 0,
+                membershipTier: freshUser.membershipTier || 'Đồng',
+              };
+              set({ zaloUser: mappedUser });
+              localStorage.setItem('zalo_profile_custom', JSON.stringify(mappedUser));
+            }
           }).catch(console.error);
+        }
+      },
+      refreshZaloProfile: async () => {
+        const currentUser = get().zaloUser;
+        if (!currentUser || !currentUser.id) return;
+        try {
+          const freshUser: any = await apiRequest('/users/sync', 'POST', {
+            zaloId: currentUser.id,
+            name: currentUser.name,
+            avatar: currentUser.avatar,
+            phone: currentUser.phone || undefined,
+            birthday: currentUser.birthday || undefined,
+            email: currentUser.email || undefined,
+          });
+          if (freshUser) {
+            const mappedUser = {
+              id: freshUser.zaloId || freshUser.id,
+              name: freshUser.name,
+              avatar: freshUser.avatar,
+              role: freshUser.role,
+              phone: freshUser.phone || '',
+              email: freshUser.email || '',
+              birthday: freshUser.birthday || '',
+              totalSpent: freshUser.totalSpent || 0,
+              membershipTier: freshUser.membershipTier || 'Đồng',
+            };
+            set({ zaloUser: mappedUser });
+            localStorage.setItem('zalo_profile_custom', JSON.stringify(mappedUser));
+          }
+        } catch (error) {
+          console.error('Failed to refresh user profile:', error);
         }
       },
       setSelectedOrder: (order) => set({ selectedOrder: order }),

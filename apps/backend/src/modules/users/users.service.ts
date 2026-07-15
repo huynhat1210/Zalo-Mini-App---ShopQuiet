@@ -20,7 +20,8 @@ export class UsersService {
     // If they already have a name in the DB, preserve it (don't let auto-sync overwrite it)
     const finalName = existingUser?.name ? existingUser.name : name;
 
-    return this.prisma.user.upsert({
+    // First upsert to make sure user exists in DB
+    const user = await this.prisma.user.upsert({
       where: { zaloId },
       update: { 
         name: finalName, 
@@ -31,6 +32,36 @@ export class UsersService {
         ...(email !== undefined && { email })
       },
       create: { zaloId, name, avatar, phone, birthday, email, role },
+    });
+
+    // Sum totalAmount of all COMPLETED and DELIVERED orders
+    const completedOrders = await this.prisma.order.findMany({
+      where: {
+        zaloUserId: zaloId,
+        status: { in: ['COMPLETED', 'DELIVERED'] }
+      },
+      select: { totalAmount: true }
+    });
+
+    const totalSpent = completedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+
+    // Calculate tier
+    let membershipTier = 'Đồng';
+    if (totalSpent >= 50000000) {
+      membershipTier = 'Kim cương';
+    } else if (totalSpent >= 10000000) {
+      membershipTier = 'Vàng';
+    } else if (totalSpent >= 2000000) {
+      membershipTier = 'Bạc';
+    }
+
+    // Update with fresh stats and return
+    return this.prisma.user.update({
+      where: { zaloId },
+      data: {
+        totalSpent,
+        membershipTier
+      }
     });
   }
 

@@ -103,4 +103,5 @@ export interface ICartContextType {
   setNotifications: Dispatch<SetStateAction<INotification[]>>;
   fetchNotifications: () => Promise<void>;
   logout: () => Promise<void>;
+  refreshZaloProfile: () => Promise<void>;
 }

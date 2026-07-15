@@ -36,7 +36,7 @@ type ProfileAddressFormValues = z.infer<typeof profileAddressSchema>;
 
 export const Profile: React.FC<IProfileProps> = (props) => {
   const { initialSubPage = 'profile' } = props;
-  const { setActiveTab, setSelectedProductDetail, showToast, zaloUser, updateZaloUser, setSelectedOrder, savedItems, setIsCartOpen, cart, logout } = useCart();
+  const { setActiveTab, setSelectedProductDetail, showToast, zaloUser, updateZaloUser, setSelectedOrder, savedItems, setIsCartOpen, cart, logout, refreshZaloProfile } = useCart();
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [recommendationProducts, setRecommendationProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -420,6 +420,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     }
     fetchOrdersAndProducts();
     fetchAddresses();
+    refreshZaloProfile();
   }, [zaloUser?.id]);
 
   // Fetch user reviews when the reviews tab is selected
