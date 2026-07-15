@@ -1,2 +1,2 @@
-export * from './products.component';
+export * from './products';
 export * from './products.type';

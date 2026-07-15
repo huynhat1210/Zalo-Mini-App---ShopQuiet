@@ -1,2 +1,2 @@
-export * from './profile.component';
+export * from './profile';
 export * from './profile.type';

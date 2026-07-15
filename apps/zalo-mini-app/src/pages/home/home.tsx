@@ -152,9 +152,9 @@ export const HomeComponent: React.FC<IHomeComponentProps> = (_props) => {
                   alt={slide.title || 'Banner'}
                   className="absolute inset-0 w-full h-full"
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/30 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/35 to-transparent z-10"></div>
 
-                <div className="relative z-10 px-6 flex flex-col justify-center h-full max-w-[270px] text-white">
+                <div className="relative z-20 px-6 flex flex-col justify-center h-full max-w-[270px] text-white">
                   <span className="text-[8px] font-extrabold uppercase tracking-widest text-primary-light bg-primary/45 w-fit px-2.5 py-0.5 rounded-md mb-2">
                     {slide.tag}
                   </span>

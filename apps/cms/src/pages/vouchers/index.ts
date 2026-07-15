@@ -1,2 +1,2 @@
-export * from './vouchers.component';
+export * from './vouchers';
 export * from './vouchers.type';

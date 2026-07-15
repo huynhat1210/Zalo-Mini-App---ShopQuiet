@@ -1,2 +1,2 @@
-export * from './orders.component';
+export * from './orders';
 export * from './orders.type';

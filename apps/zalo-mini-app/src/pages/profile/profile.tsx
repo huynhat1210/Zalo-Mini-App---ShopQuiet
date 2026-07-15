@@ -1042,7 +1042,7 @@ export const ProfileComponent: React.FC<IProfileComponentProps> = (props) => {
                       try {
                         if (editingAddressId) {
                           // Update existing address
-                          await apiRequest(`/addresses/${editingAddressId}`, 'PATCH', {
+                          await apiRequest(`/addresses/${editingAddressId}`, 'PUT', {
                             label: values.label,
                             phone: values.phone,
                             street: values.street,

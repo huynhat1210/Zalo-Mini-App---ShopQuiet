@@ -1,2 +1,2 @@
-export * from './user-management.component';
+export * from './user-management';
 export * from './user-management.type';

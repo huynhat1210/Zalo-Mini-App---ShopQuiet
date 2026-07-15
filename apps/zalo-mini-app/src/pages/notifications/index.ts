@@ -1,2 +1,2 @@
-export * from './notifications.component';
+export * from './notifications';
 export * from './notifications.type';

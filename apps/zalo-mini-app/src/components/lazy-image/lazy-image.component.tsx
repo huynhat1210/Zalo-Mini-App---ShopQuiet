@@ -39,10 +39,13 @@ export const LazyImageComponent: React.FC<ILazyImageComponentProps> = (props) =>
     };
   }, []);
 
+  const hasAbsoluteOrFixed = className.includes('absolute') || className.includes('fixed');
+  const positionClass = hasAbsoluteOrFixed ? '' : 'relative';
+
   return (
     <div 
       ref={imgRef}
-      className={`relative overflow-hidden bg-slate-100 ${className}`}
+      className={`${positionClass} overflow-hidden bg-slate-100 ${className}`}
     >
       {/* Shimmer loading placeholder */}
       {!isLoaded && !error && (

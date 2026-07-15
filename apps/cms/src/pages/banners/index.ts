@@ -1,2 +1,2 @@
-export * from './banners.component';
+export * from './banners';
 export * from './banners.type';

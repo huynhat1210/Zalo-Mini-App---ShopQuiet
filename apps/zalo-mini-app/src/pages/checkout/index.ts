@@ -1,2 +1,2 @@
-export * from './checkout.component';
+export * from './checkout';
 export * from './checkout.type';
