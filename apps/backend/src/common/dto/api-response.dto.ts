@@ -26,6 +26,7 @@ export class SuccessResponseDto<T> {
   @ApiProperty({ example: 'Request successful', description: 'Status message' })
   message: string;
 
+  @ApiProperty({ description: 'Response data payload', required: false, type: () => Object })
   data: T;
 
   @ApiProperty({ type: MetaDto })
