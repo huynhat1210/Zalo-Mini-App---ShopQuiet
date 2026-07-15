@@ -69,6 +69,8 @@ describe('AuthController', () => {
         loginDto.zaloId,
         loginDto.name,
         loginDto.avatar,
+        undefined,
+        undefined,
       );
     });
   });

@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { PrismaService } from '../../prisma/prisma.service';
-import { randomBytes } from 'crypto';
+import { randomBytes, createHmac } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -32,15 +32,25 @@ export class AuthService {
     }
 
     try {
+      const secretKey = process.env.ZALO_APP_SECRET || '';
+      const headers: Record<string, string> = {
+        access_token: accessToken,
+      };
+
+      if (secretKey) {
+        const appsecretProof = createHmac('sha256', secretKey)
+          .update(accessToken)
+          .digest('hex');
+        headers['appsecret_proof'] = appsecretProof;
+      }
+
       const response = await fetch('https://graph.zalo.me/v2.0/me?fields=id,name,picture', {
         method: 'GET',
-        headers: {
-          access_token: accessToken,
-        },
+        headers,
       });
 
       if (!response.ok) {
-        throw new Error('Zalo API returned error status');
+        throw new Error(`Zalo API returned status ${response.status}`);
       }
 
       const data = await response.json();

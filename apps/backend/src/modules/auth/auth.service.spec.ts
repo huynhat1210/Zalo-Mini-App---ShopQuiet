@@ -3,6 +3,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
+import { PrismaService } from '../../prisma/prisma.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -38,6 +39,16 @@ describe('AuthService', () => {
           useValue: {
             sign: jest.fn(),
             verify: jest.fn(),
+          },
+        },
+        {
+          provide: PrismaService,
+          useValue: {
+            refreshToken: {
+              deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+              create: jest.fn().mockResolvedValue({}),
+              findUnique: jest.fn(),
+            },
           },
         },
       ],
@@ -80,11 +91,17 @@ describe('AuthService', () => {
 
       expect(result).toEqual({
         access_token: 'mock-jwt-token',
+        refresh_token: 'mock-jwt-token',
         user: {
           zaloId: mockUser.zaloId,
           name: mockUser.name,
           avatar: mockUser.avatar,
           role: mockUser.role,
+          phone: '',
+          email: '',
+          birthday: '',
+          totalSpent: 0,
+          membershipTier: 'Đồng',
         },
       });
       expect(usersService.syncUser).toHaveBeenCalledWith(
@@ -92,11 +109,14 @@ describe('AuthService', () => {
         'Test User',
         'avatar.jpg',
       );
-      expect(jwtService.sign).toHaveBeenCalledWith({
-        sub: mockUser.zaloId,
-        zaloId: mockUser.zaloId,
-        role: mockUser.role,
-      });
+      expect(jwtService.sign).toHaveBeenCalledWith(
+        {
+          sub: mockUser.zaloId,
+          zaloId: mockUser.zaloId,
+          role: mockUser.role,
+        },
+        { expiresIn: '15m' },
+      );
     });
 
     it('should throw UnauthorizedException when user sync fails', async () => {
@@ -114,11 +134,14 @@ describe('AuthService', () => {
 
       const result = await service.login('123456', 'Test User', 'avatar.jpg');
 
-      expect(jwtService.sign).toHaveBeenCalledWith({
-        sub: userWithoutRole.zaloId,
-        zaloId: userWithoutRole.zaloId,
-        role: 'user',
-      });
+      expect(jwtService.sign).toHaveBeenCalledWith(
+        {
+          sub: userWithoutRole.zaloId,
+          zaloId: userWithoutRole.zaloId,
+          role: 'user',
+        },
+        { expiresIn: '15m' },
+      );
       expect(result.user.role).toBe('user');
     });
   });

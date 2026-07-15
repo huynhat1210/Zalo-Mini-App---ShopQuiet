@@ -30,8 +30,13 @@ describe('UsersService', () => {
   beforeEach(async () => {
     const mockPrismaService = {
       user: {
+        findUnique: jest.fn().mockResolvedValue(null),
         upsert: jest.fn().mockResolvedValue(mockUser),
+        update: jest.fn().mockResolvedValue(mockUser),
         findMany: jest.fn().mockResolvedValue(mockUsers),
+      },
+      order: {
+        findMany: jest.fn().mockResolvedValue([]),
       },
     } as any;
 
@@ -67,19 +72,20 @@ describe('UsersService', () => {
       expect(result).toEqual(mockUser);
       expect(prismaService.user.upsert).toHaveBeenCalledWith({
         where: { zaloId: '123456' },
-        update: { name: 'Test User', avatar: 'avatar.jpg' },
-        create: { zaloId: '123456', name: 'Test User', avatar: 'avatar.jpg' },
+        update: { name: 'Test User', avatar: 'avatar.jpg', role: 'user' },
+        create: { zaloId: '123456', name: 'Test User', avatar: 'avatar.jpg', phone: undefined, birthday: undefined, email: undefined, role: 'user' },
       });
     });
 
     it('should update existing user when zaloId exists', async () => {
+      prismaService.user.findUnique.mockResolvedValue(mockUser);
       const result = await service.syncUser('123456', 'Updated Name', 'new-avatar.jpg');
 
       expect(result).toEqual(mockUser);
       expect(prismaService.user.upsert).toHaveBeenCalledWith({
         where: { zaloId: '123456' },
-        update: { name: 'Updated Name', avatar: 'new-avatar.jpg' },
-        create: { zaloId: '123456', name: 'Updated Name', avatar: 'new-avatar.jpg' },
+        update: { name: 'Test User', avatar: 'new-avatar.jpg', role: 'user' },
+        create: { zaloId: '123456', name: 'Updated Name', avatar: 'new-avatar.jpg', phone: undefined, birthday: undefined, email: undefined, role: 'user' },
       });
     });
 
@@ -89,8 +95,8 @@ describe('UsersService', () => {
       expect(result).toEqual(mockUser);
       expect(prismaService.user.upsert).toHaveBeenCalledWith({
         where: { zaloId: '123456' },
-        update: { name: 'Test User', avatar: undefined },
-        create: { zaloId: '123456', name: 'Test User', avatar: undefined },
+        update: { name: 'Test User', avatar: undefined, role: 'user' },
+        create: { zaloId: '123456', name: 'Test User', avatar: undefined, phone: undefined, birthday: undefined, email: undefined, role: 'user' },
       });
     });
   });
