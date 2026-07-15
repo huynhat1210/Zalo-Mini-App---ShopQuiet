@@ -10,45 +10,25 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const zaloUserId = request.headers['x-zalo-user-id'];
 
-    if (zaloUserId && typeof zaloUserId === 'string' && zaloUserId.trim() !== '') {
-      let user = await this.prisma.user.findUnique({
-        where: { zaloId: zaloUserId },
-      });
-
-      if (!user) {
-        try {
-          user = await this.prisma.user.create({
-            data: {
-              zaloId: zaloUserId,
-              name: 'Zalo User',
-              avatar: '',
-            },
-          });
-        } catch (e) {
-          // If creation fails due to race conditions, try fetching again
-          user = await this.prisma.user.findUnique({
-            where: { zaloId: zaloUserId },
-          }) || null;
-        }
-      }
-
-      if (user) {
-        request.user = {
-          zaloId: user.zaloId,
-          name: user.name,
-          role: user.role || 'user',
-        };
-        return true;
-      }
-    }
-
+    // Verify JWT Bearer token signature
+    let isJwtValid = false;
     try {
-      const result = await super.canActivate(context);
-      return result as boolean;
+      isJwtValid = (await super.canActivate(context)) as boolean;
     } catch (err) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Phiên làm việc không hợp lệ hoặc đã hết hạn.');
     }
+
+    if (!isJwtValid || !request.user) {
+      throw new UnauthorizedException('Yêu cầu chưa được xác thực.');
+    }
+
+    // If x-zalo-user-id header is sent, double check that it matches the user in our JWT payload
+    const headerZaloUserId = request.headers['x-zalo-user-id'];
+    if (headerZaloUserId && headerZaloUserId !== request.user.zaloId) {
+      throw new UnauthorizedException('Thông tin người dùng không khớp với phiên làm việc.');
+    }
+
+    return true;
   }
 }

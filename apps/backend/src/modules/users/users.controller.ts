@@ -26,6 +26,7 @@ export class UsersController {
   }
 
   @Get('me/reviews')
+  @UseGuards(JwtAuthGuard)
   async getMyReviews(@Headers('x-zalo-user-id') zaloUserId?: string) {
     const userId = zaloUserId || 'cust-zalo-id-1';
     return (this.prisma.comment as any).findMany({

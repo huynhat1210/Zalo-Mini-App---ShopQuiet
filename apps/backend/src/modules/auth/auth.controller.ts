@@ -17,7 +17,7 @@ export class AuthController {
   @ApiResponse({ status: 200, type: SuccessResponseDto, description: 'Login successful' })
   @ApiResponse({ status: 400, type: ErrorResponseDto, description: 'Bad request' })
   async login(@Body() body: LoginDto) {
-    return this.authService.login(body.zaloId, body.name, body.avatar, body.password);
+    return this.authService.login(body.zaloId, body.name, body.avatar, body.password, body.accessToken);
   }
 
   @Post('refresh')

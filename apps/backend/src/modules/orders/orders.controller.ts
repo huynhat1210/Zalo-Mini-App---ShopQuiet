@@ -20,6 +20,7 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   async createOrder(
     @Body() body: CreateOrderDto,
     @Headers('x-zalo-user-id') zaloUserId?: string,
@@ -28,6 +29,7 @@ export class OrdersController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   async getOrders(@Headers('x-zalo-user-id') zaloUserId?: string) {
     return this.ordersService.findAll(zaloUserId);
   }
@@ -48,6 +50,7 @@ export class OrdersController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   async getOrderById(
     @Param('id') id: string,
     @Headers('x-zalo-user-id') zaloUserId?: string,
@@ -56,6 +59,8 @@ export class OrdersController {
   }
 
   @Patch(':id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   async updateStatus(
     @Param('id') id: string,
     @Body('status') status: string,
@@ -65,6 +70,7 @@ export class OrdersController {
   }
 
   @Post('zalopay-checkout')
+  @UseGuards(JwtAuthGuard)
   async createZaloPayCheckout(
     @Body() body: CreateOrderDto,
     @Headers('x-zalo-user-id') zaloUserId?: string,
@@ -73,6 +79,7 @@ export class OrdersController {
   }
 
   @Post(':id/zalopay-mac')
+  @UseGuards(JwtAuthGuard)
   async getZaloPayMacForExistingOrder(
     @Param('id') id: string,
     @Body('paymentMethod') paymentMethod?: string,

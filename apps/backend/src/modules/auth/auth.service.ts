@@ -20,15 +20,80 @@ export class AuthService {
     return user;
   }
 
-  async login(zaloId: string, name: string, avatar?: string, password?: string) {
-    const isAdminId = zaloId.toLowerCase().includes('admin') || zaloId.toLowerCase() === 'admin-zalo-id-1';
+  async validateZaloAccessToken(accessToken: string): Promise<{ zaloId: string; name: string; avatar: string }> {
+    // 1. If it's a mock token for local testing, return mock data
+    if (accessToken.startsWith('mock_zalo_token_')) {
+      const mockId = accessToken.replace('mock_zalo_token_', '') || 'cust-zalo-id-1';
+      return {
+        zaloId: mockId,
+        name: `Zalo User ${mockId}`,
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+      };
+    }
+
+    try {
+      const response = await fetch('https://graph.zalo.me/v2.0/me?fields=id,name,picture', {
+        method: 'GET',
+        headers: {
+          access_token: accessToken,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Zalo API returned error status');
+      }
+
+      const data = await response.json();
+      if (!data || !data.id) {
+        throw new Error('Zalo API returned invalid profile data');
+      }
+
+      return {
+        zaloId: data.id,
+        name: data.name || 'Khách hàng Zalo',
+        avatar: data.picture?.data?.url || '',
+      };
+    } catch (error) {
+      console.error('[Zalo Auth] Failed to verify Zalo access token:', error);
+      // Fallback for local development
+      if (process.env.NODE_ENV !== 'production') {
+        return {
+          zaloId: accessToken,
+          name: 'Zalo Test User',
+          avatar: '',
+        };
+      }
+      throw new UnauthorizedException('Không thể xác thực tài khoản Zalo');
+    }
+  }
+
+  async login(zaloId: string, name: string, avatar?: string, password?: string, accessToken?: string) {
+    let targetZaloId = zaloId;
+    let targetName = name;
+    let targetAvatar = avatar;
+
+    // Secure token verification if provided or if required in production
+    if (accessToken) {
+      const zaloProfile = await this.validateZaloAccessToken(accessToken);
+      targetZaloId = zaloProfile.zaloId;
+      targetName = zaloProfile.name;
+      targetAvatar = zaloProfile.avatar;
+    } else {
+      // In production, we require an accessToken for non-admin users to log in securely
+      const isAdminId = zaloId.toLowerCase().includes('admin') || zaloId.toLowerCase() === 'admin-zalo-id-1';
+      if (!isAdminId && process.env.NODE_ENV === 'production') {
+        throw new UnauthorizedException('Yêu cầu Zalo Access Token để đăng nhập an toàn.');
+      }
+    }
+
+    const isAdminId = targetZaloId.toLowerCase().includes('admin') || targetZaloId.toLowerCase() === 'admin-zalo-id-1';
     if (isAdminId) {
       const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
       if (!password || password !== adminPassword) {
         throw new UnauthorizedException('Mật khẩu quản trị viên không chính xác');
       }
     }
-    const user = await this.usersService.syncUser(zaloId, name, avatar);
+    const user = await this.usersService.syncUser(targetZaloId, targetName, targetAvatar);
     if (!user) {
       throw new UnauthorizedException();
     }

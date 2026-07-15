@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   UseInterceptors,
   UploadedFile,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -15,6 +16,7 @@ import * as path from 'path';
 import { Comment } from '@prisma/client';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/comment.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('products/:productId/comments')
 export class CommentsController {
@@ -28,6 +30,7 @@ export class CommentsController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   async createComment(
     @Param('productId', ParseIntPipe) productId: number,
     @Body() body: CreateCommentDto,

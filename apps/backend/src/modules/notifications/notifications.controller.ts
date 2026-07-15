@@ -21,6 +21,7 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   async getNotifications(
     @Headers('x-zalo-user-id') zaloUserId?: string,
   ): Promise<Notification[]> {

@@ -14,6 +14,10 @@ export class LoginDto {
   @IsOptional()
   @IsString()
   password?: string;
+
+  @IsOptional()
+  @IsString()
+  accessToken?: string;
 }
 
 export class VerifyTokenDto {
