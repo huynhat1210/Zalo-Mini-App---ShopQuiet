@@ -173,37 +173,33 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
           </div>
 
           {/* Delivery tracking status timeline — only for non-draft orders */}
-          {!isPendingPayment && selectedOrder.status !== 'CANCELLED' && (
+          {!isPendingPayment && (
             <div className="pt-1.5 space-y-3">
               <div className="text-[9px] font-extrabold text-[#526069]/65 uppercase tracking-widest">Lịch trình đơn hàng</div>
               
               <div className="flex flex-col gap-3 pl-2.5 relative border-l-2 border-neutral-100 mt-1.5">
-                {[
-                  { label: 'Đã nhận đơn hàng', desc: 'Hệ thống đã ghi nhận đơn thành công', active: true },
-                  { label: 'Đang chuẩn bị', desc: 'Kho hàng đang đóng gói sản phẩm của bạn', active: selectedOrder.status === 'PROCESSING' || selectedOrder.status === 'SHIPPED' || selectedOrder.status === 'DELIVERED' },
-                  { label: 'Đang giao hàng', desc: 'Đơn hàng đã bàn giao cho đơn vị vận chuyển', active: selectedOrder.status === 'SHIPPED' || selectedOrder.status === 'DELIVERED' },
-                  { label: 'Đã hoàn thành', desc: 'Đơn hàng đã được giao nhận thành công', active: selectedOrder.status === 'DELIVERED' }
-                ].map((step, sIdx) => (
+                {(selectedOrder.status === 'CANCELLED' ? [
+                  { label: 'Đã nhận đơn hàng', desc: 'Hệ thống đã ghi nhận đơn thành công', active: true, isCancelled: false },
+                  { label: 'Đơn hàng đã hủy', desc: 'Đơn hàng đã bị hủy bỏ', active: true, isCancelled: true }
+                ] : [
+                  { label: 'Đã nhận đơn hàng', desc: 'Hệ thống đã ghi nhận đơn thành công', active: true, isCancelled: false },
+                  { label: 'Đang chuẩn bị', desc: 'Kho hàng đang đóng gói sản phẩm của bạn', active: selectedOrder.status === 'PROCESSING' || selectedOrder.status === 'SHIPPED' || selectedOrder.status === 'DELIVERED', isCancelled: false },
+                  { label: 'Đang giao hàng', desc: 'Đơn hàng đã bàn giao cho đơn vị vận chuyển', active: selectedOrder.status === 'SHIPPED' || selectedOrder.status === 'DELIVERED', isCancelled: false },
+                  { label: 'Đã hoàn thành', desc: 'Đơn hàng đã được giao nhận thành công', active: selectedOrder.status === 'DELIVERED', isCancelled: false }
+                ]).map((step, sIdx) => (
                   <div key={sIdx} className="relative pl-5 text-xs">
                     <div className={`absolute left-[-16px] top-[3px] w-2.5 h-2.5 rounded-full border-2 ${
                       step.active 
-                        ? 'bg-primary border-primary shadow-xs scale-105' 
+                        ? (step.isCancelled ? 'bg-red-500 border-red-500 shadow-xs scale-105' : 'bg-primary border-primary shadow-xs scale-105') 
                         : 'bg-white border-neutral-300'
                     }`} />
                     <div className="space-y-0.5">
-                      <p className={`font-bold ${step.active ? 'text-textColor' : 'text-textColor-variant/50'}`}>{step.label}</p>
-                      <p className={`text-[10px] ${step.active ? 'text-textColor-variant' : 'text-textColor-variant/40'}`}>{step.desc}</p>
+                      <p className={`font-bold ${step.active ? (step.isCancelled ? 'text-red-600' : 'text-textColor') : 'text-textColor-variant/50'}`}>{step.label}</p>
+                      <p className={`text-[10px] ${step.active ? (step.isCancelled ? 'text-red-500/80' : 'text-textColor-variant') : 'text-textColor-variant/40'}`}>{step.desc}</p>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          {selectedOrder.status === 'CANCELLED' && (
-            <div className="pt-2 flex items-center gap-2 text-red-600 text-[10px] font-bold">
-              <span>✕</span>
-              <span>Đơn hàng này đã bị hủy bỏ.</span>
             </div>
           )}
         </div>
