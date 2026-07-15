@@ -7,12 +7,7 @@ import {
   Ticket, 
   DollarSign,
   TrendingUp,
-  PackageSearch,
-  Truck,
-  Tag,
-  Plus,
   ArrowRight,
-  ShoppingCart,
   BarChart3
 } from 'lucide-react';
 import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -172,8 +167,6 @@ export const Dashboard: React.FC = () => {
       .slice(0, 5);
   }, [stats.allOrders]);
 
-  const COLORS = ['#10b981', '#3b82f6', '#6366f1', '#f59e0b', '#ef4444'];
-
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4 animate-fadeIn">
@@ -218,55 +211,12 @@ export const Dashboard: React.FC = () => {
     }
   ];
 
-  const quickActions = [
-    {
-      icon: PackageSearch,
-      iconBg: 'bg-indigo-100 text-indigo-700',
-      title: 'Kiểm tra tồn kho',
-      desc: 'Xem & quản lý sản phẩm, variants và số lượng',
-      onClick: () => navigate('/database/Product'),
-      badge: stats.totalProducts,
-      badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200'
-    },
-    {
-      icon: Truck,
-      iconBg: 'bg-blue-100 text-blue-700',
-      title: 'Quản lý đơn hàng',
-      desc: 'Duyệt, giao hàng và cập nhật trạng thái vận chuyển',
-      onClick: () => navigate('/database/Order'),
-      badge: stats.totalOrders,
-      badgeColor: 'bg-blue-50 text-blue-700 border-blue-200'
-    },
-    {
-      icon: Tag,
-      iconBg: 'bg-amber-100 text-amber-700',
-      title: 'Tạo voucher mới',
-      desc: 'Kích hoạt mã giảm giá cho chiến dịch',
-      onClick: () => navigate('/database/Voucher'),
-      badge: null,
-      badgeColor: '',
-      actionLabel: 'Tạo ngay',
-      actionIcon: Plus
-    },
-    {
-      icon: ShoppingCart,
-      iconBg: 'bg-rose-100 text-rose-700',
-      title: 'Banner quảng cáo',
-      desc: 'Thêm và quản lý slide banner trên trang chủ app',
-      onClick: () => navigate('/database/Banner'),
-      badge: null,
-      badgeColor: '',
-      actionLabel: 'Quản lý',
-      actionIcon: ArrowRight
-    }
-  ];
-
   return (
     <div className="space-y-8 animate-fadeIn">
       {/* Header */}
       <div>
         <h2 className="text-3xl font-bold text-[#1b1c1b] tracking-tight">Tổng quan hệ thống</h2>
-        <p className="text-[#526069] text-sm mt-1">Theo dõi hoạt động kinh doanh của ShopQuiet</p>
+        <p className="text-[#526069] text-sm mt-1">Theo dõi hoạt động kinh doanh của SoftShop</p>
       </div>
 
       {/* Stats Grid */}
@@ -315,7 +265,7 @@ export const Dashboard: React.FC = () => {
                   borderRadius: '12px',
                   fontSize: '12px'
                 }}
-                formatter={(value: number) => formatPrice(value)}
+                formatter={(value: any) => formatPrice(Number(value || 0))}
               />
               <Line 
                 type="monotone" 

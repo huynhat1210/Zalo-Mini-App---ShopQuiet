@@ -267,15 +267,29 @@ export const DatabaseManager: React.FC = () => {
 
   const renderProductView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredRecords.map((product) => (
-        <div key={product.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col hover:shadow-lg transition-all duration-300 group">
-          {/* Product Image */}
-          <div className="h-52 bg-[#fbf9f7] relative overflow-hidden">
-            <img 
-              src={product.image || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400'} 
-              alt={product.name} 
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
-            />
+      {filteredRecords.map((product) => {
+        let imgUrl = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400';
+        if (product.images) {
+          try {
+            const parsed = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              imgUrl = parsed[0];
+            } else if (typeof parsed === 'string') {
+              imgUrl = parsed;
+            }
+          } catch (e) {
+            imgUrl = product.images;
+          }
+        }
+        return (
+          <div key={product.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col hover:shadow-lg transition-all duration-300 group">
+            {/* Product Image */}
+            <div className="h-52 bg-[#fbf9f7] relative overflow-hidden">
+              <img 
+                src={imgUrl} 
+                alt={product.name} 
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+              />
             <div className="absolute top-3 left-3 flex gap-2">
               <span className="bg-[#ecf6f7] text-[#0e6877] border border-[#0e6877]/10 px-2.5 py-1 rounded-full text-[10px] font-bold">
                 ID: {product.id}
@@ -338,9 +352,10 @@ export const DatabaseManager: React.FC = () => {
             </div>
           </div>
         </div>
-      ))}
-    </div>
-  );
+      );
+    })}
+  </div>
+);
 
   const getOrderStatusBadge = (status: string) => {
     switch (status) {

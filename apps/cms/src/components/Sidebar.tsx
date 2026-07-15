@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { apiRequest } from '../utils/api';
+import logo from '../assets/logo.png';
 import { 
   LayoutDashboard, 
   LogOut, 
-  Store,
   Database,
   X,
   Users
@@ -49,11 +49,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onLogout, isOpen, onClose }) =
       {/* Brand Header */}
       <div className="h-16 flex items-center justify-between px-6 border-b border-slate-250/60">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-[#ecf6f7] text-[#0e6877] rounded-xl border border-[#0e6877]/10">
-            <Store size={20} />
+          <div className="w-9 h-9 overflow-hidden rounded-xl border border-slate-200 flex items-center justify-center bg-white shrink-0">
+            <img src={logo} alt="Logo" className="w-8 h-8 object-contain" />
           </div>
           <div>
-            <h1 className="font-bold text-[#1b1c1b] tracking-wide text-sm">ShopQuiet CMS</h1>
+            <h1 className="font-bold text-[#1b1c1b] tracking-wide text-sm">SoftShop CMS</h1>
             <p className="text-[10px] text-[#526069] font-medium">Bảng Quản Trị</p>
           </div>
         </div>

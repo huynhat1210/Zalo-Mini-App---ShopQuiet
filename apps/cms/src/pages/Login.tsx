@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { apiRequest, tokenStorage } from '../utils/api';
-import { Lock, User, AlertCircle, Store } from 'lucide-react';
+import logo from '../assets/logo.png';
+import { Lock, User, AlertCircle } from 'lucide-react';
 
 interface LoginProps {
   onLoginSuccess: () => void;
@@ -8,7 +9,7 @@ interface LoginProps {
 
 export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [zaloId, setZaloId] = useState('admin-zalo-id-1');
-  const [name, setName] = useState('Administrator');
+  const [name, setName] = useState('admin');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -54,10 +55,10 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
         {/* Brand Header */}
         <div className="flex flex-col items-center mb-8 relative">
-          <div className="w-16 h-16 bg-[#ecf6f7] text-[#0e6877] rounded-2xl flex items-center justify-center mb-4 border border-[#0e6877]/10">
-            <Store size={32} />
+          <div className="w-16 h-16 overflow-hidden rounded-2xl border border-slate-200 flex items-center justify-center bg-white mb-4 shadow-sm">
+            <img src={logo} alt="Logo" className="w-12 h-12 object-contain" />
           </div>
-          <h2 className="text-2xl font-bold text-[#1b1c1b] tracking-tight">ShopQuiet CMS</h2>
+          <h2 className="text-2xl font-bold text-[#1b1c1b] tracking-tight">SoftShop CMS</h2>
           <p className="text-[#526069] text-sm mt-1">Đăng nhập cổng quản trị cửa hàng</p>
         </div>
 
