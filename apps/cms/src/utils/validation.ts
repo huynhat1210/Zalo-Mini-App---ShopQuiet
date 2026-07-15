@@ -154,7 +154,6 @@ export const validationRules: Record<string, FieldValidation[]> = {
     {
       fieldName: 'email',
       rules: [
-        { type: 'required', message: 'Email là bắt buộc' },
         { 
           type: 'email', 
           message: 'Email không hợp lệ' 
