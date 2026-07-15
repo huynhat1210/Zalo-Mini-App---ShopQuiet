@@ -183,9 +183,14 @@ export const useAppStore = create<IAppState>()(
       isSavedItem: (productId) => get().savedItems.some((item) => item.id === productId),
       syncUserFromStorage: async () => {
         const cached = localStorage.getItem('zalo_profile_custom');
+        const isRealZaloEnv = typeof window !== 'undefined' && 
+          (window.navigator.userAgent.toLowerCase().includes('zalo') || !!(window as any).ZaloMiniApp);
+
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (parsed?.name && parsed.name !== 'Alex Johnson') {
+          const isMockId = parsed?.id === 'cust-zalo-id-1' || (parsed?.id && String(parsed.id).startsWith('mock_'));
+
+          if (parsed?.name && parsed.name !== 'Alex Johnson' && !(isRealZaloEnv && isMockId)) {
             set({ zaloUser: parsed });
             if (parsed.id) {
               // Login to get tokens and fresh profile details
