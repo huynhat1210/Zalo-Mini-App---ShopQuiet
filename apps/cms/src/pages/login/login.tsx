@@ -38,7 +38,10 @@ export const Login: React.FC<ILoginProps> = (props) => {
           setError('Tài khoản của bạn không có quyền truy cập trang quản trị!');
           return;
         }
-        tokenStorage.setAccessToken(authData.access_token);
+        tokenStorage.setTokens({
+          access_token: authData.access_token,
+          refresh_token: authData.refresh_token,
+        });
         // Save authData.user in localStorage to synchronize with dynamic header display
         localStorage.setItem('zalo_profile_custom', JSON.stringify(authData.user));
         onLoginSuccess();
