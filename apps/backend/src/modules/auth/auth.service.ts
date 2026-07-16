@@ -55,7 +55,8 @@ export class AuthService {
 
       const data = await response.json();
       if (!data || !data.id) {
-        throw new Error('Zalo API returned invalid profile data');
+        console.error('[Zalo Auth] Invalid Zalo profile response:', data);
+        throw new Error(data?.message || 'Zalo API returned invalid profile data');
       }
 
       return {
