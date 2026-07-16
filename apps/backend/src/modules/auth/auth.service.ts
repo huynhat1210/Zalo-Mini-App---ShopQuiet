@@ -89,15 +89,22 @@ export class AuthService {
 
     // Secure token verification if provided or if required in production
     if (accessToken) {
-      const zaloProfile = await this.validateZaloAccessToken(accessToken);
-      if (zaloProfile) {
-        targetZaloId = zaloProfile.zaloId;
-        targetName = zaloProfile.name;
-        if (zaloProfile.avatar && zaloProfile.avatar !== '') {
-          targetAvatar = zaloProfile.avatar;
+      try {
+        const zaloProfile = await this.validateZaloAccessToken(accessToken);
+        if (zaloProfile) {
+          targetZaloId = zaloProfile.zaloId;
+          targetName = zaloProfile.name;
+          if (zaloProfile.avatar && zaloProfile.avatar !== '') {
+            targetAvatar = zaloProfile.avatar;
+          }
+        } else {
+          // Fallback to client-provided parameters if Zalo blocked verification due to server geolocation (-501)
+          targetZaloId = zaloId;
+          targetName = name;
+          targetAvatar = avatar;
         }
-      } else {
-        // Fallback to client-provided parameters if Zalo blocked verification due to server geolocation (-501)
+      } catch (err) {
+        console.warn('[Zalo Auth] validateZaloAccessToken failed, falling back to client-provided parameters:', err);
         targetZaloId = zaloId;
         targetName = name;
         targetAvatar = avatar;

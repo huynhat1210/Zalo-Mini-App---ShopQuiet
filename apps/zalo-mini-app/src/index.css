@@ -200,3 +200,38 @@ h1, h2, h3, h4, h5, h6 {
 .group:hover .card-hover-zoom {
   transform: scale(1.03);
 }
+
+/* Premium Swiper Pagination Dot Styles & Hardware Acceleration */
+.zmp-swiper, .zaui-swiper, .swiper {
+  transform: translate3d(0,0,0);
+  will-change: transform;
+}
+
+.zmp-swiper-slide, .zaui-swiper-slide, .swiper-slide {
+  transform: translate3d(0,0,0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* Dot Overrides */
+.zmp-swiper-pagination-bullet,
+.zaui-swiper-pagination-bullet,
+.swiper-pagination-bullet {
+  background: #000000 !important;
+  opacity: 0.25 !important;
+  width: 6px !important;
+  height: 6px !important;
+  display: inline-block !important;
+  border-radius: 50% !important;
+  margin: 0 4px !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.zmp-swiper-pagination-bullet-active,
+.zaui-swiper-pagination-bullet-active,
+.swiper-pagination-bullet-active {
+  background: var(--color-brand-primary, #0e6877) !important;
+  opacity: 1 !important;
+  width: 14px !important;
+  border-radius: 3px !important;
+}

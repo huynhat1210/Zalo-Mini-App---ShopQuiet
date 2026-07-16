@@ -363,7 +363,11 @@ export const useAppStore = create<IAppState>()(
           const doUserInfo = () => {
             apiAny.getUserInfo({
               success: async (data: any) => {
-                if (data?.userInfo?.name) {
+                const info = data?.userInfo;
+                const zaloId = info?.id || info?.zaloId;
+                if (zaloId) {
+                  const name = info.name || 'Người dùng Zalo';
+                  const avatar = info.avatar || 'https://zalo-api.zdn.vn/api/emoticon/avatar';
                   try {
                     let zaloToken = '';
                     if (typeof window !== 'undefined' && apiAny && apiAny.getAccessToken) {
@@ -379,13 +383,13 @@ export const useAppStore = create<IAppState>()(
                       }
                     }
                     if (!zaloToken) {
-                      zaloToken = `mock_zalo_token_${data.userInfo.id}`;
+                      zaloToken = `mock_zalo_token_${zaloId}`;
                     }
 
                     const authData: any = await apiRequest('/auth/login', 'POST', {
-                      zaloId: data.userInfo.id,
-                      name: data.userInfo.name,
-                      avatar: data.userInfo.avatar,
+                      zaloId: zaloId,
+                      name: name,
+                      avatar: avatar,
                       accessToken: zaloToken,
                     });
                     tokenStorage.setTokens({
@@ -414,9 +418,9 @@ export const useAppStore = create<IAppState>()(
                     console.error('Login failed:', error);
                     // Fallback to old sync method
                     const user = {
-                      name: data.userInfo.name,
-                      avatar: data.userInfo.avatar,
-                      id: data.userInfo.id,
+                      name: name,
+                      avatar: avatar,
+                      id: zaloId,
                       phone: '',
                       email: '',
                       birthday: '',
@@ -426,6 +430,9 @@ export const useAppStore = create<IAppState>()(
                     localStorage.setItem('zalo_profile_custom', JSON.stringify(user));
                     apiRequest('/users/sync', 'POST', { zaloId: user.id, name: user.name, avatar: user.avatar }).catch(console.error);
                   }
+                } else {
+                  console.warn('getUserInfo success but no zaloId found in data:', data);
+                  fallbackMockUser();
                 }
               },
               fail: (err: any) => {

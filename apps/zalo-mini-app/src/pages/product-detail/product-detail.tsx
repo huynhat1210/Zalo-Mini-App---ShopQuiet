@@ -192,14 +192,15 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
       </div>
 
       {/* Product Image Carousel */}
-      <div className="relative w-full aspect-square bg-white">
-        <Swiper autoplay duration={4000}>
+      <div className="relative w-full aspect-[4/3] bg-white overflow-hidden">
+        <Swiper autoplay duration={4000} dots={true} loop={true}>
           {images.map((img, idx) => (
             <Swiper.Slide key={idx} className="bg-white">
-              <LazyImageComponent
+              <img
                 src={img}
                 alt={`${product.name} ${idx + 1}`}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain pointer-events-none select-none"
+                loading="eager"
               />
             </Swiper.Slide>
           ))}
