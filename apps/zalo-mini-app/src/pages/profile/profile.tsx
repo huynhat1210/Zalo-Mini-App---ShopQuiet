@@ -37,7 +37,7 @@ type ProfileAddressFormValues = z.infer<typeof profileAddressSchema>;
 
 export const Profile: React.FC<IProfileProps> = (props) => {
   const { initialSubPage = 'profile' } = props;
-  const { setActiveTab, setSelectedProductDetail, showToast, zaloUser, updateZaloUser, setSelectedOrder, savedItems, setIsCartOpen, cart, logout, refreshZaloProfile } = useCart();
+  const { setActiveTab, setSelectedProductDetail, showToast, zaloUser, updateZaloUser, setSelectedOrder, savedItems, setIsCartOpen, cart, logout, refreshZaloProfile, syncUserFromStorage } = useCart();
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [recommendationProducts, setRecommendationProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -409,7 +409,12 @@ export const Profile: React.FC<IProfileProps> = (props) => {
   };
 
   useEffect(() => {
-    const userId = zaloUser?.id || 'cust-zalo-id-1';
+    // Skip all data fetching when user is not logged in
+    if (!zaloUser?.id) {
+      setLoading(false);
+      return;
+    }
+    const userId = zaloUser.id;
     if (typeof window !== 'undefined') {
       const cachedOrders = localStorage.getItem(`cache_orders_${userId}`);
       const cachedRecs = localStorage.getItem('cache_rec_products');
@@ -1084,12 +1089,13 @@ export const Profile: React.FC<IProfileProps> = (props) => {
 
           {/* Login with Zalo button */}
           <button
-            onClick={() => refreshZaloProfile()}
-            className="w-full max-w-xs h-12 bg-[#0068FF] text-white font-bold text-sm rounded-2xl hover:bg-blue-700 active:scale-98 transition-all flex items-center justify-center gap-3 shadow-md cursor-pointer border-none mb-3"
+            onClick={() => syncUserFromStorage()}
+            className="w-full max-w-xs h-12 bg-[#0068FF] text-white font-bold text-sm rounded-2xl hover:bg-blue-700 active:scale-98 transition-all flex items-center justify-center gap-2.5 shadow-md cursor-pointer border-none"
           >
-            <svg width="22" height="22" viewBox="0 0 50 50" fill="none">
-              <rect width="50" height="50" rx="12" fill="white"/>
-              <text x="7" y="36" fontSize="28" fontWeight="bold" fill="#0068FF">Z</text>
+            {/* Proper Zalo Z icon */}
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <rect width="24" height="24" rx="6" fill="white"/>
+              <path d="M6 8.5C6 8.5 10.5 8.5 13.5 8.5L6.5 15.5H18" stroke="#0068FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             Đăng nhập với Zalo
           </button>

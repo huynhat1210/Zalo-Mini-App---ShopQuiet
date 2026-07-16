@@ -107,4 +107,5 @@ export interface ICartContextType {
   fetchNotifications: () => Promise<void>;
   logout: () => Promise<void>;
   refreshZaloProfile: () => Promise<void>;
+  syncUserFromStorage: () => Promise<void>;
 }

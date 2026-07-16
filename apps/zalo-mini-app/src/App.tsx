@@ -188,7 +188,8 @@ export default function App() {
             setNotifications: setNotifications as any,
             fetchNotifications: fetchNotifications as any,
             logout,
-            refreshZaloProfile
+            refreshZaloProfile,
+            syncUserFromStorage,
           }}
         >
           <ZMPRouterCast>
