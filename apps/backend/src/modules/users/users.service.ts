@@ -8,6 +8,8 @@ export class UsersService {
   async syncUser(zaloId: string, name: string, avatar?: string, phone?: string, birthday?: string, email?: string) {
     if (!zaloId) return null;
     
+    console.log('[syncUser Debug] Received parameters:', { zaloId, name, avatar, phone, birthday, email });
+    
     // Check if the user already exists in the database
     const existingUser = await this.prisma.user.findUnique({
       where: { zaloId }
