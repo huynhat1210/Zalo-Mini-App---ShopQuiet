@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Page } from 'zmp-ui';
 import { openWebview } from 'zmp-sdk/apis';
+import api from 'zmp-sdk';
 import { useCart, IProduct, IOrder } from '../../App';
 import { apiRequest, API_BASE_URL } from '../../utils/api';
 import { EmptyStateComponent } from '../../components';
