@@ -236,6 +236,8 @@ export const useAppStore = create<IAppState>()(
                 };
                 set({ zaloUser: mappedUser });
                 localStorage.setItem('zalo_profile_custom', JSON.stringify(mappedUser));
+                get().fetchCart().catch(console.error);
+                get().fetchFavorites().catch(console.error);
               } catch (error) {
                 console.error('Login failed:', error);
               }
@@ -292,6 +294,8 @@ export const useAppStore = create<IAppState>()(
                   };
                   set({ zaloUser: mappedUser });
                   localStorage.setItem('zalo_profile_custom', JSON.stringify(mappedUser));
+                  get().fetchCart().catch(console.error);
+                  get().fetchFavorites().catch(console.error);
                 } catch (error) {
                   console.error('Login failed:', error);
                   // Fallback to old sync method
