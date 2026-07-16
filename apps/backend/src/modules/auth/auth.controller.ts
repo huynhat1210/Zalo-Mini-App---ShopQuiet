@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Request, Query } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Request, Query, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -75,5 +75,33 @@ export class AuthController {
   @ApiResponse({ status: 400, type: ErrorResponseDto, description: 'Decryption failed' })
   async decryptPhone(@Body() body: DecryptPhoneDto) {
     return this.authService.decryptPhone(body.zaloId, body.token);
+  }
+
+  @Get('google')
+  @ApiOperation({ summary: 'Redirect to Google OAuth' })
+  async googleLogin(@Res() res: any) {
+    const url = this.authService.getGoogleAuthUrl();
+    return res.redirect(url);
+  }
+
+  @Get('google/callback')
+  @ApiOperation({ summary: 'Google OAuth callback' })
+  async googleCallback(@Query('code') code: string, @Res() res: any) {
+    const redirectUrl = await this.authService.handleGoogleCallback(code);
+    return res.redirect(redirectUrl);
+  }
+
+  @Get('facebook')
+  @ApiOperation({ summary: 'Redirect to Facebook OAuth' })
+  async facebookLogin(@Res() res: any) {
+    const url = this.authService.getFacebookAuthUrl();
+    return res.redirect(url);
+  }
+
+  @Get('facebook/callback')
+  @ApiOperation({ summary: 'Facebook OAuth callback' })
+  async facebookCallback(@Query('code') code: string, @Res() res: any) {
+    const redirectUrl = await this.authService.handleFacebookCallback(code);
+    return res.redirect(redirectUrl);
   }
 }

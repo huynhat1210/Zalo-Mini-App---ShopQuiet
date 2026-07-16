@@ -186,6 +186,54 @@ export const useAppStore = create<IAppState>()(
       },
       isSavedItem: (productId) => get().savedItems.some((item) => item.id === productId),
       syncUserFromStorage: async () => {
+        // Check if JWT tokens are present in URL query params (Google/Facebook OAuth return redirect)
+        if (typeof window !== 'undefined') {
+          const urlParams = new URLSearchParams(window.location.search);
+          const urlToken = urlParams.get('token');
+          const urlRefreshToken = urlParams.get('refreshToken');
+
+          if (urlToken && urlRefreshToken) {
+            tokenStorage.setTokens({
+              access_token: urlToken,
+              refresh_token: urlRefreshToken,
+            });
+
+            // Clean the URL query params to keep it clean and prevent reuse
+            try {
+              const cleanUrl = window.location.pathname;
+              window.history.replaceState({}, document.title, cleanUrl);
+            } catch (e) {
+              console.error('Failed to clean URL parameters:', e);
+            }
+
+            try {
+              // Fetch user profile using the new token
+              const freshUser: any = await apiRequest('/auth/profile', 'GET');
+              if (freshUser) {
+                const mappedUser = {
+                  id: freshUser.zaloId || freshUser.id,
+                  name: freshUser.name,
+                  avatar: freshUser.avatar,
+                  role: freshUser.role,
+                  phone: freshUser.phone || '',
+                  email: freshUser.email || '',
+                  birthday: freshUser.birthday || '',
+                  gender: freshUser.gender || '',
+                  totalSpent: freshUser.totalSpent || 0,
+                  membershipTier: freshUser.membershipTier || 'Đồng',
+                };
+                set({ zaloUser: mappedUser });
+                localStorage.setItem('zalo_profile_custom', JSON.stringify(mappedUser));
+                get().fetchCart().catch(console.error);
+                get().fetchFavorites().catch(console.error);
+                return;
+              }
+            } catch (err) {
+              console.error('Failed to login with URL tokens:', err);
+            }
+          }
+        }
+
         const cached = localStorage.getItem('zalo_profile_custom');
         const isRealZaloEnv = typeof window !== 'undefined' && 
           (window.navigator.userAgent.toLowerCase().includes('zalo') || !!(window as any).ZaloMiniApp);

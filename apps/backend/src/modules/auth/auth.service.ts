@@ -293,4 +293,181 @@ export class AuthService {
       };
     }
   }
+
+  // ================= GOOGLE OAUTH =================
+
+  getGoogleAuthUrl(): string {
+    const clientId = process.env.GOOGLE_CLIENT_ID || '';
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI || '';
+    const scope = 'openid profile email';
+    const responseType = 'code';
+    
+    return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&scope=${encodeURIComponent(scope)}`;
+  }
+
+  async handleGoogleCallback(code: string): Promise<string> {
+    const clientId = process.env.GOOGLE_CLIENT_ID || '';
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI || '';
+    const miniAppId = process.env.APP_ID || '3671184609111913737';
+
+    try {
+      // 1. Exchange code for access token
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          code,
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri: redirectUri,
+          grant_type: 'authorization_code',
+        }).toString(),
+      });
+
+      if (!tokenResponse.ok) {
+        const errBody = await tokenResponse.text();
+        throw new Error(`Google token exchange failed: ${errBody}`);
+      }
+
+      const tokenData = await tokenResponse.json() as any;
+      const accessToken = tokenData.access_token;
+
+      // 2. Fetch user profile from Google info endpoint
+      const profileResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      if (!profileResponse.ok) {
+        throw new Error('Failed to fetch user profile from Google');
+      }
+
+      const profileData = await profileResponse.json() as any;
+      const googleId = profileData.sub;
+      const name = profileData.name || 'Google User';
+      const avatar = profileData.picture || '';
+      const email = profileData.email || '';
+
+      const targetZaloId = `google-${googleId}`;
+
+      // 3. Sync user in DB
+      const user = await this.usersService.syncUser(
+        targetZaloId,
+        name,
+        avatar,
+        undefined,
+        undefined,
+        email,
+      );
+
+      if (!user) {
+        throw new Error('Failed to synchronize user in database');
+      }
+
+      // 4. Generate JWT Access and Refresh Tokens
+      const jwtToken = this.jwtService.sign({ sub: targetZaloId, role: user.role });
+      
+      const refreshToken = randomBytes(40).toString('hex');
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30); // 30 days
+      
+      await this.prisma.refreshToken.upsert({
+        where: { token: refreshToken },
+        update: { expiresAt },
+        create: {
+          token: refreshToken,
+          zaloUserId: targetZaloId,
+          expiresAt,
+        },
+      });
+
+      // 5. Redirect back to Zalo Mini App with JWT tokens
+      return `https://zalo.me/s/${miniAppId}/?token=${encodeURIComponent(jwtToken)}&refreshToken=${encodeURIComponent(refreshToken)}`;
+    } catch (e: any) {
+      console.error('[Google OAuth Error]', e);
+      return `https://zalo.me/s/${miniAppId}/?error=${encodeURIComponent(e.message)}`;
+    }
+  }
+
+  // ================= FACEBOOK OAUTH =================
+
+  getFacebookAuthUrl(): string {
+    const appId = process.env.FACEBOOK_APP_ID || '';
+    const redirectUri = process.env.FACEBOOK_REDIRECT_URI || '';
+    const scope = 'public_profile,email';
+    
+    return `https://www.facebook.com/v12.0/dialog/oauth?client_id=${encodeURIComponent(appId)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&response_type=code`;
+  }
+
+  async handleFacebookCallback(code: string): Promise<string> {
+    const appId = process.env.FACEBOOK_APP_ID || '';
+    const appSecret = process.env.FACEBOOK_APP_SECRET || '';
+    const redirectUri = process.env.FACEBOOK_REDIRECT_URI || '';
+    const miniAppId = process.env.APP_ID || '3671184609111913737';
+
+    try {
+      // 1. Exchange code for access token
+      const tokenResponse = await fetch(`https://graph.facebook.com/v12.0/oauth/access_token?client_id=${encodeURIComponent(appId)}&redirect_uri=${encodeURIComponent(redirectUri)}&client_secret=${encodeURIComponent(appSecret)}&code=${encodeURIComponent(code)}`);
+
+      if (!tokenResponse.ok) {
+        const errBody = await tokenResponse.text();
+        throw new Error(`Facebook token exchange failed: ${errBody}`);
+      }
+
+      const tokenData = await tokenResponse.json() as any;
+      const accessToken = tokenData.access_token;
+
+      // 2. Fetch Facebook profile details
+      const profileResponse = await fetch(`https://graph.facebook.com/me?fields=id,name,picture.type(large),email&access_token=${encodeURIComponent(accessToken)}`);
+
+      if (!profileResponse.ok) {
+        throw new Error('Failed to fetch user profile from Facebook');
+      }
+
+      const profileData = await profileResponse.json() as any;
+      const facebookId = profileData.id;
+      const name = profileData.name || 'Facebook User';
+      const avatar = profileData.picture?.data?.url || '';
+      const email = profileData.email || '';
+
+      const targetZaloId = `facebook-${facebookId}`;
+
+      // 3. Sync user in DB
+      const user = await this.usersService.syncUser(
+        targetZaloId,
+        name,
+        avatar,
+        undefined,
+        undefined,
+        email,
+      );
+
+      if (!user) {
+        throw new Error('Failed to synchronize user in database');
+      }
+
+      // 4. Generate JWT Access and Refresh Tokens
+      const jwtToken = this.jwtService.sign({ sub: targetZaloId, role: user.role });
+      
+      const refreshToken = randomBytes(40).toString('hex');
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30); // 30 days
+      
+      await this.prisma.refreshToken.upsert({
+        where: { token: refreshToken },
+        update: { expiresAt },
+        create: {
+          token: refreshToken,
+          zaloUserId: targetZaloId,
+          expiresAt,
+        },
+      });
+
+      // 5. Redirect back to Zalo Mini App with JWT tokens
+      return `https://zalo.me/s/${miniAppId}/?token=${encodeURIComponent(jwtToken)}&refreshToken=${encodeURIComponent(refreshToken)}`;
+    } catch (e: any) {
+      console.error('[Facebook OAuth Error]', e);
+      return `https://zalo.me/s/${miniAppId}/?error=${encodeURIComponent(e.message)}`;
+    }
+  }
 }
