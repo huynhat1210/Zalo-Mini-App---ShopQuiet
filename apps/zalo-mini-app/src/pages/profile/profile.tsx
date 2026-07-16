@@ -1314,59 +1314,102 @@ export const Profile: React.FC<IProfileProps> = (props) => {
           </div>
         </div>
 
-        {/* Social Logins */}
-        <div className="space-y-2 mt-4 mb-4">
-          <button
-            onClick={() => {
-              const loginUrl = `${API_BASE_URL}/auth/google` + (zaloUser?.id ? `?state=${encodeURIComponent(zaloUser.id)}` : '');
-              const apiAny = api as any;
-              if (apiAny && apiAny.openWebview) {
-                apiAny.openWebview({
-                  url: loginUrl,
-                });
-              } else {
-                window.open(loginUrl, '_blank');
-              }
-            }}
-            className="w-full h-11 bg-white border border-[#eae8e6] text-textColor font-bold text-xs uppercase tracking-wider rounded-2xl hover:bg-neutral-50 transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-          >
-            <svg className="w-4.5 h-4.5" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.69c-.29 1.5-1.14 2.77-2.4 3.61v3h3.86c2.26-2.09 3.59-5.17 3.59-8.46z" />
-              <path fill="#34A853" d="M12 24c3.24 0 5.97-1.08 7.96-2.91l-3.86-3c-1.08.72-2.45 1.16-4.1 1.16-3.15 0-5.81-2.13-6.76-5.01H1.27v3.1C3.25 21.27 7.37 24 12 24z" />
-              <path fill="#FBBC05" d="M5.24 14.24a7.16 7.16 0 0 1 0-4.48v-3.1H1.27a11.96 11.96 0 0 0 0 10.68l3.97-3.1z" />
-              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.25 2.73 1.27 6.66l3.97 3.1c.95-2.88 3.61-5.01 6.76-5.01z" />
-            </svg>
-            <span>{zaloUser?.googleId ? 'Đã liên kết Google' : 'Đăng nhập với Google'}</span>
-          </button>
+        {/* Section: Liên kết tài khoản */}
+        <div className="space-y-2.5">
+          <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-2">Liên kết tài khoản</h3>
+          <div className="bg-white rounded-2xl border border-[#f0edeb] overflow-hidden shadow-xs divide-y divide-[#f0edeb]">
+            {/* Google Row */}
+            <button
+              onClick={() => {
+                if (zaloUser?.googleId) return; // Already linked, do nothing
+                const loginUrl = `${API_BASE_URL}/auth/google` + (zaloUser?.id ? `?state=${encodeURIComponent(zaloUser.id)}` : '');
+                const apiAny = api as any;
+                // Use openExternalBrowser to bypass Google's disallowed_useragent policy
+                if (apiAny && apiAny.openExternalBrowser) {
+                  apiAny.openExternalBrowser({ url: loginUrl });
+                } else if (apiAny && apiAny.openInWebview) {
+                  apiAny.openInWebview({ url: loginUrl });
+                } else {
+                  window.open(loginUrl, '_blank');
+                }
+              }}
+              disabled={!!zaloUser?.googleId}
+              className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer disabled:cursor-default"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4.5 h-4.5" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.69c-.29 1.5-1.14 2.77-2.4 3.61v3h3.86c2.26-2.09 3.59-5.17 3.59-8.46z" />
+                    <path fill="#34A853" d="M12 24c3.24 0 5.97-1.08 7.96-2.91l-3.86-3c-1.08.72-2.45 1.16-4.1 1.16-3.15 0-5.81-2.13-6.76-5.01H1.27v3.1C3.25 21.27 7.37 24 12 24z" />
+                    <path fill="#FBBC05" d="M5.24 14.24a7.16 7.16 0 0 1 0-4.48v-3.1H1.27a11.96 11.96 0 0 0 0 10.68l3.97-3.1z" />
+                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.25 2.73 1.27 6.66l3.97 3.1c.95-2.88 3.61-5.01 6.76-5.01z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-semibold text-textColor text-xs">Google</p>
+                  <p className="text-[10px] text-[#526069]/60 mt-0.5">
+                    {zaloUser?.googleId ? 'Đã liên kết' : 'Chưa liên kết'}
+                  </p>
+                </div>
+              </div>
+              {zaloUser?.googleId ? (
+                <span className="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2.5 py-1 rounded-full">✓ Đã liên kết</span>
+              ) : (
+                <span className="text-[10px] font-bold text-primary bg-primary/8 px-2.5 py-1 rounded-full">Liên kết</span>
+              )}
+            </button>
 
-          <button
-            onClick={() => {
-              const loginUrl = `${API_BASE_URL}/auth/facebook` + (zaloUser?.id ? `?state=${encodeURIComponent(zaloUser.id)}` : '');
-              const apiAny = api as any;
-              if (apiAny && apiAny.openWebview) {
-                apiAny.openWebview({
-                  url: loginUrl,
-                });
-              } else {
-                window.open(loginUrl, '_blank');
-              }
-            }}
-            className="w-full h-11 bg-[#1877F2] text-white border-none font-bold text-xs uppercase tracking-wider rounded-2xl hover:bg-[#166FE5] transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-          >
-            <svg className="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z" />
-            </svg>
-            <span>{zaloUser?.facebookId ? 'Đã liên kết Facebook' : 'Đăng nhập với Facebook'}</span>
-          </button>
+            {/* Facebook Row */}
+            <button
+              onClick={() => {
+                if (zaloUser?.facebookId) return; // Already linked, do nothing
+                const loginUrl = `${API_BASE_URL}/auth/facebook` + (zaloUser?.id ? `?state=${encodeURIComponent(zaloUser.id)}` : '');
+                const apiAny = api as any;
+                if (apiAny && apiAny.openExternalBrowser) {
+                  apiAny.openExternalBrowser({ url: loginUrl });
+                } else if (apiAny && apiAny.openInWebview) {
+                  apiAny.openInWebview({ url: loginUrl });
+                } else {
+                  window.open(loginUrl, '_blank');
+                }
+              }}
+              disabled={!!zaloUser?.facebookId}
+              className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer disabled:cursor-default"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-[#1877F2]/10 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4.5 h-4.5 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-semibold text-textColor text-xs">Facebook</p>
+                  <p className="text-[10px] text-[#526069]/60 mt-0.5">
+                    {zaloUser?.facebookId ? 'Đã liên kết' : 'Chưa liên kết'}
+                  </p>
+                </div>
+              </div>
+              {zaloUser?.facebookId ? (
+                <span className="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2.5 py-1 rounded-full">✓ Đã liên kết</span>
+              ) : (
+                <span className="text-[10px] font-bold text-[#1877F2] bg-[#1877F2]/8 px-2.5 py-1 rounded-full">Liên kết</span>
+              )}
+            </button>
+          </div>
         </div>
 
-        {/* Logout Button */}
-        <button
-          onClick={handleLogout}
-          className="w-full h-11 bg-white border border-[#eae8e6] text-red-500 font-extrabold text-xs uppercase tracking-wider rounded-2xl hover:bg-red-50 transition-all flex items-center justify-center shadow-xs cursor-pointer"
-        >
-          Đăng xuất tài khoản
-        </button>
+        {/* Logout Button - Prominent at bottom */}
+        <div className="pt-2 pb-6">
+          <button
+            onClick={handleLogout}
+            className="w-full py-3.5 bg-red-50 border border-red-100 text-red-500 font-extrabold text-xs uppercase tracking-wider rounded-2xl hover:bg-red-100 active:scale-98 transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+            </svg>
+            Đăng xuất tài khoản
+          </button>
+        </div>
       </div>
 
       {/* MODALS RENDER SECTION */}
