@@ -265,8 +265,16 @@ export const useAppStore = create<IAppState>()(
 
           if (parsed?.name && parsed.name !== 'Alex Johnson' && !(isRealZaloEnv && isMockId) && parsed.avatar && parsed.avatar !== '') {
             set({ zaloUser: parsed });
-            if (parsed.id) {
-              // Login to get tokens and fresh profile details
+            get().fetchCart().catch(console.error);
+            get().fetchFavorites().catch(console.error);
+
+            if (isRealZaloEnv) {
+              // Real Zalo App: we show the cached profile immediately for fast load,
+              // but we do NOT return early. We fall through to verify and update the profile
+              // against the real Zalo SDK in the background.
+              console.log('[Zalo Auth] Cached profile set. Verifying with Zalo SDK in background.');
+            } else {
+              // Web browser / Mock environment: login with cache and exit early
               try {
                 let zaloToken = '';
                 const apiAny = api as any;
@@ -312,15 +320,14 @@ export const useAppStore = create<IAppState>()(
                 };
                 set({ zaloUser: mappedUser });
                 localStorage.setItem('zalo_profile_custom', JSON.stringify(mappedUser));
-                get().fetchCart().catch(console.error);
-                get().fetchFavorites().catch(console.error);
               } catch (error) {
                 console.error('Login failed:', error);
               }
+              return;
             }
-            return;
+          } else {
+            localStorage.removeItem('zalo_profile_custom');
           }
-          localStorage.removeItem('zalo_profile_custom');
         }
 
         const fallbackMockUser = () => {
