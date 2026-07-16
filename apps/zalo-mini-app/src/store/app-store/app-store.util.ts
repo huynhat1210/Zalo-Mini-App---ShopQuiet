@@ -371,12 +371,6 @@ export const useAppStore = create<IAppState>()(
             apiAny.getUserInfo({
               autoRequestPermission: true,
               success: async (data: any) => {
-                try {
-                  api.showToast({
-                    message: `Zalo trả về: ${JSON.stringify(data).slice(0, 100)}`
-                  });
-                } catch (e) {}
-
                 const info = data?.userInfo || data;
                 const zaloId = info?.id || info?.zaloId || data?.id || data?.zaloId || data?.userInfo?.id;
                 if (zaloId) {
@@ -451,13 +445,6 @@ export const useAppStore = create<IAppState>()(
               },
               fail: (err: any) => {
                 console.warn('getUserInfo failed:', err);
-                try {
-                  api.showToast({
-                    message: `Lỗi lấy thông tin Zalo: ${JSON.stringify(err)}`
-                  });
-                } catch (e) {
-                  // ignore
-                }
                 fallbackMockUser();
               },
             });
@@ -472,11 +459,6 @@ export const useAppStore = create<IAppState>()(
                 },
                 fail: (err: any) => {
                   console.warn('authorize scope.userInfo failed:', err);
-                  try {
-                    api.showToast({
-                      message: `Lỗi xin quyền Zalo: ${JSON.stringify(err)}`
-                    });
-                  } catch (e) {}
                   doUserInfo();
                 }
               });
@@ -490,11 +472,6 @@ export const useAppStore = create<IAppState>()(
               success: requestPermissionAndFetch,
               fail: (err: any) => {
                 console.warn('login failed:', err);
-                try {
-                  api.showToast({
-                    message: `Lỗi Đăng nhập Zalo: ${JSON.stringify(err)}`
-                  });
-                } catch (e) {}
                 fallbackMockUser();
               }
             });

@@ -22,23 +22,52 @@ export class FavoritesService {
       throw new NotFoundException('Sản phẩm không tồn tại');
     }
 
-    // Upsert favorite
-    return this.prisma.favorite.upsert({
+    // Check if already favorited
+    const existing = await this.prisma.favorite.findUnique({
       where: {
         zaloUserId_productId: { zaloUserId, productId },
       },
-      update: {},
-      create: { zaloUserId, productId },
     });
+
+    if (!existing) {
+      // Increment likeCount on Product and create Favorite
+      await this.prisma.$transaction([
+        this.prisma.favorite.create({
+          data: { zaloUserId, productId },
+        }),
+        this.prisma.product.update({
+          where: { id: productId },
+          data: { likeCount: { increment: 1 } },
+        }),
+      ]);
+    }
+
+    return { success: true };
   }
 
   async remove(zaloUserId: string, productId: number) {
     try {
-      await this.prisma.favorite.delete({
+      // Check if favorited
+      const existing = await this.prisma.favorite.findUnique({
         where: {
           zaloUserId_productId: { zaloUserId, productId },
         },
       });
+
+      if (existing) {
+        // Decrement likeCount on Product and delete Favorite
+        await this.prisma.$transaction([
+          this.prisma.favorite.delete({
+            where: {
+              zaloUserId_productId: { zaloUserId, productId },
+            },
+          }),
+          this.prisma.product.update({
+            where: { id: productId },
+            data: { likeCount: { decrement: 1 } },
+          }),
+        ]);
+      }
       return { success: true };
     } catch {
       // If it doesn't exist, ignore error or return success

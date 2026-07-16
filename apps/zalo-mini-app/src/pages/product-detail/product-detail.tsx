@@ -13,8 +13,13 @@ const BoxCast = Box as any;
 
 export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
   const { product, onClose, onAddToCart } = props;
-  const { toggleSavedItem, isSavedItem, setActiveTab, showToast, setBuyNowItem, setSelectedProductDetail, cart, savedItems } = useCart();
+  const { toggleSavedItem, isSavedItem, setActiveTab, showToast, setBuyNowItem, setSelectedProductDetail, cart, savedItems, setIsCartOpen } = useCart();
   const [quantity, setQuantity] = useState(1);
+  const [likeCount, setLikeCount] = useState(product.likeCount || 0);
+
+  useEffect(() => {
+    setLikeCount(product.likeCount || 0);
+  }, [product.id, product.likeCount]);
   
   // Accordion toggle states
   const [expandedSection, setExpandedSection] = useState<string | null>('materials');
@@ -177,7 +182,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
           <button
             onClick={() => {
               onClose();
-              setActiveTab('cart');
+              setIsCartOpen(true);
             }}
             className="relative w-10 h-10 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center text-white active:scale-95 transition-all border-none cursor-pointer"
           >
@@ -230,6 +235,11 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
             <button
               onClick={() => {
                 toggleSavedItem(product);
+                if (isLiked) {
+                  setLikeCount(prev => Math.max(0, prev - 1));
+                } else {
+                  setLikeCount(prev => prev + 1);
+                }
                 showToast(isLiked ? `Đã bỏ lưu ${product.name}` : `Đã lưu ${product.name}`, 'success');
               }}
               className="flex items-center gap-1 ml-auto border-none bg-transparent"
@@ -239,7 +249,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
               ) : (
                 <HeartOutline className="w-4 h-4 text-textColor-variant" />
               )}
-              <span className="text-textColor-variant">{product.likeCount || 0}</span>
+              <span className="text-textColor-variant">{likeCount}</span>
             </button>
           </div>
         </div>
