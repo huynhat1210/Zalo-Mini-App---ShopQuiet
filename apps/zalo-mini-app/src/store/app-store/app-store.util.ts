@@ -315,6 +315,13 @@ export const useAppStore = create<IAppState>()(
             },
             fail: (err: any) => {
               console.warn('getUserInfo failed:', err);
+              try {
+                api.showToast({
+                  message: 'Đăng nhập thất bại. Vui lòng cho phép quyền truy cập thông tin để sử dụng đầy đủ tính năng!',
+                });
+              } catch (e) {
+                console.error('Failed to show permission toast:', e);
+              }
             },
           });
         }
