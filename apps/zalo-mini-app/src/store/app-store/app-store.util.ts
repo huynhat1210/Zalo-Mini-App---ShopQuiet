@@ -440,7 +440,8 @@ export const useAppStore = create<IAppState>()(
                 console.warn('getUserInfo failed:', err);
                 try {
                   api.showToast({
-                    message: 'Vui lòng cấp quyền để có trải nghiệm tốt nhất!',
+                    message: `Lỗi lấy thông tin Zalo: ${JSON.stringify(err)}`,
+                    type: 'warning'
                   });
                 } catch (e) {
                   // ignore
@@ -459,6 +460,12 @@ export const useAppStore = create<IAppState>()(
                 },
                 fail: (err: any) => {
                   console.warn('authorize scope.userInfo failed:', err);
+                  try {
+                    api.showToast({
+                      message: `Lỗi xin quyền Zalo: ${JSON.stringify(err)}`,
+                      type: 'warning'
+                    });
+                  } catch (e) {}
                   doUserInfo();
                 }
               });
@@ -472,6 +479,12 @@ export const useAppStore = create<IAppState>()(
               success: requestPermissionAndFetch,
               fail: (err: any) => {
                 console.warn('login failed:', err);
+                try {
+                  api.showToast({
+                    message: `Lỗi Đăng nhập Zalo: ${JSON.stringify(err)}`,
+                    type: 'warning'
+                  });
+                } catch (e) {}
                 fallbackMockUser();
               }
             });
