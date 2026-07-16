@@ -27,9 +27,14 @@ export class UsersService {
       ? existingUser.role 
       : (zaloId.toLowerCase() === 'admin' || zaloId.toLowerCase() === 'admin-zalo-id-1' ? 'admin' : 'user');
 
-    // If they already have a name/avatar in the DB, preserve it if the incoming values are empty/null
-    const finalName = existingUser?.name ? existingUser.name : name;
-    const finalAvatar = (avatar && avatar !== '') ? avatar : (existingUser?.avatar || '');
+    // If they already have a name/avatar in the DB, preserve it unless the incoming name/avatar is a real Zalo profile (not default guest)
+    const finalName = (name && name !== '' && name !== 'Người dùng Zalo' && name !== 'Khách')
+      ? name 
+      : (existingUser?.name || name || 'Người dùng Zalo');
+
+    const finalAvatar = (avatar && avatar !== '' && !avatar.includes('emoticon/avatar')) 
+      ? avatar 
+      : (existingUser?.avatar || avatar || 'https://zalo-api.zdn.vn/api/emoticon/avatar');
 
     // First upsert to make sure user exists in DB
     const user = await this.prisma.user.upsert({
