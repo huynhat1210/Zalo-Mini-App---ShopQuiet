@@ -44,6 +44,7 @@ export const useAppStore = create<IAppState>()(
             phone: user.phone || undefined,
             birthday: user.birthday || undefined,
             email: user.email || undefined,
+            gender: user.gender || undefined,
           }).then((freshUser: any) => {
             if (freshUser) {
               const mappedUser = {
@@ -54,6 +55,7 @@ export const useAppStore = create<IAppState>()(
                 phone: freshUser.phone || '',
                 email: freshUser.email || '',
                 birthday: freshUser.birthday || '',
+                gender: freshUser.gender || '',
                 totalSpent: freshUser.totalSpent || 0,
                 membershipTier: freshUser.membershipTier || 'Đồng',
               };
@@ -74,6 +76,7 @@ export const useAppStore = create<IAppState>()(
             phone: currentUser.phone || undefined,
             birthday: currentUser.birthday || undefined,
             email: currentUser.email || undefined,
+            gender: currentUser.gender || undefined,
           });
           if (freshUser) {
             const mappedUser = {
@@ -84,6 +87,7 @@ export const useAppStore = create<IAppState>()(
               phone: freshUser.phone || '',
               email: freshUser.email || '',
               birthday: freshUser.birthday || '',
+              gender: freshUser.gender || '',
               totalSpent: freshUser.totalSpent || 0,
               membershipTier: freshUser.membershipTier || 'Đồng',
             };
@@ -190,7 +194,7 @@ export const useAppStore = create<IAppState>()(
           const parsed = JSON.parse(cached);
           const isMockId = parsed?.id === 'cust-zalo-id-1' || (parsed?.id && String(parsed.id).startsWith('mock_'));
 
-          if (parsed?.name && parsed.name !== 'Alex Johnson' && !(isRealZaloEnv && isMockId)) {
+          if (parsed?.name && parsed.name !== 'Alex Johnson' && !(isRealZaloEnv && isMockId) && parsed.avatar && parsed.avatar !== '') {
             set({ zaloUser: parsed });
             if (parsed.id) {
               // Login to get tokens and fresh profile details
@@ -289,6 +293,7 @@ export const useAppStore = create<IAppState>()(
                     phone: authData.user.phone || '',
                     email: authData.user.email || '',
                     birthday: authData.user.birthday || '',
+                    gender: authData.user.gender || '',
                     totalSpent: authData.user.totalSpent || 0,
                     membershipTier: authData.user.membershipTier || 'Đồng',
                   };
@@ -306,6 +311,7 @@ export const useAppStore = create<IAppState>()(
                     phone: '',
                     email: '',
                     birthday: '',
+                    gender: '',
                   };
                   set({ zaloUser: user });
                   localStorage.setItem('zalo_profile_custom', JSON.stringify(user));

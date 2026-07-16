@@ -71,6 +71,7 @@ export interface IZaloUser {
   birthday?: string;
   phone?: string;
   email?: string;
+  gender?: string;
   totalSpent?: number;
   membershipTier?: string;
 }

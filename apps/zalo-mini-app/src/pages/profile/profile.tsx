@@ -236,6 +236,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     avatar: zaloUser?.avatar || cmsSettings['profile.defaultAvatar'] || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
     zaloId: zaloUser?.id || 'cust-zalo-id-1',
     birthday: zaloUser?.birthday || '',
+    gender: zaloUser?.gender || '',
   };
 
   const handleSelectAddress = async (id: number) => {
@@ -255,6 +256,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
   const [editPhone, setEditPhone] = useState(zaloUser?.phone || '');
   const [editEmail, setEditEmail] = useState(zaloUser?.email || '');
   const [editBirthday, setEditBirthday] = useState(zaloUser?.birthday || '');
+  const [editGender, setEditGender] = useState(zaloUser?.gender || '');
 
   // Birthday split state for 3-select picker
   const parseBirthday = (val: string) => {
@@ -284,6 +286,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     setEditPhone(zaloUser?.phone || '');
     setEditEmail(zaloUser?.email || '');
     setEditBirthday(zaloUser?.birthday || '');
+    setEditGender(zaloUser?.gender || '');
   }, [zaloUser]);
 
   // Auto-fetch phone from Zalo when edit profile modal opens and phone is empty
@@ -1122,6 +1125,12 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                     : 'Chưa cập nhật ngày sinh'}
                 </span>
               </p>
+              <p className="flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 opacity-75" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.109A12.018 12.018 0 0112 21.25c-2.033 0-3.92-.502-5.578-1.391M12 21.25a12.01 12.01 0 01-5.578-1.391m0 0a9.37 9.37 0 012.625-.372 9.337 9.337 0 014.121-.952 4.125 4.125 0 00-7.533-2.493M4.5 19.128v-.003c0-1.113.285-2.16.786-3.07M15 7.5a3 3 0 11-6 0 3 3 0 016 0zm6 2.25a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                </svg>
+                <span>{profile.gender ? `Giới tính: ${profile.gender}` : 'Chưa cập nhật giới tính'}</span>
+              </p>
             </div>
           </div>
         </div>
@@ -1390,6 +1399,20 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                   </select>
                 </div>
               </div>
+
+              <div>
+                <label className="text-[9px] font-extrabold text-textColor-variant uppercase tracking-wider block mb-1">Giới tính</label>
+                <select
+                  value={editGender}
+                  onChange={(e) => setEditGender(e.target.value)}
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor"
+                >
+                  <option value="">Chọn giới tính</option>
+                  <option value="Nam">Nam</option>
+                  <option value="Nữ">Nữ</option>
+                  <option value="Khác">Khác</option>
+                </select>
+              </div>
             </div>
 
             <div className="flex gap-3 pt-2">
@@ -1402,6 +1425,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                     phone: editPhone,
                     email: editEmail,
                     birthday: editBirthday,
+                    gender: editGender,
                   });
                   setIsEditProfileOpen(false);
                   showToast('Cập nhật thông tin thành công!', 'success');
