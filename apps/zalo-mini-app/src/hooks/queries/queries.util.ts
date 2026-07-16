@@ -41,7 +41,8 @@ export function useNotifications(zaloUserId?: string) {
   return useQuery({
     queryKey: ['notifications', zaloUserId || 'guest'],
     queryFn: () => apiRequest<INotification[]>('/notifications'),
-    refetchInterval: 5000, // Poll every 5 seconds
+    refetchInterval: zaloUserId ? 5000 : false, // Only poll if logged in
+    enabled: !!zaloUserId, // Only run the query if a user is logged in
   });
 }
 

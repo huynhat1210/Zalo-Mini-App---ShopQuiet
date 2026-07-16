@@ -28,7 +28,7 @@ export interface IAppState {
   updateItemSize: (productId: number, oldSize: string, newSize: string) => void;
   toggleSavedItem: (product: IProduct) => void;
   isSavedItem: (productId: number) => boolean;
-  syncUserFromStorage: () => Promise<void>;
+  syncUserFromStorage: (force?: boolean) => Promise<void>;
   refreshZaloProfile: () => Promise<void>;
   fetchFavorites: () => Promise<void>;
   fetchCart: () => Promise<void>;

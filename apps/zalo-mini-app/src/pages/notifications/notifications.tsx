@@ -10,7 +10,7 @@ const PageCast = Page as any;
 
 
 export const Notifications: React.FC<INotificationsProps> = (_props) => {
-  const { setActiveTab, showToast, setSelectedOrder, notifications, setNotifications, fetchNotifications } = useCart();
+  const { setActiveTab, showToast, setSelectedOrder, notifications, setNotifications, fetchNotifications, zaloUser, syncUserFromStorage } = useCart();
   const [activeCategory, setActiveCategory] = useState<'order' | 'system'>('order');
   const queryClient = useQueryClient();
 
@@ -27,8 +27,41 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
   };
 
   useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+    if (zaloUser?.id) {
+      fetchNotifications();
+    }
+  }, [fetchNotifications, zaloUser?.id]);
+
+  // Show login screen if user is not logged in
+  if (!zaloUser) {
+    return (
+      <PageCast className="bg-[#f7f7f7] relative flex flex-col w-full h-full overscroll-none scrollbar-none">
+        <div className="flex-1 flex flex-col items-center justify-center px-8 py-16 text-center">
+          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+            <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0M3.124 7.5A8.969 8.969 0 005.292 3m13.416 4.5A8.969 8.969 0 0118.708 3M9 1v1.5M12 1v1.5M15 1v1.5" />
+            </svg>
+          </div>
+
+          <h2 className="text-base font-black text-textColor mb-2">Chưa đăng nhập</h2>
+          <p className="text-xs text-[#526069]/70 leading-relaxed mb-8">
+            Đăng nhập để nhận thông báo mới nhất<br />về đơn hàng và ưu đãi dành riêng cho bạn.
+          </p>
+
+          <button
+            onClick={() => syncUserFromStorage(true)}
+            className="w-full max-w-xs h-12 bg-[#0068FF] text-white font-bold text-sm rounded-2xl hover:bg-blue-700 active:scale-98 transition-all flex items-center justify-center gap-2.5 shadow-md cursor-pointer border-none"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <rect width="24" height="24" rx="6" fill="white"/>
+              <path d="M6 8.5C6 8.5 10.5 8.5 13.5 8.5L6.5 15.5H18" stroke="#0068FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Đăng nhập với Zalo
+          </button>
+        </div>
+      </PageCast>
+    );
+  }
 
 
   const handleMarkAllRead = async () => {

@@ -194,13 +194,15 @@ export const useAppStore = create<IAppState>()(
         }
       },
       isSavedItem: (productId) => get().savedItems.some((item) => item.id === productId),
-      syncUserFromStorage: async () => {
+      syncUserFromStorage: async (force = false) => {
         // Throttle to prevent repeated getUserInfo calls (Zalo SDK -1409 rate limit)
         const now = Date.now();
-        if (now - lastSyncAttempt < SYNC_THROTTLE_MS) {
+        if (!force && now - lastSyncAttempt < SYNC_THROTTLE_MS) {
           return;
         }
-        lastSyncAttempt = now;
+        if (!force) {
+          lastSyncAttempt = now;
+        }
 
         // Check if JWT tokens are present in URL query params (Google/Facebook OAuth return redirect)
         if (typeof window !== 'undefined') {

@@ -1089,7 +1089,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
 
           {/* Login with Zalo button */}
           <button
-            onClick={() => syncUserFromStorage()}
+            onClick={() => syncUserFromStorage(true)}
             className="w-full max-w-xs h-12 bg-[#0068FF] text-white font-bold text-sm rounded-2xl hover:bg-blue-700 active:scale-98 transition-all flex items-center justify-center gap-2.5 shadow-md cursor-pointer border-none"
           >
             {/* Proper Zalo Z icon */}
