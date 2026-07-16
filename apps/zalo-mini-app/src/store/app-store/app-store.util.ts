@@ -450,16 +450,33 @@ export const useAppStore = create<IAppState>()(
             });
           };
 
+          const requestPermissionAndFetch = () => {
+            if (apiAny.authorize) {
+              apiAny.authorize({
+                scopes: ['scope.userInfo'],
+                success: () => {
+                  doUserInfo();
+                },
+                fail: (err: any) => {
+                  console.warn('authorize scope.userInfo failed:', err);
+                  doUserInfo();
+                }
+              });
+            } else {
+              doUserInfo();
+            }
+          };
+
           if (apiAny.login) {
             apiAny.login({
-              success: doUserInfo,
+              success: requestPermissionAndFetch,
               fail: (err: any) => {
                 console.warn('login failed:', err);
                 fallbackMockUser();
               }
             });
           } else {
-            doUserInfo();
+            requestPermissionAndFetch();
           }
         } else {
           fallbackMockUser();
