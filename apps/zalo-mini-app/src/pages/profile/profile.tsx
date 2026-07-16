@@ -231,11 +231,11 @@ export const Profile: React.FC<IProfileProps> = (props) => {
 
   // Profile details dynamically linked to Zalo User Auth
   const profile = {
-    name: zaloUser?.name || cmsSettings['profile.defaultName'] || '',
-    phone: zaloUser?.phone || cmsSettings['profile.defaultPhone'] || '',
-    email: zaloUser?.email || cmsSettings['profile.defaultEmail'] || '',
-    avatar: zaloUser?.avatar || cmsSettings['profile.defaultAvatar'] || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-    zaloId: zaloUser?.id || 'cust-zalo-id-1',
+    name: zaloUser?.name || '',
+    phone: zaloUser?.phone || '',
+    email: zaloUser?.email || '',
+    avatar: zaloUser?.avatar || '',
+    zaloId: zaloUser?.id || '',
     birthday: zaloUser?.birthday || '',
     gender: zaloUser?.gender || '',
   };
@@ -353,13 +353,15 @@ export const Profile: React.FC<IProfileProps> = (props) => {
       const active = fetched.find(a => a.isDefault) || fetched[0];
       if (active) {
         setActiveAddressId(active.id.toString());
-        const userId = zaloUser?.id || 'cust-zalo-id-1';
-        localStorage.setItem(`shipping_address_${userId}`, JSON.stringify({
-          name: zaloUser?.name || 'Alex Johnson',
-          street: active.street,
-          city: active.city,
-          phone: active.phone
-        }));
+        const userId = zaloUser?.id || '';
+        if (userId) {
+          localStorage.setItem(`shipping_address_${userId}`, JSON.stringify({
+            name: zaloUser?.name || '',
+            street: active.street,
+            city: active.city,
+            phone: active.phone
+          }));
+        }
       } else {
         setActiveAddressId('');
       }
@@ -1059,6 +1061,39 @@ export const Profile: React.FC<IProfileProps> = (props) => {
           </div>
         )}
 
+      </PageCast>
+    );
+  }
+
+  // Show login screen if user is not logged in (after logout or first visit)
+  if (!zaloUser) {
+    return (
+      <PageCast className="bg-[#f7f7f7] relative flex flex-col w-full h-full overscroll-none scrollbar-none">
+        <div className="flex-1 flex flex-col items-center justify-center px-8 py-16 text-center">
+          {/* Icon */}
+          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+            <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            </svg>
+          </div>
+
+          <h2 className="text-base font-black text-textColor mb-2">Chưa đăng nhập</h2>
+          <p className="text-xs text-[#526069]/70 leading-relaxed mb-8">
+            Đăng nhập để xem thông tin cá nhân,<br />theo dõi đơn hàng và yêu thích.
+          </p>
+
+          {/* Login with Zalo button */}
+          <button
+            onClick={() => refreshZaloProfile()}
+            className="w-full max-w-xs h-12 bg-[#0068FF] text-white font-bold text-sm rounded-2xl hover:bg-blue-700 active:scale-98 transition-all flex items-center justify-center gap-3 shadow-md cursor-pointer border-none mb-3"
+          >
+            <svg width="22" height="22" viewBox="0 0 50 50" fill="none">
+              <rect width="50" height="50" rx="12" fill="white"/>
+              <text x="7" y="36" fontSize="28" fontWeight="bold" fill="#0068FF">Z</text>
+            </svg>
+            Đăng nhập với Zalo
+          </button>
+        </div>
       </PageCast>
     );
   }
