@@ -3,11 +3,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Page } from 'zmp-ui';
+import { openWebview } from 'zmp-sdk/apis';
 import { useCart, IProduct, IOrder } from '../../App';
 import { apiRequest, API_BASE_URL } from '../../utils/api';
 import { EmptyStateComponent } from '../../components';
 import { IProfileProps } from './profile.type';
-import api from 'zmp-sdk';
 
 const PageCast = Page as any;
 
@@ -465,9 +465,10 @@ export const Profile: React.FC<IProfileProps> = (props) => {
   const handleLogout = async () => {
     await logout();
     showToast('Đã đăng xuất tài khoản!', 'info');
+    // Navigate to home tab instead of window.location.reload() which crashes in Zalo WebView
     setTimeout(() => {
-      window.location.reload();
-    }, 1500);
+      setActiveTab('home');
+    }, 800);
   };
 
   const activeOrdersList = orders.filter(
@@ -1321,17 +1322,9 @@ export const Profile: React.FC<IProfileProps> = (props) => {
             {/* Google Row */}
             <button
               onClick={() => {
-                if (zaloUser?.googleId) return; // Already linked, do nothing
+                if (zaloUser?.googleId) return;
                 const loginUrl = `${API_BASE_URL}/auth/google` + (zaloUser?.id ? `?state=${encodeURIComponent(zaloUser.id)}` : '');
-                const apiAny = api as any;
-                // Use openExternalBrowser to bypass Google's disallowed_useragent policy
-                if (apiAny && apiAny.openExternalBrowser) {
-                  apiAny.openExternalBrowser({ url: loginUrl });
-                } else if (apiAny && apiAny.openInWebview) {
-                  apiAny.openInWebview({ url: loginUrl });
-                } else {
-                  window.open(loginUrl, '_blank');
-                }
+                openWebview({ url: loginUrl });
               }}
               disabled={!!zaloUser?.googleId}
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer disabled:cursor-default"
@@ -1362,16 +1355,9 @@ export const Profile: React.FC<IProfileProps> = (props) => {
             {/* Facebook Row */}
             <button
               onClick={() => {
-                if (zaloUser?.facebookId) return; // Already linked, do nothing
+                if (zaloUser?.facebookId) return;
                 const loginUrl = `${API_BASE_URL}/auth/facebook` + (zaloUser?.id ? `?state=${encodeURIComponent(zaloUser.id)}` : '');
-                const apiAny = api as any;
-                if (apiAny && apiAny.openExternalBrowser) {
-                  apiAny.openExternalBrowser({ url: loginUrl });
-                } else if (apiAny && apiAny.openInWebview) {
-                  apiAny.openInWebview({ url: loginUrl });
-                } else {
-                  window.open(loginUrl, '_blank');
-                }
+                openWebview({ url: loginUrl });
               }}
               disabled={!!zaloUser?.facebookId}
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer disabled:cursor-default"
