@@ -18,6 +18,7 @@ describe('AuthService', () => {
     createdAt: new Date(),
     updatedAt: new Date(),
     birthday: '',
+    gender: null,
     phone: '',
     email: '',
     totalSpent: 0,

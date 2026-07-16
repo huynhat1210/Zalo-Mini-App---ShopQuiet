@@ -72,8 +72,8 @@ describe('UsersService', () => {
       expect(result).toEqual(mockUser);
       expect(prismaService.user.upsert).toHaveBeenCalledWith({
         where: { zaloId: '123456' },
-        update: { name: 'Test User', avatar: 'avatar.jpg', role: 'user' },
-        create: { zaloId: '123456', name: 'Test User', avatar: 'avatar.jpg', phone: undefined, birthday: undefined, email: undefined, role: 'user' },
+        update: { name: 'Test User', avatar: 'avatar.jpg', role: 'user', gender: undefined },
+        create: { zaloId: '123456', name: 'Test User', avatar: 'avatar.jpg', phone: undefined, birthday: undefined, email: undefined, gender: undefined, role: 'user' },
       });
     });
 
@@ -84,8 +84,8 @@ describe('UsersService', () => {
       expect(result).toEqual(mockUser);
       expect(prismaService.user.upsert).toHaveBeenCalledWith({
         where: { zaloId: '123456' },
-        update: { name: 'Test User', avatar: 'new-avatar.jpg', role: 'user' },
-        create: { zaloId: '123456', name: 'Updated Name', avatar: 'new-avatar.jpg', phone: undefined, birthday: undefined, email: undefined, role: 'user' },
+        update: { name: 'Test User', avatar: 'new-avatar.jpg', role: 'user', gender: undefined },
+        create: { zaloId: '123456', name: 'Updated Name', avatar: 'new-avatar.jpg', phone: undefined, birthday: undefined, email: undefined, gender: undefined, role: 'user' },
       });
     });
 
@@ -95,8 +95,8 @@ describe('UsersService', () => {
       expect(result).toEqual(mockUser);
       expect(prismaService.user.upsert).toHaveBeenCalledWith({
         where: { zaloId: '123456' },
-        update: { name: 'Test User', avatar: undefined, role: 'user' },
-        create: { zaloId: '123456', name: 'Test User', avatar: undefined, phone: undefined, birthday: undefined, email: undefined, role: 'user' },
+        update: { name: 'Test User', avatar: '', role: 'user', gender: undefined },
+        create: { zaloId: '123456', name: 'Test User', avatar: '', phone: undefined, birthday: undefined, email: undefined, gender: undefined, role: 'user' },
       });
     });
   });

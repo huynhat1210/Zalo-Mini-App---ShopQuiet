@@ -5,10 +5,18 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async syncUser(zaloId: string, name: string, avatar?: string, phone?: string, birthday?: string, email?: string) {
+  async syncUser(
+    zaloId: string,
+    name: string,
+    avatar?: string,
+    phone?: string,
+    birthday?: string,
+    email?: string,
+    gender?: string,
+  ) {
     if (!zaloId) return null;
     
-    console.log('[syncUser Debug] Received parameters:', { zaloId, name, avatar, phone, birthday, email });
+    console.log('[syncUser Debug] Received parameters:', { zaloId, name, avatar, phone, birthday, email, gender });
     
     // Check if the user already exists in the database
     const existingUser = await this.prisma.user.findUnique({
@@ -19,21 +27,23 @@ export class UsersService {
       ? existingUser.role 
       : (zaloId.toLowerCase() === 'admin' || zaloId.toLowerCase() === 'admin-zalo-id-1' ? 'admin' : 'user');
 
-    // If they already have a name in the DB, preserve it (don't let auto-sync overwrite it)
+    // If they already have a name/avatar in the DB, preserve it if the incoming values are empty/null
     const finalName = existingUser?.name ? existingUser.name : name;
+    const finalAvatar = (avatar && avatar !== '') ? avatar : (existingUser?.avatar || '');
 
     // First upsert to make sure user exists in DB
     const user = await this.prisma.user.upsert({
       where: { zaloId },
       update: { 
         name: finalName, 
-        avatar, 
+        avatar: finalAvatar, 
         role, 
         ...(phone !== undefined && { phone }), 
         ...(birthday !== undefined && { birthday }),
-        ...(email !== undefined && { email })
+        ...(email !== undefined && { email }),
+        ...(gender !== undefined && { gender }),
       },
-      create: { zaloId, name, avatar, phone, birthday, email, role },
+      create: { zaloId, name, avatar: finalAvatar, phone, birthday, email, gender, role },
     });
 
     // Sum totalAmount of all COMPLETED and DELIVERED orders

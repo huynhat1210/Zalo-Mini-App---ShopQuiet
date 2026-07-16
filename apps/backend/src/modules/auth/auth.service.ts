@@ -93,7 +93,9 @@ export class AuthService {
       if (zaloProfile) {
         targetZaloId = zaloProfile.zaloId;
         targetName = zaloProfile.name;
-        targetAvatar = zaloProfile.avatar;
+        if (zaloProfile.avatar && zaloProfile.avatar !== '') {
+          targetAvatar = zaloProfile.avatar;
+        }
       } else {
         // Fallback to client-provided parameters if Zalo blocked verification due to server geolocation (-501)
         targetZaloId = zaloId;

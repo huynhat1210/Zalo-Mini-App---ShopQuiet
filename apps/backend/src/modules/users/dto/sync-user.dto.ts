@@ -22,6 +22,10 @@ export class SyncUserDto {
   @IsOptional()
   @IsString()
   email?: string;
+
+  @IsOptional()
+  @IsString()
+  gender?: string;
 }
 
 export class DecryptPhoneDto {

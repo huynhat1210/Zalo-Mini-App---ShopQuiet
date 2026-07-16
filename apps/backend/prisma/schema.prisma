@@ -48,6 +48,7 @@ model User {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   birthday      String?
+  gender        String?
   phone         String?
   email         String?
   totalSpent     Float          @default(0)
