@@ -30,17 +30,20 @@ export class CartService {
     productId: number,
     quantity: number,
     size?: string,
+    color?: string,
     zaloUserId?: string,
   ) {
     const userId = zaloUserId || 'cust-zalo-id-1';
     await this.ensureUserExists(userId);
     const itemSize = size || 'DEFAULT';
+    const itemColor = color || 'DEFAULT';
 
     const existing = await this.prisma.cartItem.findUnique({
       where: {
-        zaloUserId_productId_size: {
+        zaloUserId_productId_color_size: {
           zaloUserId: userId,
           productId,
+          color: itemColor,
           size: itemSize,
         },
       },
@@ -64,6 +67,7 @@ export class CartService {
       data: {
         zaloUserId: userId,
         productId,
+        color: itemColor,
         size: itemSize,
         quantity,
       },
@@ -81,22 +85,25 @@ export class CartService {
     productId: number,
     quantity: number,
     size?: string,
+    color?: string,
     zaloUserId?: string,
   ) {
     const userId = zaloUserId || 'cust-zalo-id-1';
     await this.ensureUserExists(userId);
     const itemSize = size || 'DEFAULT';
+    const itemColor = color || 'DEFAULT';
 
     if (quantity <= 0) {
-      await this.removeFromCart(productId, itemSize, userId);
+      await this.removeFromCart(productId, itemSize, itemColor, userId);
       return null;
     }
 
     return this.prisma.cartItem.upsert({
       where: {
-        zaloUserId_productId_size: {
+        zaloUserId_productId_color_size: {
           zaloUserId: userId,
           productId,
+          color: itemColor,
           size: itemSize,
         },
       },
@@ -104,6 +111,7 @@ export class CartService {
       create: {
         zaloUserId: userId,
         productId,
+        color: itemColor,
         size: itemSize,
         quantity,
       },
@@ -117,10 +125,12 @@ export class CartService {
     });
   }
 
-  async updateItemSize(
+  async updateItemVariant(
     productId: number,
     oldSize?: string,
     newSize?: string,
+    oldColor?: string,
+    newColor?: string,
     zaloUserId?: string,
   ) {
     const userId = zaloUserId || 'cust-zalo-id-1';
@@ -128,15 +138,18 @@ export class CartService {
 
     const fromSize = oldSize || 'DEFAULT';
     const toSize = newSize || 'DEFAULT';
+    const fromColor = oldColor || 'DEFAULT';
+    const toColor = newColor || 'DEFAULT';
 
-    if (fromSize === toSize) {
+    if (fromSize === toSize && fromColor === toColor) {
       return this.getCart(userId);
     }
 
     const targetVariant = await this.prisma.productVariant.findUnique({
       where: {
-        productId_size: {
+        productId_color_size: {
           productId,
+          color: toColor,
           size: toSize,
         },
       },
@@ -153,9 +166,10 @@ export class CartService {
     await this.prisma.$transaction(async (tx) => {
       const oldItem = await tx.cartItem.findUnique({
         where: {
-          zaloUserId_productId_size: {
+          zaloUserId_productId_color_size: {
             zaloUserId: userId,
             productId,
+            color: fromColor,
             size: fromSize,
           },
         },
@@ -165,20 +179,21 @@ export class CartService {
         throw new NotFoundException('Không tìm thấy sản phẩm trong giỏ hàng.');
       }
 
-      const existingNewSize = await tx.cartItem.findUnique({
+      const existingNewVariant = await tx.cartItem.findUnique({
         where: {
-          zaloUserId_productId_size: {
+          zaloUserId_productId_color_size: {
             zaloUserId: userId,
             productId,
+            color: toColor,
             size: toSize,
           },
         },
       });
 
-      if (existingNewSize) {
+      if (existingNewVariant) {
         await tx.cartItem.update({
-          where: { id: existingNewSize.id },
-          data: { quantity: existingNewSize.quantity + oldItem.quantity },
+          where: { id: existingNewVariant.id },
+          data: { quantity: existingNewVariant.quantity + oldItem.quantity },
         });
         await tx.cartItem.delete({ where: { id: oldItem.id } });
         return;
@@ -186,23 +201,25 @@ export class CartService {
 
       await tx.cartItem.update({
         where: { id: oldItem.id },
-        data: { size: toSize },
+        data: { size: toSize, color: toColor },
       });
     });
 
     return this.getCart(userId);
   }
 
-  async removeFromCart(productId: number, size?: string, zaloUserId?: string) {
+  async removeFromCart(productId: number, size?: string, color?: string, zaloUserId?: string) {
     const userId = zaloUserId || 'cust-zalo-id-1';
     await this.ensureUserExists(userId);
     const itemSize = size || 'DEFAULT';
+    const itemColor = color || 'DEFAULT';
 
     return this.prisma.cartItem.delete({
       where: {
-        zaloUserId_productId_size: {
+        zaloUserId_productId_color_size: {
           zaloUserId: userId,
           productId,
+          color: itemColor,
           size: itemSize,
         },
       },

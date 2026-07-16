@@ -74,7 +74,7 @@ export default function App() {
   const removeFromCart = useAppStore((state) => state.removeFromCart);
   const updateQuantity = useAppStore((state) => state.updateQuantity);
   const clearCart = useAppStore((state) => state.clearCart);
-  const updateItemSize = useAppStore((state) => state.updateItemSize);
+  const updateItemVariant = useAppStore((state) => state.updateItemVariant);
   const toggleSavedItem = useAppStore((state) => state.toggleSavedItem);
   const isSavedItem = useAppStore((state) => state.isSavedItem);
   const fetchFavorites = useAppStore((state) => state.fetchFavorites);
@@ -166,7 +166,7 @@ export default function App() {
             removeFromCart,
             updateQuantity,
             clearCart,
-            updateItemSize,
+            updateItemVariant,
             activeTab,
             setActiveTab,
             selectedProductDetail,

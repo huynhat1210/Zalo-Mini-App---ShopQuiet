@@ -11,6 +11,7 @@ export interface CreateOrderItemDto {
   quantity: number;
   price: number;
   size?: string;
+  color?: string;
 }
 
 export interface CreateOrderDto {
@@ -142,12 +143,14 @@ export class OrdersService {
       // 1. Verify stock and decrement for each item
       for (const item of dto.items) {
         const itemSize = item.size || 'DEFAULT';
+        const itemColor = item.color || 'DEFAULT';
 
         // Find variant
         const variant = await tx.productVariant.findUnique({
           where: {
-            productId_size: {
+            productId_color_size: {
               productId: item.productId,
+              color: itemColor,
               size: itemSize,
             },
           },
@@ -158,13 +161,13 @@ export class OrdersService {
 
         if (!variant) {
           throw new BadRequestException(
-            `Không tìm thấy size ${itemSize} cho sản phẩm ID ${item.productId}`,
+            `Không tìm thấy phân loại ${itemColor} - ${itemSize} cho sản phẩm ID ${item.productId}`,
           );
         }
 
         if (variant.stock < item.quantity) {
           throw new BadRequestException(
-            `Sản phẩm ${variant.product.name} (Size: ${itemSize}) chỉ còn ${variant.stock} sản phẩm trong kho.`,
+            `Sản phẩm ${variant.product.name} (Phân loại: ${itemColor} - ${itemSize}) chỉ còn ${variant.stock} sản phẩm trong kho.`,
           );
         }
 
@@ -174,6 +177,14 @@ export class OrdersService {
           data: {
             stock: variant.stock - item.quantity,
           },
+        });
+
+        // Increment product soldCount
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            soldCount: { increment: item.quantity }
+          }
         });
       }
 
@@ -213,6 +224,7 @@ export class OrdersService {
               price: item.price,
               productId: item.productId,
               size: item.size || 'DEFAULT',
+              color: item.color || 'DEFAULT',
             })),
           },
         },
@@ -234,7 +246,7 @@ export class OrdersService {
       const itemsText = order.items
         .map(
           (i) =>
-            `${i.product.name}${i.size && i.size !== 'DEFAULT' ? ` (Size: ${i.size})` : ''} x${i.quantity}`,
+            `${i.product.name}${i.color && i.color !== 'DEFAULT' ? ` (Màu: ${i.color})` : ''}${i.size && i.size !== 'DEFAULT' ? ` (Size: ${i.size})` : ''} x${i.quantity}`,
         )
         .join(', ');
 
@@ -413,11 +425,13 @@ export class OrdersService {
       // Return stock back to inventory
       for (const item of order.items) {
         const itemSize = item.size || 'DEFAULT';
+        const itemColor = item.color || 'DEFAULT';
         try {
           await this.prisma.productVariant.update({
             where: {
-              productId_size: {
+              productId_color_size: {
                 productId: item.productId,
+                color: itemColor,
                 size: itemSize,
               },
             },

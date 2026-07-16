@@ -52,7 +52,13 @@ async function main() {
         price: 2225000,
         categoryId: clothing.id,
         tags: 'Bán Chạy',
-        images: JSON.stringify(['https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=600&q=80']),
+        images: JSON.stringify([
+          'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=600&q=80',
+          'https://images.unsplash.com/photo-1598032895397-b9472444bf93?auto=format&fit=crop&w=600&q=80',
+          'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=600&q=80'
+        ]),
+        soldCount: 152,
+        likeCount: 45,
         materialCare: 'Giặt máy chế độ nhẹ hoặc giặt tay, phơi trong bóng râm.',
         shippingReturn: 'Đổi trả miễn phí trong vòng 7 ngày nếu không vừa size.',
       },
@@ -111,7 +117,13 @@ async function main() {
         price: 4625000,
         categoryId: clothing.id,
         tags: 'Cao Cấp',
-        images: JSON.stringify(['https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=600&q=80']),
+        images: JSON.stringify([
+          'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=600&q=80',
+          'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=600&q=80',
+          'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=600&q=80'
+        ]),
+        soldCount: 89,
+        likeCount: 120,
         materialCare: 'Khuyến khích giặt khô để giữ phom dáng áo len dạ.',
         shippingReturn: 'Miễn phí vận chuyển hỏa tốc khu vực nội thành.',
       },
@@ -342,11 +354,11 @@ async function main() {
   ];
 
   const IMAGES = [
-    '["https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=300&q=80"]',
-    '["https://images.unsplash.com/photo-1582552938357-32b906df40cb?auto=format&fit=crop&w=300&q=80"]',
-    '["https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=300&q=80"]',
-    '["https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&q=80"]',
-    '["https://images.unsplash.com/photo-1610824352934-c10d87b700cc?auto=format&fit=crop&w=300&q=80"]',
+    '["https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=600&q=80", "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=600&q=80"]',
+    '["https://images.unsplash.com/photo-1582552938357-32b906df40cb?auto=format&fit=crop&w=600&q=80", "https://images.unsplash.com/photo-1582552938357-32b906df40cb?auto=format&fit=crop&w=600&q=80"]',
+    '["https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=600&q=80", "https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=600&q=80"]',
+    '["https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80", "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80"]',
+    '["https://images.unsplash.com/photo-1610824352934-c10d87b700cc?auto=format&fit=crop&w=600&q=80", "https://images.unsplash.com/photo-1610824352934-c10d87b700cc?auto=format&fit=crop&w=600&q=80"]',
   ];
 
   const additionalProductsData = [];
@@ -365,6 +377,8 @@ async function main() {
       categoryId,
       tags: i % 3 === 0 ? 'Mới' : 'Phổ biến',
       images: image,
+      soldCount: Math.floor(Math.random() * 500),
+      likeCount: Math.floor(Math.random() * 200),
       materialCare: 'Giặt máy bằng nước lạnh, sấy ở nhiệt độ thấp.',
       shippingReturn: 'Miễn phí vận chuyển cho đơn hàng từ 1.000.000 đ.',
     });
@@ -373,31 +387,51 @@ async function main() {
     data: additionalProductsData,
   });
 
-  // Seed Product Variants (Size & Stock)
+  // Seed Product Variants (Size & Color & Stock)
   const allProducts = await prisma.product.findMany();
   for (const p of allProducts) {
     if (p.categoryId === clothing.id) {
-      await prisma.productVariant.createMany({
-        data: [
-          { productId: p.id, size: 'S', stock: 15 },
-          { productId: p.id, size: 'M', stock: 20 },
-          { productId: p.id, size: 'L', stock: 10 },
-          { productId: p.id, size: 'XL', stock: 5 },
-        ],
-      });
+      const colors = [
+        { color: 'Trắng', colorImage: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=150&q=80' },
+        { color: 'Đen', colorImage: 'https://images.unsplash.com/photo-1582552938357-32b906df40cb?auto=format&fit=crop&w=150&q=80' }
+      ];
+      const sizes = ['S', 'M', 'L', 'XL'];
+      const variants = [];
+      for (const c of colors) {
+        for (const s of sizes) {
+          variants.push({
+            productId: p.id,
+            color: c.color,
+            colorImage: c.colorImage,
+            size: s,
+            stock: Math.floor(Math.random() * 20)
+          });
+        }
+      }
+      await prisma.productVariant.createMany({ data: variants });
     } else if (p.categoryId === shoes.id) {
-      await prisma.productVariant.createMany({
-        data: [
-          { productId: p.id, size: '39', stock: 12 },
-          { productId: p.id, size: '40', stock: 18 },
-          { productId: p.id, size: '41', stock: 15 },
-          { productId: p.id, size: '42', stock: 8 },
-        ],
-      });
+      const colors = [
+        { color: 'Đen', colorImage: 'https://images.unsplash.com/photo-1608256246200-53e635b5b65f?auto=format&fit=crop&w=150&q=80' },
+        { color: 'Nâu', colorImage: 'https://images.unsplash.com/photo-1533867617858-e7b97e060509?auto=format&fit=crop&w=150&q=80' }
+      ];
+      const sizes = ['39', '40', '41', '42'];
+      const variants = [];
+      for (const c of colors) {
+        for (const s of sizes) {
+          variants.push({
+            productId: p.id,
+            color: c.color,
+            colorImage: c.colorImage,
+            size: s,
+            stock: Math.floor(Math.random() * 15)
+          });
+        }
+      }
+      await prisma.productVariant.createMany({ data: variants });
     } else {
       await prisma.productVariant.createMany({
         data: [
-          { productId: p.id, size: 'DEFAULT', stock: 30 },
+          { productId: p.id, size: 'DEFAULT', color: 'DEFAULT', stock: 30 },
         ],
       });
     }
@@ -534,6 +568,7 @@ async function main() {
       price: 1625000,
       productId: 5, // Túi Tote vải Linen
       size: 'DEFAULT',
+      color: 'DEFAULT',
       orderId: order1.id,
     },
   });

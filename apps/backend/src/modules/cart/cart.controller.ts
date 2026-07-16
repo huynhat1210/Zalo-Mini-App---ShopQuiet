@@ -13,7 +13,7 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { CartService } from './cart.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { AddToCartDto, UpdateQuantityDto, UpdateItemSizeDto } from './dto/cart.dto';
+import { AddToCartDto, UpdateQuantityDto, UpdateItemVariantDto } from './dto/cart.dto';
 
 @ApiTags('cart')
 @Controller('cart')
@@ -38,7 +38,7 @@ export class CartController {
     @Body() body: AddToCartDto,
     @Headers('x-zalo-user-id') zaloUserId?: string,
   ) {
-    return this.cartService.addToCart(body.productId, body.quantity, body.size, zaloUserId);
+    return this.cartService.addToCart(body.productId, body.quantity, body.size, body.color, zaloUserId);
   }
 
   @Put('quantity')
@@ -54,23 +54,26 @@ export class CartController {
       body.productId,
       body.quantity,
       body.size,
+      body.color,
       zaloUserId,
     );
   }
 
-  @Put('size')
+  @Put('variant')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update cart item size' })
-  @ApiResponse({ status: 200, description: 'Size updated' })
-  async updateItemSize(
-    @Body() body: UpdateItemSizeDto,
+  @ApiOperation({ summary: 'Update cart item variant' })
+  @ApiResponse({ status: 200, description: 'Variant updated' })
+  async updateItemVariant(
+    @Body() body: UpdateItemVariantDto,
     @Headers('x-zalo-user-id') zaloUserId?: string,
   ) {
-    return this.cartService.updateItemSize(
+    return this.cartService.updateItemVariant(
       body.productId,
       body.oldSize,
       body.newSize,
+      body.oldColor,
+      body.newColor,
       zaloUserId,
     );
   }
@@ -83,11 +86,13 @@ export class CartController {
   async removeFromCart(
     @Param('productId') productId: string,
     @Query('size') size?: string,
+    @Query('color') color?: string,
     @Headers('x-zalo-user-id') zaloUserId?: string,
   ) {
     return this.cartService.removeFromCart(
       parseInt(productId),
       size,
+      color,
       zaloUserId,
     );
   }

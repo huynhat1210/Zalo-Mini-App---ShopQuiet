@@ -6,6 +6,7 @@ export interface IOrderItem {
   price: number;
   product: { id: number; name: string; images?: string };
   size?: string;
+  color?: string;
   isReviewed?: boolean;
 }
 
@@ -39,22 +40,34 @@ export interface IProductCategory {
   icon?: string | any;
 }
 
+export interface IVariant {
+  id: number;
+  productId: number;
+  color: string;
+  colorImage?: string | null;
+  size: string;
+  stock: number;
+}
+
 export interface IProduct {
   id: number;
   name: string;
   description: string;
   price: number;
   images: string;
+  soldCount?: number;
+  likeCount?: number;
   category?: IProductCategory;
   categoryName?: string;
   tags?: string;
-  variants?: any[];
+  variants?: IVariant[];
 }
 
 export interface ICartItem {
   product: IProduct;
   quantity: number;
   size: string;
+  color: string;
 }
 
 export type TToastType = 'success' | 'warning' | 'info';
@@ -80,11 +93,11 @@ export interface IZaloUser {
 
 export interface ICartContextType {
   cart: ICartItem[];
-  addToCart: (product: IProduct, quantity?: number, size?: string) => void;
-  removeFromCart: (productId: number, size?: string) => void;
-  updateQuantity: (productId: number, qty: number, size?: string) => void;
+  addToCart: (product: IProduct, quantity?: number, size?: string, color?: string) => void;
+  removeFromCart: (productId: number, size?: string, color?: string) => void;
+  updateQuantity: (productId: number, qty: number, size?: string, color?: string) => void;
   clearCart: () => void;
-  updateItemSize: (productId: number, oldSize: string, newSize: string) => void;
+  updateItemVariant: (productId: number, oldSize: string, newSize: string, oldColor: string, newColor: string) => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   selectedProductDetail: IProduct | null;

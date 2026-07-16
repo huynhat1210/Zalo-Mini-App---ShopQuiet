@@ -10,6 +10,10 @@ export class AddToCartDto {
   @IsOptional()
   @IsString()
   size?: string;
+
+  @IsOptional()
+  @IsString()
+  color?: string;
 }
 
 export class UpdateQuantityDto {
@@ -22,9 +26,13 @@ export class UpdateQuantityDto {
   @IsOptional()
   @IsString()
   size?: string;
+
+  @IsOptional()
+  @IsString()
+  color?: string;
 }
 
-export class UpdateItemSizeDto {
+export class UpdateItemVariantDto {
   @IsNumber()
   productId: number;
 
@@ -35,4 +43,12 @@ export class UpdateItemSizeDto {
   @IsOptional()
   @IsString()
   newSize?: string;
+
+  @IsOptional()
+  @IsString()
+  oldColor?: string;
+
+  @IsOptional()
+  @IsString()
+  newColor?: string;
 }

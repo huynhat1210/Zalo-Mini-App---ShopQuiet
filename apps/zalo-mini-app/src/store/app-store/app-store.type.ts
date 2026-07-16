@@ -21,11 +21,11 @@ export interface IAppState {
   updateZaloUser: (user: IZaloUser) => void;
   setSelectedOrder: (order: IOrder | null) => void;
   setBuyNowItem: (item: ICartItem | null) => void;
-  addToCart: (product: IProduct, quantity?: number, size?: string) => void;
-  removeFromCart: (productId: number, size?: string) => void;
-  updateQuantity: (productId: number, qty: number, size?: string) => void;
+  addToCart: (product: IProduct, quantity?: number, size?: string, color?: string) => void;
+  removeFromCart: (productId: number, size?: string, color?: string) => void;
+  updateQuantity: (productId: number, qty: number, size?: string, color?: string) => void;
   clearCart: () => void;
-  updateItemSize: (productId: number, oldSize: string, newSize: string) => void;
+  updateItemVariant: (productId: number, oldSize: string, newSize: string, oldColor: string, newColor: string) => void;
   toggleSavedItem: (product: IProduct) => void;
   isSavedItem: (productId: number) => boolean;
   syncUserFromStorage: (force?: boolean) => Promise<void>;

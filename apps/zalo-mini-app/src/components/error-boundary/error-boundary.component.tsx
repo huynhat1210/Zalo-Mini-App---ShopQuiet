@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo } from 'react';
+import { Component, ErrorInfo } from 'react';
 import { Page } from 'zmp-ui';
 import { IErrorBoundaryComponentProps, IErrorBoundaryComponentState } from './error-boundary.type';
 

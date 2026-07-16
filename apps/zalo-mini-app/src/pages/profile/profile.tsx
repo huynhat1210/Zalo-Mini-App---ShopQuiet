@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Page } from 'zmp-ui';
-import { openWebview } from 'zmp-sdk/apis';
 import api from 'zmp-sdk';
 import { useCart, IProduct, IOrder } from '../../App';
 import { apiRequest, API_BASE_URL } from '../../utils/api';
@@ -37,7 +36,7 @@ type ProfileAddressFormValues = z.infer<typeof profileAddressSchema>;
 
 export const Profile: React.FC<IProfileProps> = (props) => {
   const { initialSubPage = 'profile' } = props;
-  const { setActiveTab, setSelectedProductDetail, showToast, zaloUser, updateZaloUser, setSelectedOrder, savedItems, setIsCartOpen, cart, logout, refreshZaloProfile, syncUserFromStorage } = useCart();
+  const { setActiveTab, setSelectedProductDetail, showToast, zaloUser, updateZaloUser, setSelectedOrder, savedItems, setIsCartOpen, cart, refreshZaloProfile } = useCart();
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [recommendationProducts, setRecommendationProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -469,15 +468,6 @@ export const Profile: React.FC<IProfileProps> = (props) => {
       fetchUsersList();
     }
   }, [isAdminModalOpen]);
-
-  const handleLogout = async () => {
-    await logout();
-    showToast('Đã đăng xuất tài khoản!', 'info');
-    // Navigate to home tab instead of window.location.reload() which crashes in Zalo WebView
-    setTimeout(() => {
-      setActiveTab('home');
-    }, 800);
-  };
 
   const activeOrdersList = orders.filter(
     (o) => o.status === 'PROCESSING' || o.status === 'PENDING' || o.status === 'SHIPPED' || o.status === 'PENDING_PAYMENT'

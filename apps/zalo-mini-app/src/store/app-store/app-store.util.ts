@@ -104,60 +104,60 @@ export const useAppStore = create<IAppState>()(
       },
       setSelectedOrder: (order) => set({ selectedOrder: order }),
       setBuyNowItem: (item) => set({ buyNowItem: item }),
-      addToCart: (product, quantity = 1, size = 'DEFAULT') => {
+      addToCart: (product, quantity = 1, size = 'DEFAULT', color = 'DEFAULT') => {
         const prev = get().cart;
-        const existing = prev.find((item) => item.product.id === product.id && item.size === size);
+        const existing = prev.find((item) => item.product.id === product.id && item.size === size && item.color === color);
         const next = existing
           ? prev.map((item) =>
-            item.product.id === product.id && item.size === size
+            item.product.id === product.id && item.size === size && item.color === color
               ? { ...item, quantity: item.quantity + quantity }
               : item,
           )
-          : [...prev, { product, quantity, size }];
+          : [...prev, { product, quantity, size, color }];
         set({ cart: next });
-        apiRequest('/cart', 'POST', { productId: product.id, quantity, size }).catch(console.error);
+        apiRequest('/cart', 'POST', { productId: product.id, quantity, size, color }).catch(console.error);
       },
-      removeFromCart: (productId, size = 'DEFAULT') => {
-        const next = get().cart.filter((item) => !(item.product.id === productId && item.size === size));
+      removeFromCart: (productId, size = 'DEFAULT', color = 'DEFAULT') => {
+        const next = get().cart.filter((item) => !(item.product.id === productId && item.size === size && item.color === color));
         set({ cart: next });
-        apiRequest(`/cart/${productId}?size=${encodeURIComponent(size)}`, 'DELETE').catch(console.error);
+        apiRequest(`/cart/${productId}?size=${encodeURIComponent(size)}&color=${encodeURIComponent(color)}`, 'DELETE').catch(console.error);
       },
-      updateQuantity: (productId, qty, size = 'DEFAULT') => {
+      updateQuantity: (productId, qty, size = 'DEFAULT', color = 'DEFAULT') => {
         if (qty <= 0) {
-          get().removeFromCart(productId, size);
+          get().removeFromCart(productId, size, color);
           return;
         }
         const next = get().cart.map((item) =>
-          item.product.id === productId && item.size === size ? { ...item, quantity: qty } : item,
+          item.product.id === productId && item.size === size && item.color === color ? { ...item, quantity: qty } : item,
         );
         set({ cart: next });
-        apiRequest('/cart/quantity', 'PUT', { productId, quantity: qty, size }).catch(console.error);
+        apiRequest('/cart/quantity', 'PUT', { productId, quantity: qty, size, color }).catch(console.error);
       },
       clearCart: () => {
         set({ cart: [] });
         apiRequest('/cart', 'DELETE').catch(console.error);
       },
-      updateItemSize: (productId, oldSize, newSize) => {
-        if (oldSize === newSize) return;
+      updateItemVariant: (productId, oldSize, newSize, oldColor, newColor) => {
+        if (oldSize === newSize && oldColor === newColor) return;
         const previousCart = get().cart;
         const prev = get().cart;
-        const oldItem = prev.find((item) => item.product.id === productId && item.size === oldSize);
+        const oldItem = prev.find((item) => item.product.id === productId && item.size === oldSize && item.color === oldColor);
         if (!oldItem) return;
 
-        const existingNewSize = prev.find((item) => item.product.id === productId && item.size === newSize);
-        let nextCart = prev.filter((item) => !(item.product.id === productId && item.size === oldSize));
+        const existingNewVariant = prev.find((item) => item.product.id === productId && item.size === newSize && item.color === newColor);
+        let nextCart = prev.filter((item) => !(item.product.id === productId && item.size === oldSize && item.color === oldColor));
 
-        if (existingNewSize) {
-          const newQty = existingNewSize.quantity + oldItem.quantity;
+        if (existingNewVariant) {
+          const newQty = existingNewVariant.quantity + oldItem.quantity;
           nextCart = nextCart.map((item) =>
-            item.product.id === productId && item.size === newSize ? { ...item, quantity: newQty } : item,
+            item.product.id === productId && item.size === newSize && item.color === newColor ? { ...item, quantity: newQty } : item,
           );
         } else {
-          nextCart = [...nextCart, { ...oldItem, size: newSize }];
+          nextCart = [...nextCart, { ...oldItem, size: newSize, color: newColor }];
         }
 
         set({ cart: nextCart });
-        apiRequest<any[]>('/cart/size', 'PUT', { productId, oldSize, newSize })
+        apiRequest<any[]>('/cart/variant', 'PUT', { productId, oldSize, newSize, oldColor, newColor })
           .then((backendCart) => {
             if (backendCart && Array.isArray(backendCart)) {
               set({
@@ -165,6 +165,7 @@ export const useAppStore = create<IAppState>()(
                   product: item.product,
                   quantity: item.quantity,
                   size: item.size || 'DEFAULT',
+                  color: item.color || 'DEFAULT',
                 })),
               });
             }
@@ -172,7 +173,7 @@ export const useAppStore = create<IAppState>()(
           .catch((error) => {
             console.error(error);
             set({ cart: previousCart });
-            get().showToast('Không thể đổi size. Vui lòng thử lại.', 'warning');
+            get().showToast('Không thể đổi phân loại. Vui lòng thử lại.', 'warning');
           });
       },
       toggleSavedItem: (product) => {
@@ -436,6 +437,7 @@ export const useAppStore = create<IAppState>()(
                 product: item.product,
                 quantity: item.quantity,
                 size: item.size || 'DEFAULT',
+                color: item.color || 'DEFAULT',
               })),
             });
           }

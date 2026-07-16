@@ -434,7 +434,8 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           productId: item.product.id,
           quantity: item.quantity,
           price: item.product.price,
-          size: item.size || 'DEFAULT'
+          size: item.size || 'DEFAULT',
+          color: item.color || 'DEFAULT'
         })),
         isDirectBuy: !!buyNowItem
       };
@@ -464,7 +465,8 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
             quantity: item.quantity,
             price: item.product.price,
             product: { name: item.product.name },
-            size: item.size || 'DEFAULT'
+            size: item.size || 'DEFAULT',
+            color: item.color || 'DEFAULT'
           }))
         };
 
@@ -573,7 +575,8 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
             quantity: item.quantity,
             price: item.price,
             product: { name: item.product.name },
-            size: item.size || 'DEFAULT'
+            size: item.size || 'DEFAULT',
+            color: item.color || 'DEFAULT'
           }))
         };
       }
@@ -590,7 +593,8 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           price: item.product.price,
           quantity: item.quantity,
           images: item.product.images,
-          size: item.size || 'DEFAULT'
+          size: item.size || 'DEFAULT',
+          color: item.color || 'DEFAULT'
         }))
       }));
 
@@ -897,19 +901,26 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                 } catch (e) { }
 
                 const selectedSize = item.size && item.size !== 'DEFAULT' ? item.size : null;
+                const selectedColor = item.color && item.color !== 'DEFAULT' ? item.color : null;
 
                 return (
-                  <div key={`${item.product.id}-${item.size || 'DEFAULT'}`} className="flex justify-between items-center gap-3 py-3.5 first:pt-0 last:pb-0">
+                  <div key={`${item.product.id}-${item.color || 'DEFAULT'}-${item.size || 'DEFAULT'}`} className="flex justify-between items-center gap-3 py-3.5 first:pt-0 last:pb-0">
                     <div className="flex items-center gap-3">
                       <img src={img} alt={item.product.name} className="w-11 h-11 object-cover rounded-lg border border-[#f0edeb]" />
                       <div className="text-xs min-w-0">
                         <p className="font-semibold text-textColor line-clamp-1 max-w-[160px]">{item.product.name}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-textColor-variant">
+                        <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-textColor-variant flex-wrap">
                           <span>SL: {item.quantity}</span>
                           {selectedSize && (
                             <>
                               <span className="text-[#d8d2ce]">|</span>
                               <span className="font-bold text-[#526069]">Size: {selectedSize}</span>
+                            </>
+                          )}
+                          {selectedColor && (
+                            <>
+                              <span className="text-[#d8d2ce]">|</span>
+                              <span className="font-bold text-[#526069]">Màu: {selectedColor}</span>
                             </>
                           )}
                         </div>

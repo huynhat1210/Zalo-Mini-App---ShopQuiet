@@ -10,7 +10,7 @@ const PageCast = Page as any;
 
 
 export const Notifications: React.FC<INotificationsProps> = (_props) => {
-  const { setActiveTab, showToast, setSelectedOrder, notifications, setNotifications, fetchNotifications, zaloUser, syncUserFromStorage } = useCart();
+  const { setActiveTab, showToast, setSelectedOrder, notifications, setNotifications, fetchNotifications, zaloUser } = useCart();
   const [activeCategory, setActiveCategory] = useState<'order' | 'system'>('order');
   const queryClient = useQueryClient();
 

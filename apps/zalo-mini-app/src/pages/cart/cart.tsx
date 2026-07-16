@@ -5,7 +5,7 @@ import { EmptyStateComponent } from '../../components';
 import { ICartProps } from './cart.type';
 
 export const Cart: React.FC<ICartProps> = (_props) => {
-  const { cart, updateQuantity, updateItemSize, setActiveTab, setIsCartOpen, showToast } = useCart();
+  const { cart, updateQuantity, updateItemVariant, setActiveTab, setIsCartOpen, showToast } = useCart();
   const [estimatedShipping, setEstimatedShipping] = useState(5);
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
               } catch (e) {}
 
               return (
-                <div key={`${item.product.id}-${item.size}`} className="flex gap-4 p-4 bg-white rounded-2xl border border-[#f0edeb] shadow-xs relative hover:shadow-sm transition-all duration-300">
+                <div key={`${item.product.id}-${item.color}-${item.size}`} className="flex gap-4 p-4 bg-white rounded-2xl border border-[#f0edeb] shadow-xs relative hover:shadow-sm transition-all duration-300">
                   {/* Product Image */}
                   <img src={img} alt={item.product.name} className="w-18 h-18 flex-shrink-0 object-cover rounded-xl border border-[#f0edeb]" />
                   
@@ -65,32 +65,51 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                   <div className="flex-1 flex flex-col justify-between">
                     <div className="text-left">
                       <h4 className="text-xs font-semibold text-textColor line-clamp-1 pr-6 tracking-wide">{item.product.name}</h4>
-                      <div className="flex items-center gap-1.5 mt-1">
+                      <div className="flex flex-col mt-1 gap-1">
                         <span className="text-xs font-bold text-primary">{item.product.price.toLocaleString('vi-VN')} đ</span>
-                        {item.product.variants && item.product.variants.length > 0 && item.product.variants.some(v => v.size !== 'DEFAULT') ? (
-                          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                            <select
-                              value={item.size}
-                              onChange={(e) => {
-                                updateItemSize(item.product.id, item.size, e.target.value);
-                                showToast(`Đã đổi sang Size: ${e.target.value}`, 'success');
-                              }}
-                              className="text-[9px] bg-neutral-100 text-[#526069] font-bold px-1.5 py-0.5 rounded outline-none border border-transparent hover:border-neutral-300 focus:bg-white cursor-pointer uppercase tracking-wider"
-                            >
-                              {item.product.variants
-                                .filter(v => v.stock > 0 || v.size === item.size)
-                                .map((v) => (
-                                  <option key={v.size} value={v.size}>
-                                    Size: {v.size}
-                                  </option>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {item.product.variants && item.product.variants.length > 0 ? (
+                            <>
+                              <select
+                                value={item.color}
+                                onChange={(e) => {
+                                  updateItemVariant(item.product.id, item.size, item.size, item.color, e.target.value);
+                                  showToast(`Đã đổi sang Màu: ${e.target.value}`, 'success');
+                                }}
+                                className="text-[9px] bg-neutral-100 text-[#526069] font-bold px-1.5 py-0.5 rounded outline-none border border-transparent hover:border-neutral-300 focus:bg-white cursor-pointer uppercase tracking-wider"
+                              >
+                                {Array.from(new Set(item.product.variants.map(v => v.color))).filter(c => c !== 'DEFAULT').map((c) => (
+                                  <option key={c} value={c}>Màu: {c}</option>
                                 ))}
-                            </select>
-                          </div>
-                        ) : item.size && item.size !== 'DEFAULT' ? (
-                          <span className="text-[9px] bg-neutral-100 text-[#526069] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                            Size: {item.size}
-                          </span>
-                        ) : null}
+                                {item.color === 'DEFAULT' && <option value="DEFAULT">Màu: Mặc định</option>}
+                              </select>
+                              <select
+                                value={item.size}
+                                onChange={(e) => {
+                                  updateItemVariant(item.product.id, item.size, e.target.value, item.color, item.color);
+                                  showToast(`Đã đổi sang Size: ${e.target.value}`, 'success');
+                                }}
+                                className="text-[9px] bg-neutral-100 text-[#526069] font-bold px-1.5 py-0.5 rounded outline-none border border-transparent hover:border-neutral-300 focus:bg-white cursor-pointer uppercase tracking-wider"
+                              >
+                                {item.product.variants
+                                  .filter(v => v.color === item.color && (v.stock > 0 || v.size === item.size))
+                                  .map((v) => (
+                                    <option key={v.size} value={v.size}>Size: {v.size}</option>
+                                  ))}
+                                {item.size === 'DEFAULT' && <option value="DEFAULT">Size: Mặc định</option>}
+                              </select>
+                            </>
+                          ) : (
+                            <>
+                              {item.color && item.color !== 'DEFAULT' && (
+                                <span className="text-[9px] bg-neutral-100 text-[#526069] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Màu: {item.color}</span>
+                              )}
+                              {item.size && item.size !== 'DEFAULT' && (
+                                <span className="text-[9px] bg-neutral-100 text-[#526069] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Size: {item.size}</span>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                     
@@ -98,14 +117,14 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                       {/* Quantity Selector Capsule */}
                       <div className="flex items-center gap-3 bg-[#f0edeb] rounded-full px-3 py-1">
                         <button
-                          onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.size)}
+                          onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.size, item.color)}
                           className="text-textColor-variant hover:text-textColor font-extrabold text-xs px-0.5 active:scale-75 transition-transform border-none bg-transparent cursor-pointer"
                         >
                           −
                         </button>
                         <span className="text-xs font-bold text-textColor min-w-3 text-center">{item.quantity}</span>
                         <button
-                          onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.size)}
+                          onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.size, item.color)}
                           className="text-textColor-variant hover:text-textColor font-extrabold text-xs px-0.5 active:scale-75 transition-transform border-none bg-transparent cursor-pointer"
                         >
                           +
@@ -114,7 +133,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
 
                       {/* Trash Delete button */}
                       <button
-                        onClick={() => updateQuantity(item.product.id, 0, item.size)}
+                        onClick={() => updateQuantity(item.product.id, 0, item.size, item.color)}
                         className="text-red-400 hover:text-red-600 p-1.5 rounded-full hover:bg-red-50 transition-colors border-none bg-transparent cursor-pointer"
                         title="Xóa"
                       >
