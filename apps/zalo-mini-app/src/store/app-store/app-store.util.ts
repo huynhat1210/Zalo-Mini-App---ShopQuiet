@@ -4,7 +4,7 @@ import api from 'zmp-sdk';
 import { apiRequest } from '../../utils/api';
 import { tokenStorage } from '../../utils/auth';
 import type { IAppState } from './app-store.type';
-import type { IProduct, ICartItem } from '../../App.type';
+import type { IProduct } from '../../App.type';
 
 // Throttle guard: prevents calling Zalo getUserInfo more than once every 5 seconds
 let lastSyncAttempt = 0;
@@ -184,7 +184,7 @@ export const useAppStore = create<IAppState>()(
         const exists = get().savedItems.some((item) => item.id === product.id);
         const next = exists ? get().savedItems.filter((item) => item.id !== product.id) : [...get().savedItems, product];
         set({ savedItems: next });
-        const userId = get().zaloUser.id;
+        const userId = get().zaloUser!.id;
         localStorage.setItem(`saved_items_${userId}`, JSON.stringify(next));
 
         if (exists) {
