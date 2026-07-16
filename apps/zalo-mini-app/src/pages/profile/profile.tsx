@@ -1070,35 +1070,13 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     );
   }
 
-  // Show login screen if user is not logged in (after logout or first visit)
+  // Show loading screen while user is not logged in (auto-login is in progress)
   if (!zaloUser) {
     return (
-      <PageCast className="bg-[#f7f7f7] relative flex flex-col w-full h-full overscroll-none scrollbar-none">
-        <div className="flex-1 flex flex-col items-center justify-center px-8 py-16 text-center">
-          {/* Icon */}
-          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-            <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-            </svg>
-          </div>
-
-          <h2 className="text-base font-black text-textColor mb-2">Chưa đăng nhập</h2>
-          <p className="text-xs text-[#526069]/70 leading-relaxed mb-8">
-            Đăng nhập để xem thông tin cá nhân,<br />theo dõi đơn hàng và yêu thích.
-          </p>
-
-          {/* Login with Zalo button */}
-          <button
-            onClick={() => syncUserFromStorage(true)}
-            className="w-full max-w-xs h-12 bg-[#0068FF] text-white font-bold text-sm rounded-2xl hover:bg-blue-700 active:scale-98 transition-all flex items-center justify-center gap-2.5 shadow-md cursor-pointer border-none"
-          >
-            {/* Proper Zalo Z icon */}
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <rect width="24" height="24" rx="6" fill="white"/>
-              <path d="M6 8.5C6 8.5 10.5 8.5 13.5 8.5L6.5 15.5H18" stroke="#0068FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Đăng nhập với Zalo
-          </button>
+      <PageCast className="bg-[#f7f7f7] relative flex flex-col w-full h-full overscroll-none scrollbar-none items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+          <span className="text-[10px] font-bold text-[#526069] tracking-wider uppercase">Đang tải thông tin cá nhân...</span>
         </div>
       </PageCast>
     );
