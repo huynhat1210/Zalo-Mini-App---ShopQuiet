@@ -6,6 +6,10 @@ import { tokenStorage } from '../../utils/auth';
 import type { IAppState } from './app-store.type';
 import type { IProduct, ICartItem } from '../../App.type';
 
+// Throttle guard: prevents calling Zalo getUserInfo more than once every 5 seconds
+let lastSyncAttempt = 0;
+const SYNC_THROTTLE_MS = 5000;
+
 export const useAppStore = create<IAppState>()(
   persist(
     (set, get) => ({
@@ -172,10 +176,15 @@ export const useAppStore = create<IAppState>()(
           });
       },
       toggleSavedItem: (product) => {
+        // Require login to save favorites
+        if (!get().zaloUser?.id) {
+          get().showToast('Đăng nhập để lưu sản phẩm yêu thích!', 'warning');
+          return;
+        }
         const exists = get().savedItems.some((item) => item.id === product.id);
         const next = exists ? get().savedItems.filter((item) => item.id !== product.id) : [...get().savedItems, product];
         set({ savedItems: next });
-        const userId = get().zaloUser?.id || 'cust-zalo-id-1';
+        const userId = get().zaloUser.id;
         localStorage.setItem(`saved_items_${userId}`, JSON.stringify(next));
 
         if (exists) {
@@ -186,6 +195,13 @@ export const useAppStore = create<IAppState>()(
       },
       isSavedItem: (productId) => get().savedItems.some((item) => item.id === productId),
       syncUserFromStorage: async () => {
+        // Throttle to prevent repeated getUserInfo calls (Zalo SDK -1409 rate limit)
+        const now = Date.now();
+        if (now - lastSyncAttempt < SYNC_THROTTLE_MS) {
+          return;
+        }
+        lastSyncAttempt = now;
+
         // Check if JWT tokens are present in URL query params (Google/Facebook OAuth return redirect)
         if (typeof window !== 'undefined') {
           const urlParams = new URLSearchParams(window.location.search);
@@ -388,27 +404,28 @@ export const useAppStore = create<IAppState>()(
         }
       },
       fetchFavorites: async () => {
+        // Only fetch if user is authenticated
+        if (!get().zaloUser?.id) {
+          set({ savedItems: [] });
+          return;
+        }
         try {
           const fetched = await apiRequest<IProduct[]>('/favorites');
           if (fetched && Array.isArray(fetched)) {
             set({ savedItems: fetched });
-            const userId = get().zaloUser?.id || 'cust-zalo-id-1';
+            const userId = get().zaloUser!.id;
             localStorage.setItem(`saved_items_${userId}`, JSON.stringify(fetched));
           }
         } catch (e) {
           console.error('Failed to fetch favorites from backend:', e);
-          const userId = get().zaloUser?.id || 'cust-zalo-id-1';
-          const cachedSaved = localStorage.getItem(`saved_items_${userId}`);
-          if (cachedSaved) {
-            try {
-              set({ savedItems: JSON.parse(cachedSaved) });
-            } catch {
-              set({ savedItems: [] });
-            }
-          }
         }
       },
       fetchCart: async () => {
+        // Only fetch if user is authenticated
+        if (!get().zaloUser?.id) {
+          set({ cart: [] });
+          return;
+        }
         try {
           const backendCart = await apiRequest<any[]>('/cart');
           if (backendCart && Array.isArray(backendCart)) {
