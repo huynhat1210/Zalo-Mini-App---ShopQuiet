@@ -362,6 +362,7 @@ export const useAppStore = create<IAppState>()(
         if (typeof window !== 'undefined' && apiAny && apiAny.getUserInfo) {
           const doUserInfo = () => {
             apiAny.getUserInfo({
+              autoRequestPermission: true,
               success: async (data: any) => {
                 const info = data?.userInfo;
                 const zaloId = info?.id || info?.zaloId;
