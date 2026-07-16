@@ -441,7 +441,7 @@ export class AuthService {
     const redirectUri = process.env.FACEBOOK_REDIRECT_URI || '';
     const scope = 'public_profile,email';
     
-    let url = `https://www.facebook.com/v12.0/dialog/oauth?client_id=${encodeURIComponent(appId)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&response_type=code`;
+    let url = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${encodeURIComponent(appId)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&response_type=code`;
     if (state) {
       url += `&state=${encodeURIComponent(state)}`;
     }
@@ -456,7 +456,7 @@ export class AuthService {
 
     try {
       // 1. Exchange code for access token
-      const tokenResponse = await fetch(`https://graph.facebook.com/v12.0/oauth/access_token?client_id=${encodeURIComponent(appId)}&redirect_uri=${encodeURIComponent(redirectUri)}&client_secret=${encodeURIComponent(appSecret)}&code=${encodeURIComponent(code)}`);
+      const tokenResponse = await fetch(`https://graph.facebook.com/v19.0/oauth/access_token?client_id=${encodeURIComponent(appId)}&redirect_uri=${encodeURIComponent(redirectUri)}&client_secret=${encodeURIComponent(appSecret)}&code=${encodeURIComponent(code)}`);
 
       if (!tokenResponse.ok) {
         const errBody = await tokenResponse.text();

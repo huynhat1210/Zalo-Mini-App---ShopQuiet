@@ -138,10 +138,48 @@ export class AuthController {
   }
 
   @Get('facebook')
-  @ApiOperation({ summary: 'Redirect to Facebook OAuth' })
+  @ApiOperation({ summary: 'Facebook OAuth landing page (bypass WebView restriction)' })
   async facebookLogin(@Query('state') state: string, @Res() res: any) {
-    const url = this.authService.getFacebookAuthUrl(state);
-    return res.redirect(url);
+    const facebookAuthUrl = this.authService.getFacebookAuthUrl(state);
+    // Facebook also blocks OAuth in embedded WebViews
+    const html = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bước 2: Đăng nhập Facebook</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+    .card { background: white; border-radius: 20px; padding: 32px 24px; max-width: 360px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,0.10); text-align: center; }
+    .icon { width: 64px; height: 64px; margin: 0 auto 20px; background: #e7f0ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    h1 { font-size: 18px; font-weight: 700; color: #1a1a1a; margin-bottom: 10px; }
+    p { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 24px; }
+    .btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px; background: #1877F2; color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .btn:active { background: #166FE5; }
+    .note { font-size: 12px; color: #999; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="#1877F2"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/></svg>
+    </div>
+    <h1>Đăng nhập bằng Facebook</h1>
+    <p>Do chính sách bảo mật của Facebook, bạn cần đăng nhập trong trình duyệt.<br>Nhấn nút bên dưới để tiếp tục:</p>
+    <a class="btn" href="${facebookAuthUrl}" target="_top">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/></svg>
+      Mở Facebook để đăng nhập
+    </a>
+    <p class="note">ℹ️ Sau khi đăng nhập xong, bạn sẽ được chuyển về ShopQuiet tự động.</p>
+  </div>
+  <script>
+    setTimeout(() => { window.location.href = "${facebookAuthUrl}"; }, 800);
+  </script>
+</body>
+</html>`;
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.send(html);
   }
 
   @Get('facebook/callback')
