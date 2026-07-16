@@ -13,7 +13,7 @@ const BoxCast = Box as any;
 
 export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
   const { product, onClose, onAddToCart } = props;
-  const { toggleSavedItem, isSavedItem, setActiveTab, showToast, setBuyNowItem, setSelectedProductDetail, cart } = useCart();
+  const { toggleSavedItem, isSavedItem, setActiveTab, showToast, setBuyNowItem, setSelectedProductDetail, cart, savedItems } = useCart();
   const [quantity, setQuantity] = useState(1);
   
   // Accordion toggle states
@@ -113,7 +113,6 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
     }
     onAddToCart(product, quantity, size, color);
     showToast(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`, 'success');
-    onClose();
   };
 
   const handleBuyNow = () => {
@@ -193,14 +192,14 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
       </div>
 
       {/* Product Image Carousel */}
-      <div className="relative w-full aspect-square bg-neutral-100">
+      <div className="relative w-full aspect-square bg-white">
         <Swiper autoplay duration={4000}>
           {images.map((img, idx) => (
-            <Swiper.Slide key={idx}>
+            <Swiper.Slide key={idx} className="bg-white">
               <LazyImageComponent
                 src={img}
                 alt={`${product.name} ${idx + 1}`}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
             </Swiper.Slide>
           ))}

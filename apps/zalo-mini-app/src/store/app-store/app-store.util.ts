@@ -323,87 +323,138 @@ export const useAppStore = create<IAppState>()(
           localStorage.removeItem('zalo_profile_custom');
         }
 
+        const fallbackMockUser = () => {
+          const isRealZaloEnv = typeof window !== 'undefined' && 
+            (window.navigator.userAgent.toLowerCase().includes('zalo') || !!(window as any).ZaloMiniApp);
+          
+          if (!isRealZaloEnv) {
+            const user = {
+              id: 'cust-zalo-id-1',
+              name: 'Alex Johnson',
+              avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+              phone: '0987654321',
+              email: 'alex@example.com',
+              birthday: '1995-05-15',
+              gender: 'male',
+            };
+            set({ zaloUser: user });
+            localStorage.setItem('zalo_profile_custom', JSON.stringify(user));
+            get().fetchCart().catch(console.error);
+            get().fetchFavorites().catch(console.error);
+          } else {
+            // Real Zalo App but user denied permission
+            const guestUser = {
+              id: 'guest_' + Math.random().toString(36).substring(7),
+              name: 'Khách',
+              avatar: 'https://zalo-api.zdn.vn/api/emoticon/avatar',
+              phone: '',
+              email: '',
+              birthday: '',
+              gender: '',
+            };
+            set({ zaloUser: guestUser });
+            get().fetchCart().catch(console.error);
+            get().fetchFavorites().catch(console.error);
+          }
+        };
+
         const apiAny = api as any;
         if (typeof window !== 'undefined' && apiAny && apiAny.getUserInfo) {
-          apiAny.getUserInfo({
-            success: async (data: any) => {
-              if (data?.userInfo?.name) {
-                try {
-                  let zaloToken = '';
-                  const apiAny = api as any;
-                  if (typeof window !== 'undefined' && apiAny && apiAny.getAccessToken) {
-                    try {
-                      zaloToken = await new Promise((resolve) => {
-                        apiAny.getAccessToken({
-                          success: (token: string) => resolve(token),
-                          fail: () => resolve(''),
+          const doUserInfo = () => {
+            apiAny.getUserInfo({
+              success: async (data: any) => {
+                if (data?.userInfo?.name) {
+                  try {
+                    let zaloToken = '';
+                    if (typeof window !== 'undefined' && apiAny && apiAny.getAccessToken) {
+                      try {
+                        zaloToken = await new Promise((resolve) => {
+                          apiAny.getAccessToken({
+                            success: (token: string) => resolve(token),
+                            fail: () => resolve(''),
+                          });
                         });
-                      });
-                    } catch (e) {
-                      console.error('Failed to get Zalo access token:', e);
+                      } catch (e) {
+                        console.error('Failed to get Zalo access token:', e);
+                      }
                     }
-                  }
-                  if (!zaloToken) {
-                    zaloToken = `mock_zalo_token_${data.userInfo.id}`;
-                  }
+                    if (!zaloToken) {
+                      zaloToken = `mock_zalo_token_${data.userInfo.id}`;
+                    }
 
-                  const authData: any = await apiRequest('/auth/login', 'POST', {
-                    zaloId: data.userInfo.id,
-                    name: data.userInfo.name,
-                    avatar: data.userInfo.avatar,
-                    accessToken: zaloToken,
-                  });
-                  tokenStorage.setTokens({
-                    access_token: authData.access_token,
-                    refresh_token: authData.refresh_token,
-                  });
-                  const mappedUser = {
-                    id: authData.user.zaloId || authData.user.id,
-                    name: authData.user.name,
-                    avatar: authData.user.avatar,
-                    role: authData.user.role,
-                    phone: authData.user.phone || '',
-                    email: authData.user.email || '',
-                    birthday: authData.user.birthday || '',
-                    gender: authData.user.gender || '',
-                    totalSpent: authData.user.totalSpent || 0,
-                    membershipTier: authData.user.membershipTier || 'Đồng',
-                    googleId: authData.user.googleId || null,
-                    facebookId: authData.user.facebookId || null,
-                  };
-                  set({ zaloUser: mappedUser });
-                  localStorage.setItem('zalo_profile_custom', JSON.stringify(mappedUser));
-                  get().fetchCart().catch(console.error);
-                  get().fetchFavorites().catch(console.error);
-                } catch (error) {
-                  console.error('Login failed:', error);
-                  // Fallback to old sync method
-                  const user = {
-                    name: data.userInfo.name,
-                    avatar: data.userInfo.avatar,
-                    id: data.userInfo.id,
-                    phone: '',
-                    email: '',
-                    birthday: '',
-                    gender: '',
-                  };
-                  set({ zaloUser: user });
-                  localStorage.setItem('zalo_profile_custom', JSON.stringify(user));
-                  apiRequest('/users/sync', 'POST', { zaloId: user.id, name: user.name, avatar: user.avatar }).catch(console.error);
+                    const authData: any = await apiRequest('/auth/login', 'POST', {
+                      zaloId: data.userInfo.id,
+                      name: data.userInfo.name,
+                      avatar: data.userInfo.avatar,
+                      accessToken: zaloToken,
+                    });
+                    tokenStorage.setTokens({
+                      access_token: authData.access_token,
+                      refresh_token: authData.refresh_token,
+                    });
+                    const mappedUser = {
+                      id: authData.user.zaloId || authData.user.id,
+                      name: authData.user.name,
+                      avatar: authData.user.avatar,
+                      role: authData.user.role,
+                      phone: authData.user.phone || '',
+                      email: authData.user.email || '',
+                      birthday: authData.user.birthday || '',
+                      gender: authData.user.gender || '',
+                      totalSpent: authData.user.totalSpent || 0,
+                      membershipTier: authData.user.membershipTier || 'Đồng',
+                      googleId: authData.user.googleId || null,
+                      facebookId: authData.user.facebookId || null,
+                    };
+                    set({ zaloUser: mappedUser });
+                    localStorage.setItem('zalo_profile_custom', JSON.stringify(mappedUser));
+                    get().fetchCart().catch(console.error);
+                    get().fetchFavorites().catch(console.error);
+                  } catch (error) {
+                    console.error('Login failed:', error);
+                    // Fallback to old sync method
+                    const user = {
+                      name: data.userInfo.name,
+                      avatar: data.userInfo.avatar,
+                      id: data.userInfo.id,
+                      phone: '',
+                      email: '',
+                      birthday: '',
+                      gender: '',
+                    };
+                    set({ zaloUser: user });
+                    localStorage.setItem('zalo_profile_custom', JSON.stringify(user));
+                    apiRequest('/users/sync', 'POST', { zaloId: user.id, name: user.name, avatar: user.avatar }).catch(console.error);
+                  }
                 }
+              },
+              fail: (err: any) => {
+                console.warn('getUserInfo failed:', err);
+                try {
+                  api.showToast({
+                    message: 'Vui lòng cấp quyền để có trải nghiệm tốt nhất!',
+                  });
+                } catch (e) {
+                  // ignore
+                }
+                fallbackMockUser();
+              },
+            });
+          };
+
+          if (apiAny.login) {
+            apiAny.login({
+              success: doUserInfo,
+              fail: (err: any) => {
+                console.warn('login failed:', err);
+                fallbackMockUser();
               }
-            },
-            fail: (err: any) => {
-              console.warn('getUserInfo failed:', err);
-              try {
-                api.showToast({
-                  message: 'Đăng nhập thất bại. Vui lòng cho phép quyền truy cập thông tin để sử dụng đầy đủ tính năng!',
-                });
-              } catch (e) {
-                console.error('Failed to show permission toast:', e);
-              }
-            },
-          });
+            });
+          } else {
+            doUserInfo();
+          }
+        } else {
+          fallbackMockUser();
         }
       },
       fetchFavorites: async () => {
