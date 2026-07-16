@@ -364,11 +364,17 @@ export const useAppStore = create<IAppState>()(
             apiAny.getUserInfo({
               autoRequestPermission: true,
               success: async (data: any) => {
-                const info = data?.userInfo;
-                const zaloId = info?.id || info?.zaloId;
+                try {
+                  api.showToast({
+                    message: `Zalo trả về: ${JSON.stringify(data).slice(0, 100)}`
+                  });
+                } catch (e) {}
+
+                const info = data?.userInfo || data;
+                const zaloId = info?.id || info?.zaloId || data?.id || data?.zaloId || data?.userInfo?.id;
                 if (zaloId) {
-                  const name = info.name || 'Người dùng Zalo';
-                  const avatar = info.avatar || 'https://zalo-api.zdn.vn/api/emoticon/avatar';
+                  const name = info?.name || data?.userInfo?.name || 'Người dùng Zalo';
+                  const avatar = info?.avatar || data?.userInfo?.avatar || 'https://zalo-api.zdn.vn/api/emoticon/avatar';
                   try {
                     let zaloToken = '';
                     if (typeof window !== 'undefined' && apiAny && apiAny.getAccessToken) {
