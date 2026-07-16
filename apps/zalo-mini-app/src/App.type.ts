@@ -74,6 +74,8 @@ export interface IZaloUser {
   gender?: string;
   totalSpent?: number;
   membershipTier?: string;
+  googleId?: string | null;
+  facebookId?: string | null;
 }
 
 export interface ICartContextType {

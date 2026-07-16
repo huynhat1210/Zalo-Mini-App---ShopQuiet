@@ -79,29 +79,29 @@ export class AuthController {
 
   @Get('google')
   @ApiOperation({ summary: 'Redirect to Google OAuth' })
-  async googleLogin(@Res() res: any) {
-    const url = this.authService.getGoogleAuthUrl();
+  async googleLogin(@Query('state') state: string, @Res() res: any) {
+    const url = this.authService.getGoogleAuthUrl(state);
     return res.redirect(url);
   }
 
   @Get('google/callback')
   @ApiOperation({ summary: 'Google OAuth callback' })
-  async googleCallback(@Query('code') code: string, @Res() res: any) {
-    const redirectUrl = await this.authService.handleGoogleCallback(code);
+  async googleCallback(@Query('code') code: string, @Query('state') state: string, @Res() res: any) {
+    const redirectUrl = await this.authService.handleGoogleCallback(code, state);
     return res.redirect(redirectUrl);
   }
 
   @Get('facebook')
   @ApiOperation({ summary: 'Redirect to Facebook OAuth' })
-  async facebookLogin(@Res() res: any) {
-    const url = this.authService.getFacebookAuthUrl();
+  async facebookLogin(@Query('state') state: string, @Res() res: any) {
+    const url = this.authService.getFacebookAuthUrl(state);
     return res.redirect(url);
   }
 
   @Get('facebook/callback')
   @ApiOperation({ summary: 'Facebook OAuth callback' })
-  async facebookCallback(@Query('code') code: string, @Res() res: any) {
-    const redirectUrl = await this.authService.handleFacebookCallback(code);
+  async facebookCallback(@Query('code') code: string, @Query('state') state: string, @Res() res: any) {
+    const redirectUrl = await this.authService.handleFacebookCallback(code, state);
     return res.redirect(redirectUrl);
   }
 }

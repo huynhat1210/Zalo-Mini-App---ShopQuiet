@@ -1318,7 +1318,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
         <div className="space-y-2 mt-4 mb-4">
           <button
             onClick={() => {
-              const loginUrl = `${API_BASE_URL}/auth/google`;
+              const loginUrl = `${API_BASE_URL}/auth/google` + (zaloUser?.id ? `?state=${encodeURIComponent(zaloUser.id)}` : '');
               const apiAny = api as any;
               if (apiAny && apiAny.openWebview) {
                 apiAny.openWebview({
@@ -1336,12 +1336,12 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               <path fill="#FBBC05" d="M5.24 14.24a7.16 7.16 0 0 1 0-4.48v-3.1H1.27a11.96 11.96 0 0 0 0 10.68l3.97-3.1z" />
               <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.25 2.73 1.27 6.66l3.97 3.1c.95-2.88 3.61-5.01 6.76-5.01z" />
             </svg>
-            <span>Đăng nhập với Google</span>
+            <span>{zaloUser?.googleId ? 'Đã liên kết Google' : 'Đăng nhập với Google'}</span>
           </button>
 
           <button
             onClick={() => {
-              const loginUrl = `${API_BASE_URL}/auth/facebook`;
+              const loginUrl = `${API_BASE_URL}/auth/facebook` + (zaloUser?.id ? `?state=${encodeURIComponent(zaloUser.id)}` : '');
               const apiAny = api as any;
               if (apiAny && apiAny.openWebview) {
                 apiAny.openWebview({
@@ -1356,7 +1356,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
             <svg className="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z" />
             </svg>
-            <span>Đăng nhập với Facebook</span>
+            <span>{zaloUser?.facebookId ? 'Đã liên kết Facebook' : 'Đăng nhập với Facebook'}</span>
           </button>
         </div>
 

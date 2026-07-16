@@ -296,16 +296,20 @@ export class AuthService {
 
   // ================= GOOGLE OAUTH =================
 
-  getGoogleAuthUrl(): string {
+  getGoogleAuthUrl(state?: string): string {
     const clientId = process.env.GOOGLE_CLIENT_ID || '';
     const redirectUri = process.env.GOOGLE_REDIRECT_URI || '';
     const scope = 'openid profile email';
     const responseType = 'code';
     
-    return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&scope=${encodeURIComponent(scope)}`;
+    let url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&scope=${encodeURIComponent(scope)}`;
+    if (state) {
+      url += `&state=${encodeURIComponent(state)}`;
+    }
+    return url;
   }
 
-  async handleGoogleCallback(code: string): Promise<string> {
+  async handleGoogleCallback(code: string, state?: string): Promise<string> {
     const clientId = process.env.GOOGLE_CLIENT_ID || '';
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
     const redirectUri = process.env.GOOGLE_REDIRECT_URI || '';
@@ -348,21 +352,62 @@ export class AuthService {
       const avatar = profileData.picture || '';
       const email = profileData.email || '';
 
-      const targetZaloId = `google-${googleId}`;
+      let user = null;
 
-      // 3. Sync user in DB
-      const user = await this.usersService.syncUser(
-        targetZaloId,
-        name,
-        avatar,
-        undefined,
-        undefined,
-        email,
-      );
-
-      if (!user) {
-        throw new Error('Failed to synchronize user in database');
+      // Check explicit link via state (Zalo User ID)
+      if (state && !state.startsWith('google-') && !state.startsWith('facebook-')) {
+        const existingUser = await this.prisma.user.findUnique({ where: { zaloId: state } });
+        if (existingUser) {
+          user = await this.prisma.user.update({
+            where: { zaloId: state },
+            data: {
+              googleId,
+              email: existingUser.email || email || null,
+              avatar: existingUser.avatar || avatar || null,
+            },
+          });
+        }
       }
+
+      // Check if user already exists with this googleId
+      if (!user) {
+        user = await this.prisma.user.findUnique({ where: { googleId } });
+      }
+
+      // Check auto-link by email matching
+      if (!user && email) {
+        const existingUserByEmail = await this.prisma.user.findFirst({ where: { email } });
+        if (existingUserByEmail) {
+          user = await this.prisma.user.update({
+            where: { zaloId: existingUserByEmail.zaloId },
+            data: { googleId },
+          });
+        }
+      }
+
+      // Fallback: Create new user profile for Google
+      if (!user) {
+        const targetZaloId = `google-${googleId}`;
+        const synced = await this.usersService.syncUser(
+          targetZaloId,
+          name,
+          avatar,
+          undefined,
+          undefined,
+          email,
+        );
+
+        if (!synced) {
+          throw new Error('Failed to synchronize user in database');
+        }
+
+        user = await this.prisma.user.update({
+          where: { zaloId: synced.zaloId },
+          data: { googleId },
+        });
+      }
+
+      const targetZaloId = user.zaloId;
 
       // 4. Generate JWT Access and Refresh Tokens
       const jwtToken = this.jwtService.sign({ sub: targetZaloId, role: user.role });
@@ -391,15 +436,19 @@ export class AuthService {
 
   // ================= FACEBOOK OAUTH =================
 
-  getFacebookAuthUrl(): string {
+  getFacebookAuthUrl(state?: string): string {
     const appId = process.env.FACEBOOK_APP_ID || '';
     const redirectUri = process.env.FACEBOOK_REDIRECT_URI || '';
     const scope = 'public_profile,email';
     
-    return `https://www.facebook.com/v12.0/dialog/oauth?client_id=${encodeURIComponent(appId)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&response_type=code`;
+    let url = `https://www.facebook.com/v12.0/dialog/oauth?client_id=${encodeURIComponent(appId)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}&response_type=code`;
+    if (state) {
+      url += `&state=${encodeURIComponent(state)}`;
+    }
+    return url;
   }
 
-  async handleFacebookCallback(code: string): Promise<string> {
+  async handleFacebookCallback(code: string, state?: string): Promise<string> {
     const appId = process.env.FACEBOOK_APP_ID || '';
     const appSecret = process.env.FACEBOOK_APP_SECRET || '';
     const redirectUri = process.env.FACEBOOK_REDIRECT_URI || '';
@@ -430,21 +479,62 @@ export class AuthService {
       const avatar = profileData.picture?.data?.url || '';
       const email = profileData.email || '';
 
-      const targetZaloId = `facebook-${facebookId}`;
+      let user = null;
 
-      // 3. Sync user in DB
-      const user = await this.usersService.syncUser(
-        targetZaloId,
-        name,
-        avatar,
-        undefined,
-        undefined,
-        email,
-      );
-
-      if (!user) {
-        throw new Error('Failed to synchronize user in database');
+      // Check explicit link via state (Zalo User ID)
+      if (state && !state.startsWith('google-') && !state.startsWith('facebook-')) {
+        const existingUser = await this.prisma.user.findUnique({ where: { zaloId: state } });
+        if (existingUser) {
+          user = await this.prisma.user.update({
+            where: { zaloId: state },
+            data: {
+              facebookId,
+              email: existingUser.email || email || null,
+              avatar: existingUser.avatar || avatar || null,
+            },
+          });
+        }
       }
+
+      // Check if user already exists with this facebookId
+      if (!user) {
+        user = await this.prisma.user.findUnique({ where: { facebookId } });
+      }
+
+      // Check auto-link by email matching
+      if (!user && email) {
+        const existingUserByEmail = await this.prisma.user.findFirst({ where: { email } });
+        if (existingUserByEmail) {
+          user = await this.prisma.user.update({
+            where: { zaloId: existingUserByEmail.zaloId },
+            data: { facebookId },
+          });
+        }
+      }
+
+      // Fallback: Create new user profile for Facebook
+      if (!user) {
+        const targetZaloId = `facebook-${facebookId}`;
+        const synced = await this.usersService.syncUser(
+          targetZaloId,
+          name,
+          avatar,
+          undefined,
+          undefined,
+          email,
+        );
+
+        if (!synced) {
+          throw new Error('Failed to synchronize user in database');
+        }
+
+        user = await this.prisma.user.update({
+          where: { zaloId: synced.zaloId },
+          data: { facebookId },
+        });
+      }
+
+      const targetZaloId = user.zaloId;
 
       // 4. Generate JWT Access and Refresh Tokens
       const jwtToken = this.jwtService.sign({ sub: targetZaloId, role: user.role });
