@@ -42,6 +42,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
   const [returnImages, setReturnImages] = useState<string[]>([]);
   const [uploadingReturnImg, setUploadingReturnImg] = useState(false);
   const [submittingReturn, setSubmittingReturn] = useState(false);
+  const [completing, setCompleting] = useState(false);
 
   if (!selectedOrder) {
     return (
@@ -68,6 +69,19 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
       showToast(e?.message || 'Không thể hủy đơn hàng!', 'warning');
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const handleConfirmReceived = async () => {
+    setCompleting(true);
+    try {
+      await apiRequest(`/orders/${selectedOrder.id}/status`, 'PATCH', { status: 'DELIVERED' });
+      showToast('Xác nhận nhận hàng thành công!', 'success');
+      setSelectedOrder({ ...selectedOrder, status: 'DELIVERED' });
+    } catch (e: any) {
+      showToast(e?.message || 'Không thể xác nhận nhận hàng!', 'warning');
+    } finally {
+      setCompleting(false);
     }
   };
 
@@ -411,6 +425,17 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
               </button>
             </div>
           </div>
+        )}
+
+        {/* Confirm Received action for SHIPPED status */}
+        {selectedOrder.status === 'SHIPPED' && (
+          <button
+            disabled={completing}
+            onClick={handleConfirmReceived}
+            className="w-full h-11 bg-[#0e6877] text-white font-bold text-xs uppercase tracking-wider rounded-2xl border-none cursor-pointer hover:bg-[#0c5966] active:scale-[0.98] transition-all shadow-md mt-4"
+          >
+            {completing ? 'Đang cập nhật...' : '✓ Đã nhận được hàng'}
+          </button>
         )}
 
         {/* Re-order & Return actions for DELIVERED status */}
