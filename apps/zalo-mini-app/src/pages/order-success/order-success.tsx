@@ -106,9 +106,21 @@ export const OrderSuccess: React.FC<IOrderSuccessProps> = (_props) => {
                 <div key={idx} className="flex justify-between items-center py-3.5">
                   <div className="flex items-center gap-3.5">
                     <img src={img} alt={item.name} className="w-12 h-12 object-cover rounded-lg border border-[#f0edeb]" />
-                    <div className="text-xs">
+                    <div className="text-xs space-y-0.5">
                       <p className="font-semibold text-textColor line-clamp-1 max-w-[170px] pr-2">{item.name}</p>
-                      <p className="text-[10px] text-textColor-variant mt-0.5 font-medium">SL: {item.quantity}</p>
+                      <div className="flex items-center gap-1.5 text-[10px] flex-wrap">
+                        <span className="text-textColor-variant font-medium">SL: x{item.quantity}</span>
+                        {item.color && item.color !== 'DEFAULT' && (
+                          <span className="bg-[#fcf8f5] border border-orange-200/50 text-orange-700 px-1.5 py-0.2 rounded font-medium text-[8px]">
+                            Màu: {item.color}
+                          </span>
+                        )}
+                        {item.size && item.size !== 'DEFAULT' && (
+                          <span className="bg-neutral-100 text-[#526069] px-1.5 py-0.2 rounded font-medium uppercase text-[8px]">
+                            Size: {item.size}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <span className="text-xs font-bold text-textColor">{(item.price * item.quantity).toLocaleString('vi-VN')} đ</span>

@@ -404,25 +404,32 @@ export class OrdersService {
       },
     });
 
+    const itemsText = order.items
+      .map(
+        (i) =>
+          `${i.product.name}${i.color && i.color !== 'DEFAULT' ? ` (Màu: ${i.color})` : ''}${i.size && i.size !== 'DEFAULT' ? ` (Size: ${i.size})` : ''} x${i.quantity}`,
+      )
+      .join(', ');
+
     // Simulate ZNS dispatch
-    let content = `Đơn hàng #${id} đã được cập nhật trạng thái mới.`;
+    let content = `Đơn hàng #${id} gồm [${itemsText}] đã được cập nhật trạng thái mới.`;
     let notifTitle = `Đơn hàng #${id} cập nhật trạng thái`;
 
     if (status === 'PROCESSING') {
-      content = `Cửa hàng đang chuẩn bị sản phẩm cho đơn hàng #${id} của bạn.`;
+      content = `Cửa hàng đang chuẩn bị sản phẩm cho đơn hàng #${id} của bạn gồm [${itemsText}].`;
       notifTitle = `Đơn hàng #${id} đang được xử lý`;
     } else if (status === 'SHIPPED') {
       const trackingInfo = trackingNumber || (order as any).trackingNumber;
-      content = `Đơn hàng #${id} đã bàn giao cho đơn vị vận chuyển.${trackingInfo ? ` Mã vận đơn của bạn: ${trackingInfo}` : ''}`;
+      content = `Đơn hàng #${id} gồm [${itemsText}] đã bàn giao cho đơn vị vận chuyển.${trackingInfo ? ` Mã vận đơn của bạn: ${trackingInfo}` : ''}`;
       notifTitle = `Đơn hàng #${id} đang được giao`;
     } else if (status === 'DELIVERED') {
-      content = `Đơn hàng #${id} đã giao thành công! Cảm ơn bạn đã tin dùng ShopQuiet.`;
+      content = `Đơn hàng #${id} gồm [${itemsText}] đã giao thành công! Cảm ơn bạn đã tin dùng ShopQuiet.`;
       notifTitle = `Đơn hàng #${id} giao thành công`;
     } else if (status === 'CANCELLED') {
-      content = `Đơn hàng #${id} đã được hủy bỏ thành công.`;
+      content = `Đơn hàng #${id} gồm [${itemsText}] đã được hủy bỏ thành công.`;
       notifTitle = `Đơn hàng #${id} đã hủy`;
 
-      // Return stock back to inventory
+      // Return stock back to inventory and decrement soldCount
       for (const item of order.items) {
         const itemSize = item.size || 'DEFAULT';
         const itemColor = item.color || 'DEFAULT';
@@ -441,9 +448,19 @@ export class OrdersService {
               },
             },
           });
+
+          // Decrement product soldCount
+          await this.prisma.product.update({
+            where: { id: item.productId },
+            data: {
+              soldCount: {
+                decrement: item.quantity,
+              },
+            },
+          });
         } catch (e) {
           console.error(
-            `Failed to restock variant for product ${item.productId} size ${itemSize}:`,
+            `Failed to restock or decrement soldCount for product ${item.productId} size ${itemSize}:`,
             e,
           );
         }

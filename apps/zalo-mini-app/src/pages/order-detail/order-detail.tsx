@@ -231,10 +231,15 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
               <div key={idx} className="flex justify-between items-center p-4">
                 <div className="text-left space-y-1">
                   <span className="font-semibold text-textColor leading-tight block">{item.product?.name}</span>
-                  <div className="flex items-center gap-1.5 text-[10px]">
+                  <div className="flex items-center gap-1.5 text-[10px] flex-wrap">
                     <span className="text-textColor-variant">SL: x{item.quantity}</span>
+                    {item.color && item.color !== 'DEFAULT' && (
+                      <span className="bg-[#fcf8f5] border border-orange-200/50 text-orange-700 px-1.5 py-0.5 rounded font-medium text-[8px]">
+                        Màu: {item.color}
+                      </span>
+                    )}
                     {item.size && item.size !== 'DEFAULT' && (
-                      <span className="bg-neutral-100 text-[#526069] px-1.5 py-0.5 rounded font-bold uppercase text-[8px]">
+                      <span className="bg-neutral-100 text-[#526069] px-1.5 py-0.5 rounded font-medium uppercase text-[8px]">
                         Size: {item.size}
                       </span>
                     )}

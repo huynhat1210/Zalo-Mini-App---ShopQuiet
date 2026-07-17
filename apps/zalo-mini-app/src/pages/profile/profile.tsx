@@ -1108,8 +1108,8 @@ export const Profile: React.FC<IProfileProps> = (props) => {
             <div className="flex items-center gap-2">
               <h2 className="text-base font-bold tracking-tight line-clamp-1">{profile.name}</h2>
               {/* Member Level Badge */}
-              <span className="bg-amber-400 text-teal-950 font-black tracking-widest text-[8px] uppercase px-2 py-0.5 rounded flex items-center gap-1 shadow-xs animate-pulse">
-                ★ BẠC
+              <span className={`${badgeColor} font-black tracking-widest text-[8px] uppercase px-2 py-0.5 rounded flex items-center gap-1 shadow-xs`}>
+                ★ {tierBadge}
               </span>
             </div>
 

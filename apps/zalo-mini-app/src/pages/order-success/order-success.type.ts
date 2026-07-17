@@ -9,6 +9,8 @@ export interface ISuccessOrder {
     price: number;
     quantity: number;
     images: string;
+    size?: string;
+    color?: string;
   }>;
 }
 

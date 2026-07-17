@@ -55,8 +55,6 @@ model User {
   email         String?
   totalSpent     Float          @default(0)
   membershipTier String         @default("Đồng")
-  googleId       String?        @unique
-  facebookId     String?        @unique
   cartItems     CartItem[]
   comments      Comment[]
   favorites     Favorite[]

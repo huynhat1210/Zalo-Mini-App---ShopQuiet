@@ -240,8 +240,6 @@ export const useAppStore = create<IAppState>()(
                   gender: freshUser.gender || '',
                   totalSpent: freshUser.totalSpent || 0,
                   membershipTier: freshUser.membershipTier || 'Đồng',
-                  googleId: freshUser.googleId || null,
-                  facebookId: freshUser.facebookId || null,
                 };
                 set({ zaloUser: mappedUser });
                 localStorage.setItem('zalo_profile_custom', JSON.stringify(mappedUser));
@@ -315,8 +313,6 @@ export const useAppStore = create<IAppState>()(
                   gender: authData.user.gender || '',
                   totalSpent: authData.user.totalSpent || 0,
                   membershipTier: authData.user.membershipTier || 'Đồng',
-                  googleId: authData.user.googleId || null,
-                  facebookId: authData.user.facebookId || null,
                 };
                 set({ zaloUser: mappedUser });
                 localStorage.setItem('zalo_profile_custom', JSON.stringify(mappedUser));
@@ -415,8 +411,6 @@ export const useAppStore = create<IAppState>()(
                       gender: authData.user.gender || '',
                       totalSpent: authData.user.totalSpent || 0,
                       membershipTier: authData.user.membershipTier || 'Đồng',
-                      googleId: authData.user.googleId || null,
-                      facebookId: authData.user.facebookId || null,
                     };
                     set({ zaloUser: mappedUser });
                     localStorage.setItem('zalo_profile_custom', JSON.stringify(mappedUser));
