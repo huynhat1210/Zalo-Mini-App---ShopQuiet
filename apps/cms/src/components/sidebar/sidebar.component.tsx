@@ -20,6 +20,22 @@ interface ModelSummary {
   count: number;
 }
 
+const MODEL_DISPLAY_NAMES: Record<string, string> = {
+  Category: 'Danh mục sản phẩm',
+  ChatMessage: 'Lịch sử chat',
+  Comment: 'Đánh giá sản phẩm',
+  Favorite: 'Sản phẩm yêu thích',
+  MenuItem: 'Menu ứng dụng',
+  Notification: 'Thông báo hệ thống',
+  Order: 'Đơn hàng (Database)',
+  OrderItem: 'Chi tiết đơn hàng',
+  Product: 'Sản phẩm (Database)',
+  ProductVariant: 'Biến thể sản phẩm',
+  User: 'Khách hàng (Database)',
+  Voucher: 'Mã giảm giá (Database)',
+  Banner: 'Banner quảng cáo',
+};
+
 import type { ISidebarComponentProps } from './sidebar.type';
 
 export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
@@ -167,7 +183,7 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
             >
               <div className="flex items-center gap-2 truncate">
                 <Database size={13} className="text-slate-400 shrink-0" />
-                <span className="truncate">{m.model}</span>
+                <span className="truncate">{MODEL_DISPLAY_NAMES[m.model] || m.model}</span>
               </div>
               <span className="px-2 py-0.5 text-[9px] font-bold bg-slate-100 text-slate-500 rounded-full border border-slate-200 shrink-0 ml-2">
                 {m.count}

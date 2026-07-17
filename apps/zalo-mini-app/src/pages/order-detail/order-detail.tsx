@@ -445,7 +445,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
               onClick={handleReorder}
               className="flex-1 h-11 bg-primary text-white font-bold text-xs uppercase tracking-wider rounded-2xl border-none cursor-pointer hover:bg-primary-dark active:scale-[0.98] transition-all shadow-md"
             >
-              🔄 Mua lại đơn này
+              Mua lại đơn này
             </button>
             <button
               onClick={() => {
@@ -456,7 +456,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
               }}
               className="flex-1 h-11 border border-indigo-250 bg-indigo-50 text-indigo-700 font-bold text-xs uppercase tracking-wider rounded-2xl cursor-pointer hover:bg-indigo-100 active:scale-[0.98] transition-all"
             >
-              📦 Trả hàng / Hoàn tiền
+              Trả hàng / Hoàn tiền
             </button>
           </div>
         )}

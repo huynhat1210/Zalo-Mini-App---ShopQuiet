@@ -27,6 +27,22 @@ import {
   PackageSearch
 } from 'lucide-react';
 
+const MODEL_DISPLAY_NAMES: Record<string, string> = {
+  Category: 'Danh mục sản phẩm',
+  ChatMessage: 'Lịch sử chat',
+  Comment: 'Đánh giá sản phẩm',
+  Favorite: 'Sản phẩm yêu thích',
+  MenuItem: 'Menu ứng dụng',
+  Notification: 'Thông báo hệ thống',
+  Order: 'Đơn hàng (Database)',
+  OrderItem: 'Chi tiết đơn hàng',
+  Product: 'Sản phẩm (Database)',
+  ProductVariant: 'Biến thể sản phẩm',
+  User: 'Khách hàng (Database)',
+  Voucher: 'Mã giảm giá (Database)',
+  Banner: 'Banner quảng cáo',
+};
+
 import type { IDatabaseManagerProps } from './database-manager.type';
 
 export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
@@ -831,7 +847,7 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-3xl font-bold text-[#1b1c1b] tracking-tight">Bảng: {modelName}</h2>
+              <h2 className="text-3xl font-bold text-[#1b1c1b] tracking-tight">Bảng: {MODEL_DISPLAY_NAMES[modelName || ''] || modelName}</h2>
               <span className="px-2.5 py-0.5 text-xs font-bold text-[#0e6877] bg-[#ecf6f7] border border-[#0e6877]/10 rounded-full">
                 {records.length} bản ghi
               </span>
