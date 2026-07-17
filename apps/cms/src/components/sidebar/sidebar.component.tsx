@@ -34,6 +34,13 @@ const MODEL_DISPLAY_NAMES: Record<string, string> = {
   User: 'Khách hàng (Database)',
   Voucher: 'Mã giảm giá (Database)',
   Banner: 'Banner quảng cáo',
+  RefreshToken: 'Token bảo mật',
+  ShippingMethod: 'Phương thức giao hàng',
+  SiteSetting: 'Cấu hình hệ thống',
+  StaticPage: 'Trang tĩnh (Giới thiệu/Hỗ trợ)',
+  UserAddress: 'Địa chỉ khách hàng',
+  PaymentMethod: 'Phương thức thanh toán',
+  CartItem: 'Chi tiết giỏ hàng',
 };
 
 import type { ISidebarComponentProps } from './sidebar.type';
