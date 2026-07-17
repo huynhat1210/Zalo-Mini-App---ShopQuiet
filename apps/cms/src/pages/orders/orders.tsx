@@ -425,7 +425,7 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
                         </button>
                       </>
                     )}
-                    {selectedOrder.status !== 'COMPLETED' && selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'RETURNED' && selectedOrder.status !== 'RETURN_REQUESTED' && (
+                    {selectedOrder.status !== 'COMPLETED' && selectedOrder.status !== 'DELIVERED' && selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'RETURNED' && selectedOrder.status !== 'RETURN_REQUESTED' && (
                       <button
                         onClick={() => handleUpdateStatus(selectedOrder.id, 'CANCELLED')}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-semibold rounded-xl text-xs transition-colors border border-rose-200 hover:border-rose-600 cursor-pointer"

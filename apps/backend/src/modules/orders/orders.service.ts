@@ -422,7 +422,7 @@ export class OrdersService {
       const trackingInfo = trackingNumber || (order as any).trackingNumber;
       content = `Đơn hàng #${id} gồm [${itemsText}] đã bàn giao cho đơn vị vận chuyển.${trackingInfo ? ` Mã vận đơn của bạn: ${trackingInfo}` : ''}`;
       notifTitle = `Đơn hàng #${id} đang được giao`;
-    } else if (status === 'DELIVERED') {
+    } else if (status === 'DELIVERED' || status === 'COMPLETED') {
       content = `Đơn hàng #${id} gồm [${itemsText}] đã giao thành công! Cảm ơn bạn đã tin dùng ShopQuiet.`;
       notifTitle = `Đơn hàng #${id} giao thành công`;
     } else if (status === 'CANCELLED' || status === 'RETURNED') {
