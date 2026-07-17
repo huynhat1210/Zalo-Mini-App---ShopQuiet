@@ -39,6 +39,7 @@ export const Support: React.FC = () => {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [userOrders, setUserOrders] = useState<Order[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [shopStatus, setShopStatus] = useState<'ONLINE' | 'OFFLINE'>('ONLINE');
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
@@ -65,8 +66,31 @@ export const Support: React.FC = () => {
     }
   };
 
+  const fetchShopStatus = async () => {
+    try {
+      const res = await apiRequest<{ status: 'ONLINE' | 'OFFLINE' }>('/cms/settings/shop-status');
+      if (res && res.status) {
+        setShopStatus(res.status);
+      }
+    } catch (e) {
+      console.error('Failed to fetch shop status:', e);
+    }
+  };
+
+  const toggleShopStatus = async () => {
+    const nextStatus = shopStatus === 'ONLINE' ? 'OFFLINE' : 'ONLINE';
+    try {
+      setShopStatus(nextStatus);
+      await apiRequest('/cms/settings/shop-status', 'POST', { status: nextStatus });
+    } catch (e) {
+      console.error('Failed to toggle shop status:', e);
+      setShopStatus(shopStatus); // revert
+    }
+  };
+
   useEffect(() => {
     fetchSessions();
+    fetchShopStatus();
   }, []);
 
   // 2. Connect Socket.IO

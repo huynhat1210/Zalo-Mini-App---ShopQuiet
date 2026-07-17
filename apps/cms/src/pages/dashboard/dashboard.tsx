@@ -50,7 +50,7 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
 
         // Calculate revenue for completed & processing orders
         const revenue = orderList
-          .filter((o: any) => o.status === 'COMPLETED' || o.status === 'PROCESSING' || o.status === 'SHIPPED')
+          .filter((o: any) => o.status === 'COMPLETED' || o.status === 'DELIVERED' || o.status === 'PROCESSING' || o.status === 'SHIPPED')
           .reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0);
 
         // Find products with low stock variants (stock < 5)
@@ -93,6 +93,7 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
       case 'SHIPPED':
         return <span className="px-2.5 py-1 text-xs font-semibold text-indigo-700 bg-indigo-100 rounded-full">Đang giao</span>;
       case 'COMPLETED':
+      case 'DELIVERED':
         return <span className="px-2.5 py-1 text-xs font-semibold text-emerald-700 bg-emerald-100 rounded-full">Hoàn thành</span>;
       case 'CANCELLED':
         return <span className="px-2.5 py-1 text-xs font-semibold text-rose-700 bg-rose-100 rounded-full">Đã hủy</span>;

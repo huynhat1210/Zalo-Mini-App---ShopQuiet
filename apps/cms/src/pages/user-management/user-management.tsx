@@ -20,6 +20,16 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<Set<string | number>>(new Set());
 
+  // Customer Details Drawer states
+  const [selectedUserDetails, setSelectedUserDetails] = useState<any | null>(null);
+  const [userFavorites, setUserFavorites] = useState<any[]>([]);
+  const [userComments, setUserComments] = useState<any[]>([]);
+  const [userOrders, setUserOrders] = useState<any[]>([]);
+  const [vouchersList, setVouchersList] = useState<any[]>([]);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [voucherToGift, setVoucherToGift] = useState('');
+  const [giftingVoucher, setGiftingVoucher] = useState(false);
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -35,6 +45,56 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const handleViewUser = async (user: any) => {
+    setSelectedUserDetails(user);
+    setLoadingDetails(true);
+    try {
+      const [favs, comms, ords, vchs] = await Promise.all([
+        apiRequest('/cms/database/models/Favorite').catch(() => []),
+        apiRequest('/cms/database/models/Comment').catch(() => []),
+        apiRequest('/cms/database/models/Order').catch(() => []),
+        apiRequest('/cms/database/models/Voucher').catch(() => []),
+      ]);
+      
+      setUserFavorites((favs || []).filter((f: any) => f.zaloUserId === user.zaloId));
+      setUserComments((comms || []).filter((c: any) => c.zaloUserId === user.zaloId));
+      setUserOrders((ords || []).filter((o: any) => o.zaloUserId === user.zaloId));
+      setVouchersList(vchs || []);
+    } catch (e) {
+      console.error('Failed to load user details:', e);
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  const handleGiftVoucher = async () => {
+    if (!selectedUserDetails || !voucherToGift) return;
+    setGiftingVoucher(true);
+    try {
+      const voucher = vouchersList.find(v => v.code === voucherToGift);
+      if (!voucher) return;
+      
+      const discountStr = voucher.type === 'PERCENT' ? `${voucher.value}%` : `${voucher.value.toLocaleString('vi-VN')}đ`;
+      const content = `ShopQuiet gửi tặng riêng bạn mã giảm giá ${voucher.code} giảm ${discountStr} cho đơn từ ${voucher.minOrderVal.toLocaleString('vi-VN')}đ. Hãy mua sắm ngay nhé!`;
+      
+      await apiRequest('/cms/database/models/Notification', 'POST', {
+        zaloUserId: selectedUserDetails.zaloId,
+        title: 'Quà tặng Voucher riêng biệt 🎁',
+        content,
+        type: 'PROMOTION',
+        date: new Date().toLocaleDateString('vi-VN'),
+        read: false
+      });
+      
+      success('Tặng Voucher thành công', `Mã ${voucher.code} đã được gửi trực tiếp qua thông báo cho khách hàng này.`);
+      setVoucherToGift('');
+    } catch (err: any) {
+      toastError('Tặng Voucher thất bại', err.message || 'Lỗi khi tặng voucher');
+    } finally {
+      setGiftingVoucher(false);
+    }
+  };
 
   const handleDeleteUser = async (zaloId: string) => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) return;
@@ -192,13 +252,13 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
                         )}
                       </button>
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 cursor-pointer hover:opacity-85" onClick={() => handleViewUser(user)}>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-[#ecf6f7] flex items-center justify-center">
                           <UserIcon size={14} className="text-[#0e6877]" />
                         </div>
                         <div>
-                          <p className="text-xs font-semibold text-[#1b1c1b]">{user.name || 'Không tên'}</p>
+                          <p className="text-xs font-semibold text-[#0e6877] hover:underline">{user.name || 'Không tên'}</p>
                           <p className="text-[10px] text-slate-500">ID: {user.zaloId}</p>
                         </div>
                       </div>
@@ -246,6 +306,176 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
           </table>
         </div>
       </div>
+
+      {/* Customer Details Drawer */}
+      {selectedUserDetails && (
+        <div className="fixed inset-0 z-50 overflow-hidden animate-fadeIn">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
+            onClick={() => setSelectedUserDetails(null)}
+          />
+          <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
+            <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col h-full border-l border-slate-200">
+              {/* Header */}
+              <div className="px-6 py-5 bg-[#0e6877] text-white flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-black tracking-wide">Chi tiết khách hàng</h3>
+                  <p className="text-[10px] text-white/70 font-semibold mt-0.5">{selectedUserDetails.name || 'Không tên'}</p>
+                </div>
+                <button 
+                  onClick={() => setSelectedUserDetails(null)}
+                  className="p-1 bg-white/10 hover:bg-white/20 border-none text-white rounded-lg cursor-pointer transition-all"
+                >
+                  <span className="text-lg font-bold block leading-none px-1">×</span>
+                </button>
+              </div>
+
+              {/* Drawer Content */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
+                {loadingDetails ? (
+                  <div className="flex flex-col items-center justify-center py-24 gap-3">
+                    <div className="w-8 h-8 border-3 border-[#0e6877] border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-[#526069] text-xs font-semibold">Đang tổng hợp thông tin...</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* User Stats Profile Card */}
+                    <div className="bg-[#f3f9fa] border border-[#0e6877]/10 rounded-2xl p-4 space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] text-slate-500 font-extrabold uppercase">Hạng thành viên</span>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                          selectedUserDetails.membershipTier === 'Kim cương' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                          selectedUserDetails.membershipTier === 'Vàng' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                          selectedUserDetails.membershipTier === 'Bạc' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                          'bg-slate-50 text-slate-700 border-slate-200'
+                        }`}>
+                          {selectedUserDetails.membershipTier || 'Đồng'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] text-slate-500 font-extrabold uppercase">Tổng chi tiêu</span>
+                        <span className="text-xs font-bold text-slate-800">
+                          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedUserDetails.totalSpent || 0)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] text-slate-500 font-extrabold uppercase">Số điện thoại</span>
+                        <span className="text-xs font-semibold text-slate-800">{selectedUserDetails.phone || '-'}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] text-slate-500 font-extrabold uppercase">Email</span>
+                        <span className="text-xs font-semibold text-slate-800">{selectedUserDetails.email || '-'}</span>
+                      </div>
+                    </div>
+
+                    {/* Gift Voucher quick action */}
+                    <div className="border border-slate-200 rounded-2xl p-4 space-y-3 bg-white">
+                      <h4 className="text-xs font-bold text-slate-800">Tặng Voucher khuyến mãi 🎁</h4>
+                      <p className="text-[10px] text-slate-500 font-semibold leading-relaxed">Chọn mã giảm giá khả dụng để tặng trực tiếp qua hộp thông báo của khách hàng này.</p>
+                      <div className="flex gap-2">
+                        <select
+                          value={voucherToGift}
+                          onChange={(e) => setVoucherToGift(e.target.value)}
+                          className="flex-1 text-xs border border-slate-200 focus:border-[#0e6877] rounded-xl px-3 py-2 bg-white focus:outline-none"
+                        >
+                          <option value="">-- Chọn mã --</option>
+                          {vouchersList.map(v => (
+                            <option key={v.code} value={v.code}>{v.code} ({v.type === 'PERCENT' ? `${v.value}%` : `${v.value.toLocaleString('vi-VN')}đ`})</option>
+                          ))}
+                        </select>
+                        <button
+                          disabled={!voucherToGift || giftingVoucher}
+                          onClick={handleGiftVoucher}
+                          className="px-4 py-2 bg-[#0e6877] disabled:bg-slate-300 text-white font-bold text-xs rounded-xl border-none cursor-pointer hover:bg-[#0c5966] transition-all"
+                        >
+                          {giftingVoucher ? 'Đang gửi...' : 'Gửi tặng'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Favorites list */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Sản phẩm yêu thích</h4>
+                        <span className="px-2 py-0.5 text-[9px] font-bold bg-[#ecf6f7] text-[#0e6877] rounded-full">{userFavorites.length}</span>
+                      </div>
+                      {userFavorites.length === 0 ? (
+                        <p className="text-[10px] text-slate-400 text-center py-4 font-semibold">Chưa yêu thích sản phẩm nào</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {userFavorites.map((fav: any) => (
+                            <div key={fav.id} className="flex items-center gap-3 p-2 bg-slate-50 hover:bg-slate-100/70 rounded-xl transition-all">
+                              <div className="w-9 h-9 rounded-lg bg-slate-200 overflow-hidden shrink-0">
+                                {fav.product?.images && (
+                                  <img 
+                                    src={fav.product.images.split(',')[0]} 
+                                    alt="" 
+                                    className="w-full h-full object-cover"
+                                  />
+                                )}
+                              </div>
+                              <span className="text-xs font-semibold text-slate-800 truncate">{fav.product?.name || `Sản phẩm #${fav.productId}`}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Comments list */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Đánh giá sản phẩm</h4>
+                        <span className="px-2 py-0.5 text-[9px] font-bold bg-[#ecf6f7] text-[#0e6877] rounded-full">{userComments.length}</span>
+                      </div>
+                      {userComments.length === 0 ? (
+                        <p className="text-[10px] text-slate-400 text-center py-4 font-semibold">Chưa viết đánh giá nào</p>
+                      ) : (
+                        <div className="space-y-2.5">
+                          {userComments.map((comm: any) => (
+                            <div key={comm.id} className="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-1.5">
+                              <div className="flex justify-between items-center">
+                                <span className="text-[10px] font-bold text-[#0e6877]">Sản phẩm #{comm.productId}</span>
+                                <span className="text-[10px] font-bold text-amber-500">⭐ {comm.rating}/5</span>
+                              </div>
+                              <p className="text-xs text-slate-700 italic">"{comm.content}"</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Recent Orders */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Lịch sử đơn hàng</h4>
+                        <span className="px-2 py-0.5 text-[9px] font-bold bg-[#ecf6f7] text-[#0e6877] rounded-full">{userOrders.length}</span>
+                      </div>
+                      {userOrders.length === 0 ? (
+                        <p className="text-[10px] text-slate-400 text-center py-4 font-semibold">Chưa mua đơn hàng nào</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {userOrders.slice(0, 5).map((order: any) => (
+                            <div key={order.id} className="flex justify-between items-center p-2.5 bg-slate-50 rounded-xl">
+                              <div>
+                                <p className="text-xs font-bold text-slate-800">#{order.id}</p>
+                                <p className="text-[10px] text-slate-500 font-semibold">{new Date(order.createdAt).toLocaleDateString('vi-VN')}</p>
+                              </div>
+                              <span className="text-xs font-bold text-slate-800">
+                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.totalAmount || 0)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

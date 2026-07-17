@@ -58,4 +58,17 @@ export class VouchersController {
   async deleteVoucher(@Param('code') code: string) {
     return this.vouchersService.delete(code);
   }
+
+  @Post(':code/distribute')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async distributeVoucher(
+    @Param('code') code: string,
+    @Body('segment') segment: string
+  ) {
+    if (!segment) {
+      throw new BadRequestException('Phân khúc khách hàng là bắt buộc');
+    }
+    return this.vouchersService.distributeVoucher(code, segment);
+  }
 }

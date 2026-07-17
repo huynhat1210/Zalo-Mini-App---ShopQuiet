@@ -515,6 +515,18 @@ export class OrdersService {
       await this.updateUserMembership(order.zaloUserId);
     }
 
+    try {
+      await this.prisma.auditLog.create({
+        data: {
+          adminId: 'admin-zalo-id-1',
+          action: 'Cập nhật đơn hàng',
+          details: `Đã cập nhật trạng thái đơn hàng #${order.id} thành ${status}`
+        }
+      });
+    } catch (e) {
+      console.error('AuditLog error in order status update:', e);
+    }
+
     return order;
   }
 

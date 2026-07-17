@@ -52,7 +52,7 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
         .filter((o: any) => {
           const orderDate = new Date(o.createdAt);
           return orderDate.toDateString() === date.toDateString() && 
-                 (o.status === 'COMPLETED' || o.status === 'PROCESSING' || o.status === 'SHIPPED');
+                 (o.status === 'COMPLETED' || o.status === 'DELIVERED' || o.status === 'PROCESSING' || o.status === 'SHIPPED');
         })
         .reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0);
       
@@ -65,6 +65,7 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
   const orderStatusData = useMemo(() => {
     const statusCounts = {
       COMPLETED: 0,
+      DELIVERED: 0,
       PROCESSING: 0,
       SHIPPED: 0,
       PENDING: 0,
@@ -72,13 +73,14 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
     };
     
     data.allOrders.forEach((order: any) => {
-      if (statusCounts.hasOwnProperty(order.status)) {
-        statusCounts[order.status as keyof typeof statusCounts]++;
+      const status = order.status;
+      if (statusCounts.hasOwnProperty(status)) {
+        statusCounts[status as keyof typeof statusCounts]++;
       }
     });
     
     return [
-      { name: 'Hoàn thành', value: statusCounts.COMPLETED, color: '#10b981' },
+      { name: 'Hoàn thành', value: statusCounts.COMPLETED + statusCounts.DELIVERED, color: '#10b981' },
       { name: 'Đang xử lý', value: statusCounts.PROCESSING, color: '#3b82f6' },
       { name: 'Đang giao', value: statusCounts.SHIPPED, color: '#6366f1' },
       { name: 'Chờ thanh toán', value: statusCounts.PENDING, color: '#f59e0b' },
@@ -91,7 +93,7 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
     const productSales: Record<number, { name: string; revenue: number; quantity: number }> = {};
     
     data.allOrders.forEach((order: any) => {
-      if (order.status === 'COMPLETED' && Array.isArray(order.items)) {
+      if (['COMPLETED', 'DELIVERED'].includes(order.status) && Array.isArray(order.items)) {
         order.items.forEach((item: any) => {
           const productId = item.product?.id;
           const productName = item.product?.name || 'Sản phẩm không tên';
@@ -116,7 +118,7 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
 
   // Summary Metrics
   const summaryMetrics = useMemo(() => {
-    const completedOrders = data.allOrders.filter(o => o.status === 'COMPLETED');
+    const completedOrders = data.allOrders.filter(o => ['COMPLETED', 'DELIVERED'].includes(o.status));
     const totalRev = completedOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
     const avgOrderValue = completedOrders.length > 0 ? totalRev / completedOrders.length : 0;
     

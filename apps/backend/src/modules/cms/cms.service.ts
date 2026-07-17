@@ -242,6 +242,12 @@ export class CmsService implements OnModuleInit {
         type: 'URL',
         group: 'profile',
       },
+      {
+        key: 'shop.status',
+        label: 'Trạng thái hoạt động của Shop',
+        value: 'ONLINE',
+        group: 'support',
+      },
     ];
 
     for (const item of defaults) {
@@ -494,9 +500,23 @@ export class CmsService implements OnModuleInit {
     delete cleanData.createdAt;
     delete cleanData.updatedAt;
 
-    return (this.prisma as any)[modelKey].create({
+    const record = await (this.prisma as any)[modelKey].create({
       data: cleanData,
     });
+
+    try {
+      await this.prisma.auditLog.create({
+        data: {
+          adminId: 'admin-zalo-id-1',
+          action: `Tạo ${modelName}`,
+          details: `Đã tạo bản ghi mới trong bảng ${modelName} với dữ liệu: ${JSON.stringify(cleanData).substring(0, 500)}`
+        }
+      });
+    } catch (e) {
+      console.error('AuditLog error:', e);
+    }
+
+    return record;
   }
 
   async updateRecord(modelName: string, id: string, data: any) {
@@ -507,18 +527,46 @@ export class CmsService implements OnModuleInit {
     delete cleanData.createdAt;
     delete cleanData.updatedAt;
 
-    return (this.prisma as any)[modelKey].update({
+    const record = await (this.prisma as any)[modelKey].update({
       where: { id: parsedId },
       data: cleanData,
     });
+
+    try {
+      await this.prisma.auditLog.create({
+        data: {
+          adminId: 'admin-zalo-id-1',
+          action: `Sửa ${modelName}`,
+          details: `Đã cập nhật bản ghi ID ${id} trong bảng ${modelName} với dữ liệu mới: ${JSON.stringify(cleanData).substring(0, 500)}`
+        }
+      });
+    } catch (e) {
+      console.error('AuditLog error:', e);
+    }
+
+    return record;
   }
 
   async deleteRecord(modelName: string, id: string) {
     const modelKey = this.getModelKey(modelName);
     const parsedId = this.getParsedId(id);
-    return (this.prisma as any)[modelKey].delete({
+    const record = await (this.prisma as any)[modelKey].delete({
       where: { id: parsedId },
     });
+
+    try {
+      await this.prisma.auditLog.create({
+        data: {
+          adminId: 'admin-zalo-id-1',
+          action: `Xóa ${modelName}`,
+          details: `Đã xóa bản ghi ID ${id} khỏi bảng ${modelName}`
+        }
+      });
+    } catch (e) {
+      console.error('AuditLog error:', e);
+    }
+
+    return record;
   }
 
   async getAdminNotifications() {
@@ -526,5 +574,121 @@ export class CmsService implements OnModuleInit {
       orderBy: { id: 'desc' },
       take: 10,
     });
+  }
+
+  async getDashboardAnalytics() {
+    // 1. Calculate total sales (sum of COMPLETED and DELIVERED orders)
+    const completedOrders = await this.prisma.order.findMany({
+      where: {
+        status: { in: ['COMPLETED', 'DELIVERED'] }
+      },
+      select: { totalAmount: true, createdAt: true }
+    });
+
+    const totalRevenue = completedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+
+    // 2. Count total orders by status
+    const allOrders = await this.prisma.order.findMany({
+      select: { status: true }
+    });
+    const orderStatusCounts = allOrders.reduce<Record<string, number>>((acc, order) => {
+      acc[order.status] = (acc[order.status] || 0) + 1;
+      return acc;
+    }, {});
+
+    // 3. Count total users
+    const totalUsers = await this.prisma.user.count();
+
+    // 4. Low stock variants alert (stock < 10)
+    const lowStockVariants = await this.prisma.productVariant.findMany({
+      where: {
+        stock: { lt: 10 }
+      },
+      include: {
+        product: {
+          select: { name: true }
+        }
+      },
+      take: 10
+    });
+
+    // 5. Best selling products (sorted by soldCount desc)
+    const bestSellers = await this.prisma.product.findMany({
+      orderBy: { soldCount: 'desc' },
+      take: 5,
+      select: { id: true, name: true, price: true, soldCount: true, images: true }
+    });
+
+    // 6. Generate 30 days revenue chart data
+    const dailyRevenue: Record<string, number> = {};
+    const now = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      const dateString = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+      dailyRevenue[dateString] = 0;
+    }
+
+    completedOrders.forEach(order => {
+      const orderDate = new Date(order.createdAt);
+      const dateString = orderDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+      if (dailyRevenue[dateString] !== undefined) {
+        dailyRevenue[dateString] += order.totalAmount;
+      }
+    });
+
+    const revenueChartData = Object.keys(dailyRevenue).map(date => ({
+      date,
+      revenue: dailyRevenue[date]
+    }));
+
+    // 7. Get category products sold count
+    const categories = await this.prisma.category.findMany({
+      include: {
+        products: {
+          select: { soldCount: true }
+        }
+      }
+    });
+    const categoryChartData = categories.map(cat => {
+      const totalSold = cat.products.reduce((sum, p) => sum + (p.soldCount || 0), 0);
+      return {
+        name: cat.name,
+        value: totalSold
+      };
+    }).filter(c => c.value > 0);
+
+    return {
+      stats: {
+        totalRevenue,
+        totalOrders: allOrders.length,
+        totalUsers,
+        statusCounts: orderStatusCounts
+      },
+      lowStockVariants,
+      bestSellers,
+      revenueChartData,
+      categoryChartData
+    };
+  }
+
+  async getShopStatus() {
+    const setting = await this.prisma.siteSetting.findUnique({
+      where: { key: 'shop.status' }
+    });
+    return { status: setting?.value || 'ONLINE' };
+  }
+
+  async updateShopStatus(status: 'ONLINE' | 'OFFLINE') {
+    await this.prisma.siteSetting.upsert({
+      where: { key: 'shop.status' },
+      update: { value: status },
+      create: {
+        key: 'shop.status',
+        label: 'Trạng thái hoạt động của Shop',
+        value: status,
+        group: 'support'
+      }
+    });
+    return { success: true, status };
   }
 }

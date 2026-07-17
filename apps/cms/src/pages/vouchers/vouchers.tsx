@@ -6,20 +6,24 @@ import {
   Ticket, 
   Save, 
   X,
-  AlertCircle
+  AlertCircle,
+  Megaphone
 } from 'lucide-react';
 
 interface Voucher {
-  id: string;
+  id?: string;
   code: string;
-  type: 'PERCENTAGE' | 'FIXED';
+  type: 'PERCENT' | 'PERCENTAGE' | 'FIXED';
   value: number;
-  minOrder: number;
+  minOrderVal?: number;
+  minOrder?: number;
+  stock?: number;
   maxUses?: number;
+  expiresAt?: string;
+  endDate?: string;
   usedCount?: number;
   description?: string;
   startDate?: string;
-  endDate?: string;
 }
 
 import type { IVouchersProps } from './vouchers.type';
@@ -29,6 +33,12 @@ export const Vouchers: React.FC<IVouchersProps> = (_props) => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState('');
+
+  // Distribution states
+  const [isDistributeModalOpen, setIsDistributeModalOpen] = useState(false);
+  const [voucherToDistribute, setVoucherToDistribute] = useState<Voucher | null>(null);
+  const [targetSegment, setTargetSegment] = useState('ALL');
+  const [distributing, setDistributing] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -73,13 +83,36 @@ export const Vouchers: React.FC<IVouchersProps> = (_props) => {
     setError('');
   };
 
-  const handleDeleteVoucher = async (id: string) => {
+  const handleDeleteVoucher = async (code: string) => {
     if (!window.confirm('Bạn có muốn xóa mã giảm giá này không?')) return;
     try {
-      await apiRequest(`/vouchers/${id}`, 'DELETE');
-      setVouchers(vouchers.filter((v) => v.id !== id));
+      await apiRequest(`/vouchers/${code}`, 'DELETE');
+      setVouchers(vouchers.filter((v) => v.code !== code));
     } catch (err) {
       alert('Không thể xóa mã giảm giá. Lỗi kết nối.');
+    }
+  };
+
+  const handleOpenDistribute = (voucher: Voucher) => {
+    setVoucherToDistribute(voucher);
+    setTargetSegment('ALL');
+    setIsDistributeModalOpen(true);
+  };
+
+  const handleDistributeVoucher = async () => {
+    if (!voucherToDistribute) return;
+    setDistributing(true);
+    try {
+      const res = await apiRequest<any>(`/vouchers/${voucherToDistribute.code}/distribute`, 'POST', {
+        segment: targetSegment
+      });
+      alert(res?.message || 'Phân phối voucher thành công!');
+      setIsDistributeModalOpen(false);
+      setVoucherToDistribute(null);
+    } catch (err: any) {
+      alert(err?.message || 'Lỗi khi phân phối voucher');
+    } finally {
+      setDistributing(false);
     }
   };
 
@@ -147,7 +180,7 @@ export const Vouchers: React.FC<IVouchersProps> = (_props) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {vouchers.map((voucher) => (
             <div 
-              key={voucher.id}
+              key={voucher.code}
               className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-6 flex flex-col justify-between relative group hover:border-slate-750 transition-all duration-200"
             >
               {/* Ticket background outline */}
@@ -157,31 +190,40 @@ export const Vouchers: React.FC<IVouchersProps> = (_props) => {
               <div className="space-y-4">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-2.5">
-                    <div className="p-2.5 bg-amber-500/10 text-amber-450 rounded-2xl border border-amber-500/20">
+                    <div className="p-2.5 bg-[#0e6877]/20 text-[#0e6877] rounded-2xl border border-[#0e6877]/30">
                       <Ticket size={20} />
                     </div>
                     <div>
                       <h4 className="font-bold text-white tracking-wide text-sm">{voucher.code}</h4>
-                      <p className="text-[10px] text-slate-450 uppercase font-semibold">
-                        {voucher.type === 'PERCENTAGE' ? `Giảm ${voucher.value}%` : `Giảm ${formatPrice(voucher.value)}`}
+                      <p className="text-[10px] text-slate-400 uppercase font-semibold">
+                        {voucher.type === 'PERCENT' || voucher.type === 'PERCENTAGE' ? `Giảm ${voucher.value}%` : `Giảm ${formatPrice(voucher.value)}`}
                       </p>
                     </div>
                   </div>
                   
-                  <button
-                    onClick={() => handleDeleteVoucher(voucher.id)}
-                    className="p-1.5 bg-rose-500/10 hover:bg-rose-500 text-rose-450 hover:text-white rounded-lg transition-colors"
-                    title="Xóa voucher"
-                  >
-                    <Trash2 size={13} />
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleOpenDistribute(voucher)}
+                      className="p-1.5 bg-[#0e6877]/20 hover:bg-[#0e6877] text-[#0e6877] hover:text-white rounded-lg transition-colors border-none cursor-pointer"
+                      title="Phân phối voucher"
+                    >
+                      <Megaphone size={12} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteVoucher(voucher.code)}
+                      className="p-1.5 bg-rose-500/10 hover:bg-rose-500 text-rose-450 hover:text-white rounded-lg transition-colors border-none cursor-pointer"
+                      title="Xóa voucher"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-2 border-t border-dashed border-slate-800 pt-4 text-xs">
                   <p className="text-slate-400 font-medium">{voucher.description || 'Giảm giá cực sốc dành cho tất cả khách hàng.'}</p>
-                  <div className="flex justify-between text-[11px]"><span className="text-slate-500">Đơn tối thiểu:</span><span className="text-slate-200 font-semibold">{formatPrice(voucher.minOrder)}</span></div>
-                  <div className="flex justify-between text-[11px]"><span className="text-slate-500">Đã dùng:</span><span className="text-slate-200 font-semibold">{voucher.usedCount || 0} / {voucher.maxUses || 'Vô hạn'}</span></div>
-                  <div className="flex justify-between text-[11px]"><span className="text-slate-500">Hạn dùng:</span><span className="text-slate-200 font-semibold">{formatDate(voucher.startDate)} - {formatDate(voucher.endDate)}</span></div>
+                  <div className="flex justify-between text-[11px]"><span className="text-slate-500">Đơn tối thiểu:</span><span className="text-slate-200 font-semibold">{formatPrice(voucher.minOrderVal || voucher.minOrder || 0)}</span></div>
+                  <div className="flex justify-between text-[11px]"><span className="text-slate-500">Còn lại trong kho:</span><span className="text-slate-200 font-semibold">{voucher.stock !== undefined ? voucher.stock : voucher.maxUses || 0}</span></div>
+                  <div className="flex justify-between text-[11px]"><span className="text-slate-500">Hạn dùng:</span><span className="text-slate-200 font-semibold">{formatDate(voucher.startDate)} - {formatDate(voucher.expiresAt || voucher.endDate)}</span></div>
                 </div>
               </div>
             </div>
@@ -348,6 +390,72 @@ export const Vouchers: React.FC<IVouchersProps> = (_props) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Distribute Voucher Modal */}
+      {isDistributeModalOpen && voucherToDistribute && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-slideUp text-white">
+            <div className="px-6 py-5 bg-[#0e6877] text-white flex items-center justify-between">
+              <h3 className="text-sm font-black tracking-wide flex items-center gap-2">
+                <Megaphone size={16} /> Phân phối Voucher: {voucherToDistribute.code}
+              </h3>
+              <button 
+                onClick={() => {
+                  setIsDistributeModalOpen(false);
+                  setVoucherToDistribute(null);
+                }}
+                className="p-1 bg-white/10 hover:bg-white/20 border-none text-white rounded-lg cursor-pointer transition-all"
+              >
+                <span className="text-lg font-bold block leading-none px-1">×</span>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <p className="text-xs text-slate-400 font-medium leading-relaxed">
+                Chọn phân khúc nhóm khách hàng mục tiêu để tự động gửi thông báo đính kèm voucher này. Khách hàng tương ứng sẽ nhận được thông báo ngay lập tức trên Zalo Mini App.
+              </p>
+              
+              <div className="space-y-2">
+                <label className="block text-slate-450 text-[10px] font-bold uppercase tracking-wider">
+                  Phân khúc khách hàng nhận Voucher
+                </label>
+                <select
+                  value={targetSegment}
+                  onChange={(e) => setTargetSegment(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-[#0e6877] rounded-xl py-2.5 px-3.5 text-xs text-white focus:outline-none transition-all font-semibold"
+                >
+                  <option value="ALL">Tất cả khách hàng</option>
+                  <option value="NEW_USERS">Khách hàng mới (Chưa có đơn hàng nào)</option>
+                  <option value="DIAMOND">Thành viên Kim cương (Diamond)</option>
+                  <option value="GOLD">Thành viên Vàng (Gold)</option>
+                  <option value="SILVER">Thành viên Bạc (Silver)</option>
+                  <option value="BRONZE">Thành viên Đồng (Bronze)</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-800 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDistributeModalOpen(false);
+                    setVoucherToDistribute(null);
+                  }}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-750 text-slate-300 font-semibold rounded-xl text-xs transition-colors border-none cursor-pointer"
+                >
+                  Hủy
+                </button>
+                <button
+                  disabled={distributing}
+                  onClick={handleDistributeVoucher}
+                  className="px-5 py-2 bg-[#0e6877] hover:bg-[#0c5966] text-white font-semibold rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-lg border-none cursor-pointer"
+                >
+                  {distributing ? 'Đang gửi...' : 'Gửi phân phối'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

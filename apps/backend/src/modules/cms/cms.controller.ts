@@ -96,6 +96,25 @@ export class CmsController {
     return this.cmsService.deleteRecord(modelName, id);
   }
 
+  @Get('analytics/dashboard')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async getDashboardAnalytics() {
+    return this.cmsService.getDashboardAnalytics();
+  }
+
+  @Get('settings/shop-status')
+  async getShopStatus() {
+    return this.cmsService.getShopStatus();
+  }
+
+  @Post('settings/shop-status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async updateShopStatus(@Body('status') status: 'ONLINE' | 'OFFLINE') {
+    return this.cmsService.updateShopStatus(status);
+  }
+
   @Get('notifications')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')

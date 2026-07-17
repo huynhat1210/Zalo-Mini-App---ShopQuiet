@@ -138,4 +138,80 @@ export class VouchersService {
   async invalidateVouchersCache() {
     await this.cacheManager.del('vouchers_all');
   }
+
+  async distributeVoucher(code: string, segment: string) {
+    const voucher = await this.prisma.voucher.findUnique({
+      where: { code: code.toUpperCase() }
+    });
+    if (!voucher) {
+      throw new NotFoundException('Mã giảm giá không tồn tại');
+    }
+
+    // 1. Determine target users
+    let users: any[] = [];
+    if (segment === 'ALL') {
+      users = await this.prisma.user.findMany({ select: { zaloId: true } });
+    } else if (segment === 'NEW_USERS') {
+      // Users with 0 orders
+      users = await this.prisma.user.findMany({
+        where: {
+          orders: { none: {} }
+        },
+        select: { zaloId: true }
+      });
+    } else {
+      // Member tiers: DIAMOND, GOLD, SILVER, BRONZE
+      // Map to Vietnamese display tiers: Kim cương, Vàng, Bạc, Đồng
+      let tierName = 'Đồng';
+      if (segment === 'DIAMOND') tierName = 'Kim cương';
+      else if (segment === 'GOLD') tierName = 'Vàng';
+      else if (segment === 'SILVER') tierName = 'Bạc';
+
+      users = await this.prisma.user.findMany({
+        where: { membershipTier: tierName },
+        select: { zaloId: true }
+      });
+    }
+
+    if (users.length === 0) {
+      return { success: true, count: 0, message: 'Không có khách hàng nào thuộc phân khúc này.' };
+    }
+
+    // 2. Create notification entries for all target users
+    const expiryStr = voucher.expiresAt 
+      ? ` Hạn sử dụng đến ${new Date(voucher.expiresAt).toLocaleDateString('vi-VN')}.`
+      : '';
+    const discountStr = voucher.type === 'PERCENT' ? `${voucher.value}%` : `${voucher.value.toLocaleString('vi-VN')}đ`;
+
+    const notificationsData = users.map(user => ({
+      zaloUserId: user.zaloId,
+      title: 'Quà tặng Voucher độc quyền từ ShopQuiet 🎁',
+      content: `Chúc mừng bạn! ShopQuiet tặng bạn mã giảm giá ${voucher.code} giảm trực tiếp ${discountStr} cho đơn hàng từ ${voucher.minOrderVal.toLocaleString('vi-VN')}đ.${expiryStr} Hãy copy mã và mua sắm ngay nhé!`,
+      type: 'PROMOTION',
+      date: new Date().toLocaleDateString('vi-VN'),
+      read: false
+    }));
+
+    await this.prisma.notification.createMany({
+      data: notificationsData
+    });
+
+    try {
+      await this.prisma.auditLog.create({
+        data: {
+          adminId: 'admin-zalo-id-1',
+          action: 'Phân phối Voucher',
+          details: `Đã phân phối mã giảm giá ${voucher.code} tới ${users.length} khách hàng thuộc phân khúc: ${segment}`
+        }
+      });
+    } catch (e) {
+      console.error('AuditLog error in voucher distribution:', e);
+    }
+
+    return {
+      success: true,
+      count: users.length,
+      message: `Đã phân phối thành công mã ${voucher.code} tới ${users.length} khách hàng!`
+    };
+  }
 }
