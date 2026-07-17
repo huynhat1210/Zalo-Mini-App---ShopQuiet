@@ -22,6 +22,9 @@ export interface IOrder {
   paymentMethod?: string;
   voucherCode?: string;
   discountAmount?: number;
+  returnReason?: string;
+  returnDescription?: string;
+  returnImages?: string;
 }
 
 export interface INotification {

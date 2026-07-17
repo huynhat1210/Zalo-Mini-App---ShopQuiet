@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Page } from 'zmp-ui';
 import { useCart, IOrderItem } from '../../App';
-import { apiRequest } from '../../utils/api';
+import { apiRequest, API_BASE_URL } from '../../utils/api';
 import { IOrderDetailProps } from './order-detail.type';
 import { Payment } from 'zmp-sdk/apis';
 
@@ -146,7 +146,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
   const handleReorder = async () => {
     try {
       showToast('Đang mua lại đơn hàng...', 'info');
-      for (const item of selectedOrder.items) {
+      for (const item of selectedOrder.items || []) {
         if (item.product) {
           await addToCart(item.product as any, item.quantity, item.size, item.color);
         }
@@ -165,7 +165,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
     if (!files || files.length === 0) return;
     setUploadingReturnImg(true);
     try {
-      const urls = [];
+      const urls: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const formData = new FormData();
