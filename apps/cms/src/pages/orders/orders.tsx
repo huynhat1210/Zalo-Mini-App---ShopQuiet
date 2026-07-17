@@ -31,15 +31,23 @@ interface Order {
   customerName: string;
   phone: string;
   address: string;
-  status: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'COMPLETED' | 'CANCELLED';
+  status: string;
   total: number;
   createdAt: string;
   paymentMethod?: string | null;
   items: OrderItem[];
   trackingNumber?: string | null;
+  returnReason?: string | null;
+  returnDescription?: string | null;
+  returnImages?: string | null;
 }
 
 export const Orders: React.FC<IOrdersProps> = (_props) => {
+  const getBackendUrl = () => {
+    return window.location.origin.includes('localhost') ? 'http://localhost:3000' : 'https://zalo-mini-app-shopquiet.onrender.com';
+  };
+  const serverUrl = getBackendUrl();
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -193,15 +201,21 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PENDING':
+      case 'PENDING_PAYMENT':
         return <span className="px-2.5 py-1 text-xs font-semibold text-amber-300 bg-amber-500/10 rounded-full">Chờ thanh toán</span>;
       case 'PROCESSING':
         return <span className="px-2.5 py-1 text-xs font-semibold text-blue-300 bg-blue-500/10 rounded-full">Đang xử lý</span>;
       case 'SHIPPED':
         return <span className="px-2.5 py-1 text-xs font-semibold text-indigo-300 bg-indigo-500/10 rounded-full">Đang giao</span>;
       case 'COMPLETED':
+      case 'DELIVERED':
         return <span className="px-2.5 py-1 text-xs font-semibold text-emerald-300 bg-emerald-500/10 rounded-full">Hoàn thành</span>;
       case 'CANCELLED':
         return <span className="px-2.5 py-1 text-xs font-semibold text-rose-300 bg-rose-500/10 rounded-full">Đã hủy</span>;
+      case 'RETURN_REQUESTED':
+        return <span className="px-2.5 py-1 text-xs font-semibold text-purple-300 bg-purple-500/10 rounded-full font-bold">Chờ hoàn trả</span>;
+      case 'RETURNED':
+        return <span className="px-2.5 py-1 text-xs font-semibold text-slate-300 bg-slate-500/10 rounded-full">Đã hoàn trả</span>;
       default:
         return <span className="px-2.5 py-1 text-xs font-semibold text-slate-300 bg-slate-500/10 rounded-full">{status}</span>;
     }
@@ -393,7 +407,25 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
                         Hoàn thành
                       </button>
                     )}
-                    {selectedOrder.status !== 'COMPLETED' && selectedOrder.status !== 'CANCELLED' && (
+                    {selectedOrder.status === 'RETURN_REQUESTED' && (
+                      <>
+                        <button
+                          onClick={() => handleUpdateStatus(selectedOrder.id, 'RETURNED')}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs transition-colors border-none cursor-pointer"
+                        >
+                          <Check size={12} />
+                          Chấp nhận Trả hàng
+                        </button>
+                        <button
+                          onClick={() => handleUpdateStatus(selectedOrder.id, 'COMPLETED')}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-colors border border-slate-200 cursor-pointer"
+                        >
+                          <XCircle size={12} />
+                          Từ chối Trả hàng
+                        </button>
+                      </>
+                    )}
+                    {selectedOrder.status !== 'COMPLETED' && selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'RETURNED' && selectedOrder.status !== 'RETURN_REQUESTED' && (
                       <button
                         onClick={() => handleUpdateStatus(selectedOrder.id, 'CANCELLED')}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-semibold rounded-xl text-xs transition-colors border border-rose-200 hover:border-rose-600 cursor-pointer"
@@ -428,6 +460,42 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
                   <div className="flex justify-between"><span className="text-slate-450">Thời gian tạo:</span><span className="text-slate-800 font-semibold">{formatDate(selectedOrder.createdAt)}</span></div>
                 </div>
               </div>
+
+              {/* Return request details if present */}
+              {['RETURN_REQUESTED', 'RETURNED'].includes(selectedOrder.status) && (
+                <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4.5 space-y-2.5 text-xs text-left">
+                  <span className="block text-[10px] font-extrabold text-indigo-800 uppercase tracking-wider">Thông tin yêu cầu hoàn trả</span>
+                  <div className="space-y-1.5 text-[11px]">
+                    <div className="flex justify-between"><span className="text-indigo-700 font-medium">Lý do:</span><span className="text-slate-800 font-bold">{selectedOrder.returnReason}</span></div>
+                    {selectedOrder.returnDescription && (
+                      <div className="flex flex-col gap-0.5"><span className="text-indigo-700 font-medium">Chi tiết lỗi:</span><p className="text-slate-700 bg-white border border-indigo-150 p-2.5 rounded-xl mt-0.5 leading-relaxed break-words">{selectedOrder.returnDescription}</p></div>
+                    )}
+                    {selectedOrder.returnImages && (() => {
+                      try {
+                        const parsed = JSON.parse(selectedOrder.returnImages);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                          return (
+                            <div className="flex flex-col gap-1.5">
+                              <span className="text-indigo-700 font-medium">Ảnh bằng chứng:</span>
+                              <div className="flex gap-2">
+                                {parsed.map((img: string, idx: number) => {
+                                  const full = img.startsWith('http') ? img : `${serverUrl || ''}${img}`;
+                                  return (
+                                    <a key={idx} href={full} target="_blank" rel="noreferrer" className="block w-14 h-14 rounded-xl border border-indigo-200 overflow-hidden bg-white shadow-2xs hover:scale-105 active:scale-95 transition-transform">
+                                      <img src={full} alt="Bằng chứng" className="w-full h-full object-cover" />
+                                    </a>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        }
+                      } catch (e) {}
+                      return null;
+                    })()}
+                  </div>
+                </div>
+              )}
 
               {/* Items List */}
               <div className="space-y-4">

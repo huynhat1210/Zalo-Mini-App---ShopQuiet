@@ -13,7 +13,8 @@ import {
   UserManagement,
   Analytics,
   Media,
-  Notifications
+  Notifications,
+  Support
 } from './pages';
 import { ToastProviderComponent, useToast, PermissionProviderComponent } from './contexts';
 import './App.css';
@@ -68,6 +69,7 @@ export const App: React.FC = () => {
               <Route path="/banners" element={<Banners />} />
               <Route path="/database/:modelName" element={<DatabaseManager />} />
               <Route path="/users" element={<UserManagement />} />
+              <Route path="/support" element={<Support />} />
               {/* Catch-all fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

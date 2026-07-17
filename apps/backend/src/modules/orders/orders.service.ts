@@ -425,9 +425,14 @@ export class OrdersService {
     } else if (status === 'DELIVERED') {
       content = `Đơn hàng #${id} gồm [${itemsText}] đã giao thành công! Cảm ơn bạn đã tin dùng ShopQuiet.`;
       notifTitle = `Đơn hàng #${id} giao thành công`;
-    } else if (status === 'CANCELLED') {
-      content = `Đơn hàng #${id} gồm [${itemsText}] đã được hủy bỏ thành công.`;
-      notifTitle = `Đơn hàng #${id} đã hủy`;
+    } else if (status === 'CANCELLED' || status === 'RETURNED') {
+      const isReturn = status === 'RETURNED';
+      content = isReturn
+        ? `Đơn hàng #${id} gồm [${itemsText}] đã được hoàn trả thành công.`
+        : `Đơn hàng #${id} gồm [${itemsText}] đã được hủy bỏ thành công.`;
+      notifTitle = isReturn
+        ? `Đơn hàng #${id} đã hoàn trả`
+        : `Đơn hàng #${id} đã hủy`;
 
       // Return stock back to inventory and decrement soldCount
       for (const item of order.items) {
@@ -700,5 +705,42 @@ export class OrdersService {
       console.error('[ZaloPay Callback] Error parsing callback data:', e);
       return { return_code: 0, return_message: 'error parsing callback data' };
     }
+  }
+
+  async requestReturn(id: string, reason: string, description: string, images?: string[]) {
+    const order = await this.prisma.order.update({
+      where: { id },
+      data: {
+        status: 'RETURN_REQUESTED',
+        returnReason: reason,
+        returnDescription: description,
+        returnImages: images ? JSON.stringify(images) : null,
+      },
+    });
+
+    try {
+      if (order.zaloUserId) {
+        await this.prisma.notification.create({
+          data: {
+            zaloUserId: order.zaloUserId,
+            title: `Yêu cầu trả hàng #${id}`,
+            content: `Yêu cầu trả hàng của đơn hàng #${id} đã gửi thành công. Cửa hàng sẽ xét duyệt sớm nhất.`,
+            type: 'order',
+            date:
+              new Date().toLocaleTimeString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit',
+              }) +
+              ' - ' +
+              new Date().toLocaleDateString('vi-VN'),
+            read: false,
+          },
+        });
+      }
+    } catch (e) {
+      console.error('Failed to create notification for return:', e);
+    }
+
+    return order;
   }
 }

@@ -105,6 +105,10 @@ export interface ICartContextType {
   isSavedItem: (productId: number) => boolean;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
+  isChatOpen: boolean;
+  setIsChatOpen: (open: boolean) => void;
+  chatContextProduct: IProduct | null;
+  setChatContextProduct: (product: IProduct | null) => void;
   showToast: (message: string, type?: TToastType) => void;
   toast: IToastState | null;
   zaloUser: IZaloUser | null;

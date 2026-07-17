@@ -18,6 +18,8 @@ export const useAppStore = create<IAppState>()(
       selectedProductDetail: null,
       savedItems: [],
       isCartOpen: false,
+      isChatOpen: false,
+      chatContextProduct: null,
       toast: null,
       zaloUser: null,
       selectedOrder: null,
@@ -28,6 +30,8 @@ export const useAppStore = create<IAppState>()(
       setActiveTab: (tab) => set({ activeTab: tab }),
       setSelectedProductDetail: (product) => set({ selectedProductDetail: product }),
       setIsCartOpen: (open) => set({ isCartOpen: open }),
+      setIsChatOpen: (open) => set({ isChatOpen: open }),
+      setChatContextProduct: (product) => set({ chatContextProduct: product }),
       setToast: (toast) => set({ toast }),
       showToast: (message, type = 'success') => {
         const { toastTimerRef } = get();

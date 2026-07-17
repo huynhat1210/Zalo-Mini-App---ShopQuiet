@@ -92,6 +92,17 @@ export class OrdersController {
     );
   }
 
+  @Post(':id/return')
+  @UseGuards(JwtAuthGuard)
+  async requestReturn(
+    @Param('id') id: string,
+    @Body('reason') reason: string,
+    @Body('description') description: string,
+    @Body('images') images?: string[],
+  ) {
+    return this.ordersService.requestReturn(id, reason, description, images);
+  }
+
   @Post('zalopay-callback')
   async handleZaloPayCallback(@Body() body: unknown) {
     return this.ordersService.handleZaloPayCallback(body);

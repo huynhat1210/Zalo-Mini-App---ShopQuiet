@@ -36,7 +36,7 @@ type ProfileAddressFormValues = z.infer<typeof profileAddressSchema>;
 
 export const Profile: React.FC<IProfileProps> = (props) => {
   const { initialSubPage = 'profile' } = props;
-  const { setActiveTab, setSelectedProductDetail, showToast, zaloUser, updateZaloUser, setSelectedOrder, savedItems, setIsCartOpen, cart, refreshZaloProfile } = useCart();
+  const { setActiveTab, setSelectedProductDetail, showToast, zaloUser, updateZaloUser, setSelectedOrder, savedItems, setIsCartOpen, cart, refreshZaloProfile, setIsChatOpen } = useCart();
   const [orders, setOrders] = useState<IOrder[]>([]);
   const [recommendationProducts, setRecommendationProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1289,8 +1289,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
             
             <button 
               onClick={() => {
-                setActiveStaticPageSlug('help-support');
-                setIsHelpModalOpen(true);
+                setIsChatOpen(true);
               }}
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >

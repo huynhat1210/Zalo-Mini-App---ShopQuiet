@@ -6,6 +6,8 @@ export interface IAppState {
   selectedProductDetail: IProduct | null;
   savedItems: IProduct[];
   isCartOpen: boolean;
+  isChatOpen: boolean;
+  chatContextProduct: IProduct | null;
   toast: IToastState | null;
   zaloUser: IZaloUser | null;
   selectedOrder: IOrder | null;
@@ -16,6 +18,8 @@ export interface IAppState {
   setActiveTab: (tab: string) => void;
   setSelectedProductDetail: (product: IProduct | null) => void;
   setIsCartOpen: (open: boolean) => void;
+  setIsChatOpen: (open: boolean) => void;
+  setChatContextProduct: (product: IProduct | null) => void;
   setToast: (toast: IToastState | null) => void;
   showToast: (message: string, type?: TToastType) => void;
   updateZaloUser: (user: IZaloUser) => void;

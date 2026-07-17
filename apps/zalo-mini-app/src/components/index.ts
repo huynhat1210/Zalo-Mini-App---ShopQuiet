@@ -6,3 +6,4 @@ export * from './error-boundary';
 export * from './empty-state';
 export * from './offline-state';
 export * from './lazy-image';
+export * from './chat-overlay/chat-overlay.component';

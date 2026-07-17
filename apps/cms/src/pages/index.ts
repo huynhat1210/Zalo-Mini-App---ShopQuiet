@@ -9,3 +9,4 @@ export * from './vouchers';
 export * from './analytics';
 export * from './media';
 export * from './notifications';
+export * from './support/support';

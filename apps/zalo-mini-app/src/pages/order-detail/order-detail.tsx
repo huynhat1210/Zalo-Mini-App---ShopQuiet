@@ -11,23 +11,37 @@ const STATUS_LABEL: Record<string, string> = {
   PROCESSING: 'Đang xử lý',
   SHIPPED: 'Đang giao',
   DELIVERED: 'Hoàn thành',
+  COMPLETED: 'Hoàn thành',
   CANCELLED: 'Đã hủy',
   PENDING_PAYMENT: 'Chờ thanh toán',
+  RETURN_REQUESTED: 'Chờ hoàn trả',
+  RETURNED: 'Đã hoàn trả',
 };
 
 const STATUS_CLASS: Record<string, string> = {
   PROCESSING: 'bg-yellow-50 text-yellow-700',
   SHIPPED: 'bg-blue-50 text-blue-700',
   DELIVERED: 'bg-green-50 text-green-700',
+  COMPLETED: 'bg-green-50 text-green-700',
   CANCELLED: 'bg-red-50 text-red-600',
   PENDING_PAYMENT: 'bg-orange-50 text-orange-600',
+  RETURN_REQUESTED: 'bg-indigo-50 text-indigo-700',
+  RETURNED: 'bg-neutral-100 text-neutral-600',
 };
 
 export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
-  const { selectedOrder, setSelectedOrder, setActiveTab, showToast } = useCart();
+  const { selectedOrder, setSelectedOrder, setActiveTab, showToast, addToCart, setIsCartOpen } = useCart();
   const [cancelling, setCancelling] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [paying, setPaying] = useState(false);
+
+  // Return/Refund states
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [returnReason, setReturnReason] = useState('Sản phẩm lỗi kỹ thuật / không hoạt động');
+  const [returnDescription, setReturnDescription] = useState('');
+  const [returnImages, setReturnImages] = useState<string[]>([]);
+  const [uploadingReturnImg, setUploadingReturnImg] = useState(false);
+  const [submittingReturn, setSubmittingReturn] = useState(false);
 
   if (!selectedOrder) {
     return (
@@ -115,6 +129,86 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
     }
   };
 
+  const handleReorder = async () => {
+    try {
+      showToast('Đang mua lại đơn hàng...', 'info');
+      for (const item of selectedOrder.items) {
+        if (item.product) {
+          await addToCart(item.product as any, item.quantity, item.size, item.color);
+        }
+      }
+      showToast('Đã thêm sản phẩm vào giỏ hàng!', 'success');
+      setSelectedOrder(null);
+      setIsCartOpen(true);
+    } catch (e) {
+      console.error(e);
+      showToast('Lỗi mua lại đơn hàng!', 'warning');
+    }
+  };
+
+  const handleReturnImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingReturnImg(true);
+    try {
+      const urls = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetch(`${API_BASE_URL}/products/0/comments/upload-image`, {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await res.json();
+        if (data && data.url) {
+          urls.push(data.url);
+        }
+      }
+      if (urls.length > 0) {
+        setReturnImages(prev => [...prev, ...urls]);
+        showToast('Tải ảnh bằng chứng lên thành công!', 'success');
+      } else {
+        showToast('Tải ảnh thất bại!', 'warning');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('Lỗi tải ảnh!', 'warning');
+    } finally {
+      setUploadingReturnImg(false);
+    }
+  };
+
+  const handleSubmitReturn = async () => {
+    if (!returnReason) {
+      showToast('Vui lòng chọn lý do hoàn trả!', 'warning');
+      return;
+    }
+    setSubmittingReturn(true);
+    try {
+      const res = await apiRequest<any>(`/orders/${selectedOrder.id}/return`, 'POST', {
+        reason: returnReason,
+        description: returnDescription,
+        images: returnImages,
+      });
+      if (res) {
+        showToast('Đã gửi yêu cầu hoàn trả thành công!', 'success');
+        setSelectedOrder({
+          ...selectedOrder,
+          status: 'RETURN_REQUESTED',
+          returnReason,
+          returnDescription,
+          returnImages: JSON.stringify(returnImages),
+        });
+        setIsReturnModalOpen(false);
+      }
+    } catch (err: any) {
+      console.error(err);
+      showToast(err.message || 'Lỗi gửi yêu cầu hoàn trả!', 'warning');
+    } finally {
+      setSubmittingReturn(false);
+    }
+  };
 
   const statusLabel = STATUS_LABEL[selectedOrder.status] || selectedOrder.status;
   const statusClass = STATUS_CLASS[selectedOrder.status] || 'bg-neutral-100 text-textColor-variant';
@@ -183,9 +277,9 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                   { label: 'Đơn hàng đã hủy', desc: 'Đơn hàng đã bị hủy bỏ', active: true, isCancelled: true }
                 ] : [
                   { label: 'Đã nhận đơn hàng', desc: 'Hệ thống đã ghi nhận đơn thành công', active: true, isCancelled: false },
-                  { label: 'Đang chuẩn bị', desc: 'Kho hàng đang đóng gói sản phẩm của bạn', active: selectedOrder.status === 'PROCESSING' || selectedOrder.status === 'SHIPPED' || selectedOrder.status === 'DELIVERED', isCancelled: false },
-                  { label: 'Đang giao hàng', desc: 'Đơn hàng đã bàn giao cho đơn vị vận chuyển', active: selectedOrder.status === 'SHIPPED' || selectedOrder.status === 'DELIVERED', isCancelled: false },
-                  { label: 'Đã hoàn thành', desc: 'Đơn hàng đã được giao nhận thành công', active: selectedOrder.status === 'DELIVERED', isCancelled: false }
+                  { label: 'Đang chuẩn bị', desc: 'Kho hàng đang đóng gói sản phẩm của bạn', active: ['PROCESSING', 'SHIPPED', 'DELIVERED', 'COMPLETED'].includes(selectedOrder.status), isCancelled: false },
+                  { label: 'Đang giao hàng', desc: 'Đơn hàng đã bàn giao cho đơn vị vận chuyển', active: ['SHIPPED', 'DELIVERED', 'COMPLETED'].includes(selectedOrder.status), isCancelled: false },
+                  { label: 'Đã hoàn thành', desc: 'Đơn hàng đã được giao nhận thành công', active: ['DELIVERED', 'COMPLETED'].includes(selectedOrder.status), isCancelled: false }
                 ]).map((step, sIdx) => (
                   <div key={sIdx} className="relative pl-5 text-xs">
                     <div className={`absolute left-[-16px] top-[3px] w-2.5 h-2.5 rounded-full border-2 ${
@@ -318,7 +412,163 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
             </div>
           </div>
         )}
+
+        {/* Re-order & Return actions for DELIVERED status */}
+        {['DELIVERED', 'COMPLETED'].includes(selectedOrder.status) && (
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={handleReorder}
+              className="flex-1 h-11 bg-primary text-white font-bold text-xs uppercase tracking-wider rounded-2xl border-none cursor-pointer hover:bg-primary-dark active:scale-[0.98] transition-all shadow-md"
+            >
+              🔄 Mua lại đơn này
+            </button>
+            <button
+              onClick={() => {
+                setReturnReason('Sản phẩm lỗi kỹ thuật / không hoạt động');
+                setReturnDescription('');
+                setReturnImages([]);
+                setIsReturnModalOpen(true);
+              }}
+              className="flex-1 h-11 border border-indigo-250 bg-indigo-50 text-indigo-700 font-bold text-xs uppercase tracking-wider rounded-2xl cursor-pointer hover:bg-indigo-100 active:scale-[0.98] transition-all"
+            >
+              📦 Trả hàng / Hoàn tiền
+            </button>
+          </div>
+        )}
+
+        {/* Return request details display if in RETURN_REQUESTED or RETURNED */}
+        {['RETURN_REQUESTED', 'RETURNED'].includes(selectedOrder.status) && (
+          <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4.5 space-y-2 text-left mt-4">
+            <p className="font-bold text-indigo-800 text-xs">
+              {selectedOrder.status === 'RETURNED' ? '✓ Đơn hàng đã được hoàn trả thành công' : '⏳ Yêu cầu Trả hàng / Hoàn tiền đang chờ duyệt'}
+            </p>
+            <p className="text-indigo-750 font-medium text-[10.5px] mt-1">Lý do: <span className="font-bold text-textColor">{selectedOrder.returnReason}</span></p>
+            {selectedOrder.returnDescription && (
+              <p className="text-indigo-750 font-medium text-[10.5px]">Chi tiết: <span className="text-textColor">{selectedOrder.returnDescription}</span></p>
+            )}
+            {selectedOrder.returnImages && (() => {
+              try {
+                const parsed = JSON.parse(selectedOrder.returnImages);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                  return (
+                    <div className="flex gap-2 mt-2">
+                      {parsed.map((img: string, idx: number) => {
+                        const full = img.startsWith('http') ? img : `${API_BASE_URL.replace('/api/v1', '')}${img}`;
+                        return (
+                          <img key={idx} src={full} alt="Bằng chứng" className="w-12 h-12 object-cover rounded-xl border border-indigo-150" />
+                        );
+                      })}
+                    </div>
+                  );
+                }
+              } catch (e) {}
+              return null;
+            })()}
+          </div>
+        )}
       </div>
+
+      {/* Return request modal */}
+      {isReturnModalOpen && (
+        <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-center justify-center p-6 text-left">
+          <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up">
+            <div className="flex justify-between items-center pb-2 border-b border-neutral-100">
+              <h3 className="text-xs font-black text-textColor uppercase tracking-wider">Yêu cầu Trả hàng / Hoàn tiền</h3>
+              <button 
+                onClick={() => setIsReturnModalOpen(false)} 
+                className="text-neutral-400 hover:text-textColor border-none bg-transparent cursor-pointer font-bold text-xs p-1"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Reason dropdown */}
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-extrabold text-[#526069]/70 uppercase tracking-widest block">Lý do hoàn trả</label>
+              <select
+                value={returnReason}
+                onChange={(e) => setReturnReason(e.target.value)}
+                className="w-full text-xs p-3 bg-neutral-50 rounded-xl border border-neutral-200 outline-none font-bold text-textColor cursor-pointer focus:border-primary"
+              >
+                <option value="Sản phẩm lỗi kỹ thuật / không hoạt động">Sản phẩm lỗi kỹ thuật / không hoạt động</option>
+                <option value="Sản phẩm hư hỏng do vận chuyển">Sản phẩm hư hỏng do vận chuyển</option>
+                <option value="Gửi sai sản phẩm / thiếu hàng">Gửi sai sản phẩm / thiếu hàng</option>
+                <option value="Hàng giả / hàng nhái">Hàng giả / hàng nhái</option>
+                <option value="Khác">Khác (Nêu chi tiết ở mô tả)</option>
+              </select>
+            </div>
+
+            {/* Description textarea */}
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-extrabold text-[#526069]/70 uppercase tracking-widest block">Mô tả chi tiết</label>
+              <textarea
+                rows={3}
+                placeholder="Mô tả cụ thể tình trạng lỗi của sản phẩm..."
+                value={returnDescription}
+                onChange={(e) => setReturnDescription(e.target.value)}
+                className="w-full text-xs p-3 bg-neutral-50 rounded-xl border border-neutral-200 focus:border-primary outline-none resize-none font-medium text-textColor leading-relaxed"
+              />
+            </div>
+
+            {/* Images upload */}
+            <div className="space-y-2">
+              <label className="text-[9px] font-extrabold text-[#526069]/70 uppercase tracking-widest block">Ảnh bằng chứng lỗi (Tối đa 3 ảnh)</label>
+              <div className="flex flex-wrap gap-2.5">
+                {returnImages.map((url, idx) => (
+                  <div key={idx} className="w-14 h-14 rounded-xl border border-neutral-200 overflow-hidden bg-neutral-50 relative">
+                    <img src={url.startsWith('http') ? url : `${API_BASE_URL.replace('/api/v1', '')}${url}`} alt="Return proof" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setReturnImages(prev => prev.filter((_, i) => i !== idx))}
+                      className="absolute -top-1 -right-1 w-4.5 h-4.5 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-xs border border-white active:scale-90"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                
+                {returnImages.length < 3 && (
+                  <label className="w-14 h-14 rounded-xl border-2 border-dashed border-neutral-300 hover:border-primary flex flex-col items-center justify-center cursor-pointer bg-neutral-50 transition-colors">
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      multiple 
+                      className="hidden" 
+                      onChange={handleReturnImageUpload}
+                      disabled={uploadingReturnImg}
+                    />
+                    {uploadingReturnImg ? (
+                      <div className="w-4.5 h-4.5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <>
+                        <span className="text-base font-bold text-neutral-400">+</span>
+                        <span className="text-[7.5px] text-neutral-450 font-bold uppercase mt-0.5">Ảnh</span>
+                      </>
+                    )}
+                  </label>
+                )}
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex gap-3 pt-2">
+              <button
+                disabled={submittingReturn || !returnReason}
+                onClick={handleSubmitReturn}
+                className="flex-1 h-10 bg-primary text-white font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-primary-dark disabled:bg-neutral-300 active:scale-98 transition-all"
+              >
+                {submittingReturn ? 'Đang gửi...' : 'Gửi yêu cầu'}
+              </button>
+              <button
+                onClick={() => setIsReturnModalOpen(false)}
+                className="h-10 px-4 bg-neutral-100 text-textColor font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-neutral-200"
+              >
+                Hủy
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageCast>
   );
 }

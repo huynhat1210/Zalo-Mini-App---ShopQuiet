@@ -13,13 +13,21 @@ const BoxCast = Box as any;
 
 export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
   const { product, onClose, onAddToCart } = props;
-  const { toggleSavedItem, isSavedItem, setActiveTab, showToast, setBuyNowItem, setSelectedProductDetail, cart, savedItems, setIsCartOpen } = useCart();
+  const { toggleSavedItem, isSavedItem, setActiveTab, showToast, setBuyNowItem, setSelectedProductDetail, cart, savedItems, setIsCartOpen, setIsChatOpen, setChatContextProduct } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [likeCount, setLikeCount] = useState(product.likeCount || 0);
 
   useEffect(() => {
     setLikeCount(product.likeCount || 0);
   }, [product.id, product.likeCount]);
+
+  // Scroll to top when product ID changes
+  useEffect(() => {
+    const overlays = document.querySelectorAll('.fixed.inset-0.z-\\[100\\], .bg-surface.fixed.inset-0');
+    overlays.forEach(el => {
+      el.scrollTop = 0;
+    });
+  }, [product.id]);
   
   // Accordion toggle states
   const [expandedSection, setExpandedSection] = useState<string | null>('materials');
@@ -526,7 +534,10 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
       <div className="fixed bottom-0 left-0 right-0 h-[60px] bg-white border-t border-[#f0edeb] flex z-50 shadow-lg">
         {/* Chat Button */}
         <button
-          onClick={() => showToast('Đang mở Zalo OA...', 'info')}
+          onClick={() => {
+            setChatContextProduct(product);
+            setIsChatOpen(true);
+          }}
           className="flex-1 max-w-[60px] flex flex-col items-center justify-center border-r border-neutral-100 bg-teal-50/50 hover:bg-teal-50 active:bg-teal-100 border-none cursor-pointer"
         >
           <ChatBubbleOvalLeftEllipsisIcon className="w-5 h-5 text-teal-600 mb-0.5" strokeWidth={2} />

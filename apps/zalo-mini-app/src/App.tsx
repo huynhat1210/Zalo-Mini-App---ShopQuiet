@@ -13,7 +13,7 @@ import { SavedItems } from './pages/saved-items';
 import { Notifications } from './pages/notifications';
 import { OrderDetail } from './pages/order-detail';
 import { PaymentSimulate } from './pages/payment-simulate';
-import { ToastComponent, BottomNavBarComponent, ErrorBoundaryComponent, OfflineStateComponent } from './components';
+import { ToastComponent, BottomNavBarComponent, ErrorBoundaryComponent, OfflineStateComponent, ChatOverlay } from './components';
 import type { ICartContextType } from './App.type';
 import { useAppStore } from './store';
 
@@ -59,6 +59,8 @@ export default function App() {
   const selectedProductDetail = useAppStore((state) => state.selectedProductDetail);
   const savedItems = useAppStore((state) => state.savedItems);
   const isCartOpen = useAppStore((state) => state.isCartOpen);
+  const isChatOpen = useAppStore((state) => state.isChatOpen);
+  const chatContextProduct = useAppStore((state) => state.chatContextProduct);
   const toast = useAppStore((state) => state.toast);
   const zaloUser = useAppStore((state) => state.zaloUser);
   const selectedOrder = useAppStore((state) => state.selectedOrder);
@@ -66,6 +68,8 @@ export default function App() {
   const setActiveTab = useAppStore((state) => state.setActiveTab);
   const setSelectedProductDetail = useAppStore((state) => state.setSelectedProductDetail);
   const setIsCartOpen = useAppStore((state) => state.setIsCartOpen);
+  const setIsChatOpen = useAppStore((state) => state.setIsChatOpen);
+  const setChatContextProduct = useAppStore((state) => state.setChatContextProduct);
   const setSelectedOrder = useAppStore((state) => state.setSelectedOrder);
   const setBuyNowItem = useAppStore((state) => state.setBuyNowItem);
   const showToast = useAppStore((state) => state.showToast);
@@ -176,6 +180,10 @@ export default function App() {
             isSavedItem,
             isCartOpen,
             setIsCartOpen,
+            isChatOpen,
+            setIsChatOpen,
+            chatContextProduct,
+            setChatContextProduct,
             showToast,
             toast,
             zaloUser,
@@ -248,6 +256,11 @@ export default function App() {
                         </div>
                       </div>
                     </div>
+                  )}
+
+                  {/* Chat Support Overlay */}
+                  {isChatOpen && (
+                    <ChatOverlay onClose={() => setIsChatOpen(false)} />
                   )}
 
                   {/* Custom Navigation Tab Bar */}

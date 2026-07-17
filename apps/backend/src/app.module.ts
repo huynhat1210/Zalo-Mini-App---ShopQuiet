@@ -17,6 +17,7 @@ import { CmsModule } from './modules/cms/cms.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
 import { MediaModule } from './modules/media/media.module';
+import { ChatModule } from './modules/chat/chat.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -78,6 +79,7 @@ import { LoggerModule } from './common/logger/logger.module';
     BannersModule,
     CmsModule,
     HealthModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

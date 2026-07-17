@@ -62,6 +62,7 @@ model User {
   orders        Order[]
   refreshTokens RefreshToken[]
   addresses     UserAddress[]
+  chatMessages  ChatMessage[]
 
   @@index([name])
   @@index([role])
@@ -140,6 +141,9 @@ model Order {
   shippingPhone   String?
   shippingName    String?
   trackingNumber  String?
+  returnReason      String?
+  returnDescription String?
+  returnImages      String? // JSON string array of proof images
   user            User?       @relation(fields: [zaloUserId], references: [zaloId])
   items           OrderItem[]
 
@@ -296,4 +300,17 @@ model PaymentMethod {
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model ChatMessage {
+  id         Int      @id @default(autoincrement())
+  zaloUserId String
+  sender     String   // "USER" or "ADMIN"
+  content    String
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+
+  @@index([zaloUserId])
+  @@index([createdAt])
 }
