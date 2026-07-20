@@ -35,7 +35,7 @@ const checkoutAddressSchema = z.object({
 type CheckoutAddressFormValues = z.infer<typeof checkoutAddressSchema>;
 
 export const Checkout: React.FC<ICheckoutProps> = (_props) => {
-  const { cart, clearCart, removeFromCart, setActiveTab, showToast, zaloUser, buyNowItem, setBuyNowItem, setSelectedOrder, fetchNotifications } = useCart();
+  const { cart, removeFromCart, setActiveTab, showToast, zaloUser, buyNowItem, setBuyNowItem, setSelectedOrder, fetchNotifications } = useCart();
 
   // If buyNowItem exists, checkout only that item (direct buy); otherwise use selected cart items
   const getCheckoutItems = () => {
@@ -358,7 +358,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
     });
   }, [watchedAddress.city, watchedAddress.name, watchedAddress.phone, watchedAddress.street]);
 
-  const subtotal = checkoutItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const subtotal = checkoutItems.reduce((sum: number, item: any) => sum + item.product.price * item.quantity, 0);
 
   // Calculate discount and shipping
   const isFreeshipEligible = subtotal >= 300000;
@@ -458,7 +458,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
         shippingAddress: `${address.street}, ${address.city}`,
         shippingPhone: address.phone.trim(),
         shippingName: address.name.trim(),
-        items: checkoutItems.map(item => ({
+        items: checkoutItems.map((item: any) => ({
           productId: item.product.id,
           quantity: item.quantity,
           price: item.product.price,
@@ -489,7 +489,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           shippingAddress: `${address.street}, ${address.city}`,
           shippingPhone: address.phone.trim(),
           shippingName: address.name.trim(),
-          items: checkoutItems.map(item => ({
+          items: checkoutItems.map((item: any) => ({
             quantity: item.quantity,
             price: item.product.price,
             product: { name: item.product.name },
@@ -604,8 +604,8 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       localStorage.setItem('last_success_order', JSON.stringify({
         orderNumber,
         total,
-        itemsCount: checkoutItems.reduce((sum, item) => sum + item.quantity, 0),
-        items: checkoutItems.map(item => ({
+        itemsCount: checkoutItems.reduce((sum: number, item: any) => sum + item.quantity, 0),
+        items: checkoutItems.map((item: any) => ({
           name: item.product.name,
           price: item.product.price,
           quantity: item.quantity,
@@ -906,7 +906,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">Chi tiết đơn hàng</h2>
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 shadow-xs divide-y divide-[#f0edeb] space-y-3">
             <div className="space-y-3.5">
-              {checkoutItems.map((item) => {
+              {checkoutItems.map((item: any) => {
                 let img = 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=100&q=80';
                 try {
                   const parsed = JSON.parse(item.product.images);
