@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useCart } from '../../App';
 import { LazyImageComponent } from '../../components/lazy-image';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { apiRequest } from '../../utils/api';
 
 export const FlashSaleList = () => {
-  const { setActiveTab, setSelectedProductDetail, addToComparison, comparisonProducts } = useCart();
+  const { setActiveTab, setSelectedProductDetail, addToComparison, comparisonProducts, addToCart, showToast } = useCart();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -13,8 +14,7 @@ export const FlashSaleList = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch(`${window.location.origin}/api/v1/products?page=1&limit=20`);
-        const data = await response.json();
+        const data = await apiRequest<any>('/products?page=1&limit=20', 'GET');
         const productList = Array.isArray(data) ? data : data?.data || [];
         // Map originalPrice to simulate discount
         const mapped = productList.map((p: any) => ({
@@ -58,6 +58,11 @@ export const FlashSaleList = () => {
 
   const formatTime = (value: number) => value.toString().padStart(2, '0');
 
+  const handleAddToCart = (product: any) => {
+    addToCart(product);
+    showToast(`Đã thêm "${product.name}" vào giỏ hàng`, 'success');
+  };
+
   return (
     <div className="h-full flex flex-col bg-surface overflow-hidden">
       {/* Header */}
@@ -98,6 +103,7 @@ export const FlashSaleList = () => {
         {/* Product Grid */}
         {loading ? (
           <div className="flex items-center justify-center h-48 text-textColor-variant text-xs">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2"></div>
             Đang tải sản phẩm sale...
           </div>
         ) : products.length === 0 ? (
@@ -118,6 +124,7 @@ export const FlashSaleList = () => {
                 : 0;
 
               const isComparing = comparisonProducts.some((p: any) => p.id === product.id);
+              const soldRatio = Math.min(((product.soldCount || 10) / ((product.soldCount || 10) + 15)) * 100, 95);
 
               return (
                 <div
@@ -131,7 +138,7 @@ export const FlashSaleList = () => {
                   >
                     <LazyImageComponent src={img} alt={product.name} className="w-full h-full object-cover" />
                     {discountPercent > 0 && (
-                      <div className="absolute top-2 left-2 bg-red-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                      <div className="absolute top-2 left-2 bg-primary text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">
                         -{discountPercent}%
                       </div>
                     )}
@@ -162,7 +169,7 @@ export const FlashSaleList = () => {
                         {product.name}
                       </h3>
                       <div className="flex items-baseline gap-1.5 flex-wrap">
-                        <span className="text-sm font-bold text-red-500">
+                        <span className="text-sm font-bold text-primary">
                           {product.price.toLocaleString('vi-VN')}đ
                         </span>
                         {product.originalPrice && (
@@ -173,19 +180,27 @@ export const FlashSaleList = () => {
                       </div>
                     </div>
 
-                    {/* Progress indicator */}
-                    <div className="mt-3">
-                      <div className="flex items-center gap-1.5">
-                        <div className="flex-1 h-1.5 bg-neutral-100 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-amber-500 rounded-full"
-                            style={{ width: `${Math.min(((product.soldCount || 10) / ((product.soldCount || 10) + 15)) * 100, 95)}%` }}
-                          />
+                    {/* Progress indicator & Add to cart */}
+                    <div className="mt-3 flex items-center gap-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <div className="flex-1 h-1.5 bg-neutral-100 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-primary/70 rounded-full"
+                              style={{ width: `${soldRatio}%` }}
+                            />
+                          </div>
+                          <span className="text-[8px] font-bold text-textColor-variant whitespace-nowrap">
+                            Đã bán {product.soldCount || 0}
+                          </span>
                         </div>
-                        <span className="text-[8px] font-bold text-textColor-variant whitespace-nowrap">
-                          Đã bán {product.soldCount || 0}
-                        </span>
                       </div>
+                      <button
+                        onClick={() => handleAddToCart(product)}
+                        className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm active:scale-90 transition-transform shadow-xs border-none cursor-pointer flex-shrink-0"
+                      >
+                        +
+                      </button>
                     </div>
                   </div>
                 </div>

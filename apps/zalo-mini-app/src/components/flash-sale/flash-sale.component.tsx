@@ -85,7 +85,7 @@ export const FlashSale: React.FC<IFlashSaleProps> = ({ endTime, products }) => {
               <div className="relative h-28 bg-neutral-50">
                 <LazyImageComponent src={img} alt={product.name} className="w-full h-full" />
                 {discountPercent > 0 && (
-                  <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  <div className="absolute top-2 left-2 bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                     -{discountPercent}%
                   </div>
                 )}
@@ -93,7 +93,7 @@ export const FlashSale: React.FC<IFlashSaleProps> = ({ endTime, products }) => {
               <div className="p-2">
                 <h3 className="text-xs font-semibold text-textColor line-clamp-1 mb-1">{product.name}</h3>
                 <div className="flex items-center gap-1">
-                  <span className="text-xs font-bold text-red-500">
+                  <span className="text-xs font-bold text-primary">
                     {product.price.toLocaleString('vi-VN')}đ
                   </span>
                   {product.originalPrice && (
@@ -106,7 +106,7 @@ export const FlashSale: React.FC<IFlashSaleProps> = ({ endTime, products }) => {
                   <div className="flex items-center gap-1">
                     <div className="flex-1 h-1.5 bg-neutral-200 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-amber-500 rounded-full"
+                        className="h-full bg-primary/70 rounded-full"
                         style={{ width: `${Math.min(((product.soldCount || 10) / ((product.soldCount || 10) + 15)) * 100, 95)}%` }}
                       />
                     </div>

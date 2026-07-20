@@ -29,7 +29,10 @@ export class GamificationService {
     });
 
     if (existingClaim) {
-      throw new Error('Đã nhận thưởng đăng nhập hôm nay!');
+      return {
+        success: false,
+        message: 'Hôm nay bạn đã điểm danh rồi!',
+      };
     }
 
     // Calculate reward based on consecutive days
