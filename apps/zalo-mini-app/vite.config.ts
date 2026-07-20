@@ -16,7 +16,7 @@ export default defineConfig({
   },
   build: {
     target: 'es2015',
-    cssCodeSplit: true,
+    cssCodeSplit: false,
     minify: 'terser',
     terserOptions: {
       compress: {
@@ -28,9 +28,9 @@ export default defineConfig({
       output: {
         format: 'iife',
         name: 'app',
-        entryFileNames: 'assets/[name].[hash].js',
-        chunkFileNames: 'assets/[name].[hash].js',
-        assetFileNames: 'assets/[name].[hash].[ext]',
+        entryFileNames: 'assets/index.js',
+        chunkFileNames: 'assets/[name].js',
+        assetFileNames: 'assets/[name].[ext]',
       },
     },
     chunkSizeWarningLimit: 1000,
