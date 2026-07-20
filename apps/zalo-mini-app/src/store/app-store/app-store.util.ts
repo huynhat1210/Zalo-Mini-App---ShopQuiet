@@ -571,7 +571,7 @@ export const useAppStore = create<IAppState>()(
         const user = get().zaloUser;
         if (!user || !user.id) return;
         try {
-          const data = await apiRequest<any>('/gamification/profile', 'GET');
+          const data = await apiRequest<any>(`/gamification/user?zaloUserId=${user.id}`, 'GET');
           set({ gamificationData: data });
         } catch (e) {
           console.error('Failed to fetch gamification data:', e);
@@ -584,7 +584,7 @@ export const useAppStore = create<IAppState>()(
           return;
         }
         try {
-          const res = await apiRequest<any>('/gamification/daily-claim', 'POST');
+          const res = await apiRequest<any>('/gamification/claim-daily-reward', 'POST', { zaloUserId: user.id });
           if (res && res.success) {
             get().showToast(res.message || 'Điểm danh hàng ngày thành công!', 'success');
             await get().fetchGamificationData();
