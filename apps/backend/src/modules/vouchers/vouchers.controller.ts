@@ -35,11 +35,30 @@ export class VouchersController {
   async applyVoucher(
     @Body('code') code: string,
     @Body('orderTotal') orderTotal: number,
+    @Body('zaloUserId') zaloUserId?: string,
   ) {
     if (!code) {
       throw new BadRequestException('Mã giảm giá là bắt buộc');
     }
-    return this.vouchersService.validateAndApply(code, orderTotal);
+    return this.vouchersService.validateAndApply(code, orderTotal, zaloUserId);
+  }
+
+  @Post('lucky-draw/generate')
+  async generateLuckyVoucher(
+    @Body('zaloUserId') zaloUserId: string,
+    @Body('rewardType') rewardType: string,
+    @Body('rewardValue') rewardValue: number,
+    @Body('minOrderVal') minOrderVal?: number,
+  ) {
+    if (!zaloUserId || !rewardType || rewardValue === undefined) {
+      throw new BadRequestException('zaloUserId, rewardType và rewardValue là bắt buộc');
+    }
+    return this.vouchersService.generateLuckyVoucher({
+      zaloUserId,
+      rewardType,
+      rewardValue,
+      minOrderVal,
+    });
   }
 
   @Post()

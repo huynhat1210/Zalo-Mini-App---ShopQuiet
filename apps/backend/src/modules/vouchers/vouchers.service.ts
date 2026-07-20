@@ -74,7 +74,7 @@ export class VouchersService {
     return { success: true };
   }
 
-  async validateAndApply(code: string, orderTotal: number) {
+  async validateAndApply(code: string, orderTotal: number, zaloUserId?: string) {
     const formattedCode = code.trim().toUpperCase();
     const cacheKey = `voucher_${formattedCode}`;
     const cachedData = await this.cacheManager.get(cacheKey);
@@ -97,6 +97,26 @@ export class VouchersService {
       throw new NotFoundException('Mã giảm giá không tồn tại');
     }
 
+    // Logic to protect Lucky Wheel vouchers (LKY-)
+    if (formattedCode.startsWith('LKY')) {
+      if (!zaloUserId) {
+        throw new BadRequestException('Mã giảm giá này yêu cầu xác thực người dùng');
+      }
+      
+      // Expected format: LKY[6_chars_user_suffix]-[4_chars_rand]
+      const match = formattedCode.match(/^LKY([A-Z0-9]{6})-/);
+      if (!match) {
+        throw new BadRequestException('Mã giảm giá Vòng quay may mắn không đúng định dạng');
+      }
+
+      const codeUserSuffix = match[1];
+      const targetUserSuffix = zaloUserId.slice(-6).toUpperCase();
+
+      if (codeUserSuffix !== targetUserSuffix) {
+        throw new BadRequestException('Mã giảm giá này dành riêng cho người dùng khác');
+      }
+    }
+
     if (voucher.stock <= 0) {
       throw new BadRequestException('Mã giảm giá đã hết lượt sử dụng');
     }
@@ -107,7 +127,7 @@ export class VouchersService {
 
     if (orderTotal < voucher.minOrderVal) {
       throw new BadRequestException(
-        `Đơn hàng tối thiểu phải từ $${voucher.minOrderVal.toFixed(2)} để sử dụng mã này`,
+        `Đơn hàng tối thiểu phải từ ${voucher.minOrderVal.toLocaleString('vi-VN')} đ để sử dụng mã này`,
       );
     }
 
@@ -117,6 +137,55 @@ export class VouchersService {
       value: voucher.value,
       minOrderVal: voucher.minOrderVal,
     };
+  }
+
+  async generateLuckyVoucher(body: {
+    zaloUserId: string;
+    rewardType: string;
+    rewardValue: number;
+    minOrderVal?: number;
+  }) {
+    const { zaloUserId, rewardType, rewardValue, minOrderVal = 0 } = body;
+    const userSuffix = zaloUserId.slice(-6).toUpperCase();
+    
+    // Generate 4 random characters
+    const randomChars = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const code = `LKY${userSuffix}-${randomChars}`;
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // Valid for 7 days
+
+    const voucher = await this.prisma.voucher.create({
+      data: {
+        code,
+        type: rewardType.toUpperCase(),
+        value: rewardValue,
+        minOrderVal,
+        stock: 1, // One-time use
+        expiresAt,
+      },
+    });
+
+    // Invalidate cache
+    await this.invalidateVouchersCache();
+
+    // Create notification in database for the specific user
+    const discountStr = rewardType.toUpperCase() === 'PERCENT'
+      ? `${rewardValue}%`
+      : (rewardType.toUpperCase() === 'FREESHIP' ? 'Miễn phí vận chuyển' : `${rewardValue.toLocaleString('vi-VN')}đ`);
+
+    await this.prisma.notification.create({
+      data: {
+        zaloUserId,
+        title: 'Chúc mừng bạn trúng giải Vòng quay may mắn! 🎡',
+        content: `Bạn đã quay trúng voucher ${discountStr} mã: ${code}. Hạn sử dụng đến ${expiresAt.toLocaleDateString('vi-VN')}. Hãy copy mã và đặt hàng ngay nhé!`,
+        type: 'PROMO',
+        date: new Date().toLocaleDateString('vi-VN'),
+        read: false
+      }
+    });
+
+    return voucher;
   }
 
   async decrementStock(code: string) {

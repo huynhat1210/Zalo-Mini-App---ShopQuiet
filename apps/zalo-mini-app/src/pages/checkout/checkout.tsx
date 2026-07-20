@@ -383,7 +383,8 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
     try {
       const res = await apiRequest<any>('/vouchers/apply', 'POST', {
         code,
-        orderTotal: subtotal
+        orderTotal: subtotal,
+        zaloUserId: zaloUser?.id
       });
       if (res && res.code) {
         let desc = '';

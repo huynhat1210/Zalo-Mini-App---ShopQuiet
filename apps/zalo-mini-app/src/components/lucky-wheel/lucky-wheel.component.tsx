@@ -142,6 +142,27 @@ export const LuckyWheel: React.FC<ILuckyWheelProps> = (props) => {
     const prizeIndex = Math.floor(Math.random() * prizes.length);
     const selected = prizes[prizeIndex];
 
+    let finalPrizeCode = selected.code;
+
+    // Call backend API in parallel to generate the unique voucher and create user notification
+    const callBackendPromise = (async () => {
+      if (selected.type !== 'LUCKY' && zaloUser?.id) {
+        try {
+          const res = await apiRequest<any>('/vouchers/lucky-draw/generate', 'POST', {
+            zaloUserId: zaloUser.id,
+            rewardType: selected.type,
+            rewardValue: selected.value,
+            minOrderVal: 0
+          });
+          if (res && res.code) {
+            finalPrizeCode = res.code;
+          }
+        } catch (e) {
+          console.error('Failed to generate backend voucher:', e);
+        }
+      }
+    })();
+
     const sliceAngle = 360 / prizes.length;
     // Calculate stop degree (stop inside the sliced arc)
     const targetDeg = 360 - (prizeIndex * sliceAngle + sliceAngle / 2);
@@ -154,9 +175,16 @@ export const LuckyWheel: React.FC<ILuckyWheelProps> = (props) => {
       canvasRef.current.style.transform = `rotate(${totalRotation}deg)`;
     }
 
-    setTimeout(() => {
+    setTimeout(async () => {
+      // Wait for backend code generation API to resolve
+      await callBackendPromise;
+
       setSpinning(false);
-      setSpinResult(selected);
+      const updatedSpinResult = {
+        ...selected,
+        code: finalPrizeCode
+      };
+      setSpinResult(updatedSpinResult);
       setShowResultModal(true);
 
       // Save spin timestamp
@@ -166,8 +194,8 @@ export const LuckyWheel: React.FC<ILuckyWheelProps> = (props) => {
         if (selected.type !== 'LUCKY') {
           const storedClaimedStr = localStorage.getItem(`claimed_vouchers_${zaloUser.id}`) || '[]';
           const storedClaimed = JSON.parse(storedClaimedStr);
-          if (!storedClaimed.includes(selected.code)) {
-            storedClaimed.push(selected.code);
+          if (!storedClaimed.includes(finalPrizeCode)) {
+            storedClaimed.push(finalPrizeCode);
             localStorage.setItem(`claimed_vouchers_${zaloUser.id}`, JSON.stringify(storedClaimed));
           }
         }
