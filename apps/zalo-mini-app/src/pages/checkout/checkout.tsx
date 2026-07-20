@@ -6,6 +6,7 @@ import { Page } from 'zmp-ui';
 import { useCart } from '../../App';
 import { apiRequest } from '../../utils/api';
 import { Payment } from 'zmp-sdk/apis';
+import { calculateEstimatedDeliveryDate } from '../../utils/delivery-date.util';
 import api from 'zmp-sdk';
 const PageCast = Page as any;
 import { ICheckoutProps } from './checkout.type';
@@ -459,6 +460,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
         shippingAddress: `${address.street}, ${address.city}`,
         shippingPhone: address.phone.trim(),
         shippingName: address.name.trim(),
+        shippingMethodCode: shippingMethod,
         items: checkoutItems.map((item: any) => ({
           productId: item.product.id,
           quantity: item.quantity,
@@ -602,6 +604,10 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       const userId = zaloUser?.id || 'cust-zalo-id-1';
       const offlineOrders = JSON.parse(localStorage.getItem(`offline_orders_${userId}`) || '[]');
       localStorage.setItem(`offline_orders_${userId}`, JSON.stringify([createdOrder, ...offlineOrders]));
+      
+      // Calculate estimated delivery date for display
+      const deliveryRange = calculateEstimatedDeliveryDate(new Date(), shippingMethod);
+      
       localStorage.setItem('last_success_order', JSON.stringify({
         orderNumber,
         total,
@@ -613,7 +619,9 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           images: item.product.images,
           size: item.size || 'DEFAULT',
           color: item.color || 'DEFAULT'
-        }))
+        })),
+        estimatedDeliveryDate: deliveryRange.displayText,
+        shippingMethodCode: shippingMethod
       }));
 
       // Clear only what was ordered
@@ -798,29 +806,33 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
         <div className="space-y-2.5">
           <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">Phương thức vận chuyển</h2>
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-1 shadow-xs divide-y divide-[#f0edeb]">
-            {shippingMethods.map((method, index) => (
-              <label
-                key={method.code}
-                className={`flex items-center justify-between p-4 cursor-pointer hover:bg-neutral-50 transition-colors ${index === 0 ? 'rounded-t-2xl' : ''} ${index === shippingMethods.length - 1 ? 'rounded-b-2xl' : ''}`}
-              >
-                <div className="flex items-center gap-3">
-                  <input
-                    type="radio"
-                    name="shipping"
-                    className="w-4.5 h-4.5 text-primary accent-primary"
-                    checked={shippingMethod === method.code}
-                    onChange={() => setShippingMethod(method.code)}
-                  />
-                  <div className="text-xs">
-                    <p className="font-semibold text-textColor">{method.name}</p>
-                    {method.description && (
-                      <p className="text-[10px] text-textColor-variant mt-0.5">{method.description}</p>
-                    )}
+            {shippingMethods.map((method, index) => {
+              const deliveryRange = calculateEstimatedDeliveryDate(new Date(), method.code);
+              return (
+                <label
+                  key={method.code}
+                  className={`flex items-center justify-between p-4 cursor-pointer hover:bg-neutral-50 transition-colors ${index === 0 ? 'rounded-t-2xl' : ''} ${index === shippingMethods.length - 1 ? 'rounded-b-2xl' : ''}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="shipping"
+                      className="w-4.5 h-4.5 text-primary accent-primary"
+                      checked={shippingMethod === method.code}
+                      onChange={() => setShippingMethod(method.code)}
+                    />
+                    <div className="text-xs">
+                      <p className="font-semibold text-textColor">{method.name}</p>
+                      <p className="text-[10px] text-primary font-medium mt-0.5">Dự kiến: {deliveryRange.displayText}</p>
+                      {method.description && (
+                        <p className="text-[10px] text-textColor-variant mt-0.5">{method.description}</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-                 <span className="text-xs font-bold text-textColor">{method.price > 0 ? `${method.price.toLocaleString('vi-VN')} đ` : 'Miễn phí'}</span>
-              </label>
-            ))}
+                   <span className="text-xs font-bold text-textColor">{method.price > 0 ? `${method.price.toLocaleString('vi-VN')} đ` : 'Miễn phí'}</span>
+                </label>
+              );
+            })}
           </div>
         </div>
 

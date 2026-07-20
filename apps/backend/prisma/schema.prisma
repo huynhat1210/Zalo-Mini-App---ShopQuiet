@@ -144,6 +144,8 @@ model Order {
   returnReason      String?
   returnDescription String?
   returnImages      String? // JSON string array of proof images
+  estimatedDeliveryDate DateTime?
+  shippingMethodCode String?
   user            User?       @relation(fields: [zaloUserId], references: [zaloId])
   items           OrderItem[]
 
@@ -151,6 +153,7 @@ model Order {
   @@index([status])
   @@index([createdAt])
   @@index([paymentMethod])
+  @@index([estimatedDeliveryDate])
 }
 
 model OrderItem {

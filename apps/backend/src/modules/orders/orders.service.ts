@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import * as crypto from 'crypto';
+import { calculateEstimatedDeliveryDate } from '../../utils/delivery-date.util';
 
 export interface CreateOrderItemDto {
   productId: number;
@@ -25,6 +26,7 @@ export interface CreateOrderDto {
   shippingPhone?: string;
   shippingName?: string;
   isDirectBuy?: boolean;
+  shippingMethodCode?: string;
 }
 
 @Injectable()
@@ -205,7 +207,11 @@ export class OrdersService {
         }
       }
 
-      // 2. Create the order and items
+      // 2. Calculate estimated delivery date
+      const shippingMethodCode = dto.shippingMethodCode || 'standard';
+      const deliveryDateRange = calculateEstimatedDeliveryDate(new Date(), shippingMethodCode);
+
+      // 3. Create the order and items
       return tx.order.create({
         data: {
           id: orderId,
@@ -218,6 +224,8 @@ export class OrdersService {
           shippingAddress: dto.shippingAddress || null,
           shippingPhone: dto.shippingPhone || null,
           shippingName: dto.shippingName || null,
+          estimatedDeliveryDate: deliveryDateRange.minDate,
+          shippingMethodCode: shippingMethodCode,
           items: {
             create: dto.items.map((item) => ({
               quantity: item.quantity,

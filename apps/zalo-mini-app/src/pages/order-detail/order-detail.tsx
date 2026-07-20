@@ -4,6 +4,7 @@ import { useCart, IOrderItem } from '../../App';
 import { apiRequest, API_BASE_URL } from '../../utils/api';
 import { IOrderDetailProps } from './order-detail.type';
 import { Payment } from 'zmp-sdk/apis';
+import { getRemainingDays, getDeliveryStatusText } from '../../utils/delivery-date.util';
 
 const PageCast = Page as any;
 
@@ -316,6 +317,19 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
         <div className="space-y-2.5">
           <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">Thông tin giao hàng</h2>
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 shadow-xs space-y-2">
+            {selectedOrder.estimatedDeliveryDate && (
+              <div className="flex justify-between items-center pb-2 border-b border-[#f5f3f0]">
+                <span className="text-textColor-variant">Dự kiến giao:</span>
+                <div className="text-right">
+                  <span className="font-bold text-primary">{new Date(selectedOrder.estimatedDeliveryDate).toLocaleDateString('vi-VN')}</span>
+                  {['PROCESSING', 'SHIPPED'].includes(selectedOrder.status) && (
+                    <p className="text-[10px] text-textColor-variant mt-0.5">
+                      {getDeliveryStatusText(getRemainingDays(selectedOrder.estimatedDeliveryDate))}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-textColor-variant">Người nhận:</span>
               <span className="font-bold text-textColor">{selectedOrder.shippingName}</span>

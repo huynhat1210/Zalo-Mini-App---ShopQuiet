@@ -82,7 +82,7 @@ export const OrderSuccess: React.FC<IOrderSuccessProps> = (_props) => {
             </div>
             <div className="text-xs">
               <p className="text-[#526069]/60 font-semibold uppercase tracking-wider text-[9px]">Dự kiến giao hàng</p>
-              <p className="font-bold text-textColor mt-0.5">3 - 5 ngày làm việc</p>
+              <p className="font-bold text-textColor mt-0.5">{activeOrder.estimatedDeliveryDate || '3 - 5 ngày làm việc'}</p>
             </div>
           </div>
         </div>

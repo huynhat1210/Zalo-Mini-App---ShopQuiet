@@ -12,5 +12,7 @@ export interface ISuccessOrder {
     size?: string;
     color?: string;
   }>;
+  estimatedDeliveryDate?: string;
+  shippingMethodCode?: string;
 }
 
