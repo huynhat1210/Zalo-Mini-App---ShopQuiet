@@ -13,8 +13,8 @@ export class AuthService {
     private prisma: PrismaService,
   ) {}
 
-  async validateUser(zaloId: string): Promise<any> {
-    const user = await this.usersService.syncUser(zaloId, '', '');
+  async validateUser(zaloId: any): Promise<any> {
+    const user = await this.usersService.syncUser(String(zaloId), '', '');
     if (!user) {
       throw new UnauthorizedException();
     }
@@ -83,8 +83,8 @@ export class AuthService {
     }
   }
 
-  async login(zaloId: string, name: string, avatar?: string, password?: string, accessToken?: string) {
-    let targetZaloId = zaloId;
+  async login(zaloId: any, name: string, avatar?: string, password?: string, accessToken?: string) {
+    let targetZaloId = String(zaloId);
     let targetName = name;
     let targetAvatar = avatar;
 
@@ -93,32 +93,32 @@ export class AuthService {
       try {
         const zaloProfile = await this.validateZaloAccessToken(accessToken);
         if (zaloProfile) {
-          targetZaloId = zaloProfile.zaloId;
+          targetZaloId = String(zaloProfile.zaloId);
           targetName = zaloProfile.name;
           if (zaloProfile.avatar && zaloProfile.avatar !== '') {
             targetAvatar = zaloProfile.avatar;
           }
         } else {
           // Fallback to client-provided parameters if Zalo blocked verification due to server geolocation (-501)
-          targetZaloId = zaloId;
+          targetZaloId = String(zaloId);
           targetName = name;
           targetAvatar = avatar;
         }
       } catch (err) {
         console.warn('[Zalo Auth] validateZaloAccessToken failed, falling back to client-provided parameters:', err);
-        targetZaloId = zaloId;
+        targetZaloId = String(zaloId);
         targetName = name;
         targetAvatar = avatar;
       }
     } else {
       // In production, we require an accessToken for non-admin users to log in securely
-      const isAdminId = zaloId.toLowerCase() === 'admin' || zaloId.toLowerCase() === 'admin-zalo-id-1';
+      const isAdminId = String(zaloId).toLowerCase() === 'admin' || String(zaloId).toLowerCase() === 'admin-zalo-id-1';
       if (!isAdminId && process.env.NODE_ENV === 'production') {
         throw new UnauthorizedException('Yêu cầu Zalo Access Token để đăng nhập an toàn.');
       }
     }
 
-    const isAdminId = targetZaloId.toLowerCase() === 'admin' || targetZaloId.toLowerCase() === 'admin-zalo-id-1';
+    const isAdminId = String(targetZaloId).toLowerCase() === 'admin' || String(targetZaloId).toLowerCase() === 'admin-zalo-id-1';
     if (isAdminId) {
       const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH || 
         '$2b$10$tZ/n07XU0mD65fH4kY/vveHWh3h7FvFv.u9k5CjEszkX9H/7CveQ2'; // default bcrypt hash for 'admin123'

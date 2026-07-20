@@ -290,9 +290,9 @@ export const useAppStore = create<IAppState>()(
               }
 
               const authData: any = await apiRequest('/auth/login', 'POST', {
-                zaloId: parsed.id,
-                name: parsed.name,
-                avatar: parsed.avatar,
+                zaloId: String(parsed.id),
+                name: String(parsed.name || 'Người dùng Zalo'),
+                avatar: String(parsed.avatar || ''),
                 accessToken: zaloToken,
               });
               tokenStorage.setTokens({
@@ -387,9 +387,9 @@ export const useAppStore = create<IAppState>()(
                     }
 
                     const authData: any = await apiRequest('/auth/login', 'POST', {
-                      zaloId: zaloId,
-                      name: name,
-                      avatar: avatar,
+                      zaloId: String(zaloId),
+                      name: String(name || 'Người dùng Zalo'),
+                      avatar: String(avatar || ''),
                       accessToken: zaloToken,
                     });
                     tokenStorage.setTokens({
