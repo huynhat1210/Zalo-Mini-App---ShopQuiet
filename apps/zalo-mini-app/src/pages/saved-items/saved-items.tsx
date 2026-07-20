@@ -25,6 +25,42 @@ export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
     }
   };
 
+  const handleShareWishlist = () => {
+    if (savedItems.length === 0) {
+      showToast('Wishlist trống, không thể chia sẻ!', 'warning');
+      return;
+    }
+
+    const wishlistText = savedItems.map((item, index) => 
+      `${index + 1}. ${item.name} - ${item.price.toLocaleString('vi-VN')}đ`
+    ).join('\n');
+
+    const shareContent = `Danh sách yêu thích của tôi (${savedItems.length} sản phẩm):\n\n${wishlistText}\n\nXem thêm tại ShopQuiet!`;
+
+    // Try Web Share API first
+    if (navigator.share) {
+      navigator.share({
+        title: 'Wishlist của tôi',
+        text: shareContent,
+      }).catch((error: any) => {
+        console.error('Share failed:', error);
+        // Fallback to clipboard
+        copyToClipboard(shareContent);
+      });
+    } else {
+      // Fallback to clipboard
+      copyToClipboard(shareContent);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('Đã copy wishlist vào clipboard!', 'success');
+    }).catch(() => {
+      showToast('Không thể copy. Vui lòng thử lại!', 'warning');
+    });
+  };
+
   return (
     <PageCast className="bg-surface relative flex flex-col w-full h-full overscroll-none scrollbar-none animate-fade-in">
       {/* Header */}
@@ -35,7 +71,14 @@ export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
           </svg>
         </button>
         <span className="text-xs font-bold uppercase tracking-widest text-textColor">Sản phẩm đã lưu</span>
-        <div className="w-8"></div>
+        <button
+          onClick={handleShareWishlist}
+          className="p-1.5 hover:bg-[#f0edeb] rounded-full transition-colors active:scale-95"
+        >
+          <svg className="w-5.5 h-5.5 text-textColor" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+          </svg>
+        </button>
       </div>
 
       <div className="flex-1 px-6 py-5.5 space-y-4 pb-28">

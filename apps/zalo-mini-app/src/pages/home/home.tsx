@@ -6,7 +6,7 @@ import { useInfiniteProducts, useCategories, useBanners } from '../../hooks';
 import { Bars3Icon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 // @ts-ignore
 import logoIcon from '../../assets/logo.png';
-import { MenuDrawerComponent, BannerSkeleton, CategorySkeleton, ProductGridSkeleton, LazyImageComponent, LuckyWheel } from '../../components';
+import { MenuDrawerComponent, BannerSkeleton, CategorySkeleton, ProductGridSkeleton, LazyImageComponent, LuckyWheel, FlashSale } from '../../components';
 import { IHomeProps } from './home.type';
 
 const PageCast = Page as any;
@@ -201,6 +201,17 @@ export const Home: React.FC<IHomeProps> = (_props) => {
           </div>
         </BoxCast>
         ) : null}
+
+        {/* Flash Sale Section */}
+        <div className="mx-6 my-4">
+          <FlashSale
+            endTime={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()}
+            products={filteredProducts.slice(0, 5).map(p => ({
+              ...p,
+              originalPrice: p.price * 1.3,
+            }))}
+          />
+        </div>
 
         {/* Categories Section - Clean horizontal capsule scrolling */}
         <BoxCast className="my-6">

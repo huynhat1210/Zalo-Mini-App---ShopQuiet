@@ -15,6 +15,8 @@ export interface IAppState {
   notifications: INotification[];
   toastTimerRef: ReturnType<typeof setTimeout> | null;
   viewedProducts: IProduct[];
+  comparisonProducts: IProduct[];
+  isComparisonOpen: boolean;
 
   setActiveTab: (tab: string) => void;
   setSelectedProductDetail: (product: IProduct | null) => void;
@@ -40,4 +42,8 @@ export interface IAppState {
   logout: () => Promise<void>;
   addToViewedProducts: (product: IProduct) => void;
   clearViewedProducts: () => void;
+  addToComparison: (product: IProduct) => void;
+  removeFromComparison: (productId: number) => void;
+  clearComparison: () => void;
+  setIsComparisonOpen: (open: boolean) => void;
 }

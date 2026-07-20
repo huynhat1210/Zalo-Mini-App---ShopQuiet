@@ -18,6 +18,10 @@ import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
 import { MediaModule } from './modules/media/media.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { WebsocketModule } from './modules/websocket/websocket.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { RecommendationsModule } from './modules/recommendations/recommendations.module';
+import { GamificationModule } from './modules/gamification/gamification.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -80,6 +84,10 @@ import { LoggerModule } from './common/logger/logger.module';
     CmsModule,
     HealthModule,
     ChatModule,
+    WebsocketModule,
+    AnalyticsModule,
+    RecommendationsModule,
+    GamificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

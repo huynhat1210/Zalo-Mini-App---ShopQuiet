@@ -35,6 +35,7 @@ model Product {
   orderItems     OrderItem[]
   category       Category         @relation(fields: [categoryId], references: [id])
   variants       ProductVariant[]
+  analyticsEvents AnalyticsEvent[]
 
   @@index([categoryId])
   @@index([name])
@@ -63,6 +64,9 @@ model User {
   refreshTokens RefreshToken[]
   addresses     UserAddress[]
   chatMessages  ChatMessage[]
+  dailyRewardClaims DailyRewardClaim[]
+  pointsHistory PointsHistory[]
+  userAchievements UserAchievement[]
 
   @@index([name])
   @@index([role])
@@ -324,4 +328,72 @@ model AuditLog {
   action    String
   details   String
   createdAt DateTime @default(now())
+}
+
+model AnalyticsEvent {
+  id         Int      @id @default(autoincrement())
+  zaloUserId String
+  eventType  String   // "view", "click", "add_to_cart", "purchase", "search", "filter", "share"
+  productId  Int?
+  categoryId Int?
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  product    Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([zaloUserId])
+  @@index([eventType])
+  @@index([productId])
+  @@index([createdAt])
+}
+
+model DailyRewardClaim {
+  id             Int      @id @default(autoincrement())
+  zaloUserId     String
+  points         Int
+  consecutiveDays Int      @default(1)
+  claimedAt      DateTime @default(now())
+
+  user           User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+
+  @@index([zaloUserId])
+  @@index([claimedAt])
+}
+
+model PointsHistory {
+  id         Int      @id @default(autoincrement())
+  zaloUserId String
+  points     Int
+  reason     String
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+
+  @@index([zaloUserId])
+  @@index([createdAt])
+}
+
+model Achievement {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  icon        String
+  condition   String
+  createdAt   DateTime @default(now())
+
+  userAchievements UserAchievement[]
+}
+
+model UserAchievement {
+  id             Int      @id @default(autoincrement())
+  zaloUserId     String
+  achievementId  Int
+  unlockedAt     DateTime @default(now())
+
+  user           User       @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+  achievement    Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([zaloUserId, achievementId])
+  @@index([zaloUserId])
 }

@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, lazy, Suspense 
 import { App as ZaloApp, ZMPRouter, SnackbarProvider } from 'zmp-ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNotifications } from './hooks';
-import { ToastComponent, BottomNavBarComponent, ErrorBoundaryComponent, OfflineStateComponent, ChatOverlay } from './components';
+import { ToastComponent, BottomNavBarComponent, ErrorBoundaryComponent, OfflineStateComponent, ChatOverlay, ProductComparison } from './components';
 import type { ICartContextType } from './App.type';
 import { useAppStore } from './store';
 
@@ -90,6 +90,11 @@ export default function App() {
   const logout = useAppStore((state) => state.logout);
   const addToViewedProducts = useAppStore((state) => state.addToViewedProducts);
   const viewedProducts = useAppStore((state) => state.viewedProducts);
+  const addToComparison = useAppStore((state) => state.addToComparison);
+  const removeFromComparison = useAppStore((state) => state.removeFromComparison);
+  const comparisonProducts = useAppStore((state) => state.comparisonProducts);
+  const isComparisonOpen = useAppStore((state) => state.isComparisonOpen);
+  const setIsComparisonOpen = useAppStore((state) => state.setIsComparisonOpen);
 
   // TanStack React Query for Notifications
   const { data: notificationsData, refetch: fetchNotifications } = useNotifications(zaloUser?.id);
@@ -219,6 +224,12 @@ export default function App() {
             syncUserFromStorage,
             addToViewedProducts,
             viewedProducts,
+            addToComparison,
+            removeFromComparison,
+            clearComparison,
+            comparisonProducts,
+            isComparisonOpen,
+            setIsComparisonOpen,
           }}
         >
           <ZMPRouterCast>
@@ -288,6 +299,15 @@ export default function App() {
                   {/* Chat Support Overlay */}
                   {isChatOpen && (
                     <ChatOverlay onClose={() => setIsChatOpen(false)} />
+                  )}
+
+                  {/* Product Comparison Overlay */}
+                  {isComparisonOpen && (
+                    <ProductComparison
+                      products={comparisonProducts}
+                      onRemove={removeFromComparison}
+                      onClose={() => setIsComparisonOpen(false)}
+                    />
                   )}
 
                   {/* Custom Navigation Tab Bar */}

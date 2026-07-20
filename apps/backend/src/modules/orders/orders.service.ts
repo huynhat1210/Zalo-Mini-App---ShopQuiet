@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import * as crypto from 'crypto';
 import { calculateEstimatedDeliveryDate } from '../../utils/delivery-date.util';
+import { OrderTrackingGateway } from '../websocket/websocket.gateway';
 
 export interface CreateOrderItemDto {
   productId: number;
@@ -31,7 +32,10 @@ export interface CreateOrderDto {
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private orderTrackingGateway: OrderTrackingGateway,
+  ) {}
 
   private znsLogs: Array<{
     id: string;
@@ -482,6 +486,9 @@ export class OrdersService {
       content = `Đơn hàng #${id} đang chờ hoàn tất thanh toán qua cổng ZaloPay.`;
       notifTitle = `Đơn hàng #${id} chờ thanh toán`;
     }
+
+    // Broadcast order status update via WebSocket
+    this.orderTrackingGateway.broadcastOrderStatus(id, status);
 
     if (order.zaloUserId) {
       try {
