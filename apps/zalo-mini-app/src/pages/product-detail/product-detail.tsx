@@ -13,7 +13,7 @@ const BoxCast = Box as any;
 
 export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
   const { product, onClose, onAddToCart } = props;
-  const { toggleSavedItem, isSavedItem, setActiveTab, showToast, setBuyNowItem, setSelectedProductDetail, cart, savedItems, setIsCartOpen, setIsChatOpen, setChatContextProduct } = useCart();
+  const { toggleSavedItem, isSavedItem, setActiveTab, showToast, setBuyNowItem, setSelectedProductDetail, cart, setIsCartOpen, setIsChatOpen, setChatContextProduct } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [likeCount, setLikeCount] = useState(product.likeCount || 0);
 
@@ -118,24 +118,36 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
   }, [selectedColor, hasSizes, productDetails]);
 
   const handleAdd = () => {
-    const size = selectedSize || 'DEFAULT';
-    const color = selectedColor || 'DEFAULT';
-    if (stockCount <= 0) {
-      showToast('Sản phẩm với phân loại này đã hết hàng!', 'warning');
-      return;
+    // If product has variants, require selection and check stock
+    if (hasColors || hasSizes) {
+      const size = selectedSize || 'DEFAULT';
+      const color = selectedColor || 'DEFAULT';
+      if (stockCount <= 0) {
+        showToast('Sản phẩm với phân loại này đã hết hàng!', 'warning');
+        return;
+      }
+      onAddToCart(product, quantity, size, color);
+    } else {
+      // Product has no variants, add directly
+      onAddToCart(product, quantity, 'DEFAULT', 'DEFAULT');
     }
-    onAddToCart(product, quantity, size, color);
     showToast(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`, 'success');
   };
 
   const handleBuyNow = () => {
-    const size = selectedSize || 'DEFAULT';
-    const color = selectedColor || 'DEFAULT';
-    if (stockCount <= 0) {
-      showToast('Sản phẩm với phân loại này đã hết hàng!', 'warning');
-      return;
+    // If product has variants, require selection and check stock
+    if (hasColors || hasSizes) {
+      const size = selectedSize || 'DEFAULT';
+      const color = selectedColor || 'DEFAULT';
+      if (stockCount <= 0) {
+        showToast('Sản phẩm với phân loại này đã hết hàng!', 'warning');
+        return;
+      }
+      setBuyNowItem({ product, quantity, size, color });
+    } else {
+      // Product has no variants, buy directly
+      setBuyNowItem({ product, quantity, size: 'DEFAULT', color: 'DEFAULT' });
     }
-    setBuyNowItem({ product, quantity, size, color });
     onClose();
     setActiveTab('checkout');
   };
@@ -564,7 +576,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
 
         {/* Add to Cart Button */}
         <button
-          disabled={stockCount <= 0}
+          disabled={(hasColors || hasSizes) && stockCount <= 0}
           onClick={handleAdd}
           className="flex-[1.2] flex flex-col items-center justify-center bg-amber-50 hover:bg-amber-100 text-amber-600 active:bg-amber-200 transition-colors border-none cursor-pointer disabled:opacity-50 disabled:bg-neutral-100 disabled:text-neutral-400"
         >
@@ -574,11 +586,11 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
 
         {/* Buy Now Button */}
         <button
-          disabled={stockCount <= 0}
+          disabled={(hasColors || hasSizes) && stockCount <= 0}
           onClick={handleBuyNow}
           className="flex-[1.8] bg-primary hover:bg-primary-dark text-white font-semibold text-[13px] flex items-center justify-center active:bg-primary-darker transition-colors border-none cursor-pointer disabled:bg-neutral-400"
         >
-          {stockCount > 0 ? 'Mua ngay' : 'Hết hàng'}
+          {(hasColors || hasSizes) && stockCount <= 0 ? 'Hết hàng' : 'Mua ngay'}
         </button>
       </div>
     </PageCast>
