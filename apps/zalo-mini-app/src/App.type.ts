@@ -25,6 +25,7 @@ export interface IOrder {
   returnReason?: string;
   returnDescription?: string;
   returnImages?: string;
+  zaloUserId?: string;
 }
 
 export interface INotification {
