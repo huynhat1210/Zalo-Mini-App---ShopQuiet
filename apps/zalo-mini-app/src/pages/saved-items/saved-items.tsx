@@ -6,7 +6,24 @@ import { ISavedItemsProps } from './saved-items.type';
 const PageCast = Page as any;
 
 export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
-  const { savedItems, toggleSavedItem, addToCart, setSelectedProductDetail, setActiveTab } = useCart();
+  const { savedItems, toggleSavedItem, addToCart, setSelectedProductDetail, setActiveTab, showToast } = useCart();
+
+  const handleAddToCart = (product: any) => {
+    // Check if product has variants (size or color)
+    const hasVariants = product.variants && product.variants.length > 0;
+    const hasColors = hasVariants && product.variants.some((v: any) => v.color && v.color !== 'DEFAULT');
+    const hasSizes = hasVariants && product.variants.some((v: any) => v.size && v.size !== 'DEFAULT');
+
+    if (hasColors || hasSizes) {
+      // Product has variants - open product detail to select
+      setSelectedProductDetail(product);
+      showToast('Vui lòng chọn phân loại sản phẩm!', 'info');
+    } else {
+      // Product has no variants - add directly
+      addToCart(product);
+      showToast(`Đã thêm ${product.name} vào giỏ hàng!`, 'success');
+    }
+  };
 
   return (
     <PageCast className="bg-surface relative flex flex-col w-full h-full overscroll-none scrollbar-none animate-fade-in">
@@ -70,7 +87,7 @@ export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
                     <div className="flex justify-between items-center mt-3.5">
                       <span className="text-xs font-bold text-textColor">{prod.price.toLocaleString('vi-VN')} đ</span>
                       <button
-                        onClick={(e) => { e.stopPropagation(); addToCart(prod); }}
+                        onClick={(e) => { e.stopPropagation(); handleAddToCart(prod); }}
                         className="text-[9px] font-bold uppercase tracking-wider text-primary hover:text-primary-dark active:scale-95 transition-transform"
                       >
                         Thêm vào giỏ

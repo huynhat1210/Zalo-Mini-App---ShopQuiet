@@ -156,47 +156,55 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                         <div className="flex flex-col mt-1 gap-1">
                           <span className="text-xs font-bold text-primary">{item.product.price.toLocaleString('vi-VN')} đ</span>
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            {item.product.variants && item.product.variants.length > 0 ? (
-                              <>
-                                <select
-                                  value={item.color}
-                                  onChange={(e) => {
-                                    updateItemVariant(item.product.id, item.size, item.size, item.color, e.target.value);
-                                    showToast(`Đã đổi sang Màu: ${e.target.value}`, 'success');
-                                  }}
-                                  className="text-[9px] bg-neutral-100 text-[#526069] font-bold px-1.5 py-0.5 rounded outline-none border border-transparent hover:border-neutral-300 focus:bg-white cursor-pointer uppercase tracking-wider"
-                                >
-                                  {Array.from(new Set(item.product.variants.map(v => v.color))).filter(c => c !== 'DEFAULT').map((c) => (
-                                    <option key={c} value={c}>Màu: {c}</option>
-                                  ))}
-                                  {item.color === 'DEFAULT' && <option value="DEFAULT">Màu: Mặc định</option>}
-                                </select>
-                                <select
-                                  value={item.size}
-                                  onChange={(e) => {
-                                    updateItemVariant(item.product.id, item.size, e.target.value, item.color, item.color);
-                                    showToast(`Đã đổi sang Size: ${e.target.value}`, 'success');
-                                  }}
-                                  className="text-[9px] bg-neutral-100 text-[#526069] font-bold px-1.5 py-0.5 rounded outline-none border border-transparent hover:border-neutral-300 focus:bg-white cursor-pointer uppercase tracking-wider"
-                                >
-                                  {item.product.variants
-                                    .filter(v => v.color === item.color && (v.stock > 0 || v.size === item.size))
-                                    .map((v) => (
-                                      <option key={v.size} value={v.size}>Size: {v.size}</option>
-                                    ))}
-                                  {item.size === 'DEFAULT' && <option value="DEFAULT">Size: Mặc định</option>}
-                                </select>
-                              </>
-                            ) : (
-                              <>
-                                {item.color && item.color !== 'DEFAULT' && (
-                                  <span className="text-[9px] bg-neutral-100 text-[#526069] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Màu: {item.color}</span>
-                                )}
-                                {item.size && item.size !== 'DEFAULT' && (
-                                  <span className="text-[9px] bg-neutral-100 text-[#526069] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Size: {item.size}</span>
-                                )}
-                              </>
-                            )}
+                            {(() => {
+                              // Check if product has real variants (non-DEFAULT size or color)
+                              const hasRealVariants = item.product.variants && item.product.variants.length > 0 &&
+                                (item.product.variants.some((v: any) => v.color && v.color !== 'DEFAULT') ||
+                                 item.product.variants.some((v: any) => v.size && v.size !== 'DEFAULT'));
+
+                              if (hasRealVariants) {
+                                // Show dropdowns for products with variants
+                                return (
+                                  <>
+                                    {item.product.variants!.some((v: any) => v.color && v.color !== 'DEFAULT') && (
+                                      <select
+                                        value={item.color}
+                                        onChange={(e) => {
+                                          updateItemVariant(item.product.id, item.size, item.size, item.color, e.target.value);
+                                          showToast(`Đã đổi sang Màu: ${e.target.value}`, 'success');
+                                        }}
+                                        className="text-[9px] bg-neutral-100 text-[#526069] font-bold px-1.5 py-0.5 rounded outline-none border border-transparent hover:border-neutral-300 focus:bg-white cursor-pointer uppercase tracking-wider"
+                                      >
+                                        {Array.from(new Set(item.product.variants!.map((v: any) => v.color))).filter((c: string) => c && c !== 'DEFAULT').map((c: string) => (
+                                          <option key={c} value={c}>Màu: {c}</option>
+                                        ))}
+                                        {item.color === 'DEFAULT' && <option value="DEFAULT">Màu: Mặc định</option>}
+                                      </select>
+                                    )}
+                                    {item.product.variants!.some((v: any) => v.size && v.size !== 'DEFAULT') && (
+                                      <select
+                                        value={item.size}
+                                        onChange={(e) => {
+                                          updateItemVariant(item.product.id, item.size, e.target.value, item.color, item.color);
+                                          showToast(`Đã đổi sang Size: ${e.target.value}`, 'success');
+                                        }}
+                                        className="text-[9px] bg-neutral-100 text-[#526069] font-bold px-1.5 py-0.5 rounded outline-none border border-transparent hover:border-neutral-300 focus:bg-white cursor-pointer uppercase tracking-wider"
+                                      >
+                                        {item.product.variants!
+                                          .filter((v: any) => v.color === item.color && (v.stock > 0 || v.size === item.size))
+                                          .map((v: any) => (
+                                            <option key={v.size} value={v.size}>Size: {v.size}</option>
+                                          ))}
+                                        {item.size === 'DEFAULT' && <option value="DEFAULT">Size: Mặc định</option>}
+                                      </select>
+                                    )}
+                                  </>
+                                );
+                              } else {
+                                // No variants - don't show any variant UI
+                                return null;
+                              }
+                            })()}
                           </div>
                         </div>
                       </div>

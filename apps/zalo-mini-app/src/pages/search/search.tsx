@@ -9,10 +9,27 @@ import { LazyImageComponent } from '../../components';
 const PageCast = Page as any;
 
 export const Search: React.FC<ISearchProps> = (_props) => {
-  const { setSelectedProductDetail, addToCart } = useCart();
+  const { setSelectedProductDetail, addToCart, showToast } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+
+  const handleAddToCart = (product: any) => {
+    // Check if product has variants (size or color)
+    const hasVariants = product.variants && product.variants.length > 0;
+    const hasColors = hasVariants && product.variants.some((v: any) => v.color && v.color !== 'DEFAULT');
+    const hasSizes = hasVariants && product.variants.some((v: any) => v.size && v.size !== 'DEFAULT');
+
+    if (hasColors || hasSizes) {
+      // Product has variants - open product detail to select
+      setSelectedProductDetail(product);
+      showToast('Vui lòng chọn phân loại sản phẩm!', 'info');
+    } else {
+      // Product has no variants - add directly
+      addToCart(product);
+      showToast(`Đã thêm ${product.name} vào giỏ hàng!`, 'success');
+    }
+  };
 
   // Dynamic API state via React Query
   const { data: productsData } = useAllProducts();
@@ -234,7 +251,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
                         <div className="flex justify-between items-center mt-3.5">
                           <span className="text-xs font-bold text-textColor">{prod.price.toLocaleString('vi-VN')} đ</span>
                           <button
-                            onClick={(e) => { e.stopPropagation(); addToCart(prod); }}
+                            onClick={(e) => { e.stopPropagation(); handleAddToCart(prod); }}
                             className="w-7.5 h-7.5 rounded-full bg-primary-light text-primary flex items-center justify-center font-bold text-sm active:scale-90 transition-transform"
                           >
                             +
@@ -286,7 +303,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
                         <div className="flex justify-between items-center mt-3.5">
                           <span className="text-xs font-bold text-textColor">{prod.price.toLocaleString('vi-VN')} đ</span>
                           <button
-                            onClick={(e) => { e.stopPropagation(); addToCart(prod); }}
+                            onClick={(e) => { e.stopPropagation(); handleAddToCart(prod); }}
                             className="w-7.5 h-7.5 rounded-full bg-primary-light text-primary flex items-center justify-center font-bold text-sm active:scale-90 transition-transform"
                           >
                             +

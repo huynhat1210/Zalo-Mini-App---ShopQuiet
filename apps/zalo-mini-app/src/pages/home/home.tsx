@@ -93,10 +93,22 @@ export const Home: React.FC<IHomeProps> = (_props) => {
     : products) : [];
 
   const handleAddToCart = (product: IProduct) => {
-    addToCart(product);
-    showToast(`Đã thêm ${product.name} vào giỏ hàng!`, 'success');
-    setIsCartBouncing(true);
-    setTimeout(() => setIsCartBouncing(false), 300);
+    // Check if product has variants (size or color)
+    const hasVariants = product.variants && product.variants.length > 0;
+    const hasColors = hasVariants && product.variants!.some((v: any) => v.color && v.color !== 'DEFAULT');
+    const hasSizes = hasVariants && product.variants!.some((v: any) => v.size && v.size !== 'DEFAULT');
+
+    if (hasColors || hasSizes) {
+      // Product has variants - open product detail to select
+      setSelectedProductDetail(product);
+      showToast('Vui lòng chọn phân loại sản phẩm!', 'info');
+    } else {
+      // Product has no variants - add directly
+      addToCart(product);
+      showToast(`Đã thêm ${product.name} vào giỏ hàng!`, 'success');
+      setIsCartBouncing(true);
+      setTimeout(() => setIsCartBouncing(false), 300);
+    }
   };
 
   const handleRefresh = async () => {

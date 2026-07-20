@@ -143,6 +143,12 @@ export const useAppStore = create<IAppState>()(
       },
       updateItemVariant: (productId, oldSize, newSize, oldColor, newColor) => {
         if (oldSize === newSize && oldColor === newColor) return;
+
+        // Skip API call if product has no variants (both are DEFAULT)
+        const isDefaultVariant = oldSize === 'DEFAULT' && newSize === 'DEFAULT' &&
+                                 oldColor === 'DEFAULT' && newColor === 'DEFAULT';
+        if (isDefaultVariant) return;
+
         const previousCart = get().cart;
         const prev = get().cart;
         const oldItem = prev.find((item) => item.product.id === productId && item.size === oldSize && item.color === oldColor);
