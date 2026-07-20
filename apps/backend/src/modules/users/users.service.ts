@@ -36,6 +36,8 @@ export class UsersService {
       ? avatar 
       : (existingUser?.avatar || avatar || 'https://zalo-api.zdn.vn/api/emoticon/avatar');
 
+    const isNewUser = !existingUser;
+
     // First upsert to make sure user exists in DB
     const user = await this.prisma.user.upsert({
       where: { zaloId },
@@ -70,6 +72,39 @@ export class UsersService {
       membershipTier = 'Vàng';
     } else if (totalSpent >= 2000000) {
       membershipTier = 'Bạc';
+    }
+
+    // Trigger System Notifications
+    if (isNewUser) {
+      try {
+        await this.prisma.notification.create({
+          data: {
+            zaloUserId: zaloId,
+            title: 'Chào mừng bạn đến với ShopQuiet! 🎉',
+            content: 'Cảm ơn bạn đã lựa chọn trải nghiệm mua sắm sản phẩm tối giản cùng chúng tôi. Nhận ngay các đặc quyền thành viên trong thẻ Membership nhé!',
+            type: 'SYSTEM',
+            date: new Date().toLocaleDateString('vi-VN'),
+            read: false
+          }
+        });
+      } catch (err) {
+        console.error('Welcome notification create failed:', err);
+      }
+    } else if (existingUser && existingUser.membershipTier !== membershipTier) {
+      try {
+        await this.prisma.notification.create({
+          data: {
+            zaloUserId: zaloId,
+            title: `Chúc mừng bạn được thăng hạng ${membershipTier.toUpperCase()}! 🌟`,
+            content: `Hạng thành viên của bạn đã được nâng cấp lên ${membershipTier}. Nhiều ưu đãi đặc quyền mới đã được kích hoạt trong ví thành viên của bạn!`,
+            type: 'SYSTEM',
+            date: new Date().toLocaleDateString('vi-VN'),
+            read: false
+          }
+        });
+      } catch (err) {
+        console.error('Tier upgrade notification create failed:', err);
+      }
     }
 
     // Update with fresh stats and return
