@@ -67,6 +67,8 @@ export interface IProduct {
   categoryName?: string;
   tags?: string;
   variants?: IVariant[];
+  createdAt?: string;
+  comments?: any[];
 }
 
 export interface ICartItem {
@@ -129,4 +131,6 @@ export interface ICartContextType {
   logout: () => Promise<void>;
   refreshZaloProfile: () => Promise<void>;
   syncUserFromStorage: (force?: boolean) => Promise<void>;
+  addToViewedProducts: (product: IProduct) => void;
+  viewedProducts: IProduct[];
 }

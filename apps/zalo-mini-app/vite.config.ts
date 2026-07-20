@@ -16,15 +16,29 @@ export default defineConfig({
   },
   build: {
     target: 'es2015',
-    cssCodeSplit: false,
+    cssCodeSplit: true,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
     rollupOptions: {
       output: {
         format: 'iife',
         name: 'app',
-        entryFileNames: 'assets/[name].js',
-        chunkFileNames: 'assets/[name].js',
-        assetFileNames: 'assets/[name].[ext]',
+        entryFileNames: 'assets/[name].[hash].js',
+        chunkFileNames: 'assets/[name].[hash].js',
+        assetFileNames: 'assets/[name].[hash].[ext]',
+        manualChunks: {
+          'vendor': ['react', 'react-dom'],
+          'zmp': ['zmp-sdk', 'zmp-ui'],
+          'query': ['@tanstack/react-query'],
+          'zustand': ['zustand'],
+        },
       },
     },
+    chunkSizeWarningLimit: 1000,
   },
 });

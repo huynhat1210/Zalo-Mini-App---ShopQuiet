@@ -1,21 +1,23 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { App as ZaloApp, ZMPRouter, SnackbarProvider } from 'zmp-ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNotifications } from './hooks';
-import { Home } from './pages/home';
-import { Cart } from './pages/cart';
-import { Profile } from './pages/profile';
-import { ProductDetail } from './pages/product-detail';
-import { Search } from './pages/search';
-import { Checkout } from './pages/checkout';
-import { OrderSuccess } from './pages/order-success';
-import { SavedItems } from './pages/saved-items';
-import { Notifications } from './pages/notifications';
-import { OrderDetail } from './pages/order-detail';
-import { PaymentSimulate } from './pages/payment-simulate';
 import { ToastComponent, BottomNavBarComponent, ErrorBoundaryComponent, OfflineStateComponent, ChatOverlay } from './components';
 import type { ICartContextType } from './App.type';
 import { useAppStore } from './store';
+
+// Code splitting with React.lazy
+const Home = lazy(() => import('./pages/home').then(module => ({ default: module.Home })));
+const Cart = lazy(() => import('./pages/cart').then(module => ({ default: module.Cart })));
+const Profile = lazy(() => import('./pages/profile').then(module => ({ default: module.Profile })));
+const ProductDetail = lazy(() => import('./pages/product-detail').then(module => ({ default: module.ProductDetail })));
+const Search = lazy(() => import('./pages/search').then(module => ({ default: module.Search })));
+const Checkout = lazy(() => import('./pages/checkout').then(module => ({ default: module.Checkout })));
+const OrderSuccess = lazy(() => import('./pages/order-success').then(module => ({ default: module.OrderSuccess })));
+const SavedItems = lazy(() => import('./pages/saved-items').then(module => ({ default: module.SavedItems })));
+const Notifications = lazy(() => import('./pages/notifications').then(module => ({ default: module.Notifications })));
+const OrderDetail = lazy(() => import('./pages/order-detail').then(module => ({ default: module.OrderDetail })));
+const PaymentSimulate = lazy(() => import('./pages/payment-simulate').then(module => ({ default: module.PaymentSimulate })));
 
 export type {
   ICartContextType,
@@ -86,6 +88,8 @@ export default function App() {
   const syncUserFromStorage = useAppStore((state) => state.syncUserFromStorage);
   const refreshZaloProfile = useAppStore((state) => state.refreshZaloProfile);
   const logout = useAppStore((state) => state.logout);
+  const addToViewedProducts = useAppStore((state) => state.addToViewedProducts);
+  const viewedProducts = useAppStore((state) => state.viewedProducts);
 
   // TanStack React Query for Notifications
   const { data: notificationsData, refetch: fetchNotifications } = useNotifications(zaloUser?.id);
@@ -116,6 +120,21 @@ export default function App() {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
+  }, []);
+
+  // Register Service Worker
+  useEffect(() => {
+    if ('serviceWorker' in navigator && typeof window !== 'undefined') {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(() => {
+            console.log('ServiceWorker registration successful');
+          })
+          .catch((error) => {
+            console.log('ServiceWorker registration failed:', error);
+          });
+      });
+    }
   }, []);
 
   const handleRetryConnection = () => {
@@ -198,6 +217,8 @@ export default function App() {
             logout,
             refreshZaloProfile,
             syncUserFromStorage,
+            addToViewedProducts,
+            viewedProducts,
           }}
         >
           <ZMPRouterCast>
@@ -211,51 +232,57 @@ export default function App() {
 
                   {/* Active Tab rendering */}
                   <div className="flex-1 flex flex-col relative overflow-hidden">
-                    {activeTab === 'home' && <Home />}
-                    {activeTab === 'search' && <Search />}
-                    {activeTab === 'orders' && <Profile initialSubPage="orders" />}
-                    {activeTab === 'notifications' && <Notifications />}
-                    {activeTab === 'profile' && <Profile />}
-                    {activeTab === 'ranking' && <Profile initialSubPage="ranking" />}
-                    {activeTab === 'saved-items' && <SavedItems />}
-                    {activeTab === 'checkout' && <Checkout />}
-                    {activeTab === 'order-success' && <OrderSuccess />}
-                    {activeTab === 'order-detail' && <OrderDetail />}
-                    {activeTab === 'payment-simulate' && <PaymentSimulate />}
+                    <Suspense fallback={<div className="flex items-center justify-center h-full text-textColor-variant text-xs">Đang tải...</div>}>
+                      {activeTab === 'home' && <Home />}
+                      {activeTab === 'search' && <Search />}
+                      {activeTab === 'orders' && <Profile initialSubPage="orders" />}
+                      {activeTab === 'notifications' && <Notifications />}
+                      {activeTab === 'profile' && <Profile />}
+                      {activeTab === 'ranking' && <Profile initialSubPage="ranking" />}
+                      {activeTab === 'saved-items' && <SavedItems />}
+                      {activeTab === 'checkout' && <Checkout />}
+                      {activeTab === 'order-success' && <OrderSuccess />}
+                      {activeTab === 'order-detail' && <OrderDetail />}
+                      {activeTab === 'payment-simulate' && <PaymentSimulate />}
+                    </Suspense>
                   </div>
 
 
                   {/* Product Detail Modal Overlay */}
                   {selectedProductDetail && (
-                    <ProductDetail
-                      product={selectedProductDetail}
-                      onClose={() => setSelectedProductDetail(null)}
-                      onAddToCart={addToCart}
-                    />
+                    <Suspense fallback={<div className="flex items-center justify-center h-full text-textColor-variant text-xs">Đang tải...</div>}>
+                      <ProductDetail
+                        product={selectedProductDetail}
+                        onClose={() => setSelectedProductDetail(null)}
+                        onAddToCart={addToCart}
+                      />
+                    </Suspense>
                   )}
 
                   {/* Cart Slider Overlay */}
                   {isCartOpen && (
-                    <div className="fixed inset-0 z-[90] flex justify-end bg-black/45 backdrop-blur-xs">
-                      <div className="w-full max-w-md h-full bg-white shadow-2xl animate-slide-left border-l border-[#f0edeb]">
-                        <div className="h-full flex flex-col">
-                          <div className="bg-white/95 backdrop-blur-md px-6 py-4 flex items-center gap-3 border-b border-[#f0edeb] sticky top-0 z-30 shadow-xs">
-                            <button 
-                              onClick={() => setIsCartOpen(false)} 
-                              className="p-1.5 -ml-1.5 hover:bg-[#f0edeb] rounded-full transition-colors active:scale-95"
-                            >
-                              <svg className="w-5.5 h-5.5 text-textColor" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                              </svg>
-                            </button>
-                            <span className="text-xs font-bold uppercase tracking-widest text-textColor">Giỏ hàng của bạn</span>
-                          </div>
-                          <div className="flex-1 overflow-y-auto bg-[#fbf9f7]">
-                            <Cart />
+                    <Suspense fallback={<div className="flex items-center justify-center h-full text-textColor-variant text-xs">Đang tải...</div>}>
+                      <div className="fixed inset-0 z-[90] flex justify-end bg-black/45 backdrop-blur-xs">
+                        <div className="w-full max-w-md h-full bg-white shadow-2xl animate-slide-left border-l border-[#f0edeb]">
+                          <div className="h-full flex flex-col">
+                            <div className="bg-white/95 backdrop-blur-md px-6 py-4 flex items-center gap-3 border-b border-[#f0edeb] sticky top-0 z-30 shadow-xs">
+                              <button
+                                onClick={() => setIsCartOpen(false)}
+                                className="p-1.5 -ml-1.5 hover:bg-[#f0edeb] rounded-full transition-colors active:scale-95"
+                              >
+                                <svg className="w-5.5 h-5.5 text-textColor" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                                </svg>
+                              </button>
+                              <span className="text-xs font-bold uppercase tracking-widest text-textColor">Giỏ hàng của bạn</span>
+                            </div>
+                            <div className="flex-1 overflow-y-auto bg-[#fbf9f7]">
+                              <Cart />
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </Suspense>
                   )}
 
                   {/* Chat Support Overlay */}

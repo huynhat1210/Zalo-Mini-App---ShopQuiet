@@ -4,15 +4,23 @@ import { useCart } from '../../App';
 import { useDebounce } from '../../utils';
 import { useAllProducts, useCategories } from '../../hooks';
 import { ISearchProps } from './search.type';
-import { LazyImageComponent } from '../../components';
+import { LazyImageComponent, PriceSlider } from '../../components';
 
 const PageCast = Page as any;
 
 export const Search: React.FC<ISearchProps> = (_props) => {
-  const { setSelectedProductDetail, addToCart, showToast } = useCart();
+  const { setSelectedProductDetail, addToCart, showToast, addToViewedProducts, viewedProducts } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  
+  // Advanced filter states
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000]);
+  const [selectedRating, setSelectedRating] = useState<number>(0);
+  const [sortBy, setSortBy] = useState<'newest' | 'price-asc' | 'price-desc' | 'popularity' | 'best-selling'>('newest');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   const handleAddToCart = (product: any) => {
     // Check if product has variants (size or color)
@@ -29,6 +37,11 @@ export const Search: React.FC<ISearchProps> = (_props) => {
       addToCart(product);
       showToast(`Đã thêm ${product.name} vào giỏ hàng!`, 'success');
     }
+  };
+
+  const handleProductClick = (product: any) => {
+    addToViewedProducts(product);
+    setSelectedProductDetail(product);
   };
 
   // Dynamic API state via React Query
@@ -59,6 +72,20 @@ export const Search: React.FC<ISearchProps> = (_props) => {
 
   const filterTags = ['Giá < 1.000.000 đ', 'Đồ gia dụng', 'Còn hàng'];
 
+  // Calculate product stock status
+  const getProductStock = (product: any) => {
+    if (!product.variants || product.variants.length === 0) return true;
+    const totalStock = product.variants.reduce((sum: number, v: any) => sum + (v.stock || 0), 0);
+    return totalStock > 0;
+  };
+
+  // Calculate product average rating
+  const getProductRating = (product: any) => {
+    if (!product.comments || product.comments.length === 0) return 0;
+    const totalRating = product.comments.reduce((sum: number, c: any) => sum + (c.rating || 0), 0);
+    return totalRating / product.comments.length;
+  };
+
   // Filtering
   const filteredProducts = (Array.isArray(products) ? products : []).filter(p => {
     const query = debouncedSearchQuery.toLowerCase().trim();
@@ -70,8 +97,23 @@ export const Search: React.FC<ISearchProps> = (_props) => {
         p.category.slug.toLowerCase().includes(query)
       ));
     
+    // Price range filter
+    const matchesPrice = p.price >= priceRange[0] && p.price <= priceRange[1];
+    
+    // Rating filter
+    const productRating = getProductRating(p);
+    const matchesRating = selectedRating === 0 || productRating >= selectedRating;
+    
+    // Category filter
+    const matchesCategory = selectedCategories.length === 0 || 
+      (p.category && selectedCategories.includes(p.category.slug));
+    
+    // Availability filter
+    const matchesAvailability = !inStockOnly || getProductStock(p);
+    
+    // Legacy quick filters
     if (activeFilter === 'Còn hàng') {
-      return matchesSearch;
+      return matchesSearch && matchesAvailability;
     }
     if (activeFilter === 'Giá < 1.000.000 đ') {
       return matchesSearch && p.price < 1000000;
@@ -79,7 +121,25 @@ export const Search: React.FC<ISearchProps> = (_props) => {
     if (activeFilter === 'Đồ gia dụng') {
       return matchesSearch && p.category?.slug === 'home';
     }
-    return matchesSearch;
+    
+    return matchesSearch && matchesPrice && matchesRating && matchesCategory && matchesAvailability;
+  });
+
+  // Sorting
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (sortBy) {
+      case 'price-asc':
+        return a.price - b.price;
+      case 'price-desc':
+        return b.price - a.price;
+      case 'popularity':
+        return (b.likeCount || 0) - (a.likeCount || 0);
+      case 'best-selling':
+        return (b.soldCount || 0) - (a.soldCount || 0);
+      case 'newest':
+      default:
+        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    }
   });
 
   return (
@@ -143,6 +203,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
         {/* Filters Grid */}
         <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-none pl-6 pr-6 -mx-6">
           <button 
+            onClick={() => setIsFilterModalOpen(true)}
             className="flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-[#eae8e6] bg-white text-xs font-bold text-textColor-variant active:scale-95 transition-all whitespace-nowrap shrink-0"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
@@ -150,6 +211,19 @@ export const Search: React.FC<ISearchProps> = (_props) => {
             </svg>
             <span>Bộ lọc</span>
           </button>
+
+          {/* Sort dropdown */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="px-4 py-2.5 rounded-full border border-[#eae8e6] bg-white text-xs font-semibold text-textColor-variant outline-none cursor-pointer"
+          >
+            <option value="newest">Mới nhất</option>
+            <option value="price-asc">Giá: Thấp → Cao</option>
+            <option value="price-desc">Giá: Cao → Thấp</option>
+            <option value="popularity">Phổ biến</option>
+            <option value="best-selling">Bán chạy</option>
+          </select>
 
           {filterTags.map(tag => {
             const isActive = activeFilter === tag;
@@ -207,6 +281,51 @@ export const Search: React.FC<ISearchProps> = (_props) => {
               </div>
             </div>
 
+            {/* Viewed Products */}
+            {viewedProducts.length > 0 && (
+              <div className="space-y-3.5">
+                <div className="flex justify-between items-center px-1">
+                  <h3 className="text-[10px] font-extrabold text-[#526069]/60 uppercase tracking-widest">Bạn đã xem</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-x-5 gap-y-7">
+                  {viewedProducts.slice(0, 6).map(prod => {
+                    let img = 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80';
+                    try {
+                      const parsed = JSON.parse(prod.images);
+                      if (parsed && parsed.length > 0) img = parsed[0];
+                    } catch (e) {}
+
+                    return (
+                      <div
+                        key={prod.id}
+                        onClick={() => handleProductClick(prod)}
+                        className="bg-white rounded-2xl overflow-hidden flex flex-col relative border border-[#f0edeb] shadow-xs cursor-pointer group hover:shadow-md transition-all duration-300"
+                      >
+                        <div className="h-[135px] w-full overflow-hidden bg-neutral-50 border-b border-[#f0edeb]">
+                          <LazyImageComponent src={img} alt={prod.name} className="w-full h-full" />
+                        </div>
+                        <div className="p-3.5 flex-1 flex flex-col justify-between">
+                          <div>
+                            <span className="text-[9px] text-[#526069]/60 uppercase font-bold tracking-wider">{prod.category?.name}</span>
+                            <h3 className="text-xs font-semibold text-textColor mt-0.5 line-clamp-1 group-hover:text-primary transition-colors">{prod.name}</h3>
+                          </div>
+                          <div className="flex justify-between items-center mt-3.5">
+                            <span className="text-xs font-bold text-textColor">{prod.price.toLocaleString('vi-VN')} đ</span>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleAddToCart(prod); }}
+                              className="w-7.5 h-7.5 rounded-full bg-primary-light text-primary flex items-center justify-center font-bold text-sm active:scale-90 transition-transform"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Categories */}
             <div className="space-y-3.5">
               <h3 className="text-[10px] font-extrabold text-[#526069]/60 uppercase tracking-widest px-1">Danh mục</h3>
@@ -237,7 +356,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
                   return (
                     <div
                       key={prod.id}
-                      onClick={() => setSelectedProductDetail(prod)}
+                      onClick={() => handleProductClick(prod)}
                       className="bg-white rounded-2xl overflow-hidden flex flex-col relative border border-[#f0edeb] shadow-xs cursor-pointer group hover:shadow-md transition-all duration-300"
                     >
                       <div className="h-[135px] w-full overflow-hidden bg-neutral-50 border-b border-[#f0edeb]">
@@ -270,16 +389,16 @@ export const Search: React.FC<ISearchProps> = (_props) => {
           <div className="space-y-4">
             <div className="flex justify-between items-center px-1">
               <h3 className="text-[10px] font-extrabold text-[#526069]/60 uppercase tracking-widest">Kết quả tìm kiếm</h3>
-              <span className="text-[10px] text-textColor/45 font-medium">Tìm thấy {filteredProducts.length} sản phẩm</span>
+              <span className="text-[10px] text-textColor/45 font-medium">Tìm thấy {sortedProducts.length} sản phẩm</span>
             </div>
 
-            {filteredProducts.length === 0 ? (
+            {sortedProducts.length === 0 ? (
               <div className="text-center py-16 bg-white rounded-2xl border border-[#f0edeb] text-xs text-textColor-variant shadow-xs">
                 Không tìm thấy sản phẩm nào phù hợp với "{debouncedSearchQuery}"
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-x-5 gap-y-7">
-                {filteredProducts.map(prod => {
+                {sortedProducts.map(prod => {
                   let img = 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80';
                   try {
                     const parsed = JSON.parse(prod.images);
@@ -289,7 +408,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
                   return (
                     <div
                       key={prod.id}
-                      onClick={() => setSelectedProductDetail(prod)}
+                      onClick={() => handleProductClick(prod)}
                       className="bg-white rounded-2xl overflow-hidden flex flex-col relative border border-[#f0edeb] shadow-xs cursor-pointer group hover:shadow-md transition-all duration-300"
                     >
                       <div className="h-[135px] w-full overflow-hidden bg-neutral-50 border-b border-[#f0edeb]">
@@ -318,6 +437,122 @@ export const Search: React.FC<ISearchProps> = (_props) => {
           </div>
         )}
       </div>
+
+      {/* Advanced Filter Modal */}
+      {isFilterModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50">
+          <div className="bg-white rounded-t-3xl w-full max-w-lg p-6 animate-slide-up">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold text-textColor">Bộ lọc nâng cao</h3>
+              <button
+                onClick={() => setIsFilterModalOpen(false)}
+                className="text-textColor-variant hover:text-textColor border-none bg-transparent cursor-pointer"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Price Range */}
+            <div className="mb-6">
+              <h4 className="text-sm font-semibold text-textColor mb-3">Khoảng giá</h4>
+              <div className="space-y-4">
+                <PriceSlider
+                  min={0}
+                  max={10000000}
+                  value={priceRange}
+                  onChange={setPriceRange}
+                />
+                <div className="flex justify-between text-xs text-textColor-variant font-medium">
+                  <span>{priceRange[0].toLocaleString('vi-VN')} đ</span>
+                  <span>{priceRange[1].toLocaleString('vi-VN')} đ</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Rating Filter */}
+            <div className="mb-6">
+              <h4 className="text-sm font-semibold text-textColor mb-3">Đánh giá</h4>
+              <div className="flex gap-2">
+                {[0, 4, 3, 2, 1].map((rating) => (
+                  <button
+                    key={rating}
+                    onClick={() => setSelectedRating(rating)}
+                    className={`px-4 py-2 rounded-lg border text-xs font-semibold transition-all ${
+                      selectedRating === rating
+                        ? 'border-primary bg-primary-light text-primary'
+                        : 'border-[#eae8e6] bg-white text-textColor-variant'
+                    }`}
+                  >
+                    {rating === 0 ? 'Tất cả' : `${rating}+ sao`}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Category Filter */}
+            <div className="mb-6">
+              <h4 className="text-sm font-semibold text-textColor mb-3">Danh mục</h4>
+              <div className="flex flex-wrap gap-2">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.slug}
+                    onClick={() => {
+                      setSelectedCategories(prev =>
+                        prev.includes(cat.slug)
+                          ? prev.filter(c => c !== cat.slug)
+                          : [...prev, cat.slug]
+                      );
+                    }}
+                    className={`px-4 py-2 rounded-lg border text-xs font-semibold transition-all ${
+                      selectedCategories.includes(cat.slug)
+                        ? 'border-primary bg-primary-light text-primary'
+                        : 'border-[#eae8e6] bg-white text-textColor-variant'
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Availability Filter */}
+            <div className="mb-6">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={inStockOnly}
+                  onChange={(e) => setInStockOnly(e.target.checked)}
+                  className="w-5 h-5 text-primary accent-primary"
+                />
+                <span className="text-sm font-semibold text-textColor">Chỉ hiện sản phẩm còn hàng</span>
+              </label>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-4 border-t border-[#f0edeb]">
+              <button
+                onClick={() => {
+                  setPriceRange([0, 10000000]);
+                  setSelectedRating(0);
+                  setSelectedCategories([]);
+                  setInStockOnly(false);
+                }}
+                className="flex-1 py-3 rounded-xl border border-[#eae8e6] text-sm font-semibold text-textColor-variant active:scale-95 transition-all"
+              >
+                Đặt lại
+              </button>
+              <button
+                onClick={() => setIsFilterModalOpen(false)}
+                className="flex-1 py-3 rounded-xl bg-primary text-white text-sm font-semibold active:scale-95 transition-all"
+              >
+                Áp dụng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageCast>
   );
 }

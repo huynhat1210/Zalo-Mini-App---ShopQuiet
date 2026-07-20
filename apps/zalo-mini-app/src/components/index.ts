@@ -14,5 +14,6 @@ export * from './voucher-wallet';
 export * from './review-modal';
 export * from './order-history';
 export * from './lucky-wheel';
+export * from './price-slider';
 
 

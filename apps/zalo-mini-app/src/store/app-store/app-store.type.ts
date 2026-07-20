@@ -14,6 +14,7 @@ export interface IAppState {
   buyNowItem: ICartItem | null;
   notifications: INotification[];
   toastTimerRef: ReturnType<typeof setTimeout> | null;
+  viewedProducts: IProduct[];
 
   setActiveTab: (tab: string) => void;
   setSelectedProductDetail: (product: IProduct | null) => void;
@@ -37,4 +38,6 @@ export interface IAppState {
   fetchFavorites: () => Promise<void>;
   fetchCart: () => Promise<void>;
   logout: () => Promise<void>;
+  addToViewedProducts: (product: IProduct) => void;
+  clearViewedProducts: () => void;
 }

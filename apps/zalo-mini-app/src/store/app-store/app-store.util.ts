@@ -26,6 +26,7 @@ export const useAppStore = create<IAppState>()(
       buyNowItem: null,
       notifications: [],
       toastTimerRef: null,
+      viewedProducts: [],
 
       setActiveTab: (tab) => set({ activeTab: tab }),
       setSelectedProductDetail: (product) => set({ selectedProductDetail: product }),
@@ -523,6 +524,23 @@ export const useAppStore = create<IAppState>()(
           set({ zaloUser: null, cart: [], savedItems: [] });
         }
       },
+      addToViewedProducts: (product) => {
+        const current = get().viewedProducts;
+        const exists = current.some((item) => item.id === product.id);
+        let updated;
+        if (exists) {
+          updated = current.filter((item) => item.id !== product.id);
+        } else {
+          updated = current;
+        }
+        updated = [product, ...updated].slice(0, 20);
+        set({ viewedProducts: updated });
+        localStorage.setItem('viewed_products', JSON.stringify(updated));
+      },
+      clearViewedProducts: () => {
+        set({ viewedProducts: [] });
+        localStorage.removeItem('viewed_products');
+      },
 
 
     }),
@@ -532,6 +550,7 @@ export const useAppStore = create<IAppState>()(
         cart: state.cart,
         savedItems: state.savedItems,
         zaloUser: state.zaloUser,
+        viewedProducts: state.viewedProducts,
       }),
     }
   )
