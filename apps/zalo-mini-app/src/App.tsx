@@ -127,9 +127,12 @@ export default function App() {
     };
   }, []);
 
-  // Register Service Worker
+  // Register Service Worker (Only on standard web browser, not inside Zalo App WebView)
   useEffect(() => {
-    if ('serviceWorker' in navigator && typeof window !== 'undefined') {
+    const isRealZaloEnv = typeof window !== 'undefined' && 
+      (window.navigator.userAgent.toLowerCase().includes('zalo') || !!(window as any).ZaloMiniApp);
+
+    if ('serviceWorker' in navigator && typeof window !== 'undefined' && !isRealZaloEnv) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')
           .then(() => {
