@@ -566,12 +566,12 @@ export const useAppStore = create<IAppState>()(
       clearComparison: () => {
         set({ comparisonProducts: [] });
       },
-      setIsComparisonOpen: (open) => set({ isComparisonOpen: open }),
+      setIsComparisonOpen: (open: boolean) => set({ isComparisonOpen: open }),
       fetchGamificationData: async () => {
         const user = get().zaloUser;
         if (!user || !user.id) return;
         try {
-          const data = await apiRequest('GET', `/gamification/profile`);
+          const data = await apiRequest<any>('/gamification/profile', 'GET');
           set({ gamificationData: data });
         } catch (e) {
           console.error('Failed to fetch gamification data:', e);
@@ -584,7 +584,7 @@ export const useAppStore = create<IAppState>()(
           return;
         }
         try {
-          const res = await apiRequest('POST', `/gamification/daily-claim`);
+          const res = await apiRequest<any>('/gamification/daily-claim', 'POST');
           if (res && res.success) {
             get().showToast(res.message || 'Điểm danh hàng ngày thành công!', 'success');
             await get().fetchGamificationData();
@@ -598,14 +598,14 @@ export const useAppStore = create<IAppState>()(
       fetchRecommendations: async () => {
         const user = get().zaloUser;
         try {
-          let data = [];
+          let data: any = [];
           if (user && user.id) {
-            data = await apiRequest('GET', `/recommendations/personalized?zaloUserId=${user.id}&limit=8`);
+            data = await apiRequest<any>(`/recommendations/personalized?zaloUserId=${user.id}&limit=8`, 'GET');
           }
           if (!data || data.length === 0) {
-            data = await apiRequest('GET', `/recommendations/trending?limit=8`);
+            data = await apiRequest<any>('/recommendations/trending?limit=8', 'GET');
           }
-          set({ recommendations: data || [] });
+          set({ recommendations: (Array.isArray(data) ? data : data?.data || []) });
         } catch (e) {
           console.error('Failed to fetch recommendations:', e);
           set({ recommendations: [] });

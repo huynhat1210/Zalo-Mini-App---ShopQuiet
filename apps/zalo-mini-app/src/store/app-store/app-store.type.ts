@@ -50,4 +50,5 @@ export interface IAppState {
   claimDailyReward: () => Promise<void>;
   recommendations: IProduct[];
   fetchRecommendations: () => Promise<void>;
+  setIsComparisonOpen: (open: boolean) => void;
 }
