@@ -77,7 +77,7 @@ export class GamificationService {
   async addPoints(zaloUserId: string, points: number, reason: string, metadata?: Record<string, any>) {
     // Update user points
     const user = await this.prisma.user.findUnique({
-      where: { zaloUserId },
+      where: { zaloId: zaloUserId },
     });
 
     if (!user) {
@@ -87,7 +87,7 @@ export class GamificationService {
     const newTotalPoints = (user.totalSpent || 0) + points;
 
     await this.prisma.user.update({
-      where: { zaloUserId },
+      where: { zaloId: zaloUserId },
       data: { totalSpent: newTotalPoints },
     });
 
@@ -107,7 +107,7 @@ export class GamificationService {
   async getUserGamification(zaloUserId: string) {
     const [user, todayClaim, achievements, pointsHistory] = await Promise.all([
       this.prisma.user.findUnique({
-        where: { zaloUserId },
+        where: { zaloId: zaloUserId },
         select: { totalSpent: true, membershipTier: true },
       }),
       this.prisma.dailyRewardClaim.findFirst({
@@ -144,7 +144,7 @@ export class GamificationService {
 
   async checkAchievements(zaloUserId: string) {
     const user = await this.prisma.user.findUnique({
-      where: { zaloUserId },
+      where: { zaloId: zaloUserId },
       include: {
         orders: true,
         comments: true,
