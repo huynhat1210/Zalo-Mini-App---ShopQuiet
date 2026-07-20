@@ -30,20 +30,24 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
   const [voucherToGift, setVoucherToGift] = useState('');
   const [giftingVoucher, setGiftingVoucher] = useState(false);
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (isSilent = false) => {
     try {
-      setLoading(true);
+      if (!isSilent) setLoading(true);
       const res = await apiRequest('/users');
       setUsers(Array.isArray(res) ? res : []);
     } catch (err) {
       console.error('Failed to load users:', err);
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchUsers();
+    const interval = setInterval(() => {
+      fetchUsers(true);
+    }, 30000); // 30s polling
+    return () => clearInterval(interval);
   }, []);
 
   const handleViewUser = async (user: any) => {

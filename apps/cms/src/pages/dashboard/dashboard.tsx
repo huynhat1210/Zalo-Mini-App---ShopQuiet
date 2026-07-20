@@ -35,12 +35,12 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchDashboardData = async (isSilent = false) => {
       try {
-        setLoading(true);
+        if (!isSilent) setLoading(true);
         const [products, orders, vouchers] = await Promise.all([
           apiRequest('/products?page=1&limit=100').catch(() => ({ data: [] })),
-          apiRequest('/orders').catch(() => []),
+          apiRequest('/orders/admin/all').catch(() => []),
           apiRequest('/vouchers').catch(() => [])
         ]);
 
@@ -73,11 +73,15 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
       } catch (err) {
         console.error('Failed to load dashboard statistics:', err);
       } finally {
-        setLoading(false);
+        if (!isSilent) setLoading(false);
       }
     };
 
     fetchDashboardData();
+    const interval = setInterval(() => {
+      fetchDashboardData(true);
+    }, 30000); // 30s polling
+    return () => clearInterval(interval);
   }, []);
 
   const formatPrice = (amount: number) => {

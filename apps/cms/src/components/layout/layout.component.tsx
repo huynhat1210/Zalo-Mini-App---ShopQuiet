@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { SidebarComponent } from '../sidebar';
 import { User, Bell, Menu, Check, Clock } from 'lucide-react';
 import { apiRequest } from '../../utils/api';
+import { useLocation } from 'react-router-dom';
 
 
 
@@ -18,6 +19,8 @@ import type { ILayoutComponentProps } from './layout.type';
 
 export const LayoutComponent: React.FC<ILayoutComponentProps> = (props) => {
   const { children, onLogout } = props;
+  const location = useLocation();
+  const isFullBleed = location.pathname === '/support';
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [adminUser, setAdminUser] = useState<any>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -191,10 +194,15 @@ export const LayoutComponent: React.FC<ILayoutComponentProps> = (props) => {
         </header>
 
         {/* Inner Scrollable Container */}
-        <main className="flex-1 p-8 overflow-y-auto min-h-0 bg-[#fbf9f7]">
-          <div className="max-w-7xl mx-auto space-y-6">
-            {children}
-          </div>
+        <main className={isFullBleed
+          ? 'flex-1 overflow-hidden min-h-0 flex flex-col'
+          : 'flex-1 p-8 overflow-y-auto min-h-0 bg-[#fbf9f7]'
+        }>
+          {isFullBleed ? children : (
+            <div className="max-w-7xl mx-auto space-y-6">
+              {children}
+            </div>
+          )}
         </main>
       </div>
     </div>

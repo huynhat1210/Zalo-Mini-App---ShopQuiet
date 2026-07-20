@@ -19,20 +19,24 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
   const [timeRange, setTimeRange] = useState<7 | 30>(7);
 
   useEffect(() => {
-    const fetchAnalyticsData = async () => {
+    const fetchAnalyticsData = async (isSilent = false) => {
       try {
-        setLoading(true);
-        const orders = await apiRequest('/orders').catch(() => []);
+        if (!isSilent) setLoading(true);
+        const orders = await apiRequest('/orders/admin/all').catch(() => []);
         setData({
           allOrders: Array.isArray(orders) ? orders : []
         });
       } catch (err) {
         console.error('Failed to fetch analytics database:', err);
       } finally {
-        setLoading(false);
+        if (!isSilent) setLoading(false);
       }
     };
     fetchAnalyticsData();
+    const interval = setInterval(() => {
+      fetchAnalyticsData(true);
+    }, 30000); // 30s polling
+    return () => clearInterval(interval);
   }, []);
 
   const formatPrice = (amount: number) => {

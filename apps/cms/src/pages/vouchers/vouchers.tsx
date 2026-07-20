@@ -52,20 +52,24 @@ export const Vouchers: React.FC<IVouchersProps> = (_props) => {
     endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
   });
 
-  const fetchVouchers = async () => {
+  const fetchVouchers = async (isSilent = false) => {
     try {
-      setLoading(true);
+      if (!isSilent) setLoading(true);
       const res = await apiRequest('/vouchers');
       setVouchers(Array.isArray(res) ? res : []);
     } catch (err) {
       console.error('Failed to load vouchers:', err);
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchVouchers();
+    const interval = setInterval(() => {
+      fetchVouchers(true);
+    }, 30000); // 30s polling
+    return () => clearInterval(interval);
   }, []);
 
   const handleOpenAddModal = () => {

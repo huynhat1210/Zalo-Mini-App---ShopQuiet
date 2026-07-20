@@ -57,20 +57,24 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
   const [showTrackingForm, setShowTrackingForm] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState('');
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (isSilent = false) => {
     try {
-      setLoading(true);
-      const res = await apiRequest('/orders');
+      if (!isSilent) setLoading(true);
+      const res = await apiRequest('/orders/admin/all');
       setOrders(Array.isArray(res) ? res : []);
     } catch (err) {
       console.error('Failed to fetch orders:', err);
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchOrders();
+    const interval = setInterval(() => {
+      fetchOrders(true);
+    }, 30000); // 30s polling
+    return () => clearInterval(interval);
   }, []);
 
   const handleUpdateStatus = async (orderId: string, newStatus: string, trackNum?: string) => {
