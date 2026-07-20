@@ -131,13 +131,12 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     const userId = zaloUser.id;
     try {
       const [fetchedOrders, fetchedProducts, fetchedVouchers] = await Promise.all([
-        apiRequest<IOrder[]>('/orders/admin/all'), // Lấy tất cả đơn hàng cho đồng bộ
+        apiRequest<IOrder[]>('/orders'), // Lấy đơn hàng của chính user hiện tại
         apiRequest<any>('/products?page=1&limit=10'),
         apiRequest<any[]>('/vouchers').catch(() => []),
       ]);
 
-      const userSpecificOrders = fetchedOrders.filter((o) => o.zaloUserId === userId);
-      setOrders(userSpecificOrders);
+      setOrders(fetchedOrders);
       setUserVouchersCount(fetchedVouchers.length);
 
       const productList = Array.isArray(fetchedProducts) ? fetchedProducts : fetchedProducts?.data || [];
@@ -145,7 +144,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
       setRecommendationProducts(recs);
 
       // Cache fresh data
-      localStorage.setItem(`cache_orders_${userId}`, JSON.stringify(userSpecificOrders));
+      localStorage.setItem(`cache_orders_${userId}`, JSON.stringify(fetchedOrders));
       localStorage.setItem('cache_rec_products', JSON.stringify(recs));
     } catch (err) {
       console.error('Failed to fetch profile page data:', err);
