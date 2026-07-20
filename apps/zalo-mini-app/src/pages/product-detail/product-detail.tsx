@@ -13,7 +13,7 @@ const BoxCast = Box as any;
 
 export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
   const { product, onClose, onAddToCart } = props;
-  const { toggleSavedItem, isSavedItem, setActiveTab, showToast, setBuyNowItem, setSelectedProductDetail, cart, setIsCartOpen, setIsChatOpen, setChatContextProduct, zaloUser } = useCart();
+  const { toggleSavedItem, isSavedItem, setActiveTab, showToast, setBuyNowItem, setSelectedProductDetail, cart, setIsCartOpen, setIsChatOpen, setChatContextProduct, zaloUser, addToComparison } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [likeCount, setLikeCount] = useState(product.likeCount || 0);
 
@@ -622,6 +622,17 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
         >
           <ChatBubbleOvalLeftEllipsisIcon className="w-5 h-5 text-teal-600 mb-0.5" strokeWidth={2} />
           <span className="text-[9px] text-teal-700 font-medium">Chat ngay</span>
+        </button>
+        
+        {/* Comparison Button */}
+        <button
+          onClick={() => {
+            addToComparison(product);
+          }}
+          className="flex-1 max-w-[60px] flex flex-col items-center justify-center border-r border-neutral-100 bg-[#fbf9f7] hover:bg-neutral-50 active:bg-neutral-100 border-none cursor-pointer"
+        >
+          <span className="text-[17px] mb-0.5">⚖️</span>
+          <span className="text-[9px] text-[#526069] font-medium">So sánh</span>
         </button>
 
         {/* Add to Cart Button */}

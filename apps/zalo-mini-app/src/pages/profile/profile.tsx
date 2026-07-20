@@ -46,6 +46,9 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     cart,
     refreshZaloProfile,
     setIsChatOpen,
+    gamificationData,
+    fetchGamificationData,
+    claimDailyReward,
   } = useCart();
 
   const [orders, setOrders] = useState<IOrder[]>([]);
@@ -176,6 +179,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
 
     fetchOrdersAndProducts();
     refreshZaloProfile();
+    fetchGamificationData();
   }, [zaloUser?.id]);
 
   const handleReviewSuccess = (orderId: string, productId: number) => {
@@ -350,6 +354,61 @@ export const Profile: React.FC<IProfileProps> = (props) => {
           <span className="text-base font-extrabold text-teal-600">{orders.length}</span>
           <span className="text-[10px] text-[#526069]/65 font-bold uppercase tracking-wider mt-1">Đơn hàng</span>
         </button>
+      </div>
+
+      {/* Gamification Reward & Achievements Card */}
+      <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 mx-6 mt-4.5 space-y-4 shadow-xs">
+        <div className="flex justify-between items-center">
+          <div className="text-left">
+            <h4 className="text-xs font-bold text-textColor flex items-center gap-1.5">
+              <span>🏆</span> Điểm thưởng & Thành tựu
+            </h4>
+            <p className="text-[10px] text-textColor-variant mt-0.5 font-semibold">
+              Điểm tích lũy: <span className="text-primary font-bold">{gamificationData?.points || 0}</span>
+            </p>
+          </div>
+          <button
+            onClick={() => claimDailyReward()}
+            disabled={gamificationData?.hasClaimedToday}
+            className={`px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border-none transition-all active:scale-95 cursor-pointer ${
+              gamificationData?.hasClaimedToday
+                ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
+                : 'bg-primary hover:bg-primary-dark text-white shadow-sm'
+            }`}
+          >
+            {gamificationData?.hasClaimedToday ? 'Đã điểm danh ✓' : '📍 Điểm danh (+10đ)'}
+          </button>
+        </div>
+
+        <div className="border-t border-[#f0edeb] pt-3">
+          <div className="grid grid-cols-5 gap-1 pt-1">
+            {[
+              { id: 1, name: 'Tân thủ', desc: 'Đặt 1 đơn', icon: '🎉' },
+              { id: 2, name: 'Mua sắm', desc: 'Đặt 5 đơn', icon: '🛍️' },
+              { id: 3, name: 'Sành điệu', desc: 'Lưu 10 tim', icon: '❤️' },
+              { id: 4, name: 'Đánh giá', desc: 'Viết 5 bình luận', icon: '⭐' },
+              { id: 5, name: 'VIP', desc: 'Tiêu > 1Tr', icon: '👑' },
+            ].map((badge) => {
+              const isUnlocked = gamificationData?.achievements?.some((a: any) => a.id === badge.id);
+              return (
+                <div key={badge.id} className="flex flex-col items-center text-center">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-xs border relative transition-all duration-300 ${
+                    isUnlocked 
+                      ? 'bg-amber-50 border-amber-400 scale-105' 
+                      : 'bg-neutral-50 border-neutral-200 filter grayscale opacity-40'
+                  }`} title={badge.desc}>
+                    {badge.icon}
+                    {isUnlocked && (
+                      <span className="absolute -top-1 -right-1 bg-amber-400 text-[7px] w-3 h-3 rounded-full text-teal-950 font-bold border border-white flex items-center justify-center">✓</span>
+                    )}
+                  </div>
+                  <span className="text-[7.5px] font-bold text-textColor mt-1.5 line-clamp-1 w-full">{badge.name}</span>
+                  <span className="text-[6.5px] text-textColor-variant scale-90 origin-top mt-0.5 line-clamp-1 w-full">{badge.desc}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Profile menu categories list */}

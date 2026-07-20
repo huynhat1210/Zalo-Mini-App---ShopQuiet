@@ -29,6 +29,8 @@ export const useAppStore = create<IAppState>()(
       viewedProducts: [],
       comparisonProducts: [],
       isComparisonOpen: false,
+      gamificationData: null,
+      recommendations: [],
 
       setActiveTab: (tab) => set({ activeTab: tab }),
       setSelectedProductDetail: (product) => set({ selectedProductDetail: product }),
@@ -565,6 +567,50 @@ export const useAppStore = create<IAppState>()(
         set({ comparisonProducts: [] });
       },
       setIsComparisonOpen: (open) => set({ isComparisonOpen: open }),
+      fetchGamificationData: async () => {
+        const user = get().zaloUser;
+        if (!user || !user.id) return;
+        try {
+          const data = await apiRequest('GET', `/gamification/profile`);
+          set({ gamificationData: data });
+        } catch (e) {
+          console.error('Failed to fetch gamification data:', e);
+        }
+      },
+      claimDailyReward: async () => {
+        const user = get().zaloUser;
+        if (!user || !user.id) {
+          get().showToast('Vui lòng đăng nhập để điểm danh!', 'warning');
+          return;
+        }
+        try {
+          const res = await apiRequest('POST', `/gamification/daily-claim`);
+          if (res && res.success) {
+            get().showToast(res.message || 'Điểm danh hàng ngày thành công!', 'success');
+            await get().fetchGamificationData();
+          } else {
+            get().showToast(res?.message || 'Hôm nay bạn đã điểm danh rồi.', 'warning');
+          }
+        } catch (e: any) {
+          get().showToast(e?.message || 'Hôm nay bạn đã điểm danh rồi!', 'warning');
+        }
+      },
+      fetchRecommendations: async () => {
+        const user = get().zaloUser;
+        try {
+          let data = [];
+          if (user && user.id) {
+            data = await apiRequest('GET', `/recommendations/personalized?zaloUserId=${user.id}&limit=8`);
+          }
+          if (!data || data.length === 0) {
+            data = await apiRequest('GET', `/recommendations/trending?limit=8`);
+          }
+          set({ recommendations: data || [] });
+        } catch (e) {
+          console.error('Failed to fetch recommendations:', e);
+          set({ recommendations: [] });
+        }
+      },
 
 
     }),

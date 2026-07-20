@@ -45,5 +45,9 @@ export interface IAppState {
   addToComparison: (product: IProduct) => void;
   removeFromComparison: (productId: number) => void;
   clearComparison: () => void;
-  setIsComparisonOpen: (open: boolean) => void;
+  gamificationData: any | null;
+  fetchGamificationData: () => Promise<void>;
+  claimDailyReward: () => Promise<void>;
+  recommendations: IProduct[];
+  fetchRecommendations: () => Promise<void>;
 }

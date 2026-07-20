@@ -58,7 +58,7 @@ export const FlashSale: React.FC<IFlashSaleProps> = ({ endTime, products }) => {
           </div>
         </div>
         <button 
-          onClick={() => setActiveTab('search')}
+          onClick={() => setActiveTab('flash-sale-list')}
           className="text-white text-xs font-semibold hover:underline border-none bg-transparent cursor-pointer"
         >
           Xem tất cả

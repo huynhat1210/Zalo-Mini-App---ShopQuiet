@@ -18,6 +18,7 @@ const SavedItems = lazy(() => import('./pages/saved-items').then(module => ({ de
 const Notifications = lazy(() => import('./pages/notifications').then(module => ({ default: module.Notifications })));
 const OrderDetail = lazy(() => import('./pages/order-detail').then(module => ({ default: module.OrderDetail })));
 const PaymentSimulate = lazy(() => import('./pages/payment-simulate').then(module => ({ default: module.PaymentSimulate })));
+const FlashSaleList = lazy(() => import('./pages/flash-sale-list').then(module => ({ default: module.FlashSaleList })));
 
 export type {
   ICartContextType,
@@ -96,6 +97,11 @@ export default function App() {
   const comparisonProducts = useAppStore((state) => state.comparisonProducts);
   const isComparisonOpen = useAppStore((state) => state.isComparisonOpen);
   const setIsComparisonOpen = useAppStore((state) => state.setIsComparisonOpen);
+  const gamificationData = useAppStore((state) => state.gamificationData);
+  const fetchGamificationData = useAppStore((state) => state.fetchGamificationData);
+  const claimDailyReward = useAppStore((state) => state.claimDailyReward);
+  const recommendations = useAppStore((state) => state.recommendations);
+  const fetchRecommendations = useAppStore((state) => state.fetchRecommendations);
 
   // TanStack React Query for Notifications
   const { data: notificationsData, refetch: fetchNotifications } = useNotifications(zaloUser?.id);
@@ -234,6 +240,11 @@ export default function App() {
             comparisonProducts,
             isComparisonOpen,
             setIsComparisonOpen,
+            gamificationData,
+            fetchGamificationData,
+            claimDailyReward,
+            recommendations,
+            fetchRecommendations,
           }}
         >
           <ZMPRouterCast>
@@ -259,6 +270,7 @@ export default function App() {
                       {activeTab === 'order-success' && <OrderSuccess />}
                       {activeTab === 'order-detail' && <OrderDetail />}
                       {activeTab === 'payment-simulate' && <PaymentSimulate />}
+                      {activeTab === 'flash-sale-list' && <FlashSaleList />}
                     </Suspense>
                   </div>
 
@@ -312,6 +324,33 @@ export default function App() {
                       onRemove={removeFromComparison}
                       onClose={() => setIsComparisonOpen(false)}
                     />
+                  )}
+
+                  {/* Sticky Comparison Floating Bar */}
+                  {comparisonProducts.length > 0 && (
+                    <div className={`fixed ${showNavbar ? 'bottom-[78px]' : 'bottom-4'} left-4 right-4 z-40 bg-white/95 backdrop-blur-md rounded-2xl border border-[#f0edeb] px-4.5 py-3 shadow-lg flex items-center justify-between animate-slide-up`}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">⚖️</span>
+                        <div className="text-left">
+                          <p className="text-xs font-bold text-textColor">So sánh sản phẩm</p>
+                          <p className="text-[10px] text-textColor-variant">Đã chọn {comparisonProducts.length}/3 sản phẩm</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => clearComparison()}
+                          className="px-3 py-1.5 rounded-full text-[10px] font-bold text-[#526069] bg-neutral-100 hover:bg-neutral-200 transition-colors border-none cursor-pointer"
+                        >
+                          Xóa hết
+                        </button>
+                        <button
+                          onClick={() => setIsComparisonOpen(true)}
+                          className="px-3 py-1.5 rounded-full text-[10px] font-extrabold text-white bg-primary hover:bg-primary-dark transition-colors border-none cursor-pointer"
+                        >
+                          So sánh ngay
+                        </button>
+                      </div>
+                    </div>
                   )}
 
                   {/* Custom Navigation Tab Bar */}

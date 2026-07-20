@@ -14,7 +14,7 @@ const BoxCast = Box as any;
 const TextCast = Text as any;
 
 export const Home: React.FC<IHomeProps> = (_props) => {
-  const { addToCart, setSelectedProductDetail, cart, setIsCartOpen, toggleSavedItem, isSavedItem, showToast, zaloUser } = useCart();
+  const { addToCart, setSelectedProductDetail, cart, setIsCartOpen, toggleSavedItem, isSavedItem, showToast, zaloUser, addToComparison, comparisonProducts, recommendations, fetchRecommendations } = useCart();
   const [isLuckyWheelOpen, setIsLuckyWheelOpen] = useState(false);
 
   
@@ -65,6 +65,10 @@ export const Home: React.FC<IHomeProps> = (_props) => {
     }
     loadSettings();
   }, []);
+
+  useEffect(() => {
+    fetchRecommendations();
+  }, [zaloUser?.id]);
 
   const bannerSlides = banners
     .filter((banner) => banner.imageUrl)
@@ -305,6 +309,24 @@ export const Home: React.FC<IHomeProps> = (_props) => {
                       </svg>
                     </button>
 
+                    {/* Floating Comparison Toggle Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToComparison(prod);
+                      }}
+                      className={`absolute top-[48px] right-2.5 z-10 w-8 h-8 rounded-full flex items-center justify-center shadow-xs transition-all active:scale-90 border-none cursor-pointer ${
+                        comparisonProducts.some((p: any) => p.id === prod.id)
+                          ? 'bg-primary text-white'
+                          : 'bg-white/90 backdrop-blur-md text-[#526069] hover:bg-white'
+                      }`}
+                      title="So sánh sản phẩm"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </button>
+
                     {/* Floating Tag */}
                     {prod.tags && (
                       <span className="absolute bottom-2.5 left-2.5 z-10 text-[8px] font-bold uppercase tracking-wider bg-white/90 backdrop-blur-md text-textColor px-2.5 py-1 rounded-full border border-white/50 shadow-xs">
@@ -336,6 +358,59 @@ export const Home: React.FC<IHomeProps> = (_props) => {
               );
             })}
           </div>
+          )}
+
+          {/* Recommendations Section */}
+          {recommendations && recommendations.length > 0 && (
+            <BoxCast className="my-6 border-t border-[#f0edeb] pt-6">
+              <div className="flex justify-between items-center px-6 mb-4">
+                <TextCast className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/80">Gợi ý dành riêng cho bạn 🌟</TextCast>
+              </div>
+              <div className="flex gap-4 overflow-x-auto px-6 pb-4 scrollbar-none">
+                {recommendations.map((prod) => {
+                  let img = 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80';
+                  try {
+                    const parsed = JSON.parse(prod.images);
+                    if (parsed && parsed.length > 0) img = parsed[0];
+                  } catch (e) { }
+
+                  const isComparing = comparisonProducts.some((p: any) => p.id === prod.id);
+
+                  return (
+                    <div
+                      key={prod.id}
+                      onClick={() => setSelectedProductDetail(prod)}
+                      className="flex-shrink-0 w-32 bg-white rounded-xl overflow-hidden shadow-xs border border-[#f0edeb] relative p-2 flex flex-col justify-between"
+                    >
+                      <div className="relative aspect-[3/4] bg-neutral-50 rounded-lg overflow-hidden mb-2">
+                        <LazyImageComponent src={img} alt={prod.name} className="w-full h-full object-cover" />
+                        
+                        {/* Floating Compare Button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToComparison(prod);
+                          }}
+                          className={`absolute top-1.5 right-1.5 z-10 w-6 h-6 rounded-full flex items-center justify-center shadow-xs active:scale-90 border-none cursor-pointer ${
+                            isComparing ? 'bg-primary text-white' : 'bg-white/90 backdrop-blur-md text-[#526069]'
+                          }`}
+                          title="So sánh"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      <div>
+                        <h4 className="text-[10px] font-semibold text-textColor line-clamp-1 text-left">{prod.name}</h4>
+                        <p className="text-[10px] font-bold text-primary text-left mt-1">{prod.price.toLocaleString('vi-VN')} đ</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </BoxCast>
           )}
           
           {/* Loading more indicator & intersection observer target */}

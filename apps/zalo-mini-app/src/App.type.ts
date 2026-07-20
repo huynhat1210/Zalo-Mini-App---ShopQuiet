@@ -138,5 +138,9 @@ export interface ICartContextType {
   clearComparison: () => void;
   comparisonProducts: IProduct[];
   isComparisonOpen: boolean;
-  setIsComparisonOpen: (open: boolean) => void;
+  gamificationData: any | null;
+  fetchGamificationData: () => Promise<void>;
+  claimDailyReward: () => Promise<void>;
+  recommendations: IProduct[];
+  fetchRecommendations: () => Promise<void>;
 }
