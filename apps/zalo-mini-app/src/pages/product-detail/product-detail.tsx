@@ -168,16 +168,34 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
           <button
             onClick={() => {
               const apiAny = api as any;
-              if (apiAny.shareCurrentPage) {
-                apiAny.shareCurrentPage({
-                  title: product.name,
-                  desc: product.description,
-                  thumb: images[0],
-                  success: () => showToast('Chia sẻ thành công!', 'success'),
-                  fail: () => showToast('Chia sẻ thất bại!', 'warning')
-                });
-              } else {
-                showToast('Đã sao chép liên kết chia sẻ Zalo!', 'success');
+              try {
+                if (apiAny.shareApp) {
+                  apiAny.shareApp({
+                    title: product.name,
+                    desc: product.description || 'Khám phá sản phẩm cao cấp tại ShopQuiet!',
+                    thumb: images[0],
+                    path: `pages/product-detail?id=${product.id}`,
+                    success: () => showToast('Đã mở chia sẻ Zalo!', 'success'),
+                    fail: () => {
+                      navigator.clipboard?.writeText(window.location.href || '').catch(() => {});
+                      showToast('Đã sao chép liên kết chia sẻ!', 'success');
+                    }
+                  });
+                } else if (apiAny.shareCurrentPage) {
+                  apiAny.shareCurrentPage({
+                    title: product.name,
+                    desc: product.description || 'ShopQuiet',
+                    thumb: images[0],
+                    success: () => showToast('Chia sẻ thành công!', 'success'),
+                    fail: () => showToast('Chia sẻ thất bại!', 'warning')
+                  });
+                } else {
+                  navigator.clipboard?.writeText(window.location.href || '').catch(() => {});
+                  showToast('Đã sao chép liên kết sản phẩm!', 'success');
+                }
+              } catch (e) {
+                navigator.clipboard?.writeText(window.location.href || '').catch(() => {});
+                showToast('Đã sao chép liên kết sản phẩm!', 'success');
               }
             }}
             className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center text-white active:scale-95 transition-all border-none cursor-pointer"

@@ -6,7 +6,7 @@ import { useInfiniteProducts, useCategories, useBanners } from '../../hooks';
 import { Bars3Icon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 // @ts-ignore
 import logoIcon from '../../assets/logo.png';
-import { MenuDrawerComponent, BannerSkeleton, CategorySkeleton, ProductGridSkeleton, LazyImageComponent } from '../../components';
+import { MenuDrawerComponent, BannerSkeleton, CategorySkeleton, ProductGridSkeleton, LazyImageComponent, LuckyWheel } from '../../components';
 import { IHomeProps } from './home.type';
 
 const PageCast = Page as any;
@@ -14,7 +14,9 @@ const BoxCast = Box as any;
 const TextCast = Text as any;
 
 export const Home: React.FC<IHomeProps> = (_props) => {
-  const { addToCart, setSelectedProductDetail, cart, setIsCartOpen, toggleSavedItem, isSavedItem, showToast } = useCart();
+  const { addToCart, setSelectedProductDetail, cart, setIsCartOpen, toggleSavedItem, isSavedItem, showToast, zaloUser } = useCart();
+  const [isLuckyWheelOpen, setIsLuckyWheelOpen] = useState(false);
+
   
   const { data: productsData, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading: isLoadingProducts, refetch: refetchProducts } = useInfiniteProducts();
   const { data: categoriesData, isLoading: isLoadingCategories, refetch: refetchCategories } = useCategories();
@@ -327,6 +329,23 @@ export const Home: React.FC<IHomeProps> = (_props) => {
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
         setSelectedCategory={setSelectedCategory}
+      />
+
+      {/* Floating Lucky Wheel Button */}
+      <button
+        onClick={() => setIsLuckyWheelOpen(true)}
+        className="fixed bottom-24 right-5 z-40 w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-white flex items-center justify-center shadow-lg active:scale-90 transition-transform animate-pulse border-2 border-white"
+        style={{ animationDuration: '3s' }}
+      >
+        <span className="text-xl">🎡</span>
+      </button>
+
+      {/* Lucky Wheel Modal */}
+      <LuckyWheel
+        isOpen={isLuckyWheelOpen}
+        onClose={() => setIsLuckyWheelOpen(false)}
+        zaloUser={zaloUser}
+        showToast={showToast}
       />
     </PageCast>
   );

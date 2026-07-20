@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import api from 'zmp-sdk';
 import { apiRequest } from '../../utils/api';
 import { IAddressManagerProps } from './address-manager.type';
 
@@ -20,11 +21,13 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
   const [activeAddressId, setActiveAddressId] = useState<string>('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState<number | null>(null);
+  const [locating, setLocating] = useState(false);
 
   const {
     register,
     handleSubmit,
     reset,
+    getValues,
     formState: { errors },
   } = useForm<ProfileAddressFormValues>({
     resolver: zodResolver(profileAddressSchema),
@@ -35,6 +38,62 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
       city: '',
     },
   });
+
+  const handleGetGPSLocation = () => {
+    setLocating(true);
+    try {
+      if (api && api.getLocation) {
+        api.getLocation({
+          success: async (data: any) => {
+            const { latitude, longitude } = data;
+            if (latitude && longitude) {
+              try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=vi`, {
+                  headers: {
+                    'User-Agent': 'ShopQuiet Zalo Mini App'
+                  }
+                });
+                if (res.ok) {
+                  const resJson = await res.json();
+                  const address = resJson.address || {};
+                  const displayName = resJson.display_name || '';
+
+                  const city = address.city || address.province || address.state || address.town || '';
+                  const district = address.suburb || address.district || address.county || '';
+                  const street = address.road || address.suburb || address.quarter || '';
+                  const houseNumber = address.house_number || '';
+                  
+                  const parsedStreet = `${houseNumber} ${street} ${district}`.trim().replace(/\s+/g, ' ');
+                  
+                  reset({
+                    ...getValues(),
+                    street: parsedStreet || displayName,
+                    city: city,
+                  });
+                  showToast('Đã định vị địa chỉ thành công!', 'success');
+                } else {
+                  showToast('Không thể giải mã tọa độ GPS!', 'warning');
+                }
+              } catch (err) {
+                console.error(err);
+                showToast('Lỗi phân tích địa chỉ GPS!', 'warning');
+              }
+            }
+          },
+          fail: (err: any) => {
+            console.error(err);
+            showToast('Không lấy được vị trí GPS. Hãy bật GPS trên máy!', 'warning');
+          }
+        });
+      } else {
+        showToast('Zalo SDK không hỗ trợ định vị ở môi trường này!', 'info');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLocating(false);
+    }
+  };
 
   const fetchAddresses = async () => {
     try {
@@ -189,8 +248,18 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
           </div>
         ) : (
           <div className="border border-neutral-100 bg-neutral-50/50 p-4 rounded-2xl space-y-3 mt-2 animate-fade-in text-left">
-            <div className="text-[9px] font-extrabold text-[#526069]/70 uppercase tracking-widest border-b border-neutral-100 pb-1">
-              {editingAddressId ? 'Chỉnh sửa địa chỉ' : 'Địa chỉ mới'}
+            <div className="flex justify-between items-center border-b border-neutral-100 pb-1">
+              <span className="text-[9px] font-extrabold text-[#526069]/70 uppercase tracking-widest">
+                {editingAddressId ? 'Chỉnh sửa địa chỉ' : 'Địa chỉ mới'}
+              </span>
+              <button
+                type="button"
+                onClick={handleGetGPSLocation}
+                disabled={locating}
+                className="text-[9px] bg-primary/10 text-primary font-black uppercase px-2 py-1 rounded-md border-none cursor-pointer flex items-center gap-1 active:scale-95 transition-all"
+              >
+                {locating ? 'Đang định vị...' : '📍 Định vị GPS'}
+              </button>
             </div>
 
             <div>

@@ -35,10 +35,37 @@ const checkoutAddressSchema = z.object({
 type CheckoutAddressFormValues = z.infer<typeof checkoutAddressSchema>;
 
 export const Checkout: React.FC<ICheckoutProps> = (_props) => {
-  const { cart, clearCart, setActiveTab, showToast, zaloUser, buyNowItem, setBuyNowItem, setSelectedOrder, fetchNotifications } = useCart();
+  const { cart, clearCart, removeFromCart, setActiveTab, showToast, zaloUser, buyNowItem, setBuyNowItem, setSelectedOrder, fetchNotifications } = useCart();
 
-  // If buyNowItem exists, checkout only that item (direct buy); otherwise use full cart
-  const checkoutItems = buyNowItem ? [buyNowItem] : cart;
+  // If buyNowItem exists, checkout only that item (direct buy); otherwise use selected cart items
+  const getCheckoutItems = () => {
+    if (buyNowItem) return [buyNowItem];
+    const stored = localStorage.getItem('checkout_items');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch (e) {
+        return cart;
+      }
+    }
+    return cart;
+  };
+
+  const checkoutItems = getCheckoutItems();
+
+  const clearPurchasedItems = () => {
+    if (buyNowItem) {
+      setBuyNowItem(null);
+    } else {
+      // Remove only checked items from cart
+      checkoutItems.forEach((item: any) => {
+        removeFromCart(item.product.id, item.size, item.color);
+      });
+      localStorage.removeItem('checkout_items');
+      localStorage.removeItem('checkout_freeship');
+    }
+  };
+
 
   const [shippingMethod, setShippingMethod] = useState('standard');
   const [paymentMethod, setPaymentMethod] = useState('cod');
@@ -334,8 +361,9 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   const subtotal = checkoutItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
   // Calculate discount and shipping
+  const isFreeshipEligible = subtotal >= 300000;
   const selectedShippingMethod = shippingMethods.find((item) => item.code === shippingMethod);
-  let shippingCost = selectedShippingMethod?.price || 0;
+  let shippingCost = isFreeshipEligible ? 0 : (selectedShippingMethod?.price || 0);
   let discount = 0;
 
   if (appliedPromo) {
@@ -490,11 +518,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                     // Success
                     apiRequest(`/orders/${checkoutRes.orderId}/status`, 'PATCH', { status: 'PROCESSING' })
                       .then(() => {
-                        if (buyNowItem) {
-                          setBuyNowItem(null);
-                        } else {
-                          clearCart();
-                        }
+                        clearPurchasedItems();
                         showToast('Thanh toán thành công!', 'success');
                         if (fetchNotifications) {
                           fetchNotifications();
@@ -503,27 +527,23 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                       })
                       .catch((e) => {
                         console.error('Failed to update status on frontend after checkTransaction success:', e);
-                        if (buyNowItem) setBuyNowItem(null);
-                        else clearCart();
+                        clearPurchasedItems();
                         setSelectedOrder(createdOrder);
                         setActiveTab('order-detail');
                       });
                   } else if (resultCode === 0) {
                     showToast('Giao dịch đang được xử lý...', 'info');
-                    if (buyNowItem) setBuyNowItem(null);
-                    else clearCart();
+                    clearPurchasedItems();
                     setSelectedOrder(createdOrder);
                     setActiveTab('order-detail');
                   } else if (resultCode === -2) {
                     showToast('Bạn đã hủy thanh toán!', 'warning');
-                    if (buyNowItem) setBuyNowItem(null);
-                    else clearCart();
+                    clearPurchasedItems();
                     setSelectedOrder(createdOrder);
                     setActiveTab('order-detail');
                   } else {
                     showToast('Thanh toán thất bại!', 'warning');
-                    if (buyNowItem) setBuyNowItem(null);
-                    else clearCart();
+                    clearPurchasedItems();
                     setSelectedOrder(createdOrder);
                     setActiveTab('order-detail');
                   }
@@ -531,8 +551,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                 fail: (err) => {
                   console.error('Payment.checkTransaction failed:', err);
                   showToast('Không thể xác minh giao dịch!', 'warning');
-                  if (buyNowItem) setBuyNowItem(null);
-                  else clearCart();
+                  clearPurchasedItems();
                   setSelectedOrder(createdOrder);
                   setActiveTab('order-detail');
                 }
@@ -541,8 +560,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
             fail: (err) => {
               console.warn('Payment.createOrder failed:', err);
               showToast('Không thể tạo đơn hàng thanh toán!', 'warning');
-              if (buyNowItem) setBuyNowItem(null);
-              else clearCart();
+              clearPurchasedItems();
               setSelectedOrder(createdOrder);
               setActiveTab('order-detail');
             }
@@ -550,8 +568,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           return;
         } catch (sdkErr) {
           console.error('Error invoking Zalo SDK payment:', sdkErr);
-          if (buyNowItem) setBuyNowItem(null);
-          else clearCart();
+          clearPurchasedItems();
           setSelectedOrder(createdOrder);
           setActiveTab('order-detail');
           return;
@@ -599,11 +616,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       }));
 
       // Clear only what was ordered
-      if (buyNowItem) {
-        setBuyNowItem(null);
-      } else {
-        clearCart();
-      }
+      clearPurchasedItems();
       showToast(`Đặt hàng #${orderNumber} thành công!`, 'success');
       if (fetchNotifications) {
         fetchNotifications();

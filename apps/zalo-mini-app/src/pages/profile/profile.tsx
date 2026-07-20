@@ -10,8 +10,10 @@ import {
   AddressManager, 
   EditProfile, 
   VoucherWallet, 
-  OrderHistory 
+  OrderHistory,
+  LuckyWheel
 } from '../../components';
+
 
 
 const PageCast = Page as any;
@@ -56,6 +58,8 @@ export const Profile: React.FC<IProfileProps> = (props) => {
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
+  const [isLuckyWheelOpen, setIsLuckyWheelOpen] = useState(false);
+
 
   const [userVouchersCount, setUserVouchersCount] = useState(0);
   const [usersList, setUsersList] = useState<any[]>([]);
@@ -440,6 +444,19 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                 </svg>
               </div>
             </button>
+
+            <button
+              onClick={() => setIsLuckyWheelOpen(true)}
+              className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-lg leading-none">🎡</span>
+                <span className="font-semibold text-textColor">Vòng quay may mắn</span>
+              </div>
+              <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -594,6 +611,15 @@ export const Profile: React.FC<IProfileProps> = (props) => {
           </div>
         </div>
       )}
+      {/* Lucky Wheel Modal */}
+      <LuckyWheel
+
+        isOpen={isLuckyWheelOpen}
+        onClose={() => setIsLuckyWheelOpen(false)}
+        zaloUser={zaloUser}
+        showToast={showToast}
+        onVoucherClaimed={fetchOrdersAndProducts}
+      />
     </PageCast>
   );
 };
