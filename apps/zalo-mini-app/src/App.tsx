@@ -92,6 +92,7 @@ export default function App() {
   const viewedProducts = useAppStore((state) => state.viewedProducts);
   const addToComparison = useAppStore((state) => state.addToComparison);
   const removeFromComparison = useAppStore((state) => state.removeFromComparison);
+  const clearComparison = useAppStore((state) => state.clearComparison);
   const comparisonProducts = useAppStore((state) => state.comparisonProducts);
   const isComparisonOpen = useAppStore((state) => state.isComparisonOpen);
   const setIsComparisonOpen = useAppStore((state) => state.setIsComparisonOpen);
