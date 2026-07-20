@@ -4,7 +4,7 @@ import { useCart, IOrderItem } from '../../App';
 import { apiRequest, API_BASE_URL } from '../../utils/api';
 import { IOrderDetailProps } from './order-detail.type';
 import { Payment } from 'zmp-sdk/apis';
-import { getRemainingDays, getDeliveryStatusText } from '../../utils/delivery-date.util';
+import { getRemainingDays, getDeliveryStatusText } from '../../utils/delivery-date';
 
 const PageCast = Page as any;
 

@@ -26,6 +26,8 @@ export interface IOrder {
   returnDescription?: string;
   returnImages?: string;
   zaloUserId?: string;
+  estimatedDeliveryDate?: string;
+  shippingMethodCode?: string;
 }
 
 export interface INotification {

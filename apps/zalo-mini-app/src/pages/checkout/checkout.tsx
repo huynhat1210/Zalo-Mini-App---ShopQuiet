@@ -6,7 +6,7 @@ import { Page } from 'zmp-ui';
 import { useCart } from '../../App';
 import { apiRequest } from '../../utils/api';
 import { Payment } from 'zmp-sdk/apis';
-import { calculateEstimatedDeliveryDate } from '../../utils/delivery-date.util';
+import { calculateEstimatedDeliveryDate } from '../../utils/delivery-date';
 import api from 'zmp-sdk';
 const PageCast = Page as any;
 import { ICheckoutProps } from './checkout.type';
