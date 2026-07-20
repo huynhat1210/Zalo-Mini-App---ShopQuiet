@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { randomBytes, createHmac } from 'crypto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -111,16 +112,19 @@ export class AuthService {
       }
     } else {
       // In production, we require an accessToken for non-admin users to log in securely
-      const isAdminId = zaloId.toLowerCase().includes('admin') || zaloId.toLowerCase() === 'admin-zalo-id-1';
+      const isAdminId = zaloId.toLowerCase() === 'admin' || zaloId.toLowerCase() === 'admin-zalo-id-1';
       if (!isAdminId && process.env.NODE_ENV === 'production') {
         throw new UnauthorizedException('Yêu cầu Zalo Access Token để đăng nhập an toàn.');
       }
     }
 
-    const isAdminId = targetZaloId.toLowerCase().includes('admin') || targetZaloId.toLowerCase() === 'admin-zalo-id-1';
+    const isAdminId = targetZaloId.toLowerCase() === 'admin' || targetZaloId.toLowerCase() === 'admin-zalo-id-1';
     if (isAdminId) {
-      const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
-      if (!password || password !== adminPassword) {
+      const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH || 
+        '$2b$10$tZ/n07XU0mD65fH4kY/vveHWh3h7FvFv.u9k5CjEszkX9H/7CveQ2'; // default bcrypt hash for 'admin123'
+      
+      const isPasswordMatch = password && await bcrypt.compare(password, adminPasswordHash);
+      if (!isPasswordMatch) {
         throw new UnauthorizedException('Mật khẩu quản trị viên không chính xác');
       }
     }
