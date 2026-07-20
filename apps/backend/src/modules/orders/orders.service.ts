@@ -100,15 +100,15 @@ export class OrdersService {
       select: { totalAmount: true }
     });
 
-    const totalSpent = completedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+    const totalOrderSpend = completedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
     
     // Calculate tier
     let membershipTier = 'Đồng';
-    if (totalSpent >= 50000000) {
+    if (totalOrderSpend >= 50000000) {
       membershipTier = 'Kim cương';
-    } else if (totalSpent >= 10000000) {
+    } else if (totalOrderSpend >= 10000000) {
       membershipTier = 'Vàng';
-    } else if (totalSpent >= 2000000) {
+    } else if (totalOrderSpend >= 2000000) {
       membershipTier = 'Bạc';
     }
 
@@ -116,7 +116,6 @@ export class OrdersService {
     await this.prisma.user.update({
       where: { zaloId: zaloUserId },
       data: {
-        totalSpent,
         membershipTier
       }
     });
@@ -314,6 +313,43 @@ export class OrdersService {
 
     if (order.zaloUserId) {
       await this.updateUserMembership(order.zaloUserId);
+
+      // Tích điểm thưởng mua sắm: 1 điểm cho mỗi 1.000đ
+      const earnedPoints = Math.round(order.totalAmount / 1000);
+      if (earnedPoints > 0) {
+        try {
+          const user = await this.prisma.user.findUnique({ where: { zaloId: order.zaloUserId } });
+          if (user) {
+            const newPoints = (user.totalSpent || 0) + earnedPoints;
+            await this.prisma.user.update({
+              where: { zaloId: order.zaloUserId },
+              data: { totalSpent: newPoints }
+            });
+
+            await this.prisma.pointsHistory.create({
+              data: {
+                zaloUserId: order.zaloUserId,
+                points: earnedPoints,
+                reason: `Tích điểm mua sắm đơn hàng #${order.id}`,
+                metadata: { orderId: order.id }
+              }
+            });
+
+            await this.prisma.notification.create({
+              data: {
+                zaloUserId: order.zaloUserId,
+                type: 'order',
+                title: `🎉 Tích điểm thành công`,
+                content: `Bạn được cộng +${earnedPoints} điểm tích lũy từ đơn hàng #${order.id}.`,
+                date: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('vi-VN'),
+                read: false,
+              }
+            });
+          }
+        } catch (e) {
+          console.error('Failed to reward points for order creation:', e);
+        }
+      }
     }
 
     return order;

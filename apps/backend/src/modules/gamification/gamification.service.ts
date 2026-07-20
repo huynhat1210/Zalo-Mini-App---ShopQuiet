@@ -69,6 +69,22 @@ export class GamificationService {
     // Check for achievements
     await this.checkAchievements(zaloUserId);
 
+    // Create Notification
+    try {
+      await this.prisma.notification.create({
+        data: {
+          zaloUserId,
+          type: 'promotion',
+          title: `📍 Điểm danh thành công`,
+          content: `Chúc mừng! Bạn đã nhận được +${rewardPoints} điểm thưởng (chuỗi điểm danh liên tục: ${consecutiveDays} ngày).`,
+          date: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('vi-VN'),
+          read: false,
+        },
+      });
+    } catch (e) {
+      console.error('Failed to create gamification notification:', e);
+    }
+
     return {
       success: true,
       points: rewardPoints,
@@ -108,6 +124,12 @@ export class GamificationService {
   }
 
   async getUserGamification(zaloUserId: string) {
+    try {
+      await this.checkAchievements(zaloUserId);
+    } catch (e) {
+      console.error('Error pre-checking achievements in getUserGamification:', e);
+    }
+
     const [user, todayClaim, achievements, pointsHistory] = await Promise.all([
       this.prisma.user.findUnique({
         where: { zaloId: zaloUserId },
@@ -146,6 +168,34 @@ export class GamificationService {
   }
 
   async checkAchievements(zaloUserId: string) {
+    // 1. Seed static achievements dynamically if not exists
+    const achievementsToSeed = [
+      { id: 1, name: 'Khách hàng mới', description: 'Đặt đơn hàng đầu tiên', icon: '🎉', condition: 'orders >= 1' },
+      { id: 2, name: 'Người mua sắm', description: 'Đặt 5 đơn hàng', icon: '🛍️', condition: 'orders >= 5' },
+      { id: 3, name: 'Sành điệu', description: 'Lưu 10 sản phẩm', icon: '❤️', condition: 'favorites >= 10' },
+      { id: 4, name: 'Người đánh giá', description: 'Viết 5 đánh giá', icon: '⭐', condition: 'comments >= 5' },
+      { id: 5, name: 'VIP', description: 'Chi tiêu trên 1 triệu', icon: '👑', condition: 'points >= 1000000' },
+    ];
+
+    for (const ach of achievementsToSeed) {
+      await this.prisma.achievement.upsert({
+        where: { id: ach.id },
+        update: {
+          name: ach.name,
+          description: ach.description,
+          icon: ach.icon,
+          condition: ach.condition,
+        },
+        create: {
+          id: ach.id,
+          name: ach.name,
+          description: ach.description,
+          icon: ach.icon,
+          condition: ach.condition,
+        },
+      });
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { zaloId: zaloUserId },
       include: {
@@ -164,7 +214,7 @@ export class GamificationService {
       })
     ).map((ua) => ua.achievementId);
 
-    // Define achievements
+    // Define achievements check
     const achievements = [
       {
         id: 1,
@@ -211,6 +261,22 @@ export class GamificationService {
             achievementId: achievement.id,
           },
         });
+
+        // Auto create notification log for unlocking achievement
+        try {
+          await this.prisma.notification.create({
+            data: {
+              zaloUserId,
+              type: 'promotion',
+              title: `🏆 Đạt huy hiệu mới: ${achievement.name}`,
+              content: `Chúc mừng bạn đã đạt được thành tựu "${achievement.name}" (${achievement.description})!`,
+              date: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('vi-VN'),
+              read: false,
+            },
+          });
+        } catch (e) {
+          console.error(`Failed to create notification for achievement ${achievement.name}:`, e);
+        }
       }
     }
   }
