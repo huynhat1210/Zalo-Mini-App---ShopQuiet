@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { IFlashSaleProps } from './flash-sale.type';
 import { LazyImageComponent } from '../lazy-image';
+import { useCart } from '../../App';
 
 export const FlashSale: React.FC<IFlashSaleProps> = ({ endTime, products }) => {
+  const { setActiveTab } = useCart();
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
@@ -33,7 +35,7 @@ export const FlashSale: React.FC<IFlashSaleProps> = ({ endTime, products }) => {
   const formatTime = (value: number) => value.toString().padStart(2, '0');
 
   return (
-    <div className="bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl p-4 mb-6">
+    <div className="bg-gradient-to-r from-primary to-primary-dark rounded-2xl p-4 mb-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <span className="text-white font-bold text-sm uppercase tracking-wider">Flash Sale</span>
@@ -55,7 +57,10 @@ export const FlashSale: React.FC<IFlashSaleProps> = ({ endTime, products }) => {
             </div>
           </div>
         </div>
-        <button className="text-white text-xs font-semibold hover:underline">
+        <button 
+          onClick={() => setActiveTab('search')}
+          className="text-white text-xs font-semibold hover:underline border-none bg-transparent cursor-pointer"
+        >
           Xem tất cả
         </button>
       </div>
@@ -101,8 +106,8 @@ export const FlashSale: React.FC<IFlashSaleProps> = ({ endTime, products }) => {
                   <div className="flex items-center gap-1">
                     <div className="flex-1 h-1.5 bg-neutral-200 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-red-500 rounded-full"
-                        style={{ width: `${Math.random() * 100}%` }}
+                        className="h-full bg-amber-500 rounded-full"
+                        style={{ width: `${Math.min(((product.soldCount || 10) / ((product.soldCount || 10) + 15)) * 100, 95)}%` }}
                       />
                     </div>
                     <span className="text-[9px] text-textColor-variant">
