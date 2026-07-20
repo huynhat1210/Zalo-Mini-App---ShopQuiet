@@ -31,12 +31,6 @@ export default defineConfig({
         entryFileNames: 'assets/[name].[hash].js',
         chunkFileNames: 'assets/[name].[hash].js',
         assetFileNames: 'assets/[name].[hash].[ext]',
-        manualChunks: {
-          'vendor': ['react', 'react-dom'],
-          'zmp': ['zmp-sdk', 'zmp-ui'],
-          'query': ['@tanstack/react-query'],
-          'zustand': ['zustand'],
-        },
       },
     },
     chunkSizeWarningLimit: 1000,
