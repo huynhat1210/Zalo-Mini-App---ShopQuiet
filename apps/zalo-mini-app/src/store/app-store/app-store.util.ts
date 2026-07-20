@@ -275,12 +275,8 @@ export const useAppStore = create<IAppState>()(
               const apiAny = api as any;
               if (typeof window !== 'undefined' && apiAny && apiAny.getAccessToken) {
                 try {
-                  zaloToken = await new Promise((resolve) => {
-                    apiAny.getAccessToken({
-                      success: (token: string) => resolve(token),
-                      fail: () => resolve(''),
-                    });
-                  });
+                  const token = await apiAny.getAccessToken();
+                  zaloToken = token || '';
                 } catch (e) {
                   console.error('Failed to get Zalo access token:', e);
                 }
@@ -370,21 +366,17 @@ export const useAppStore = create<IAppState>()(
                   const avatar = info?.avatar || data?.userInfo?.avatar || 'https://zalo-api.zdn.vn/api/emoticon/avatar';
                   try {
                     let zaloToken = '';
-                    if (typeof window !== 'undefined' && apiAny && apiAny.getAccessToken) {
-                      try {
-                        zaloToken = await new Promise((resolve) => {
-                          apiAny.getAccessToken({
-                            success: (token: string) => resolve(token),
-                            fail: () => resolve(''),
-                          });
-                        });
-                      } catch (e) {
-                        console.error('Failed to get Zalo access token:', e);
-                      }
-                    }
-                    if (!zaloToken) {
-                      zaloToken = `mock_zalo_token_${zaloId}`;
-                    }
+                     if (typeof window !== 'undefined' && apiAny && apiAny.getAccessToken) {
+                       try {
+                         const token = await apiAny.getAccessToken();
+                         zaloToken = token || '';
+                       } catch (e) {
+                         console.error('Failed to get Zalo access token:', e);
+                       }
+                     }
+                     if (!zaloToken) {
+                       zaloToken = `mock_zalo_token_${zaloId}`;
+                     }
 
                     const authData: any = await apiRequest('/auth/login', 'POST', {
                       zaloId: String(zaloId),

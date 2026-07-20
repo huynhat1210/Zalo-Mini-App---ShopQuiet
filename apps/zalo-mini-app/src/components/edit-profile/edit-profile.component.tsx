@@ -97,7 +97,8 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
     }
     setUpdating(true);
     try {
-      const res = await apiRequest<any>('/users/profile', 'PUT', {
+      const res = await apiRequest<any>('/users/sync', 'POST', {
+        zaloId: zaloUser.id,
         name: editName.trim(),
         avatar: editAvatar,
         phone: editPhone.trim(),
@@ -106,7 +107,19 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
         gender: editGender,
       });
       if (res) {
-        updateZaloUser(res);
+        const mappedUser = {
+          id: res.zaloId || res.id,
+          name: res.name,
+          avatar: res.avatar,
+          role: res.role,
+          phone: res.phone || '',
+          email: res.email || '',
+          birthday: res.birthday || '',
+          gender: res.gender || '',
+          totalSpent: res.totalSpent || 0,
+          membershipTier: res.membershipTier || 'Đồng',
+        };
+        updateZaloUser(mappedUser);
         showToast('Cập nhật thông tin thành công!', 'success');
         onClose();
       }
