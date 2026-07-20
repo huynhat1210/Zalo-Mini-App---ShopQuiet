@@ -270,61 +270,53 @@ export const useAppStore = create<IAppState>()(
             get().fetchCart().catch(console.error);
             get().fetchFavorites().catch(console.error);
 
-            if (isRealZaloEnv) {
-              // Real Zalo App: we show the cached profile immediately for fast load,
-              // but we do NOT return early. We fall through to verify and update the profile
-              // against the real Zalo SDK in the background.
-              console.log('[Zalo Auth] Cached profile set. Verifying with Zalo SDK in background.');
-            } else {
-              // Web browser / Mock environment: login with cache and exit early
-              try {
-                let zaloToken = '';
-                const apiAny = api as any;
-                if (typeof window !== 'undefined' && apiAny && apiAny.getAccessToken) {
-                  try {
-                    zaloToken = await new Promise((resolve) => {
-                      apiAny.getAccessToken({
-                        success: (token: string) => resolve(token),
-                        fail: () => resolve(''),
-                      });
+            try {
+              let zaloToken = '';
+              const apiAny = api as any;
+              if (typeof window !== 'undefined' && apiAny && apiAny.getAccessToken) {
+                try {
+                  zaloToken = await new Promise((resolve) => {
+                    apiAny.getAccessToken({
+                      success: (token: string) => resolve(token),
+                      fail: () => resolve(''),
                     });
-                  } catch (e) {
-                    console.error('Failed to get Zalo access token:', e);
-                  }
+                  });
+                } catch (e) {
+                  console.error('Failed to get Zalo access token:', e);
                 }
-                if (!zaloToken) {
-                  zaloToken = `mock_zalo_token_${parsed.id}`;
-                }
-
-                const authData: any = await apiRequest('/auth/login', 'POST', {
-                  zaloId: parsed.id,
-                  name: parsed.name,
-                  avatar: parsed.avatar,
-                  accessToken: zaloToken,
-                });
-                tokenStorage.setTokens({
-                  access_token: authData.access_token,
-                  refresh_token: authData.refresh_token,
-                });
-                const mappedUser = {
-                  id: authData.user.zaloId || authData.user.id,
-                  name: authData.user.name,
-                  avatar: authData.user.avatar,
-                  role: authData.user.role,
-                  phone: authData.user.phone || '',
-                  email: authData.user.email || '',
-                  birthday: authData.user.birthday || '',
-                  gender: authData.user.gender || '',
-                  totalSpent: authData.user.totalSpent || 0,
-                  membershipTier: authData.user.membershipTier || 'Đồng',
-                };
-                set({ zaloUser: mappedUser });
-                localStorage.setItem('zalo_profile_custom', JSON.stringify(mappedUser));
-              } catch (error) {
-                console.error('Login failed:', error);
               }
-              return;
+              if (!zaloToken) {
+                zaloToken = `mock_zalo_token_${parsed.id}`;
+              }
+
+              const authData: any = await apiRequest('/auth/login', 'POST', {
+                zaloId: parsed.id,
+                name: parsed.name,
+                avatar: parsed.avatar,
+                accessToken: zaloToken,
+              });
+              tokenStorage.setTokens({
+                access_token: authData.access_token,
+                refresh_token: authData.refresh_token,
+              });
+              const mappedUser = {
+                id: authData.user.zaloId || authData.user.id,
+                name: authData.user.name,
+                avatar: authData.user.avatar,
+                role: authData.user.role,
+                phone: authData.user.phone || '',
+                email: authData.user.email || '',
+                birthday: authData.user.birthday || '',
+                gender: authData.user.gender || '',
+                totalSpent: authData.user.totalSpent || 0,
+                membershipTier: authData.user.membershipTier || 'Đồng',
+              };
+              set({ zaloUser: mappedUser });
+              localStorage.setItem('zalo_profile_custom', JSON.stringify(mappedUser));
+            } catch (error) {
+              console.error('Cached login failed:', error);
             }
+            return;
           } else {
             localStorage.removeItem('zalo_profile_custom');
           }
