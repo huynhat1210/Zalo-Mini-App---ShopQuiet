@@ -229,6 +229,53 @@ export class AuthService {
         refresh_token: new_refresh_token,
       };
     } catch (error) {
+      console.error('[AuthService] Refresh token error:', error);
+      // If JWT verification fails but token exists in DB, try to recover by user ID
+      try {
+        const storedToken = await this.prisma.refreshToken.findUnique({
+          where: { token: refreshToken },
+          include: { user: true },
+        });
+        
+        if (storedToken && storedToken.expiresAt >= new Date()) {
+          // Token exists in DB and is not expired, but JWT verification failed
+          // This can happen after deployment with new JWT secret
+          // Generate new tokens for the user
+          const newPayload = { 
+            sub: storedToken.user.zaloId, 
+            zaloId: storedToken.user.zaloId, 
+            role: storedToken.user.role || 'user' 
+          };
+          
+          const new_access_token = this.jwtService.sign(newPayload, { expiresIn: '15m' });
+          const new_refresh_token = this.jwtService.sign(newPayload, { expiresIn: '7d' });
+          const newExpiresAt = new Date();
+          newExpiresAt.setDate(newExpiresAt.getDate() + 7);
+          
+          // Replace old token with new one
+          await this.prisma.refreshToken.delete({
+            where: { id: storedToken.id },
+          });
+          
+          await this.prisma.refreshToken.create({
+            data: {
+              token: new_refresh_token,
+              zaloUserId: storedToken.user.zaloId,
+              expiresAt: newExpiresAt,
+            },
+          });
+          
+          console.log('[AuthService] Recovered refresh token for user:', storedToken.user.zaloId);
+          
+          return {
+            access_token: new_access_token,
+            refresh_token: new_refresh_token,
+          };
+        }
+      } catch (recoveryError) {
+        console.error('[AuthService] Recovery attempt failed:', recoveryError);
+      }
+      
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
