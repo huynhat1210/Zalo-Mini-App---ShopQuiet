@@ -2,7 +2,7 @@ services:
   - type: web
     name: shopquiet-backend
     env: node
-    buildCommand: pnpm install && cd apps/backend && pnpm prisma db push && pnpm run build
+    buildCommand: pnpm install && cd apps/backend && pnpm prisma generate && pnpm run build
     startCommand: cd apps/backend && pnpm run start:prod
     envVars:
       - key: NODE_VERSION
