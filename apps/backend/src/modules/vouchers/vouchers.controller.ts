@@ -12,6 +12,7 @@ import { VouchersService } from './vouchers.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 type CreateVoucherDto = {
   code: string;
@@ -32,29 +33,31 @@ export class VouchersController {
   }
 
   @Post('apply')
+  @UseGuards(JwtAuthGuard)
   async applyVoucher(
+    @CurrentUser() user: any,
     @Body('code') code: string,
     @Body('orderTotal') orderTotal: number,
-    @Body('zaloUserId') zaloUserId?: string,
   ) {
     if (!code) {
       throw new BadRequestException('Mã giảm giá là bắt buộc');
     }
-    return this.vouchersService.validateAndApply(code, orderTotal, zaloUserId);
+    return this.vouchersService.validateAndApply(code, orderTotal, user.zaloId);
   }
 
   @Post('lucky-draw/generate')
+  @UseGuards(JwtAuthGuard)
   async generateLuckyVoucher(
-    @Body('zaloUserId') zaloUserId: string,
+    @CurrentUser() user: any,
     @Body('rewardType') rewardType: string,
     @Body('rewardValue') rewardValue: number,
     @Body('minOrderVal') minOrderVal?: number,
   ) {
-    if (!zaloUserId || !rewardType || rewardValue === undefined) {
-      throw new BadRequestException('zaloUserId, rewardType và rewardValue là bắt buộc');
+    if (!rewardType || rewardValue === undefined) {
+      throw new BadRequestException('rewardType và rewardValue là bắt buộc');
     }
     return this.vouchersService.generateLuckyVoucher({
-      zaloUserId,
+      zaloUserId: user.zaloId,
       rewardType,
       rewardValue,
       minOrderVal,

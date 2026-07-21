@@ -11,6 +11,7 @@ export * from './membership-card';
 export * from './address-manager';
 export * from './edit-profile';
 export * from './voucher-wallet';
+export * from './voucher-exchange-modal';
 export * from './review-modal';
 export * from './order-history';
 export * from './lucky-wheel';

@@ -1,23 +1,28 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
 import { GamificationService } from './gamification.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('gamification')
 export class GamificationController {
   constructor(private gamificationService: GamificationService) {}
 
   @Post('claim-daily-reward')
-  async claimDailyReward(@Body() body: { zaloUserId: string }) {
-    return this.gamificationService.claimDailyReward(body.zaloUserId);
+  @UseGuards(JwtAuthGuard)
+  async claimDailyReward(@CurrentUser() user: any) {
+    return this.gamificationService.claimDailyReward(user.zaloId);
   }
 
   @Get('user')
-  async getUserGamification(@Query('zaloUserId') zaloUserId: string) {
-    return this.gamificationService.getUserGamification(zaloUserId);
+  @UseGuards(JwtAuthGuard)
+  async getUserGamification(@CurrentUser() user: any) {
+    return this.gamificationService.getUserGamification(user.zaloId);
   }
 
   @Post('add-points')
-  async addPoints(@Body() body: { zaloUserId: string; points: number; reason: string }) {
-    return this.gamificationService.addPoints(body.zaloUserId, body.points, body.reason);
+  @UseGuards(JwtAuthGuard)
+  async addPoints(@CurrentUser() user: any, @Body() body: { points: number; reason: string }) {
+    return this.gamificationService.addPoints(user.zaloId, body.points, body.reason);
   }
 
   @Get('leaderboard')
@@ -26,7 +31,8 @@ export class GamificationController {
   }
 
   @Post('exchange-voucher')
-  async exchangeVoucher(@Body() body: { zaloUserId: string; voucherCode: string; pointsCost: number }) {
-    return this.gamificationService.exchangeVoucher(body.zaloUserId, body.voucherCode, body.pointsCost);
+  @UseGuards(JwtAuthGuard)
+  async exchangeVoucher(@CurrentUser() user: any, @Body() body: { voucherCode: string; pointsCost: number }) {
+    return this.gamificationService.exchangeVoucher(user.zaloId, body.voucherCode, body.pointsCost);
   }
 }

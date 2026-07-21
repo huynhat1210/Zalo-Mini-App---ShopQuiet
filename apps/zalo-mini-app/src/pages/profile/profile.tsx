@@ -11,7 +11,8 @@ import {
   EditProfile, 
   VoucherWallet, 
   OrderHistory,
-  LuckyWheel
+  LuckyWheel,
+  VoucherExchangeModal
 } from '../../components';
 
 
@@ -63,6 +64,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
   const [isLuckyWheelOpen, setIsLuckyWheelOpen] = useState(false);
+  const [isVoucherExchangeOpen, setIsVoucherExchangeOpen] = useState(false);
 
 
   const [userVouchersCount, setUserVouchersCount] = useState(0);
@@ -372,121 +374,65 @@ export const Profile: React.FC<IProfileProps> = (props) => {
         </button>
       </div>
 
-      {/* Gamification Reward & Achievements Card */}
-      <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 mx-6 mt-4.5 space-y-4 shadow-xs">
-        <div className="flex justify-between items-center">
-          <div className="text-left">
-            <h4 className="text-xs font-bold text-textColor flex items-center gap-1.5">
-              <span>🏆</span> Điểm thưởng & Thành tựu
-            </h4>
-            <p className="text-[10px] text-textColor-variant mt-0.5 font-semibold">
-              Điểm tích lũy: <span className="text-primary font-bold">{gamificationData?.points || 0}</span>
-            </p>
-          </div>
-          <button
-            onClick={() => claimDailyReward()}
-            disabled={gamificationData?.hasClaimedToday}
-            className={`px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border-none transition-all active:scale-95 cursor-pointer ${
-              gamificationData?.hasClaimedToday
-                ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
-                : 'bg-primary hover:bg-primary-dark text-white shadow-sm'
-            }`}
-          >
-            {gamificationData?.hasClaimedToday ? 'Đã điểm danh ✓' : '📍 Điểm danh (+10đ)'}
-          </button>
-        </div>
 
-        <div className="border-t border-[#f0edeb] pt-3">
-          <div className="grid grid-cols-5 gap-1 pt-1">
-            {[
-              { id: 1, name: 'Tân thủ', desc: 'Đặt 1 đơn', icon: '🎉' },
-              { id: 2, name: 'Mua sắm', desc: 'Đặt 5 đơn', icon: '🛍️' },
-              { id: 3, name: 'Sành điệu', desc: 'Lưu 10 tim', icon: '❤️' },
-              { id: 4, name: 'Đánh giá', desc: 'Viết 5 bình luận', icon: '⭐' },
-              { id: 5, name: 'VIP', desc: 'Tiêu > 1Tr', icon: '👑' },
-            ].map((badge) => {
-              const isUnlocked = gamificationData?.achievements?.some((a: any) => a.id === badge.id);
-              return (
-                <div key={badge.id} className="flex flex-col items-center text-center">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-xs border relative transition-all duration-300 ${
-                    isUnlocked 
-                      ? 'bg-amber-50 border-amber-400 scale-105' 
-                      : 'bg-neutral-50 border-neutral-200 filter grayscale opacity-40'
-                  }`} title={badge.desc}>
-                    {badge.icon}
-                    {isUnlocked && (
-                      <span className="absolute -top-1 -right-1 bg-amber-400 text-[7px] w-3 h-3 rounded-full text-teal-950 font-bold border border-white flex items-center justify-center">✓</span>
-                    )}
-                  </div>
-                  <span className="text-[7.5px] font-bold text-textColor mt-1.5 line-clamp-1 w-full">{badge.name}</span>
-                  <span className="text-[6.5px] text-textColor-variant scale-90 origin-top mt-0.5 line-clamp-1 w-full">{badge.desc}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Voucher Exchange Shop */}
-      <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 mx-6 mt-4.5 shadow-xs">
-        <h4 className="text-xs font-bold text-textColor flex items-center gap-1.5 mb-2.5 text-left">
-          <span>🎁</span> Chợ đổi Voucher
-        </h4>
-        <p className="text-[9.5px] text-textColor-variant mb-4 text-left font-semibold">
-          Dùng điểm tích lũy của bạn để đổi lấy các Voucher giảm giá mua sắm đặc quyền.
-        </p>
-        
-        <div className="space-y-2.5">
-          {[
-            { code: 'DISCOUNT10', title: 'Voucher Giảm 10K', desc: 'Đơn hàng tối thiểu 50K', cost: 100 },
-            { code: 'DISCOUNT20', title: 'Voucher Giảm 20K', desc: 'Đơn hàng tối thiểu 100K', cost: 250 },
-            { code: 'DISCOUNT50', title: 'Voucher Giảm 50K', desc: 'Đơn hàng tối thiểu 200K', cost: 500 },
-          ].map((item) => {
-            const userPoints = gamificationData?.points || 0;
-            const canExchange = userPoints >= item.cost;
-            
-            return (
-              <div 
-                key={item.code} 
-                className="flex items-center justify-between p-2.5 rounded-xl border border-[#f0edeb] bg-neutral-50/50 hover:bg-neutral-50 transition-colors"
-              >
-                <div className="text-left space-y-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10.5px] font-bold text-textColor">{item.title}</span>
-                    <span className="text-[7.5px] bg-primary/10 text-primary font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider">
-                      {item.code}
-                    </span>
-                  </div>
-                  <p className="text-[8.5px] text-textColor-variant font-medium">{item.desc}</p>
-                  <p className="text-[9px] text-primary font-extrabold">
-                    Chi phí: {item.cost} điểm
-                  </p>
-                </div>
-                
-                <button
-                  onClick={async () => {
-                    const success = await exchangeVoucher(item.code, item.cost);
-                    if (success) {
-                      fetchOrdersAndProducts();
-                    }
-                  }}
-                  disabled={!canExchange}
-                  className={`px-3 py-1.5 rounded-lg text-[9.5px] font-extrabold border-none transition-all active:scale-95 cursor-pointer ${
-                    canExchange
-                      ? 'bg-primary hover:bg-primary-dark text-white shadow-xs'
-                      : 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
-                  }`}
-                >
-                  Đổi
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
       {/* Profile menu categories list */}
       <div className="flex-1 overflow-y-auto px-6 py-5.5 space-y-5 pb-28">
+        {/* Gamification Reward & Achievements Card */}
+        <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 space-y-4 shadow-xs">
+          <div className="flex justify-between items-center">
+            <div className="text-left">
+              <h4 className="text-xs font-bold text-textColor flex items-center gap-1.5">
+                <span>🏆</span> Điểm thưởng & Thành tựu
+              </h4>
+              <p className="text-[10px] text-textColor-variant mt-0.5 font-semibold">
+                Điểm tích lũy: <span className="text-primary font-bold">{gamificationData?.points || 0}</span>
+              </p>
+            </div>
+            <button
+              onClick={() => claimDailyReward()}
+              disabled={gamificationData?.hasClaimedToday}
+              className={`px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border-none transition-all active:scale-95 cursor-pointer ${
+                gamificationData?.hasClaimedToday
+                  ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
+                  : 'bg-primary hover:bg-primary-dark text-white shadow-sm'
+              }`}
+            >
+              {gamificationData?.hasClaimedToday ? 'Đã điểm danh ✓' : '📍 Điểm danh (+10đ)'}
+            </button>
+          </div>
+
+          <div className="border-t border-[#f0edeb] pt-3">
+            <div className="grid grid-cols-5 gap-1 pt-1">
+              {[
+                { id: 1, name: 'Tân thủ', desc: 'Đặt 1 đơn', icon: '🎉' },
+                { id: 2, name: 'Mua sắm', desc: 'Đặt 5 đơn', icon: '🛍️' },
+                { id: 3, name: 'Sành điệu', desc: 'Lưu 10 tim', icon: '❤️' },
+                { id: 4, name: 'Đánh giá', desc: 'Viết 5 bình luận', icon: '⭐' },
+                { id: 5, name: 'VIP', desc: 'Tiêu > 1Tr', icon: '👑' },
+              ].map((badge) => {
+                const isUnlocked = gamificationData?.achievements?.some((a: any) => a.id === badge.id);
+                return (
+                  <div key={badge.id} className="flex flex-col items-center text-center">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-xs border relative transition-all duration-300 ${
+                      isUnlocked 
+                        ? 'bg-amber-50 border-amber-400 scale-105' 
+                        : 'bg-neutral-50 border-neutral-200 filter grayscale opacity-40'
+                    }`} title={badge.desc}>
+                      {badge.icon}
+                      {isUnlocked && (
+                        <span className="absolute -top-1 -right-1 bg-amber-400 text-[7px] w-3 h-3 rounded-full text-teal-950 font-bold border border-white flex items-center justify-center">✓</span>
+                      )}
+                    </div>
+                    <span className="text-[7.5px] font-bold text-textColor mt-1.5 line-clamp-1 w-full">{badge.name}</span>
+                    <span className="text-[6.5px] text-textColor-variant scale-90 origin-top mt-0.5 line-clamp-1 w-full">{badge.desc}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
         {/* Section 1: Shopping */}
         <div className="space-y-2.5">
           <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-2">Giao dịch & Mua sắm</h3>
@@ -604,6 +550,19 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               <div className="flex items-center gap-3">
                 <span className="text-lg leading-none">🎡</span>
                 <span className="font-semibold text-textColor">Vòng quay may mắn</span>
+              </div>
+              <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </button>
+
+            <button
+              onClick={() => setIsVoucherExchangeOpen(true)}
+              className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-lg leading-none">🎁</span>
+                <span className="font-semibold text-textColor">Chợ đổi Voucher</span>
               </div>
               <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -765,12 +724,20 @@ export const Profile: React.FC<IProfileProps> = (props) => {
       )}
       {/* Lucky Wheel Modal */}
       <LuckyWheel
-
         isOpen={isLuckyWheelOpen}
         onClose={() => setIsLuckyWheelOpen(false)}
         zaloUser={zaloUser}
         showToast={showToast}
         onVoucherClaimed={fetchOrdersAndProducts}
+      />
+
+      {/* Voucher Exchange Modal */}
+      <VoucherExchangeModal
+        isOpen={isVoucherExchangeOpen}
+        onClose={() => setIsVoucherExchangeOpen(false)}
+        gamificationData={gamificationData}
+        exchangeVoucher={exchangeVoucher}
+        onExchangeSuccess={fetchOrdersAndProducts}
       />
     </PageCast>
   );

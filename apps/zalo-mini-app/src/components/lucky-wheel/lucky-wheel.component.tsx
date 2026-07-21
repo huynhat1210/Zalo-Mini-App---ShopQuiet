@@ -149,7 +149,6 @@ export const LuckyWheel: React.FC<ILuckyWheelProps> = (props) => {
       if (selected.type !== 'LUCKY' && zaloUser?.id) {
         try {
           const res = await apiRequest<any>('/vouchers/lucky-draw/generate', 'POST', {
-            zaloUserId: zaloUser.id,
             rewardType: selected.type,
             rewardValue: selected.value,
             minOrderVal: 0
