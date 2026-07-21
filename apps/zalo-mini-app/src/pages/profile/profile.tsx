@@ -49,6 +49,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     gamificationData,
     fetchGamificationData,
     claimDailyReward,
+    exchangeVoucher,
   } = useCart();
 
   const [orders, setOrders] = useState<IOrder[]>([]);
@@ -278,11 +279,26 @@ export const Profile: React.FC<IProfileProps> = (props) => {
           </div>
 
           <div className="flex-1 text-left space-y-1.5">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-base font-bold tracking-tight line-clamp-1">{profile.name}</h2>
               <span className={`${badgeColor} font-black tracking-widest text-[8px] uppercase px-2 py-0.5 rounded flex items-center gap-1 shadow-xs`}>
                 ★ {tierBadge}
               </span>
+              
+              {/* Render unlocked badges mini list */}
+              {gamificationData?.achievements && gamificationData.achievements.length > 0 && (
+                <div className="flex items-center gap-1 bg-white/10 px-1.5 py-0.5 rounded-full backdrop-blur-xs">
+                  {gamificationData.achievements.map((ach: any) => (
+                    <span 
+                      key={ach.id} 
+                      className="text-[10px] filter drop-shadow-xs" 
+                      title={ach.name}
+                    >
+                      {ach.icon}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="space-y-0.5 text-[10.5px] text-white/80 font-medium">
@@ -408,6 +424,64 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               );
             })}
           </div>
+        </div>
+      </div>
+
+      {/* Voucher Exchange Shop */}
+      <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 mx-6 mt-4.5 shadow-xs">
+        <h4 className="text-xs font-bold text-textColor flex items-center gap-1.5 mb-2.5 text-left">
+          <span>🎁</span> Chợ đổi Voucher
+        </h4>
+        <p className="text-[9.5px] text-textColor-variant mb-4 text-left font-semibold">
+          Dùng điểm tích lũy của bạn để đổi lấy các Voucher giảm giá mua sắm đặc quyền.
+        </p>
+        
+        <div className="space-y-2.5">
+          {[
+            { code: 'DISCOUNT10', title: 'Voucher Giảm 10K', desc: 'Đơn hàng tối thiểu 50K', cost: 100 },
+            { code: 'DISCOUNT20', title: 'Voucher Giảm 20K', desc: 'Đơn hàng tối thiểu 100K', cost: 250 },
+            { code: 'DISCOUNT50', title: 'Voucher Giảm 50K', desc: 'Đơn hàng tối thiểu 200K', cost: 500 },
+          ].map((item) => {
+            const userPoints = gamificationData?.points || 0;
+            const canExchange = userPoints >= item.cost;
+            
+            return (
+              <div 
+                key={item.code} 
+                className="flex items-center justify-between p-2.5 rounded-xl border border-[#f0edeb] bg-neutral-50/50 hover:bg-neutral-50 transition-colors"
+              >
+                <div className="text-left space-y-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10.5px] font-bold text-textColor">{item.title}</span>
+                    <span className="text-[7.5px] bg-primary/10 text-primary font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                      {item.code}
+                    </span>
+                  </div>
+                  <p className="text-[8.5px] text-textColor-variant font-medium">{item.desc}</p>
+                  <p className="text-[9px] text-primary font-extrabold">
+                    Chi phí: {item.cost} điểm
+                  </p>
+                </div>
+                
+                <button
+                  onClick={async () => {
+                    const success = await exchangeVoucher(item.code, item.cost);
+                    if (success) {
+                      fetchOrdersAndProducts();
+                    }
+                  }}
+                  disabled={!canExchange}
+                  className={`px-3 py-1.5 rounded-lg text-[9.5px] font-extrabold border-none transition-all active:scale-95 cursor-pointer ${
+                    canExchange
+                      ? 'bg-primary hover:bg-primary-dark text-white shadow-xs'
+                      : 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
+                  }`}
+                >
+                  Đổi
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 

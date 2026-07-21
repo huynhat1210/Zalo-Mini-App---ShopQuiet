@@ -24,4 +24,9 @@ export class GamificationController {
   async getLeaderboard(@Query('limit') limit?: string) {
     return this.gamificationService.getLeaderboard(limit ? parseInt(limit, 10) : 10);
   }
+
+  @Post('exchange-voucher')
+  async exchangeVoucher(@Body() body: { zaloUserId: string; voucherCode: string; pointsCost: number }) {
+    return this.gamificationService.exchangeVoucher(body.zaloUserId, body.voucherCode, body.pointsCost);
+  }
 }

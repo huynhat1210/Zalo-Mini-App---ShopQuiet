@@ -102,6 +102,7 @@ export default function App() {
   const claimDailyReward = useAppStore((state) => state.claimDailyReward);
   const recommendations = useAppStore((state) => state.recommendations);
   const fetchRecommendations = useAppStore((state) => state.fetchRecommendations);
+  const exchangeVoucher = useAppStore((state) => state.exchangeVoucher);
 
   // TanStack React Query for Notifications
   const { data: notificationsData, refetch: fetchNotifications } = useNotifications(zaloUser?.id);
@@ -245,6 +246,7 @@ export default function App() {
             claimDailyReward,
             recommendations,
             fetchRecommendations,
+            exchangeVoucher,
           }}
         >
           <ZMPRouterCast>

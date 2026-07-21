@@ -303,4 +303,103 @@ export class GamificationService {
       membershipTier: user.membershipTier,
     }));
   }
+
+  async exchangeVoucher(zaloUserId: string, voucherCode: string, pointsCost: number) {
+    // 1. Ensure the voucher exists (seed/upsert statically if not in DB to prevent failure)
+    const vouchersToSeed = [
+      { code: 'DISCOUNT10', type: 'fixed', value: 10000, minOrderVal: 50000, maxDiscount: 10000 },
+      { code: 'DISCOUNT20', type: 'fixed', value: 20000, minOrderVal: 100000, maxDiscount: 20000 },
+      { code: 'DISCOUNT50', type: 'fixed', value: 50000, minOrderVal: 200000, maxDiscount: 50000 },
+    ];
+
+    for (const v of vouchersToSeed) {
+      await this.prisma.voucher.upsert({
+        where: { code: v.code },
+        update: {
+          type: v.type,
+          value: v.value,
+          minOrderVal: v.minOrderVal,
+          maxDiscount: v.maxDiscount,
+        },
+        create: {
+          code: v.code,
+          type: v.type,
+          value: v.value,
+          minOrderVal: v.minOrderVal,
+          maxDiscount: v.maxDiscount,
+          stock: 999,
+        },
+      });
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { zaloId: zaloUserId },
+    });
+
+    if (!user) {
+      return { success: false, message: 'Không tìm thấy người dùng!' };
+    }
+
+    if ((user.totalSpent || 0) < pointsCost) {
+      return { success: false, message: 'Bạn không đủ điểm tích lũy!' };
+    }
+
+    const voucher = await this.prisma.voucher.findUnique({
+      where: { code: voucherCode },
+    });
+
+    if (!voucher) {
+      return { success: false, message: 'Mã voucher không tồn tại!' };
+    }
+
+    if (voucher.stock <= 0) {
+      return { success: false, message: 'Voucher này đã hết lượt đổi!' };
+    }
+
+    // Execute exchange
+    await this.prisma.$transaction(async (tx) => {
+      // Deduct user points
+      await tx.user.update({
+        where: { zaloId: zaloUserId },
+        data: {
+          totalSpent: { decrement: pointsCost },
+        },
+      });
+
+      // Decrement voucher stock
+      await tx.voucher.update({
+        where: { code: voucherCode },
+        data: {
+          stock: { decrement: 1 },
+        },
+      });
+
+      // Create PointsHistory log
+      await tx.pointsHistory.create({
+        data: {
+          zaloUserId,
+          points: -pointsCost,
+          reason: `Đổi mã voucher ${voucherCode}`,
+        },
+      });
+
+      // Create Notification
+      await tx.notification.create({
+        data: {
+          zaloUserId,
+          type: 'promotion',
+          title: `🎁 Đổi quà thành công`,
+          content: `Chúc mừng bạn đã đổi thành công mã voucher: ${voucherCode} (-${voucher.value.toLocaleString('vi-VN')}đ) bằng ${pointsCost} điểm tích lũy. Áp dụng ngay khi thanh toán!`,
+          date: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('vi-VN'),
+          read: false,
+        },
+      });
+    });
+
+    return {
+      success: true,
+      message: `Đổi voucher ${voucherCode} thành công!`,
+      voucherCode,
+    };
+  }
 }

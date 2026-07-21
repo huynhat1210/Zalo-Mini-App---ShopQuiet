@@ -611,6 +611,31 @@ export const useAppStore = create<IAppState>()(
           set({ recommendations: [] });
         }
       },
+      exchangeVoucher: async (voucherCode: string, pointsCost: number) => {
+        const user = get().zaloUser;
+        if (!user || !user.id) {
+          get().showToast('Vui lòng đăng nhập để đổi voucher!', 'warning');
+          return false;
+        }
+        try {
+          const res = await apiRequest<any>('/gamification/exchange-voucher', 'POST', {
+            zaloUserId: user.id,
+            voucherCode,
+            pointsCost,
+          });
+          if (res && res.success) {
+            get().showToast(res.message || 'Đổi voucher thành công!', 'success');
+            await get().fetchGamificationData();
+            return true;
+          } else {
+            get().showToast(res?.message || 'Không đủ điểm để đổi voucher này!', 'warning');
+            return false;
+          }
+        } catch (e: any) {
+          get().showToast(e?.message || 'Lỗi đổi voucher!', 'warning');
+          return false;
+        }
+      },
 
 
     }),

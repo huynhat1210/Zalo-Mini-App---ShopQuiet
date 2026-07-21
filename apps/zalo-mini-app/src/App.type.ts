@@ -144,4 +144,5 @@ export interface ICartContextType {
   claimDailyReward: () => Promise<void>;
   recommendations: IProduct[];
   fetchRecommendations: () => Promise<void>;
+  exchangeVoucher: (voucherCode: string, pointsCost: number) => Promise<boolean>;
 }

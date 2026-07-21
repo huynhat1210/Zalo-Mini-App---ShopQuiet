@@ -51,4 +51,5 @@ export interface IAppState {
   recommendations: IProduct[];
   fetchRecommendations: () => Promise<void>;
   setIsComparisonOpen: (open: boolean) => void;
+  exchangeVoucher: (voucherCode: string, pointsCost: number) => Promise<boolean>;
 }
