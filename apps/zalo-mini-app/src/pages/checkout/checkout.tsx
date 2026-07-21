@@ -89,6 +89,14 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
   const [vouchers, setVouchers] = useState<any[]>([]);
 
+  // Tier benefits state
+  const [tierBenefits, setTierBenefits] = useState<{
+    tier: string;
+    discountPercentage: number;
+    freeShippingThreshold: number;
+    pointsMultiplier: number;
+  } | null>(null);
+
   useEffect(() => {
     const fetchVouchers = async () => {
       try {
@@ -100,6 +108,23 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
     };
     fetchVouchers();
   }, []);
+
+  useEffect(() => {
+    const fetchTierBenefits = async () => {
+      try {
+        const benefits = await apiRequest<{
+          tier: string;
+          discountPercentage: number;
+          freeShippingThreshold: number;
+          pointsMultiplier: number;
+        }>('/users/tier-benefits');
+        setTierBenefits(benefits);
+      } catch (e) {
+        console.error('Failed to fetch tier benefits:', e);
+      }
+    };
+    fetchTierBenefits();
+  }, [zaloUser?.id]);
 
   useEffect(() => {
     async function fetchCmsCheckoutConfig() {
@@ -361,11 +386,17 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
   const subtotal = checkoutItems.reduce((sum: number, item: any) => sum + item.product.price * item.quantity, 0);
 
-  // Calculate discount and shipping
-  const isFreeshipEligible = subtotal >= 300000;
+  // Calculate discount and shipping based on tier benefits
+  const freeShippingThreshold = tierBenefits?.freeShippingThreshold || 300000;
+  const isFreeshipEligible = subtotal >= freeShippingThreshold;
   const selectedShippingMethod = shippingMethods.find((item) => item.code === shippingMethod);
   let shippingCost = isFreeshipEligible ? 0 : (selectedShippingMethod?.price || 0);
   let discount = 0;
+
+  // Apply tier discount percentage
+  if (tierBenefits?.discountPercentage && tierBenefits.discountPercentage > 0) {
+    discount = subtotal * (tierBenefits.discountPercentage / 100);
+  }
 
   if (appliedPromo) {
     if (appliedPromo.type === 'percent') {

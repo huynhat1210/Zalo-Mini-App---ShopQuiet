@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Headers, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Headers, UseGuards, Param } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -84,5 +84,24 @@ export class UsersController {
         phoneNumber: '0987654321',
       };
     }
+  }
+
+  @Get('membership-privileges/:tier')
+  async getMembershipPrivileges(@Param('tier') tier: string) {
+    return this.usersService.getMembershipPrivileges(tier);
+  }
+
+  @Post('membership-privileges/seed')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async seedMembershipPrivileges() {
+    return this.usersService.seedMembershipPrivileges();
+  }
+
+  @Get('tier-benefits')
+  @UseGuards(JwtAuthGuard)
+  async getUserTierBenefits(@Headers('x-zalo-user-id') zaloUserId?: string) {
+    const userId = zaloUserId || 'cust-zalo-id-1';
+    return this.usersService.getUserTierBenefits(userId);
   }
 }

@@ -1,16 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Page } from 'zmp-ui';
 import { IMembershipCardProps } from './membership-card.type';
+import { apiRequest } from '../../utils/api';
 
 const PageCast = Page as any;
 
 export const MembershipCard: React.FC<IMembershipCardProps> = (props) => {
   const { zaloUser, setActiveTab } = props;
   const [showRankingInfo, setShowRankingInfo] = useState(false);
+  const [privileges, setPrivileges] = useState<Record<string, any[]>>({});
+  const [tierBenefits, setTierBenefits] = useState<{
+    tier: string;
+    discountPercentage: number;
+    freeShippingThreshold: number;
+    pointsMultiplier: number;
+  } | null>(null);
 
   // Dynamic membership ranking calculations
   const totalSpent = zaloUser?.totalSpent || 0;
   const currentTier = zaloUser?.membershipTier || 'Đồng';
+
+  // Fetch membership privileges from backend
+  useEffect(() => {
+    const fetchPrivileges = async () => {
+      const tiers = ['Đồng', 'Bạc', 'Vàng', 'Kim cương'];
+      const privilegesData: Record<string, any[]> = {};
+      
+      for (const tier of tiers) {
+        try {
+          const data = await apiRequest<any[]>(`/users/membership-privileges/${encodeURIComponent(tier)}`, 'GET');
+          privilegesData[tier] = data || [];
+        } catch (e) {
+          console.error(`Failed to fetch privileges for tier ${tier}:`, e);
+          privilegesData[tier] = [];
+        }
+      }
+      
+      setPrivileges(privilegesData);
+    };
+
+    fetchPrivileges();
+  }, []);
+
+  // Fetch tier benefits
+  useEffect(() => {
+    const fetchTierBenefits = async () => {
+      try {
+        const benefits = await apiRequest<{
+          tier: string;
+          discountPercentage: number;
+          freeShippingThreshold: number;
+          pointsMultiplier: number;
+        }>('/users/tier-benefits');
+        setTierBenefits(benefits);
+      } catch (e) {
+        console.error('Failed to fetch tier benefits:', e);
+      }
+    };
+    fetchTierBenefits();
+  }, [zaloUser?.id]);
 
   let nextTier = '';
   let nextGoal = 0;
@@ -124,16 +172,37 @@ export const MembershipCard: React.FC<IMembershipCardProps> = (props) => {
               <p className="text-[10px] text-white/70 italic text-center mt-1">Bạn đã đạt hạng thành viên cao nhất tại ShopQuiet</p>
             )}
           </div>
+
+          {/* Tier Benefits Summary */}
+          {tierBenefits && (
+            <div className="mt-4 pt-4 border-t border-white/20 relative z-10">
+              <p className="text-[9px] font-bold text-white/90 uppercase tracking-wider mb-2">Đặc quyền hiện tại:</p>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="text-center">
+                  <p className="text-[10px] font-bold text-amber-300">{tierBenefits.discountPercentage}%</p>
+                  <p className="text-[8px] text-white/70">Giảm giá</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] font-bold text-amber-300">{tierBenefits.freeShippingThreshold === 0 ? 'Miễn phí' : tierBenefits.freeShippingThreshold.toLocaleString('vi-VN') + 'đ'}</p>
+                  <p className="text-[8px] text-white/70">Freeship từ</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] font-bold text-amber-300">x{tierBenefits.pointsMultiplier}</p>
+                  <p className="text-[8px] text-white/70">Điểm thưởng</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Member tiers list */}
         <div className="space-y-4 text-left">
           <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-1">Danh sách phân hạng</h3>
           {[
-            { level: 'Đồng', badge: '🥉', min: '0đ', max: '1.999.999đ', perks: ['Tích điểm x1', 'Ưu đãi sản phẩm cơ bản', 'Hỗ trợ tiêu chuẩn'], current: currentTier === 'Đồng' },
-            { level: 'Bạc', badge: '🥈', min: '2.000.000đ', max: '9.999.999đ', perks: ['Tích điểm x1.5', 'Miễn phí vận chuyển đơn >200k', 'Ưu đãi thành viên hàng tháng', 'Hỗ trợ ưu tiên'], current: currentTier === 'Bạc' },
-            { level: 'Vàng', badge: '🥇', min: '10.000.000đ', max: '49.999.999đ', perks: ['Tích điểm x2', 'Miễn phí vận chuyển mọi đơn', 'Flash sale độc quyền', 'Hoàn tiền 5%', 'Hỗ trợ 24/7'], current: currentTier === 'Vàng' },
-            { level: 'Kim cương', badge: '💎', min: '50.000.000đ', max: 'Không giới hạn', perks: ['Tích điểm x3', 'Miễn phí ship & đổi trả tự do', 'Early access sản phẩm mới', 'Hoàn tiền 10%', 'Quản lý tài khoản cá nhân'], current: currentTier === 'Kim cương' },
+            { level: 'Đồng', badge: '🥉', min: '0đ', max: '1.999.999đ', current: currentTier === 'Đồng' },
+            { level: 'Bạc', badge: '🥈', min: '2.000.000đ', max: '9.999.999đ', current: currentTier === 'Bạc' },
+            { level: 'Vàng', badge: '🥇', min: '10.000.000đ', max: '49.999.999đ', current: currentTier === 'Vàng' },
+            { level: 'Kim cương', badge: '💎', min: '50.000.000đ', max: 'Không giới hạn', current: currentTier === 'Kim cương' },
           ].map(tier => (
             <div key={tier.level} className={`border rounded-2xl p-4.5 space-y-3 bg-white relative transition-all shadow-xs ${tier.current ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
               {tier.current && (
@@ -151,14 +220,19 @@ export const MembershipCard: React.FC<IMembershipCardProps> = (props) => {
               <div className="space-y-2">
                 <p className="text-[9px] font-extrabold text-[#526069]/55 uppercase tracking-widest">Đặc quyền nhận được:</p>
                 <ul className="grid grid-cols-1 gap-2">
-                  {tier.perks.map(perk => (
-                    <li key={perk} className="text-xs text-textColor-variant flex items-center gap-2">
-                      <svg className="w-3.5 h-3.5 text-primary flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
-                      </svg>
-                      <span className="font-medium">{perk}</span>
-                    </li>
-                  ))}
+                  {privileges[tier.level]?.length > 0 ? (
+                    privileges[tier.level].map((privilege: any) => (
+                      <li key={privilege.id} className="text-xs text-textColor-variant flex items-center gap-2">
+                        <span className="text-sm">{privilege.icon}</span>
+                        <div className="flex-1">
+                          <span className="font-medium">{privilege.title}</span>
+                          <p className="text-[9px] text-textColor-variant/70 mt-0.5">{privilege.description}</p>
+                        </div>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-xs text-textColor-variant/70 italic">Đang tải đặc quyền...</li>
+                  )}
                 </ul>
               </div>
             </div>

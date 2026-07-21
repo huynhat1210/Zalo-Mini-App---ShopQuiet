@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { UsersService } from '../users/users.service';
 
 export interface ClaimDailyRewardDto {
   zaloUserId: string;
@@ -14,7 +15,10 @@ export interface AddPointsDto {
 
 @Injectable()
 export class GamificationService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private usersService: UsersService,
+  ) {}
 
   async claimDailyReward(zaloUserId: string) {
     const today = new Date();
@@ -51,8 +55,17 @@ export class GamificationService {
       consecutiveDays = (yesterdayClaim.consecutiveDays || 0) + 1;
     }
 
-    // Reward formula: base 10 points + 5 points per consecutive day (max 7 days)
-    const rewardPoints = Math.min(10 + (consecutiveDays - 1) * 5, 45);
+    // Get user's membership tier for points multiplier
+    const user = await this.prisma.user.findUnique({
+      where: { zaloId: zaloUserId },
+      select: { membershipTier: true },
+    });
+
+    const tierMultiplier = await this.usersService.getTierDailyPointsMultiplier(user?.membershipTier || 'Đồng');
+
+    // Reward formula: base 10 points + 5 points per consecutive day (max 7 days), then apply tier multiplier
+    const basePoints = Math.min(10 + (consecutiveDays - 1) * 5, 45);
+    const rewardPoints = Math.round(basePoints * tierMultiplier);
 
     // Create claim record
     await this.prisma.dailyRewardClaim.create({
@@ -94,7 +107,7 @@ export class GamificationService {
   }
 
   async addPoints(zaloUserId: string, points: number, reason: string, metadata?: Record<string, any>) {
-    // Update user points
+    // Update user gamification points
     const user = await this.prisma.user.findUnique({
       where: { zaloId: zaloUserId },
     });
@@ -103,11 +116,11 @@ export class GamificationService {
       throw new Error('Không tìm thấy người dùng');
     }
 
-    const newTotalPoints = (user.totalSpent || 0) + points;
+    const newTotalPoints = (user.gamificationPoints || 0) + points;
 
     await this.prisma.user.update({
       where: { zaloId: zaloUserId },
-      data: { totalSpent: newTotalPoints },
+      data: { gamificationPoints: newTotalPoints },
     });
 
     // Create points history record
@@ -133,7 +146,7 @@ export class GamificationService {
     const [user, todayClaim, achievements, pointsHistory] = await Promise.all([
       this.prisma.user.findUnique({
         where: { zaloId: zaloUserId },
-        select: { totalSpent: true, membershipTier: true },
+        select: { totalSpent: true, membershipTier: true, gamificationPoints: true },
       }),
       this.prisma.dailyRewardClaim.findFirst({
         where: {
@@ -153,7 +166,7 @@ export class GamificationService {
     ]);
 
     return {
-      points: user?.totalSpent || 0,
+      points: user?.gamificationPoints || 0,
       membershipTier: user?.membershipTier || 'Đồng',
       hasClaimedToday: !!todayClaim,
       achievements: achievements.map((ua) => ({
@@ -277,6 +290,16 @@ export class GamificationService {
         } catch (e) {
           console.error(`Failed to create notification for achievement ${achievement.name}:`, e);
         }
+      } else if (!achievement.condition && unlockedAchievementIds.includes(achievement.id)) {
+        // Remove achievement if condition is no longer met
+        await this.prisma.userAchievement.delete({
+          where: {
+            zaloUserId_achievementId: {
+              zaloUserId,
+              achievementId: achievement.id,
+            },
+          },
+        });
       }
     }
   }
@@ -340,7 +363,7 @@ export class GamificationService {
       return { success: false, message: 'Không tìm thấy người dùng!' };
     }
 
-    if ((user.totalSpent || 0) < pointsCost) {
+    if ((user.gamificationPoints || 0) < pointsCost) {
       return { success: false, message: 'Bạn không đủ điểm tích lũy!' };
     }
 
@@ -358,11 +381,11 @@ export class GamificationService {
 
     // Execute exchange
     await this.prisma.$transaction(async (tx) => {
-      // Deduct user points
+      // Deduct user gamification points
       await tx.user.update({
         where: { zaloId: zaloUserId },
         data: {
-          totalSpent: { decrement: pointsCost },
+          gamificationPoints: { decrement: pointsCost },
         },
       });
 
