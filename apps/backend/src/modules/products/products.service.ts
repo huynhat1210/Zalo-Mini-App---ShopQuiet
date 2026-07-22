@@ -261,6 +261,25 @@ export class ProductsService {
       return normalizedTag.includes('flash sale') || normalizedTag.includes('giảm') || normalizedTag.includes('giam');
     });
 
+    // If flash sale count is less than 4, enrich it with standard products as fallback
+    if (flashSaleProducts.length < 4 && allProducts.length > 0) {
+      const existingIds = new Set(flashSaleProducts.map(p => p.id));
+      const remainingProducts = allProducts.filter(p => !existingIds.has(p.id));
+      
+      const neededCount = Math.min(4 - flashSaleProducts.length, remainingProducts.length);
+      const fallbacksToAdd = remainingProducts.slice(0, neededCount);
+
+      const discountOptions = ['Giảm 15%', 'Giảm 23%', 'Giảm 30%', 'Flash Sale (Giảm 10%)'];
+      for (let i = 0; i < fallbacksToAdd.length; i++) {
+        const randomTag = discountOptions[Math.floor(Math.random() * discountOptions.length)];
+        await this.prisma.product.update({
+          where: { id: fallbacksToAdd[i].id },
+          data: { tags: randomTag },
+        });
+      }
+      return this.findFlashSaleProducts();
+    }
+
     const mappedProducts = flashSaleProducts.map((product) => {
       const tag = product.tags || '';
       let discountPercent = 20;
@@ -278,18 +297,6 @@ export class ProductsService {
         discountPercent,
       };
     });
-
-    if (mappedProducts.length === 0 && allProducts.length > 0) {
-      const fallbackProducts = allProducts.slice(0, 4);
-      const discountOptions = ['Giảm 15%', 'Giảm 23%', 'Giảm 30%', 'Flash Sale (Giảm 10%)'];
-      for (let i = 0; i < fallbackProducts.length; i++) {
-        await this.prisma.product.update({
-          where: { id: fallbackProducts[i].id },
-          data: { tags: discountOptions[i] },
-        });
-      }
-      return this.findFlashSaleProducts();
-    }
 
     const endTime = new Date();
     endTime.setHours(23, 59, 59, 999);
