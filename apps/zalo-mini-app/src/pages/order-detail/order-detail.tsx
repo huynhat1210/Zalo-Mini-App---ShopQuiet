@@ -443,6 +443,14 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
             Thông tin giao hàng
           </h2>
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 shadow-xs space-y-2">
+            {selectedOrder.trackingNumber && (
+              <div className="flex justify-between items-center pb-2 border-b border-[#f5f3f0]">
+                <span className="text-textColor-variant font-medium">Mã vận đơn (GHN):</span>
+                <span className="font-bold text-teal-700 bg-teal-50 px-2.5 py-1 rounded-md text-[11px] font-mono select-all">
+                  {selectedOrder.trackingNumber}
+                </span>
+              </div>
+            )}
             {selectedOrder.estimatedDeliveryDate && (
               <div className="flex justify-between items-center pb-2 border-b border-[#f5f3f0]">
                 <span className="text-textColor-variant">Dự kiến giao:</span>

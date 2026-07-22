@@ -948,6 +948,85 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                 />
               </svg>
             </button>
+
+            {/* Follow Zalo Official Account */}
+            <button
+              onClick={() => {
+                try {
+                  const apiAny = require("zmp-sdk") as any;
+                  if (apiAny && apiAny.openOutApp) {
+                    apiAny.openOutApp({ url: cmsSettings["brand.zalo_oa_url"] || "https://zalo.me" });
+                  } else {
+                    window.open(cmsSettings["brand.zalo_oa_url"] || "https://zalo.me", "_blank");
+                  }
+                  showToast("Mở Zalo Official Account...", "info");
+                } catch (e) {
+                  window.open("https://zalo.me", "_blank");
+                }
+              }}
+              className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-lg leading-none">💬</span>
+                <span className="font-semibold text-textColor">
+                  Quan tâm Zalo Official Account
+                </span>
+              </div>
+              <span className="text-[10px] font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                Zalo OA
+              </span>
+            </button>
+
+            {/* Share Mini App */}
+            <button
+              onClick={() => {
+                try {
+                  const apiAny = require("zmp-sdk") as any;
+                  if (apiAny && apiAny.shareApp) {
+                    apiAny.shareApp({
+                      title: "ShopQuiet - Thương Mại Điện Tử Zalo Mini App",
+                      path: "pages/home/index",
+                    });
+                  }
+                  showToast("Đã mở cửa sổ chia sẻ Mini App!", "success");
+                } catch (e) {
+                  showToast("Tính năng chia sẻ chỉ hoạt động trong Zalo App", "info");
+                }
+              }}
+              className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <svg
+                  className="w-5 h-5 text-teal-600"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0-12.814a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5zm0 12.814a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z"
+                  />
+                </svg>
+                <span className="font-semibold text-textColor">
+                  Chia sẻ Mini App cho bạn bè
+                </span>
+              </div>
+              <svg
+                className="w-4 h-4 text-[#526069]/40"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
