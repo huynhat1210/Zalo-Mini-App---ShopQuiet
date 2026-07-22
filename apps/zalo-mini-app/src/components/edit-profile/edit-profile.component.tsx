@@ -12,7 +12,6 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
   const [editEmail, setEditEmail] = useState('');
   const [editBirthday, setEditBirthday] = useState('');
   const [editGender, setEditGender] = useState('');
-  const [editMembershipTier, setEditMembershipTier] = useState('Đồng');
   const [updating, setUpdating] = useState(false);
 
   // Birthday splits
@@ -35,7 +34,6 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
       setEditEmail(zaloUser.email || '');
       setEditBirthday(zaloUser.birthday || '');
       setEditGender(zaloUser.gender || '');
-      setEditMembershipTier(zaloUser.membershipTier || 'Đồng');
 
       const bday = parseBirthday(zaloUser.birthday || '');
       setBdDay(bday.d);
@@ -107,7 +105,6 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
         email: editEmail.trim(),
         birthday: editBirthday,
         gender: editGender,
-        membershipTier: editMembershipTier,
       });
       if (res) {
         const mappedUser = {
@@ -247,20 +244,6 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
               <option value="Nam">Nam</option>
               <option value="Nữ">Nữ</option>
               <option value="Khác">Khác</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="text-[9px] font-extrabold text-textColor-variant uppercase tracking-wider block mb-1">Hạng thành viên (Dev Test)</label>
-            <select
-              value={editMembershipTier}
-              onChange={(e) => setEditMembershipTier(e.target.value)}
-              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor"
-            >
-              <option value="Đồng">Đồng (0% Giảm - 200k Freeship)</option>
-              <option value="Bạc">Bạc (5% Giảm - 150k Freeship)</option>
-              <option value="Vàng">Vàng (10% Giảm - 100k Freeship)</option>
-              <option value="Kim cương">Kim cương (15% Giảm - 0đ Freeship)</option>
             </select>
           </div>
         </div>

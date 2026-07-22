@@ -10,6 +10,8 @@ import { calculateEstimatedDeliveryDate } from '../../utils/delivery-date';
 import api from 'zmp-sdk';
 const PageCast = Page as any;
 import { ICheckoutProps } from './checkout.type';
+import { trackAnalyticsEvent } from '../../utils/analytics';
+import { useTranslation } from '../../utils/i18n';
 
 type CmsShippingMethod = {
   code: string;
@@ -36,6 +38,7 @@ const checkoutAddressSchema = z.object({
 type CheckoutAddressFormValues = z.infer<typeof checkoutAddressSchema>;
 
 export const Checkout: React.FC<ICheckoutProps> = (_props) => {
+  const { t } = useTranslation();
   const { cart, removeFromCart, setActiveTab, showToast, zaloUser, buyNowItem, setBuyNowItem, setSelectedOrder, fetchNotifications } = useCart();
 
   // If buyNowItem exists, checkout only that item (direct buy); otherwise use selected cart items
@@ -636,6 +639,15 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       const offlineOrders = JSON.parse(localStorage.getItem(`offline_orders_${userId}`) || '[]');
       localStorage.setItem(`offline_orders_${userId}`, JSON.stringify([createdOrder, ...offlineOrders]));
       
+      // Track purchase event
+      if (zaloUser?.id) {
+        trackAnalyticsEvent(zaloUser.id, 'purchase', undefined, undefined, {
+          orderId: orderNumber,
+          totalAmount: total,
+          itemsCount: checkoutItems.reduce((sum: number, item: any) => sum + item.quantity, 0),
+        });
+      }
+      
       // Calculate estimated delivery date for display
       const deliveryRange = calculateEstimatedDeliveryDate(new Date(), shippingMethod);
       
@@ -679,7 +691,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </button>
-        <span className="text-xs font-bold uppercase tracking-widest text-textColor">Đặt hàng</span>
+        <span className="text-xs font-bold uppercase tracking-widest text-textColor">{t('checkout.title')}</span>
         <div className="w-8"></div>
       </div>
 
@@ -705,7 +717,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
         {/* Shipping Address Section */}
         <div className="space-y-2.5">
           <div className="flex justify-between items-center px-1">
-            <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70">Địa chỉ giao hàng</h2>
+            <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70">{t('checkout.deliveryAddress')}</h2>
             {!isEnteringCustomAddress && addresses.length > 0 && (
               <button
                 onClick={() => {
@@ -947,7 +959,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
         {/* IOrder Review Section */}
         <div className="space-y-2.5">
-          <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">Chi tiết đơn hàng</h2>
+          <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">{t('checkout.orderSummary')}</h2>
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 shadow-xs divide-y divide-[#f0edeb] space-y-3">
             <div className="space-y-3.5">
               {checkoutItems.map((item: any) => {
@@ -992,11 +1004,11 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
             {/* Invoice billing breakdown */}
             <div className="pt-3.5 space-y-2 text-xs">
               <div className="flex justify-between text-textColor-variant">
-                <span>Tạm tính</span>
+                <span>{t('checkout.subtotal')}</span>
                 <span>{subtotal.toLocaleString('vi-VN')} đ</span>
               </div>
               <div className="flex justify-between text-textColor-variant">
-                <span>Phí vận chuyển</span>
+                <span>{t('checkout.shippingFee')}</span>
                 <span>{shippingCost > 0 ? `${shippingCost.toLocaleString('vi-VN')} đ` : 'Miễn phí'}</span>
               </div>
               {discount > 0 && (
@@ -1006,7 +1018,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                 </div>
               )}
               <div className="flex justify-between font-bold text-textColor pt-2.5 border-t border-dashed border-[#f0edeb]">
-                <span>Tổng cộng</span>
+                <span>{t('checkout.total')}</span>
                 <span className="text-primary">{total.toLocaleString('vi-VN')} đ</span>
               </div>
             </div>
@@ -1017,7 +1029,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       {/* Sticky Footer Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 h-[80px] bg-white border-t border-[#f0edeb] flex justify-between items-center px-4.5 z-40 shadow-lg">
         <div className="flex flex-col">
-          <span className="text-[9px] font-bold text-textColor-variant uppercase tracking-wider">Tổng cộng</span>
+          <span className="text-[9px] font-bold text-textColor-variant uppercase tracking-wider">{t('checkout.total')}</span>
           <span className="text-lg font-extrabold text-textColor">{total.toLocaleString('vi-VN')} đ</span>
         </div>
 
@@ -1025,7 +1037,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           onClick={handleSubmit(() => void handlePlaceOrder())}
           className="h-11 px-8 bg-primary hover:bg-primary-dark text-white font-bold text-xs uppercase tracking-widest rounded-full shadow-md active:scale-95 transition-all"
         >
-          Đặt hàng
+          {t('checkout.placeOrder')}
         </button>
       </div>
 

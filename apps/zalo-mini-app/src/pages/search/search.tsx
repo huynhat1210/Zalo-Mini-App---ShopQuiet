@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Page } from 'zmp-ui';
 import { useCart } from '../../App';
 import { useDebounce } from '../../utils';
 import { useAllProducts, useCategories } from '../../hooks';
 import { ISearchProps } from './search.type';
 import { LazyImageComponent, PriceSlider } from '../../components';
+import { trackAnalyticsEvent } from '../../utils/analytics';
 
 const PageCast = Page as any;
 
 export const Search: React.FC<ISearchProps> = (_props) => {
-  const { setSelectedProductDetail, addToCart, showToast, addToViewedProducts, viewedProducts } = useCart();
+  const { setSelectedProductDetail, addToCart, showToast, addToViewedProducts, viewedProducts, zaloUser } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -21,6 +22,12 @@ export const Search: React.FC<ISearchProps> = (_props) => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (debouncedSearchQuery.trim() && zaloUser?.id) {
+      trackAnalyticsEvent(zaloUser.id, 'search', undefined, undefined, { query: debouncedSearchQuery.trim() });
+    }
+  }, [debouncedSearchQuery, zaloUser?.id]);
 
   const handleAddToCart = (product: any) => {
     // Check if product has variants (size or color)
@@ -36,12 +43,22 @@ export const Search: React.FC<ISearchProps> = (_props) => {
       // Product has no variants - add directly
       addToCart(product);
       showToast(`Đã thêm ${product.name} vào giỏ hàng!`, 'success');
+      
+      // Track add_to_cart event
+      if (zaloUser?.id) {
+        trackAnalyticsEvent(zaloUser.id, 'add_to_cart', product.id, product.categoryId);
+      }
     }
   };
 
   const handleProductClick = (product: any) => {
     addToViewedProducts(product);
     setSelectedProductDetail(product);
+    
+    // Track click event
+    if (zaloUser?.id) {
+      trackAnalyticsEvent(zaloUser.id, 'click', product.id, product.categoryId);
+    }
   };
 
   // Dynamic API state via React Query

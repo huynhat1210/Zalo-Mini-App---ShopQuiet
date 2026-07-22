@@ -8,12 +8,15 @@ import { Bars3Icon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 import logoIcon from '../../assets/logo.png';
 import { MenuDrawerComponent, BannerSkeleton, CategorySkeleton, ProductGridSkeleton, LazyImageComponent, LuckyWheel, FlashSale } from '../../components';
 import { IHomeProps } from './home.type';
+import { trackAnalyticsEvent } from '../../utils/analytics';
+import { useTranslation } from '../../utils/i18n';
 
 const PageCast = Page as any;
 const BoxCast = Box as any;
 const TextCast = Text as any;
 
 export const Home: React.FC<IHomeProps> = (_props) => {
+  const { t } = useTranslation();
   const { addToCart, setSelectedProductDetail, cart, setIsCartOpen, toggleSavedItem, isSavedItem, showToast, zaloUser, recommendations, fetchRecommendations } = useCart();
   const [isLuckyWheelOpen, setIsLuckyWheelOpen] = useState(false);
 
@@ -127,6 +130,12 @@ export const Home: React.FC<IHomeProps> = (_props) => {
       // Product has no variants - add directly
       addToCart(product);
       showToast(`Đã thêm ${product.name} vào giỏ hàng!`, 'success');
+      
+      // Track add_to_cart event
+      if (zaloUser?.id) {
+        trackAnalyticsEvent(zaloUser.id, 'add_to_cart', product.id, product.categoryId);
+      }
+
       setIsCartBouncing(true);
       setTimeout(() => setIsCartBouncing(false), 300);
     }
@@ -236,7 +245,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
         {/* Categories Section - Clean horizontal capsule scrolling */}
         <BoxCast className="my-6">
           <div className="flex justify-between items-center px-6 mb-3">
-            <TextCast className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/80">Danh mục</TextCast>
+            <TextCast className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/80">{t('home.categories')}</TextCast>
           </div>
 
           {isFetchingCategories && categories.length === 0 ? (
@@ -250,7 +259,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
                 : 'border-[#f0edeb] bg-white text-textColor-variant hover:bg-neutral-50'
                 }`}
             >
-              Tất cả
+              {t('home.all')}
             </button>
             {categories.map((cat) => {
               const isActive = selectedCategory === cat.slug;
@@ -275,7 +284,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
         {/* Featured Products - High-fidelity borderless grid cards */}
         <BoxCast className="my-6">
           <div className="px-6 mb-4">
-            <TextCast className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/80">Sản phẩm nổi bật</TextCast>
+            <TextCast className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/80">{t('home.featured')}</TextCast>
           </div>
 
           {isFetchingProducts && products.length === 0 ? (
@@ -371,40 +380,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
           </div>
           )}
 
-          {/* Recommendations Section */}
-          {recommendations && recommendations.length > 0 && (
-            <BoxCast className="my-6 border-t border-[#f0edeb] pt-6">
-              <div className="flex justify-between items-center px-6 mb-4">
-                <TextCast className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/80">Gợi ý dành riêng cho bạn 🌟</TextCast>
-              </div>
-              <div className="flex gap-4 overflow-x-auto px-6 pb-4 scrollbar-none">
-                {recommendations.map((prod) => {
-                  let img = 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80';
-                  try {
-                    const parsed = JSON.parse(prod.images);
-                    if (parsed && parsed.length > 0) img = parsed[0];
-                  } catch (e) { }
 
-                  return (
-                    <div
-                      key={prod.id}
-                      onClick={() => setSelectedProductDetail(prod)}
-                      className="flex-shrink-0 w-32 bg-white rounded-xl overflow-hidden shadow-xs border border-[#f0edeb] relative p-2 flex flex-col justify-between"
-                    >
-                      <div className="relative aspect-[3/4] bg-neutral-50 rounded-lg overflow-hidden mb-2">
-                        <LazyImageComponent src={img} alt={prod.name} className="w-full h-full object-cover" />
-                      </div>
-
-                      <div>
-                        <h4 className="text-[10px] font-semibold text-textColor line-clamp-1 text-left">{prod.name}</h4>
-                        <p className="text-[10px] font-bold text-primary text-left mt-1">{prod.price.toLocaleString('vi-VN')} đ</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </BoxCast>
-          )}
           
           {/* Loading more indicator & intersection observer target */}
           <div ref={lastElementRef} className="w-full h-12 mt-4 flex items-center justify-center">

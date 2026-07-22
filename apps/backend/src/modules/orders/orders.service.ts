@@ -366,10 +366,10 @@ export class OrdersService {
         try {
           const user = await this.prisma.user.findUnique({ where: { zaloId: order.zaloUserId } });
           if (user) {
-            const newPoints = (user.totalSpent || 0) + earnedPoints;
+            const newPoints = (user.gamificationPoints || 0) + earnedPoints;
             await this.prisma.user.update({
               where: { zaloId: order.zaloUserId },
-              data: { totalSpent: newPoints }
+              data: { gamificationPoints: newPoints }
             });
 
             await this.prisma.pointsHistory.create({

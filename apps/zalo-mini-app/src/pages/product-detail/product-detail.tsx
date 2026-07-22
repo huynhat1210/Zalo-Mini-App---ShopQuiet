@@ -7,6 +7,7 @@ import { ChevronLeftIcon, ShareIcon, ShoppingBagIcon, HeartIcon as HeartOutline,
 import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
 import { IProductDetailProps } from './product-detail.type';
 import { LazyImageComponent } from '../../components';
+import { trackAnalyticsEvent } from '../../utils/analytics';
 
 const PageCast = Page as any;
 const BoxCast = Box as any;
@@ -56,6 +57,11 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
             const initialVariant = available || details.variants[0];
             setSelectedColor(initialVariant.color);
             setSelectedSize(initialVariant.size);
+          }
+
+          // Track view event
+          if (zaloUser?.id) {
+            trackAnalyticsEvent(zaloUser.id, 'view', product.id, product.categoryId);
           }
         }
       } catch (e) {
@@ -131,6 +137,12 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
       // Product has no variants, add directly
       onAddToCart(product, quantity, 'DEFAULT', 'DEFAULT');
     }
+    
+    // Track add_to_cart event
+    if (zaloUser?.id) {
+      trackAnalyticsEvent(zaloUser.id, 'add_to_cart', product.id, product.categoryId, { quantity });
+    }
+
     showToast(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`, 'success');
   };
 
