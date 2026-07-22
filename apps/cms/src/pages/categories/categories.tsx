@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { apiRequest, apiUploadRequest } from '../../utils/api';
+import { useToast } from '../../contexts';
 import {
   FolderPlus,
   Edit3,
@@ -23,6 +25,7 @@ interface Category {
 }
 
 export const Categories: React.FC = () => {
+  const { success: toastSuccess, error: toastError, warning: toastWarning } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -78,7 +81,7 @@ export const Categories: React.FC = () => {
   const handleDeleteCategory = async (cat: Category) => {
     const count = cat._count?.products || 0;
     if (count > 0) {
-      alert(`Không thể xóa danh mục "${cat.name}" vì đang chứa ${count} sản phẩm.`);
+      toastWarning('Không thể xóa', `Danh mục "${cat.name}" đang chứa ${count} sản phẩm.`);
       return;
     }
     if (!window.confirm(`Bạn có chắc chắn muốn xóa danh mục "${cat.name}"?`)) return;
@@ -86,8 +89,9 @@ export const Categories: React.FC = () => {
     try {
       await apiRequest(`/categories/${cat.id}`, 'DELETE');
       setCategories(categories.filter((c) => c.id !== cat.id));
+      toastSuccess('Đã xóa danh mục', `Danh mục "${cat.name}" đã được xóa.`);
     } catch (err: any) {
-      alert(err.message || 'Không thể xóa danh mục.');
+      toastError('Không thể xóa danh mục', err.message || 'Lỗi server.');
     }
   };
 
@@ -98,8 +102,9 @@ export const Categories: React.FC = () => {
       setUploading(true);
       const url = await apiUploadRequest(file);
       setFormData((prev) => ({ ...prev, imageUrl: url }));
+      toastSuccess('Tải ảnh thành công', 'Ảnh danh mục đã được tải lên.');
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi tải ảnh danh mục');
+      toastError('Tải ảnh thất bại', err.message || 'Lỗi khi tải ảnh danh mục.');
     } finally {
       setUploading(false);
     }
@@ -108,7 +113,7 @@ export const Categories: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      alert('Vui lòng nhập tên danh mục');
+      toastWarning('Thiếu thông tin', 'Vui lòng nhập tên danh mục.');
       return;
     }
 
@@ -116,14 +121,16 @@ export const Categories: React.FC = () => {
       if (editingCategory) {
         const updated = await apiRequest<Category>(`/categories/${editingCategory.id}`, 'PUT', formData);
         setCategories(categories.map((c) => (c.id === editingCategory.id ? { ...c, ...updated } : c)));
+        toastSuccess('Cập nhật thành công', `Danh mục "${formData.name}" đã được lưu.`);
       } else {
         const created = await apiRequest<Category>('/categories', 'POST', formData);
         setCategories([...categories, created]);
+        toastSuccess('Tạo danh mục mới', `Danh mục "${formData.name}" đã tạo thành công.`);
       }
       setIsModalOpen(false);
       fetchCategories();
     } catch (err: any) {
-      alert(err.message || 'Thao tác thất bại');
+      toastError('Lưu thất bại', err.message || 'Thao tác thất bại.');
     }
   };
 
@@ -234,106 +241,110 @@ export const Categories: React.FC = () => {
       </div>
 
       {/* Slide-Over Drawer: Add / Edit Category */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          {/* Transparent Backdrop */}
-          <div
-            onClick={() => setIsModalOpen(false)}
-            className="fixed inset-0 bg-transparent transition-opacity"
-          />
+      {isModalOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] overflow-hidden flex justify-end">
+            {/* Transparent Backdrop */}
+            <div
+              onClick={() => setIsModalOpen(false)}
+              className="fixed inset-0 bg-[#0e6877]/10 backdrop-blur-[2px] transition-opacity animate-fadeIn"
+            />
 
-          <div className="fixed inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl z-50 flex flex-col justify-between border-l border-slate-200 animate-slideLeft">
-            {/* Header */}
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-[#0e6877] to-[#168a9e] text-white">
-              <div>
-                <h3 className="text-base font-black text-white">
-                  {editingCategory ? '✏️ Chỉnh Sửa Danh Mục' : '✨ Thêm Danh Mục Mới'}
-                </h3>
-                <p className="text-[11px] text-white/80 font-medium mt-0.5">Cấu hình nhóm phân loại mặt hàng hiển thị trên Mini App</p>
-              </div>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/20 text-white hover:bg-white/30 flex items-center justify-center border-none cursor-pointer transition-colors"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* Scrollable Form Body */}
-            <form id="categoryForm" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-thin">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Tên Danh Mục *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ví dụ: Áo Nam, Quần Jeans..."
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Slug (Đường dẫn tùy chọn)</label>
-                <input
-                  type="text"
-                  placeholder="Tự động tạo từ tên nếu để trống"
-                  value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Mô Tả Danh Mục</label>
-                <textarea
-                  rows={3}
-                  placeholder="Mô tả ngắn cho danh mục..."
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Ảnh Đại Diện Danh Mục</label>
-                <div className="flex gap-2 items-center">
-                  <input
-                    type="text"
-                    placeholder="https://..."
-                    value={formData.imageUrl}
-                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none"
-                  />
-                  <label className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold cursor-pointer transition-colors flex items-center gap-1 shrink-0">
-                    <ImageIcon size={14} />
-                    {uploading ? 'Tải...' : 'Chọn file'}
-                    <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
-                  </label>
+            <div className="relative w-full max-w-md h-full bg-white shadow-2xl z-[10000] flex flex-col justify-between border-l border-slate-200 animate-slideLeft">
+              {/* Header */}
+              <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-[#0e6877] to-[#168a9e] text-white shrink-0 shadow-sm">
+                <div>
+                  <h3 className="text-base font-black text-white">
+                    {editingCategory ? '✏️ Chỉnh Sửa Danh Mục' : '✨ Thêm Danh Mục Mới'}
+                  </h3>
+                  <p className="text-[11px] text-white/80 font-medium mt-0.5">Cấu hình nhóm phân loại mặt hàng hiển thị trên Mini App</p>
                 </div>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="w-9 h-9 rounded-full bg-white/20 text-white hover:bg-white/30 flex items-center justify-center border-none cursor-pointer transition-colors shadow-2xs"
+                >
+                  <X size={18} />
+                </button>
               </div>
-            </form>
 
-            {/* Sticky Footer */}
-            <div className="p-4 border-t border-slate-100 bg-white flex justify-end gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2.5 bg-slate-100 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-200 transition-colors border-none cursor-pointer"
-              >
-                Hủy
-              </button>
-              <button
-                type="submit"
-                form="categoryForm"
-                className="px-5 py-2.5 bg-[#0e6877] text-white text-xs font-bold rounded-xl hover:bg-[#0b5460] transition-colors flex items-center gap-1.5 border-none cursor-pointer shadow-xs active:scale-95"
-              >
-                <Save size={15} /> Lưu Danh Mục
-              </button>
+              {/* Scrollable Form Body */}
+              <form id="categoryForm" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4 bg-[#fbf9f7] scrollbar-thin">
+                <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3.5">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Tên Danh Mục *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ví dụ: Áo Nam, Quần Jeans..."
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:bg-white focus:outline-none transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Slug (Đường dẫn tùy chọn)</label>
+                    <input
+                      type="text"
+                      placeholder="Tự động tạo từ tên nếu để trống"
+                      value={formData.slug}
+                      onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:bg-white focus:outline-none font-mono transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Mô Tả Danh Mục</label>
+                    <textarea
+                      rows={3}
+                      placeholder="Mô tả ngắn cho danh mục..."
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:bg-white focus:outline-none transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Ảnh Đại Diện Danh Mục</label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        placeholder="https://..."
+                        value={formData.imageUrl}
+                        onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                        className="flex-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:bg-white focus:outline-none font-mono"
+                      />
+                      <label className="px-3.5 py-2.5 bg-slate-100 hover:bg-[#0e6877] hover:text-white text-slate-700 rounded-xl text-xs font-bold cursor-pointer transition-colors flex items-center gap-1.5 shrink-0 border border-slate-200">
+                        <ImageIcon size={14} />
+                        {uploading ? 'Tải...' : 'Chọn file'}
+                        <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </form>
+
+              {/* Sticky Footer */}
+              <div className="p-4 border-t border-slate-200 bg-white flex justify-end gap-3 shrink-0 shadow-lg">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-5 py-2.5 bg-slate-100 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-200 transition-colors border-none cursor-pointer"
+                >
+                  Hủy Chỉnh Sửa
+                </button>
+                <button
+                  type="submit"
+                  form="categoryForm"
+                  className="px-6 py-2.5 bg-[#0e6877] hover:bg-[#0b5460] text-white text-xs font-black rounded-xl transition-all flex items-center gap-2 border-none cursor-pointer shadow-md active:scale-95"
+                >
+                  <Save size={16} /> Lưu Danh Mục
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };

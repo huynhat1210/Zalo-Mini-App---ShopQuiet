@@ -9,7 +9,7 @@ import {
   Megaphone,
   CheckCircle,
 } from 'lucide-react';
-import type { IVouchersProps } from './vouchers.type';
+import { useToast } from '../../contexts';
 
 interface Voucher {
   id?: string;
@@ -27,7 +27,8 @@ interface Voucher {
   startDate?: string;
 }
 
-export const Vouchers: React.FC<IVouchersProps> = (_props) => {
+export const Vouchers: React.FC = () => {
+  const { success: toastSuccess, error: toastError, warning: toastWarning } = useToast();
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -90,9 +91,10 @@ export const Vouchers: React.FC<IVouchersProps> = (_props) => {
     try {
       await apiRequest(`/vouchers/${code}`, 'DELETE');
       setVouchers(vouchers.filter((v) => v.code !== code));
-    } catch (err) {
+      toastSuccess('Đã xóa Voucher', `Mã giảm giá "${code}" đã được gỡ.`);
+    } catch (err: any) {
       console.error('Lỗi khi xóa voucher:', err);
-      alert('Không thể xóa mã giảm giá.');
+      toastError('Không thể xóa Voucher', err.message || 'Lỗi server.');
     }
   };
 
@@ -112,15 +114,16 @@ export const Vouchers: React.FC<IVouchersProps> = (_props) => {
       await apiRequest('/vouchers/distribute', 'POST', {
         voucherCode: voucherToDistribute.code,
         targetSegment,
-      }).catch(() => {});
+      });
 
       setDistributeSuccess(true);
+      toastSuccess('Phát hành thành công', `Đã gửi mã ${voucherToDistribute.code} qua Zalo OA!`);
       setTimeout(() => {
         setIsDistributeModalOpen(false);
         setDistributeSuccess(false);
       }, 2000);
     } catch (err: any) {
-      alert(err.message || 'Phát hành voucher thất bại.');
+      toastError('Phát hành thất bại', err.message || 'Lỗi khi phát hành qua Zalo OA.');
     } finally {
       setDistributing(false);
     }
@@ -129,16 +132,17 @@ export const Vouchers: React.FC<IVouchersProps> = (_props) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.code.trim()) {
-      alert('Vui lòng nhập mã giảm giá');
+      toastWarning('Thiếu thông tin', 'Vui lòng nhập mã giảm giá.');
       return;
     }
 
     try {
       await apiRequest('/vouchers', 'POST', formData);
+      toastSuccess('Tạo Voucher mới', `Mã "${formData.code}" đã được tạo thành công.`);
       fetchVouchers();
       setIsModalOpen(false);
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi tạo voucher mới.');
+      toastError('Tạo thất bại', err.message || 'Lỗi khi tạo mã giảm giá.');
     }
   };
 

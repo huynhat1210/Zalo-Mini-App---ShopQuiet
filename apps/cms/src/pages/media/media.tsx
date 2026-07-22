@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest } from '../../utils/api';
+import { useToast } from '../../contexts';
 import { 
   Upload, 
   Trash2, 
@@ -19,6 +20,7 @@ interface MediaFile {
 }
 
 export const Media: React.FC<IMediaProps> = (_props) => {
+  const { success: toastSuccess, error: toastError } = useToast();
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -68,10 +70,11 @@ export const Media: React.FC<IMediaProps> = (_props) => {
       }
 
       await response.json();
+      toastSuccess('Tải ảnh thành công', 'File ảnh đã được lưu vào thư viện Media.');
       fetchFiles();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Upload failed:', err);
-      alert('Không thể tải ảnh lên! Vui lòng kiểm tra lại định dạng tệp.');
+      toastError('Không thể tải ảnh lên', 'Vui lòng kiểm tra lại định dạng tệp.');
     } finally {
       setUploading(false);
     }
@@ -82,9 +85,10 @@ export const Media: React.FC<IMediaProps> = (_props) => {
     try {
       await apiRequest(`/media/${filename}`, 'DELETE');
       setFiles(files.filter(f => f.filename !== filename));
-    } catch (err) {
+      toastSuccess('Đã xóa hình ảnh', `Tệp ${filename} đã được xóa khỏi server.`);
+    } catch (err: any) {
       console.error('Failed to delete file:', err);
-      alert('Không thể xóa file!');
+      toastError('Không thể xóa file', err.message || 'Lỗi server.');
     }
   };
 
@@ -101,6 +105,7 @@ export const Media: React.FC<IMediaProps> = (_props) => {
 
     navigator.clipboard.writeText(finalUrl);
     setCopiedFilename(filename);
+    toastSuccess('Đã sao chép URL ảnh', finalUrl);
     setTimeout(() => setCopiedFilename(null), 2000);
   };
 

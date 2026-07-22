@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest } from '../../utils/api';
+import { useToast } from '../../contexts';
 import { 
   Send, 
   Bell, 
@@ -27,6 +28,7 @@ interface NotificationHistory {
 }
 
 export const Notifications: React.FC<INotificationsProps> = (_props) => {
+  const { success: toastSuccess, error: toastError, warning: toastWarning } = useToast();
   const [history, setHistory] = useState<NotificationHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -58,7 +60,7 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
   const handleSendNotification = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
-      alert('Vui lòng điền tiêu đề và nội dung thông báo!');
+      toastWarning('Thiếu thông tin', 'Vui lòng điền tiêu đề và nội dung thông báo!');
       return;
     }
 
@@ -74,15 +76,16 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
       await apiRequest('/notifications', 'POST', payload);
       
       setSuccessMsg('Đã phát hành thông báo thành công!');
+      toastSuccess('Đã gửi thông báo', `Thông báo "${title}" đã được gửi tới khách hàng.`);
       setTitle('');
       setContent('');
       setSpecificUserId('');
       
-      setTimeout(() => setSuccessMsg(''), 4000);
+      setTimeout(() => setSuccessMsg(''), 3000);
       fetchHistory();
     } catch (err: any) {
       console.error('Failed to send notification:', err);
-      alert(err.message || 'Gửi thông báo thất bại!');
+      toastError('Gửi thất bại', err.message || 'Lỗi khi gửi thông báo.');
     } finally {
       setSubmitting(false);
     }

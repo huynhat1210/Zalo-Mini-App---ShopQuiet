@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest } from '../../utils/api';
+import { useToast } from '../../contexts';
 import {
   Truck,
   CreditCard,
@@ -28,6 +29,7 @@ interface PaymentMethod {
 }
 
 export const Settings: React.FC = () => {
+  const { success: toastSuccess, error: toastError } = useToast();
   const [activeTab, setActiveTab] = useState<'BRAND' | 'SHIPPING' | 'PAYMENT'>('BRAND');
   const [settings, setSettings] = useState<Record<string, string>>({
     'brand.name': 'ShopQuiet',
@@ -78,9 +80,10 @@ export const Settings: React.FC = () => {
       setLoading(true);
       await apiRequest('/cms/settings', 'POST', settings).catch(() => {});
       setSaveSuccess(true);
+      toastSuccess('Đã lưu cấu hình', 'Thông tin cửa hàng đã được cập nhật thành công.');
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (e: any) {
-      alert(e.message || 'Lỗi khi lưu cài đặt');
+      toastError('Lưu thất bại', e.message || 'Lỗi khi lưu cài đặt.');
     } finally {
       setLoading(false);
     }

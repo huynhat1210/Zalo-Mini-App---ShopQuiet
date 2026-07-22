@@ -43,8 +43,10 @@ interface Order {
 }
 
 import { exportToExcel } from '../../utils/excel-export.util';
+import { useToast } from '../../contexts';
 
 export const Orders: React.FC<IOrdersProps> = (_props) => {
+  const { success: toastSuccess, error: toastError } = useToast();
   const getBackendUrl = () => {
     return window.location.origin.includes('localhost') ? 'http://localhost:3000' : 'https://zalo-mini-app-shopquiet.onrender.com';
   };
@@ -113,8 +115,9 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
       
       setShowTrackingForm(false);
       setTrackingNumber('');
+      toastSuccess('Cập nhật đơn hàng', `Đơn hàng #${orderId.slice(0, 8)} chuyển sang ${newStatus}.`);
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi cập nhật trạng thái đơn hàng');
+      toastError('Cập nhật thất bại', err.message || 'Lỗi khi cập nhật trạng thái đơn hàng.');
     }
   };
 
@@ -270,10 +273,10 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
                   { key: 'customerName', label: 'Tên Khách Hàng' },
                   { key: 'phone', label: 'Số Điện Thoại' },
                   { key: 'address', label: 'Địa Chỉ Giao Hàng' },
-                  { key: 'total', label: 'Tổng Tiền (VNĐ)', formatter: (val) => val?.toLocaleString('vi-VN') },
+                  { key: 'total', label: 'Tổng Tiền (VNĐ)', formatter: (val: any) => val?.toLocaleString('vi-VN') },
                   { key: 'status', label: 'Trạng Thái' },
                   { key: 'paymentMethod', label: 'Phương Thức Thanh Toán' },
-                  { key: 'createdAt', label: 'Ngày Tạo', formatter: (val) => new Date(val).toLocaleString('vi-VN') },
+                  { key: 'createdAt', label: 'Ngày Tạo', formatter: (val: any) => new Date(val).toLocaleString('vi-VN') },
                 ],
               )
             }

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { apiRequest } from '../../utils/api';
+import { useToast } from '../../contexts';
 import {
   Package,
   AlertTriangle,
@@ -34,6 +35,7 @@ interface Product {
 }
 
 export const Inventory: React.FC = () => {
+  const { success: toastSuccess, error: toastError } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -85,8 +87,9 @@ export const Inventory: React.FC = () => {
           variants: p.variants.map((v) => (v.id === variantId ? { ...v, stock: newStock } : v)),
         })),
       );
+      toastSuccess('Đã lưu tồn kho', `Số lượng kho mới: ${newStock} sản phẩm.`);
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi cập nhật kho hàng');
+      toastError('Không thể cập nhật kho', err.message || 'Lỗi khi cập nhật kho hàng.');
     } finally {
       setUpdatingId(null);
     }

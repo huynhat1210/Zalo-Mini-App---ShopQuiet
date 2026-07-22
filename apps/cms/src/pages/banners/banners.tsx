@@ -9,6 +9,7 @@ import {
   Link as LinkIcon,
 } from 'lucide-react';
 import type { IBannersProps } from './banners.type';
+import { useToast } from '../../contexts';
 
 interface Banner {
   id: number;
@@ -20,6 +21,7 @@ interface Banner {
 }
 
 export const Banners: React.FC<IBannersProps> = (_props) => {
+  const { success: toastSuccess, error: toastError, warning: toastWarning } = useToast();
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -52,7 +54,7 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
 
   const handleOpenAddModal = () => {
     setFormData({
-      imageUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1000&auto=format&fit=crop&q=80',
+      imageUrl: '',
       title: '',
       description: '',
       link: '',
@@ -66,9 +68,10 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
     try {
       await apiRequest(`/banners/${id}`, 'DELETE');
       setBanners(banners.filter((b) => b.id !== id));
-    } catch (err) {
+      toastSuccess('Đã xóa Banner', 'Banner quảng cáo đã được gỡ.');
+    } catch (err: any) {
       console.error('Lỗi khi xóa banner:', err);
-      alert('Không thể xóa banner.');
+      toastError('Không thể xóa Banner', err.message || 'Lỗi khi xóa banner.');
     }
   };
 
@@ -79,8 +82,9 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
       setUploading(true);
       const url = await apiUploadRequest(file);
       setFormData((prev) => ({ ...prev, imageUrl: url }));
+      toastSuccess('Tải ảnh thành công', 'Ảnh banner đã được tải lên.');
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi tải hình ảnh banner');
+      toastError('Tải ảnh thất bại', err.message || 'Lỗi khi tải hình ảnh banner');
     } finally {
       setUploading(false);
     }
@@ -89,16 +93,17 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.imageUrl.trim()) {
-      alert('Vui lòng cung cấp URL hình ảnh hoặc chọn file tải lên');
+      toastWarning('Thiếu thông tin', 'Vui lòng cung cấp URL hình ảnh hoặc chọn file tải lên');
       return;
     }
 
     try {
       await apiRequest('/banners', 'POST', formData);
+      toastSuccess('Thêm Banner thành công', 'Banner quảng cáo mới đã được đăng tải.');
       fetchBanners();
       setIsModalOpen(false);
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi tạo banner mới.');
+      toastError('Lưu thất bại', err.message || 'Lỗi khi tạo banner mới.');
     }
   };
 
