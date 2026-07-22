@@ -61,7 +61,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
 
           // Track view event
           if (zaloUser?.id) {
-            trackAnalyticsEvent(zaloUser.id, 'view', product.id, product.categoryId);
+            trackAnalyticsEvent(zaloUser.id, 'view', product.id, product.category?.id);
           }
         }
       } catch (e) {
@@ -140,7 +140,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
     
     // Track add_to_cart event
     if (zaloUser?.id) {
-      trackAnalyticsEvent(zaloUser.id, 'add_to_cart', product.id, product.categoryId, { quantity });
+      trackAnalyticsEvent(zaloUser.id, 'add_to_cart', product.id, product.category?.id, { quantity });
     }
 
     showToast(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`, 'success');
@@ -636,16 +636,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
           <span className="text-[9px] text-teal-700 font-medium">Chat ngay</span>
         </button>
         
-        {/* Comparison Button */}
-        <button
-          onClick={() => {
-            addToComparison(product);
-          }}
-          className="flex-1 max-w-[60px] flex flex-col items-center justify-center border-r border-neutral-100 bg-[#fbf9f7] hover:bg-neutral-50 active:bg-neutral-100 border-none cursor-pointer"
-        >
-          <span className="text-[17px] mb-0.5">⚖️</span>
-          <span className="text-[9px] text-[#526069] font-medium">So sánh</span>
-        </button>
+
 
         {/* Add to Cart Button */}
         <button

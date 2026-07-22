@@ -38,6 +38,24 @@ const translations = {
     'profile.exchange': 'Đổi quà',
     'profile.systemInfo': 'Thông tin hệ thống',
     'profile.logout': 'Đăng xuất',
+    'profile.section.shopping': 'Giao dịch & Mua sắm',
+    'profile.myOrders': 'Đơn hàng của tôi',
+    'profile.favorites': 'Sản phẩm yêu thích',
+    'profile.section.settings': 'Thiết lập & Cá nhân',
+    'profile.section.general': 'Thông tin ứng dụng',
+    'profile.helpCenter': 'Trung tâm hỗ trợ',
+    'profile.about': 'Về ShopQuiet',
+
+    // Search Page
+    'search.advanced': 'Bộ lọc nâng cao',
+    'search.inStock': 'Còn hàng',
+    'search.under1m': 'Giá < 1.000.000 đ',
+    'search.appliances': 'Đồ gia dụng',
+    'search.noResults': 'Không tìm thấy sản phẩm nào phù hợp',
+    'search.recent': 'Tìm kiếm gần đây',
+    'search.clearHistory': 'Xóa lịch sử',
+    'search.cancel': 'Hủy',
+    'search.placeholder': 'Tìm kiếm sản phẩm...',
 
     // Checkout Page
     'checkout.title': 'Thanh toán',
@@ -93,6 +111,24 @@ const translations = {
     'profile.exchange': 'Exchange',
     'profile.systemInfo': 'System Settings',
     'profile.logout': 'Sign Out',
+    'profile.section.shopping': 'Transactions & Shopping',
+    'profile.myOrders': 'My Orders',
+    'profile.favorites': 'Favorites',
+    'profile.section.settings': 'Settings & Profile',
+    'profile.section.general': 'Application Info',
+    'profile.helpCenter': 'Help Center',
+    'profile.about': 'About ShopQuiet',
+
+    // Search Page
+    'search.advanced': 'Advanced Filter',
+    'search.inStock': 'In Stock',
+    'search.under1m': 'Price < 1,000,000 đ',
+    'search.appliances': 'Home Appliances',
+    'search.noResults': 'No matching products found',
+    'search.recent': 'Recent Searches',
+    'search.clearHistory': 'Clear History',
+    'search.cancel': 'Cancel',
+    'search.placeholder': 'Search products...',
 
     // Checkout Page
     'checkout.title': 'Checkout',

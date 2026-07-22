@@ -437,7 +437,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
 
         {/* Section 1: Shopping */}
         <div className="space-y-2.5">
-          <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-2">Giao dịch & Mua sắm</h3>
+          <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-2">{t('profile.section.shopping')}</h3>
           <div className="bg-white rounded-2xl border border-[#f0edeb] overflow-hidden shadow-xs divide-y divide-[#f0edeb]">
             <button
               onClick={() => setActiveTab('orders')}
@@ -451,7 +451,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                     d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
                   />
                 </svg>
-                <span className="font-semibold text-textColor">Đơn hàng của tôi</span>
+                <span className="font-semibold text-textColor">{t('profile.myOrders')}</span>
               </div>
               <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -470,7 +470,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                     d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
                   />
                 </svg>
-                <span className="font-semibold text-textColor">Sản phẩm yêu thích</span>
+                <span className="font-semibold text-textColor">{t('profile.favorites')}</span>
               </div>
               <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -489,7 +489,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                     d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0"
                   />
                 </svg>
-                <span className="font-semibold text-textColor">Hạng thành viên</span>
+                <span className="font-semibold text-textColor">{t('profile.membership')}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className={`font-black text-[9px] uppercase px-2.5 py-0.5 rounded shadow-xs ${badgeColor}`}>★ {tierBadge}</span>
@@ -503,7 +503,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
 
         {/* Section 2: Account */}
         <div className="space-y-2.5">
-          <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-2">Thiết lập & Cá nhân</h3>
+          <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-2">{t('profile.section.settings')}</h3>
           <div className="bg-white rounded-2xl border border-[#f0edeb] overflow-hidden shadow-xs divide-y divide-[#f0edeb]">
             <button
               onClick={() => setIsAddressModalOpen(true)}
@@ -514,7 +514,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
                 </svg>
-                <span className="font-semibold text-textColor">Địa chỉ nhận hàng</span>
+                <span className="font-semibold text-textColor">{t('profile.addresses')}</span>
               </div>
               <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -533,7 +533,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                     d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185zM9.75 9h.008v.008H9.75V9zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 4.5h.008v.008h-.008V13.5zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
                   />
                 </svg>
-                <span className="font-semibold text-textColor">Ví Voucher</span>
+                <span className="font-semibold text-textColor">{t('profile.myVouchers')}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="bg-teal-50 text-teal-600 font-bold text-[10px] px-2 py-0.5 rounded-full">
@@ -551,7 +551,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
             >
               <div className="flex items-center gap-3">
                 <span className="text-lg leading-none">🎡</span>
-                <span className="font-semibold text-textColor">Vòng quay may mắn</span>
+                <span className="font-semibold text-textColor">{t('profile.luckyWheel')}</span>
               </div>
               <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -564,7 +564,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
             >
               <div className="flex items-center gap-3">
                 <span className="text-lg leading-none">🎁</span>
-                <span className="font-semibold text-textColor">Chợ đổi Voucher</span>
+                <span className="font-semibold text-textColor">{t('profile.exchangeVoucher')}</span>
               </div>
               <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -593,7 +593,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
 
         {/* Section 3: General */}
         <div className="space-y-2.5">
-          <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-2">Thông tin ứng dụng</h3>
+          <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-2">{t('profile.section.general')}</h3>
           <div className="bg-white rounded-2xl border border-[#f0edeb] overflow-hidden shadow-xs divide-y divide-[#f0edeb]">
             <button
               onClick={() => setActiveTab('notifications')}
@@ -607,7 +607,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                     d="M14.857 17.082a9.04 9.04 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0M3.124 7.5A8.969 8.969 0 015.292 3m13.416 0a8.969 8.969 0 012.168 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <span className="font-semibold text-textColor">Thông báo</span>
+                <span className="font-semibold text-textColor">{t('tab.notifications')}</span>
               </div>
               <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -628,7 +628,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                     d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"
                   />
                 </svg>
-                <span className="font-semibold text-textColor">Trung tâm hỗ trợ</span>
+                <span className="font-semibold text-textColor">{t('profile.helpCenter')}</span>
               </div>
               <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -650,7 +650,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                     d="M11.25 11.25l.041-.02a.75.75 0 111.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
                   />
                 </svg>
-                <span className="font-semibold text-textColor">Về ShopQuiet</span>
+                <span className="font-semibold text-textColor">{t('profile.about')}</span>
               </div>
               <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />

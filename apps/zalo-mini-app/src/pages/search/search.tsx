@@ -87,7 +87,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
     });
   };
 
-  const filterTags = ['Giá < 1.000.000 đ', 'Đồ gia dụng', 'Còn hàng'];
+  const filterTags = [t('search.under1m'), t('search.appliances'), t('search.inStock')];
 
   // Calculate product stock status
   const getProductStock = (product: any) => {
@@ -129,13 +129,13 @@ export const Search: React.FC<ISearchProps> = (_props) => {
     const matchesAvailability = !inStockOnly || getProductStock(p);
     
     // Legacy quick filters
-    if (activeFilter === 'Còn hàng') {
+    if (activeFilter === t('search.inStock')) {
       return matchesSearch && matchesAvailability;
     }
-    if (activeFilter === 'Giá < 1.000.000 đ') {
+    if (activeFilter === t('search.under1m')) {
       return matchesSearch && p.price < 1000000;
     }
-    if (activeFilter === 'Đồ gia dụng') {
+    if (activeFilter === t('search.appliances')) {
       return matchesSearch && p.category?.slug === 'home';
     }
     
@@ -169,7 +169,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
           </svg>
           <input
             type="text"
-            placeholder="Tìm kiếm sản phẩm tối giản..."
+            placeholder={t('search.placeholder')}
             className="bg-transparent w-full text-xs outline-none text-textColor placeholder-[#747873]"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -211,7 +211,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
         </div>
         {searchQuery && (
           <button onClick={() => setSearchQuery('')} className="text-xs font-semibold text-textColor-variant hover:text-textColor active:scale-95 transition-all">
-            Hủy
+            {t('search.cancel')}
           </button>
         )}
       </div>
@@ -226,7 +226,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.59l-5.432 5.432a2.25 2.25 0 00-.659 1.59v3.414a2.25 2.25 0 01-.659 1.59l-1.87 1.87a.75.75 0 01-1.28-.53v-6.344a2.25 2.25 0 00-.659-1.59L3.659 7.408A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A50.06 50.06 0 0112 3z" />
             </svg>
-            <span>Bộ lọc</span>
+            <span>{t('search.advanced')}</span>
           </button>
 
           {/* Sort dropdown */}
@@ -235,11 +235,11 @@ export const Search: React.FC<ISearchProps> = (_props) => {
             onChange={(e) => setSortBy(e.target.value as any)}
             className="px-4 py-2.5 rounded-full border border-[#eae8e6] bg-white text-xs font-semibold text-textColor-variant outline-none cursor-pointer"
           >
-            <option value="newest">Mới nhất</option>
-            <option value="price-asc">Giá: Thấp → Cao</option>
-            <option value="price-desc">Giá: Cao → Thấp</option>
-            <option value="popularity">Phổ biến</option>
-            <option value="best-selling">Bán chạy</option>
+            <option value="newest">{lang === 'vi' ? 'Mới nhất' : 'Newest'}</option>
+            <option value="price-asc">{lang === 'vi' ? 'Giá: Thấp → Cao' : 'Price: Low → High'}</option>
+            <option value="price-desc">{lang === 'vi' ? 'Giá: Cao → Thấp' : 'Price: High → Low'}</option>
+            <option value="popularity">{lang === 'vi' ? 'Phổ biến' : 'Popular'}</option>
+            <option value="best-selling">{lang === 'vi' ? 'Bán chạy' : 'Best Selling'}</option>
           </select>
 
           {filterTags.map(tag => {
@@ -266,7 +266,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
             {/* Recent Searches */}
             <div className="space-y-3.5">
               <div className="flex justify-between items-center px-1">
-                <h3 className="text-[10px] font-extrabold text-[#526069]/60 uppercase tracking-widest">Tìm kiếm gần đây</h3>
+                <h3 className="text-[10px] font-extrabold text-[#526069]/60 uppercase tracking-widest">{t('search.recent')}</h3>
                 {history.length > 0 && (
                   <button
                     onClick={() => {
@@ -275,7 +275,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
                     }}
                     className="text-[9px] font-bold text-red-500 hover:text-red-700 bg-transparent border-none cursor-pointer"
                   >
-                    Xóa lịch sử
+                    {t('search.clearHistory')}
                   </button>
                 )}
               </div>
@@ -405,13 +405,15 @@ export const Search: React.FC<ISearchProps> = (_props) => {
           /* Search Results Grid */
           <div className="space-y-4">
             <div className="flex justify-between items-center px-1">
-              <h3 className="text-[10px] font-extrabold text-[#526069]/60 uppercase tracking-widest">Kết quả tìm kiếm</h3>
-              <span className="text-[10px] text-textColor/45 font-medium">Tìm thấy {sortedProducts.length} sản phẩm</span>
+              <h3 className="text-[10px] font-extrabold text-[#526069]/60 uppercase tracking-widest">{lang === 'vi' ? 'Kết quả tìm kiếm' : 'Search Results'}</h3>
+              <span className="text-[10px] text-textColor/45 font-medium">
+                {lang === 'vi' ? `Tìm thấy ${sortedProducts.length} sản phẩm` : `Found ${sortedProducts.length} products`}
+              </span>
             </div>
 
             {sortedProducts.length === 0 ? (
               <div className="text-center py-16 bg-white rounded-2xl border border-[#f0edeb] text-xs text-textColor-variant shadow-xs">
-                Không tìm thấy sản phẩm nào phù hợp với "{debouncedSearchQuery}"
+                {t('search.noResults')} "{debouncedSearchQuery}"
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-x-5 gap-y-7">

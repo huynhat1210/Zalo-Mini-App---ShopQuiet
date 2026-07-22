@@ -17,7 +17,7 @@ const TextCast = Text as any;
 
 export const Home: React.FC<IHomeProps> = (_props) => {
   const { t } = useTranslation();
-  const { addToCart, setSelectedProductDetail, cart, setIsCartOpen, toggleSavedItem, isSavedItem, showToast, zaloUser, recommendations, fetchRecommendations } = useCart();
+  const { addToCart, setSelectedProductDetail, cart, setIsCartOpen, toggleSavedItem, isSavedItem, showToast, zaloUser } = useCart();
   const [isLuckyWheelOpen, setIsLuckyWheelOpen] = useState(false);
 
   
@@ -133,7 +133,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
       
       // Track add_to_cart event
       if (zaloUser?.id) {
-        trackAnalyticsEvent(zaloUser.id, 'add_to_cart', product.id, product.categoryId);
+        trackAnalyticsEvent(zaloUser.id, 'add_to_cart', product.id, product.category?.id);
       }
 
       setIsCartBouncing(true);
