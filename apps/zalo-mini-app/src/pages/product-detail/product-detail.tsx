@@ -13,7 +13,7 @@ const BoxCast = Box as any;
 
 export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
   const { product, onClose, onAddToCart } = props;
-  const { toggleSavedItem, isSavedItem, setActiveTab, showToast, setBuyNowItem, setSelectedProductDetail, cart, setIsCartOpen, setIsChatOpen, setChatContextProduct, zaloUser, addToComparison } = useCart();
+  const { toggleSavedItem, isSavedItem, setActiveTab, showToast, setBuyNowItem, setSelectedProductDetail, cart, setIsCartOpen, setIsChatOpen, setChatContextProduct, zaloUser } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [likeCount, setLikeCount] = useState(product.likeCount || 0);
 

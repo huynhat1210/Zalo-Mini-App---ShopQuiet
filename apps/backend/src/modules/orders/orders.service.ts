@@ -143,6 +143,52 @@ export class OrdersService {
     // Ensure the user exists in database to avoid foreign key constraint errors
     await this.ensureUserExists(filterUserId, dto.shippingName || undefined);
 
+    // Tính toán bảo mật giá đơn hàng tại Backend dựa trên hạng thành viên và voucher
+    const user = await this.prisma.user.findUnique({
+      where: { zaloId: filterUserId }
+    });
+    const tier = user?.membershipTier || 'Đồng';
+
+    const discountPercent = tier === 'Bạc' ? 5 : (tier === 'Vàng' ? 10 : (tier === 'Kim cương' ? 15 : 0));
+    const freeShipThreshold = tier === 'Bạc' ? 150000 : (tier === 'Vàng' ? 100000 : (tier === 'Kim cương' ? 0 : 200000));
+
+    let subtotal = 0;
+    for (const item of dto.items) {
+      const product = await this.prisma.product.findUnique({ where: { id: item.productId } });
+      if (product) {
+        subtotal += product.price * item.quantity;
+      }
+    }
+
+    let shippingCost = dto.shippingMethodCode === 'express' ? 50000 : 30000;
+    if (subtotal >= freeShipThreshold) {
+      shippingCost = 0;
+    }
+
+    const tierDiscount = Math.round(subtotal * (discountPercent / 100));
+    let voucherDiscount = 0;
+
+    if (dto.voucherCode) {
+      const voucher = await this.prisma.voucher.findUnique({
+        where: { code: dto.voucherCode.trim().toUpperCase() }
+      });
+      if (voucher) {
+        if (voucher.type.toUpperCase() === 'PERCENT') {
+          voucherDiscount = Math.round(subtotal * (voucher.value / 100));
+          if (voucher.maxDiscount) {
+            voucherDiscount = Math.min(voucherDiscount, voucher.maxDiscount);
+          }
+        } else if (voucher.type.toUpperCase() === 'FIXED') {
+          voucherDiscount = voucher.value;
+        } else if (voucher.type.toUpperCase() === 'FREESHIP') {
+          voucherDiscount = shippingCost;
+        }
+      }
+    }
+
+    const finalDiscount = tierDiscount + voucherDiscount;
+    const finalTotalAmount = Math.max(0, subtotal + shippingCost - finalDiscount);
+
     // We run the verification, stock decrement, and order creation inside a transaction
     const order = await this.prisma.$transaction(async (tx) => {
       // 1. Verify stock and decrement for each item
@@ -218,12 +264,12 @@ export class OrdersService {
       return tx.order.create({
         data: {
           id: orderId,
-          totalAmount: dto.totalAmount,
+          totalAmount: finalTotalAmount,
           status: dto.status || 'PROCESSING',
           zaloUserId: filterUserId,
           paymentMethod: dto.paymentMethod || 'COD',
           voucherCode: dto.voucherCode || null,
-          discountAmount: dto.discountAmount || 0,
+          discountAmount: finalDiscount,
           shippingAddress: dto.shippingAddress || null,
           shippingPhone: dto.shippingPhone || null,
           shippingName: dto.shippingName || null,

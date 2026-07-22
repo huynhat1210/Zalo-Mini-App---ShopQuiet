@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, lazy, Suspense 
 import { App as ZaloApp, ZMPRouter, SnackbarProvider } from 'zmp-ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNotifications } from './hooks';
-import { ToastComponent, BottomNavBarComponent, ErrorBoundaryComponent, OfflineStateComponent, ChatOverlay, ProductComparison } from './components';
+import { ToastComponent, BottomNavBarComponent, ErrorBoundaryComponent, OfflineStateComponent, ChatOverlay } from './components';
 import type { ICartContextType } from './App.type';
 import { useAppStore } from './store';
 
@@ -91,12 +91,6 @@ export default function App() {
   const logout = useAppStore((state) => state.logout);
   const addToViewedProducts = useAppStore((state) => state.addToViewedProducts);
   const viewedProducts = useAppStore((state) => state.viewedProducts);
-  const addToComparison = useAppStore((state) => state.addToComparison);
-  const removeFromComparison = useAppStore((state) => state.removeFromComparison);
-  const clearComparison = useAppStore((state) => state.clearComparison);
-  const comparisonProducts = useAppStore((state) => state.comparisonProducts);
-  const isComparisonOpen = useAppStore((state) => state.isComparisonOpen);
-  const setIsComparisonOpen = useAppStore((state) => state.setIsComparisonOpen);
   const gamificationData = useAppStore((state) => state.gamificationData);
   const fetchGamificationData = useAppStore((state) => state.fetchGamificationData);
   const claimDailyReward = useAppStore((state) => state.claimDailyReward);
@@ -235,12 +229,6 @@ export default function App() {
             syncUserFromStorage,
             addToViewedProducts,
             viewedProducts,
-            addToComparison,
-            removeFromComparison,
-            clearComparison,
-            comparisonProducts,
-            isComparisonOpen,
-            setIsComparisonOpen,
             gamificationData,
             fetchGamificationData,
             claimDailyReward,
@@ -317,42 +305,6 @@ export default function App() {
                   {/* Chat Support Overlay */}
                   {isChatOpen && (
                     <ChatOverlay onClose={() => setIsChatOpen(false)} />
-                  )}
-
-                  {/* Product Comparison Overlay */}
-                  {isComparisonOpen && (
-                    <ProductComparison
-                      products={comparisonProducts}
-                      onRemove={removeFromComparison}
-                      onClose={() => setIsComparisonOpen(false)}
-                    />
-                  )}
-
-                  {/* Sticky Comparison Floating Bar */}
-                  {comparisonProducts.length > 0 && (
-                    <div className={`fixed ${showNavbar ? 'bottom-[78px]' : 'bottom-4'} left-4 right-4 z-40 bg-white/95 backdrop-blur-md rounded-2xl border border-[#f0edeb] px-4.5 py-3 shadow-lg flex items-center justify-between animate-slide-up`}>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">⚖️</span>
-                        <div className="text-left">
-                          <p className="text-xs font-bold text-textColor">So sánh sản phẩm</p>
-                          <p className="text-[10px] text-textColor-variant">Đã chọn {comparisonProducts.length}/3 sản phẩm</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => clearComparison()}
-                          className="px-3 py-1.5 rounded-full text-[10px] font-bold text-[#526069] bg-neutral-100 hover:bg-neutral-200 transition-colors border-none cursor-pointer"
-                        >
-                          Xóa hết
-                        </button>
-                        <button
-                          onClick={() => setIsComparisonOpen(true)}
-                          className="px-3 py-1.5 rounded-full text-[10px] font-extrabold text-white bg-primary hover:bg-primary-dark transition-colors border-none cursor-pointer"
-                        >
-                          So sánh ngay
-                        </button>
-                      </div>
-                    </div>
                   )}
 
                   {/* Custom Navigation Tab Bar */}

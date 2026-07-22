@@ -26,6 +26,10 @@ export class SyncUserDto {
   @IsOptional()
   @IsString()
   gender?: string;
+
+  @IsOptional()
+  @IsString()
+  membershipTier?: string;
 }
 
 export class DecryptPhoneDto {

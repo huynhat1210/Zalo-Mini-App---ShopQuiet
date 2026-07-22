@@ -27,8 +27,6 @@ export const useAppStore = create<IAppState>()(
       notifications: [],
       toastTimerRef: null,
       viewedProducts: [],
-      comparisonProducts: [],
-      isComparisonOpen: false,
       gamificationData: null,
       recommendations: [],
 
@@ -545,28 +543,6 @@ export const useAppStore = create<IAppState>()(
         set({ viewedProducts: [] });
         localStorage.removeItem('viewed_products');
       },
-      addToComparison: (product) => {
-        const current = get().comparisonProducts;
-        const exists = current.some((item) => item.id === product.id);
-        if (exists) {
-          get().showToast('Sản phẩm đã có trong danh sách so sánh', 'info');
-          return;
-        }
-        if (current.length >= 3) {
-          get().showToast('Chỉ có thể so sánh tối đa 3 sản phẩm', 'warning');
-          return;
-        }
-        set({ comparisonProducts: [...current, product] });
-        get().showToast('Đã thêm vào danh sách so sánh', 'success');
-      },
-      removeFromComparison: (productId) => {
-        const current = get().comparisonProducts;
-        set({ comparisonProducts: current.filter((item) => item.id !== productId) });
-      },
-      clearComparison: () => {
-        set({ comparisonProducts: [] });
-      },
-      setIsComparisonOpen: (open: boolean) => set({ isComparisonOpen: open }),
       fetchGamificationData: async () => {
         const user = get().zaloUser;
         if (!user || !user.id) return;

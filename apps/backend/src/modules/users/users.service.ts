@@ -13,6 +13,7 @@ export class UsersService {
     birthday?: string,
     email?: string,
     gender?: string,
+    membershipTier?: string,
   ) {
     if (!zaloId) return null;
     
@@ -64,14 +65,30 @@ export class UsersService {
 
     const totalSpent = completedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
 
-    // Calculate tier
-    let membershipTier = 'Đồng';
-    if (totalSpent >= 50000000) {
-      membershipTier = 'Kim cương';
-    } else if (totalSpent >= 10000000) {
-      membershipTier = 'Vàng';
-    } else if (totalSpent >= 2000000) {
-      membershipTier = 'Bạc';
+    // Calculate tier or respect client-provided dev test tier
+    let finalMembershipTier = membershipTier;
+    let finalTotalSpent = totalSpent;
+
+    if (membershipTier && ['Đồng', 'Bạc', 'Vàng', 'Kim cương'].includes(membershipTier)) {
+      finalMembershipTier = membershipTier;
+      if (membershipTier === 'Đồng' && totalSpent >= 2000000) {
+        finalTotalSpent = 0;
+      } else if (membershipTier === 'Bạc' && (totalSpent < 2000000 || totalSpent >= 10000000)) {
+        finalTotalSpent = 2500000;
+      } else if (membershipTier === 'Vàng' && (totalSpent < 10000000 || totalSpent >= 50000000)) {
+        finalTotalSpent = 12000000;
+      } else if (membershipTier === 'Kim cương' && totalSpent < 50000000) {
+        finalTotalSpent = 55000000;
+      }
+    } else {
+      finalMembershipTier = 'Đồng';
+      if (totalSpent >= 50000000) {
+        finalMembershipTier = 'Kim cương';
+      } else if (totalSpent >= 10000000) {
+        finalMembershipTier = 'Vàng';
+      } else if (totalSpent >= 2000000) {
+        finalMembershipTier = 'Bạc';
+      }
     }
 
     // Trigger System Notifications
@@ -90,13 +107,13 @@ export class UsersService {
       } catch (err) {
         console.error('Welcome notification create failed:', err);
       }
-    } else if (existingUser && existingUser.membershipTier !== membershipTier) {
+    } else if (existingUser && existingUser.membershipTier !== finalMembershipTier) {
       try {
         await this.prisma.notification.create({
           data: {
             zaloUserId: zaloId,
-            title: `Chúc mừng bạn được thăng hạng ${membershipTier.toUpperCase()}! 🌟`,
-            content: `Hạng thành viên của bạn đã được nâng cấp lên ${membershipTier}. Nhiều ưu đãi đặc quyền mới đã được kích hoạt trong ví thành viên của bạn!`,
+            title: `Chúc mừng bạn được thăng hạng ${finalMembershipTier.toUpperCase()}! 🌟`,
+            content: `Hạng thành viên của bạn đã được nâng cấp lên ${finalMembershipTier}. Nhiều ưu đãi đặc quyền mới đã được kích hoạt trong ví thành viên của bạn!`,
             type: 'SYSTEM',
             date: new Date().toLocaleDateString('vi-VN'),
             read: false
@@ -111,8 +128,8 @@ export class UsersService {
     return this.prisma.user.update({
       where: { zaloId },
       data: {
-        totalSpent,
-        membershipTier
+        totalSpent: finalTotalSpent,
+        membershipTier: finalMembershipTier
       }
     });
   }

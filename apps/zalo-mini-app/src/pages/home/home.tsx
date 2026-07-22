@@ -14,7 +14,7 @@ const BoxCast = Box as any;
 const TextCast = Text as any;
 
 export const Home: React.FC<IHomeProps> = (_props) => {
-  const { addToCart, setSelectedProductDetail, cart, setIsCartOpen, toggleSavedItem, isSavedItem, showToast, zaloUser, addToComparison, comparisonProducts, recommendations, fetchRecommendations } = useCart();
+  const { addToCart, setSelectedProductDetail, cart, setIsCartOpen, toggleSavedItem, isSavedItem, showToast, zaloUser, recommendations, fetchRecommendations } = useCart();
   const [isLuckyWheelOpen, setIsLuckyWheelOpen] = useState(false);
 
   
@@ -45,6 +45,8 @@ export const Home: React.FC<IHomeProps> = (_props) => {
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [flashSaleProducts, setFlashSaleProducts] = useState<any[]>([]);
+  const [flashSaleEndTime, setFlashSaleEndTime] = useState<string>('');
 
   // Carousel Slide State
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -69,6 +71,21 @@ export const Home: React.FC<IHomeProps> = (_props) => {
   useEffect(() => {
     fetchRecommendations();
   }, [zaloUser?.id]);
+
+  useEffect(() => {
+    async function loadFlashSale() {
+      try {
+        const res = await apiRequest<{ products: any[]; endTime: string }>('/products/flash-sale');
+        if (res) {
+          setFlashSaleProducts(res.products || []);
+          setFlashSaleEndTime(res.endTime || '');
+        }
+      } catch (e) {
+        console.error('Failed to load flash sale products:', e);
+      }
+    }
+    loadFlashSale();
+  }, []);
 
   const bannerSlides = banners
     .filter((banner) => banner.imageUrl)
@@ -207,15 +224,14 @@ export const Home: React.FC<IHomeProps> = (_props) => {
         ) : null}
 
         {/* Flash Sale Section */}
-        <div className="mx-6 my-4">
-          <FlashSale
-            endTime={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()}
-            products={filteredProducts.slice(0, 5).map(p => ({
-              ...p,
-              originalPrice: p.price * 1.3,
-            }))}
-          />
-        </div>
+        {flashSaleProducts.length > 0 && (
+          <div className="mx-6 my-4">
+            <FlashSale
+              endTime={flashSaleEndTime || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()}
+              products={flashSaleProducts}
+            />
+          </div>
+        )}
 
         {/* Categories Section - Clean horizontal capsule scrolling */}
         <BoxCast className="my-6">
@@ -309,24 +325,6 @@ export const Home: React.FC<IHomeProps> = (_props) => {
                       </svg>
                     </button>
 
-                    {/* Floating Comparison Toggle Button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addToComparison(prod);
-                      }}
-                      className={`absolute top-[48px] right-2.5 z-10 w-8 h-8 rounded-full flex items-center justify-center shadow-xs transition-all active:scale-90 border-none cursor-pointer ${
-                        comparisonProducts.some((p: any) => p.id === prod.id)
-                          ? 'bg-primary text-white'
-                          : 'bg-white/90 backdrop-blur-md text-[#526069] hover:bg-white'
-                      }`}
-                      title="So sánh sản phẩm"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                    </button>
-
                     {/* Floating Tag */}
                     {prod.tags && (
                       <span className="absolute bottom-2.5 left-2.5 z-10 text-[8px] font-bold uppercase tracking-wider bg-white/90 backdrop-blur-md text-textColor px-2.5 py-1 rounded-full border border-white/50 shadow-xs">
@@ -336,13 +334,26 @@ export const Home: React.FC<IHomeProps> = (_props) => {
                   </div>
 
                   {/* Product Details Section */}
-                  <div className="px-1 flex flex-col">
+                  <div className="px-1 flex flex-col text-left">
                     <span className="text-[9px] text-[#526069]/60 uppercase font-bold tracking-widest">
                       {prod.category?.name || 'Home'}
                     </span>
                     <h3 className="text-xs font-semibold text-textColor mt-0.5 line-clamp-1 group-hover:text-primary transition-colors">
                       {prod.name}
                     </h3>
+
+                    {/* Render rating stars and count */}
+                    <div className="flex items-center gap-1 mt-1 text-[9.5px] font-bold text-amber-500">
+                      <span>⭐</span>
+                      <span>
+                        {prod.comments && prod.comments.length > 0
+                          ? (prod.comments.reduce((sum: number, c: any) => sum + c.rating, 0) / prod.comments.length).toFixed(1)
+                          : '5.0'}
+                      </span>
+                      <span className="text-textColor-variant font-semibold">
+                        ({prod.comments ? prod.comments.length : 0} đánh giá)
+                      </span>
+                    </div>
 
                     <div className="flex justify-between items-center mt-2">
                       <span className="text-xs font-extrabold text-textColor">{prod.price.toLocaleString('vi-VN')} đ</span>
@@ -374,8 +385,6 @@ export const Home: React.FC<IHomeProps> = (_props) => {
                     if (parsed && parsed.length > 0) img = parsed[0];
                   } catch (e) { }
 
-                  const isComparing = comparisonProducts.some((p: any) => p.id === prod.id);
-
                   return (
                     <div
                       key={prod.id}
@@ -384,22 +393,6 @@ export const Home: React.FC<IHomeProps> = (_props) => {
                     >
                       <div className="relative aspect-[3/4] bg-neutral-50 rounded-lg overflow-hidden mb-2">
                         <LazyImageComponent src={img} alt={prod.name} className="w-full h-full object-cover" />
-                        
-                        {/* Floating Compare Button */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addToComparison(prod);
-                          }}
-                          className={`absolute top-1.5 right-1.5 z-10 w-6 h-6 rounded-full flex items-center justify-center shadow-xs active:scale-90 border-none cursor-pointer ${
-                            isComparing ? 'bg-primary text-white' : 'bg-white/90 backdrop-blur-md text-[#526069]'
-                          }`}
-                          title="So sánh"
-                        >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                          </svg>
-                        </button>
                       </div>
 
                       <div>

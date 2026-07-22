@@ -5,23 +5,22 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { apiRequest } from '../../utils/api';
 
 export const FlashSaleList = () => {
-  const { setActiveTab, setSelectedProductDetail, addToComparison, comparisonProducts, addToCart, showToast } = useCart();
+  const { setActiveTab, setSelectedProductDetail, addToCart, showToast } = useCart();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  const [endTimeStr, setEndTimeStr] = useState<string>('');
 
   // Load products from API
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const data = await apiRequest<any>('/products?page=1&limit=20', 'GET');
-        const productList = Array.isArray(data) ? data : data?.data || [];
-        // Map originalPrice to simulate discount
-        const mapped = productList.map((p: any) => ({
-          ...p,
-          originalPrice: p.price * 1.3,
-        }));
-        setProducts(mapped);
+        const res = await apiRequest<{ products: any[]; endTime: string }>('/products/flash-sale', 'GET');
+        if (res) {
+          setProducts(res.products || []);
+          setEndTimeStr(res.endTime || '');
+        }
       } catch (e) {
         console.error('Failed to load flash sale products:', e);
       } finally {
@@ -31,9 +30,10 @@ export const FlashSaleList = () => {
     fetchProducts();
   }, []);
 
-  // Countdown timer (24h from now)
+  // Countdown timer based on server endTime
   useEffect(() => {
-    const endTime = new Date(Date.now() + 24 * 60 * 60 * 1000).getTime();
+    if (!endTimeStr) return;
+    const endTime = new Date(endTimeStr).getTime();
     
     const calculateTimeLeft = () => {
       const difference = endTime - Date.now();
@@ -54,7 +54,7 @@ export const FlashSaleList = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [endTimeStr]);
 
   const formatTime = (value: number) => value.toString().padStart(2, '0');
 
@@ -123,7 +123,6 @@ export const FlashSaleList = () => {
                 ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
                 : 0;
 
-              const isComparing = comparisonProducts.some((p: any) => p.id === product.id);
               const soldRatio = Math.min(((product.soldCount || 10) / ((product.soldCount || 10) + 15)) * 100, 95);
 
               return (
@@ -144,20 +143,7 @@ export const FlashSaleList = () => {
                     )}
                   </div>
 
-                  {/* Add to Comparison Toggle Button */}
-                  <button
-                    onClick={() => addToComparison(product)}
-                    className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center shadow-sm border transition-colors ${
-                      isComparing 
-                        ? 'bg-primary text-white border-primary' 
-                        : 'bg-white text-textColor hover:bg-neutral-50 border-[#f0edeb]'
-                    } cursor-pointer active:scale-90`}
-                    title="So sánh sản phẩm"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </button>
+
 
                   {/* Product Info */}
                   <div className="p-3 flex-1 flex flex-col justify-between">

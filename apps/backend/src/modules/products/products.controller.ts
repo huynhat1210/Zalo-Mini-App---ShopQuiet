@@ -45,6 +45,13 @@ export class ProductsController {
     return this.productsService.findAll(search, categoryId, pageNum, limitNum, sort);
   }
 
+  @Get('products/flash-sale')
+  @ApiOperation({ summary: 'Get flash sale products' })
+  @ApiResponse({ status: 200, description: 'Flash sale products retrieved' })
+  async getFlashSaleProducts() {
+    return this.productsService.findFlashSaleProducts();
+  }
+
   @Get('products/:id')
   @ApiOperation({ summary: 'Get product by ID' })
   @ApiResponse({ status: 200, description: 'Product retrieved' })

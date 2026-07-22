@@ -52,6 +52,11 @@ export class ProductsService {
         include: {
           category: true,
           variants: true,
+          comments: {
+            select: {
+              rating: true,
+            },
+          },
         },
         skip,
         take: limit,
@@ -235,5 +240,63 @@ export class ProductsService {
     return this.prisma.productVariant.delete({
       where: { id: variantId },
     });
+  }
+
+  async findFlashSaleProducts() {
+    const allProducts = await this.prisma.product.findMany({
+      include: {
+        category: true,
+        variants: true,
+        comments: {
+          select: {
+            rating: true,
+          },
+        },
+      },
+    });
+
+    const flashSaleProducts = allProducts.filter((product) => {
+      if (!product.tags) return false;
+      const normalizedTag = product.tags.toLowerCase();
+      return normalizedTag.includes('flash sale') || normalizedTag.includes('giảm') || normalizedTag.includes('giam');
+    });
+
+    const mappedProducts = flashSaleProducts.map((product) => {
+      const tag = product.tags || '';
+      let discountPercent = 20;
+      
+      const percentMatch = tag.match(/giảm\s*(\d+)%/i) || tag.match(/giam\s*(\d+)%/i) || tag.match(/(\d+)%/);
+      if (percentMatch && percentMatch[1]) {
+        discountPercent = parseInt(percentMatch[1], 10);
+      }
+
+      const originalPrice = Math.round(product.price / (1 - discountPercent / 100));
+
+      return {
+        ...product,
+        originalPrice,
+        discountPercent,
+      };
+    });
+
+    if (mappedProducts.length === 0 && allProducts.length > 0) {
+      const fallbackProducts = allProducts.slice(0, 4);
+      const discountOptions = ['Giảm 15%', 'Giảm 23%', 'Giảm 30%', 'Flash Sale (Giảm 10%)'];
+      for (let i = 0; i < fallbackProducts.length; i++) {
+        await this.prisma.product.update({
+          where: { id: fallbackProducts[i].id },
+          data: { tags: discountOptions[i] },
+        });
+      }
+      return this.findFlashSaleProducts();
+    }
+
+    const endTime = new Date();
+    endTime.setHours(23, 59, 59, 999);
+
+    return {
+      products: mappedProducts,
+      endTime: endTime.toISOString(),
+    };
   }
 }
