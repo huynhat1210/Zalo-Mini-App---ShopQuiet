@@ -242,7 +242,7 @@ export class ProductsService {
     });
   }
 
-  async findFlashSaleProducts() {
+  async findFlashSaleProducts(): Promise<any> {
     const allProducts = await this.prisma.product.findMany({
       include: {
         category: true,
