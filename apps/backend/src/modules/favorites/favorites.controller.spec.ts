@@ -72,9 +72,9 @@ describe('FavoritesController', () => {
     it('should throw BadRequestException when zaloUserId is missing', async () => {
       const addFavoriteDto = { productId: 1 };
 
-      await expect(controller.addFavorite(undefined as any, addFavoriteDto)).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        controller.addFavorite(undefined as any, addFavoriteDto),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -87,9 +87,9 @@ describe('FavoritesController', () => {
     });
 
     it('should throw BadRequestException when zaloUserId is missing', async () => {
-     await expect(controller.removeFavorite(undefined as any, 1)).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        controller.removeFavorite(undefined as any, 1),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

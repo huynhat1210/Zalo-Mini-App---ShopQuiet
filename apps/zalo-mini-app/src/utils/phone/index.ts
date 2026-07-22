@@ -1,2 +1,2 @@
-export * from './phone.util';
-export * from './phone.type';
+export * from "./phone.util";
+export * from "./phone.type";

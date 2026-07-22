@@ -10,10 +10,19 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { CartService } from './cart.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { AddToCartDto, UpdateQuantityDto, UpdateItemVariantDto } from './dto/cart.dto';
+import {
+  AddToCartDto,
+  UpdateQuantityDto,
+  UpdateItemVariantDto,
+} from './dto/cart.dto';
 
 @ApiTags('cart')
 @Controller('cart')
@@ -38,7 +47,13 @@ export class CartController {
     @Body() body: AddToCartDto,
     @Headers('x-zalo-user-id') zaloUserId?: string,
   ) {
-    return this.cartService.addToCart(body.productId, body.quantity, body.size, body.color, zaloUserId);
+    return this.cartService.addToCart(
+      body.productId,
+      body.quantity,
+      body.size,
+      body.color,
+      zaloUserId,
+    );
   }
 
   @Put('quantity')

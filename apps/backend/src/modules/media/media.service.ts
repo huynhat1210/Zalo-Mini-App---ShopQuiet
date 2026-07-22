@@ -4,7 +4,14 @@ import * as path from 'path';
 
 @Injectable()
 export class MediaService {
-  private readonly uploadsDir = path.join(__dirname, '..', '..', '..', 'public', 'uploads');
+  private readonly uploadsDir = path.join(
+    __dirname,
+    '..',
+    '..',
+    '..',
+    'public',
+    'uploads',
+  );
 
   constructor() {
     // Ensure directory exists

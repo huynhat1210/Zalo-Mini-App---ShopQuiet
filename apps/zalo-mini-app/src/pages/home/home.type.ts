@@ -1,4 +1,4 @@
-export interface IHomeProps { }
+export interface IHomeProps {}
 
 export interface ICategoryItem {
   id: number;
@@ -6,4 +6,3 @@ export interface ICategoryItem {
   slug: string;
   icon?: string;
 }
-

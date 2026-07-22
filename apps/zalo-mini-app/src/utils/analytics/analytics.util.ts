@@ -1,23 +1,23 @@
-import { apiRequest } from '../api';
-import { ITrackEventDto } from './analytics.type';
+import { apiRequest } from "../api";
+import { ITrackEventDto } from "./analytics.type";
 
 export const trackAnalyticsEvent = async (
   zaloUserId: string,
-  eventType: ITrackEventDto['eventType'],
+  eventType: ITrackEventDto["eventType"],
   productId?: number,
   categoryId?: number,
-  metadata?: Record<string, any>
+  metadata?: Record<string, any>,
 ) => {
   if (!zaloUserId) return;
   try {
-    await apiRequest('/analytics/track', 'POST', {
+    await apiRequest("/analytics/track", "POST", {
       zaloUserId,
       eventType,
       productId,
       categoryId,
-      metadata: metadata || {}
+      metadata: metadata || {},
     });
   } catch (e) {
-    console.error('[Analytics] Failed to track event:', e);
+    console.error("[Analytics] Failed to track event:", e);
   }
 };

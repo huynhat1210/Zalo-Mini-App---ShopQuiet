@@ -37,14 +37,21 @@ export class CommentsController {
     @Headers('x-zalo-user-id') zaloUserId?: string,
   ): Promise<Comment> {
     const userId = zaloUserId || 'cust-zalo-id-1';
-    return this.commentsService.create(productId, userId, body.content, body.rating, body.orderId, body.images);
+    return this.commentsService.create(
+      productId,
+      userId,
+      body.content,
+      body.rating,
+      body.orderId,
+      body.images,
+    );
   }
 
   @Post('upload-image')
   @UseInterceptors(FileInterceptor('file'))
   async uploadReviewImage(@UploadedFile() file: any) {
     if (!file) return { success: false, message: 'No file uploaded' };
-    
+
     if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
       return { success: false, message: 'Chỉ chấp nhận các file ảnh!' };
     }
@@ -52,13 +59,13 @@ export class CommentsController {
     try {
       const formData = new FormData();
       formData.append('reqtype', 'fileupload');
-      
+
       const blob = new Blob([file.buffer], { type: file.mimetype });
       formData.append('fileToUpload', blob, file.originalname);
 
       const res = await fetch('https://catbox.moe/user/api.php', {
         method: 'POST',
-        body: formData
+        body: formData,
       });
 
       if (!res.ok) {
@@ -72,8 +79,11 @@ export class CommentsController {
 
       return { success: true, url: fileUrl };
     } catch (error: any) {
-      console.error('Failed to upload image to Catbox, falling back to local file storage:', error);
-      
+      console.error(
+        'Failed to upload image to Catbox, falling back to local file storage:',
+        error,
+      );
+
       try {
         const fs = require('fs');
         const path = require('path');
@@ -92,4 +102,3 @@ export class CommentsController {
     }
   }
 }
-

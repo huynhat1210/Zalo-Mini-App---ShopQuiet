@@ -1,1 +1,1 @@
-export interface ICheckoutProps { }
+export interface ICheckoutProps {}

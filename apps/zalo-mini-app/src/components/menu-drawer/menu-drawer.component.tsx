@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useCart } from '../../App';
-import { apiRequest } from '../../utils/api';
-import { IMenuDrawerComponentProps } from './menu-drawer.type';
+import { useEffect, useState } from "react";
+import { useCart } from "../../App";
+import { apiRequest } from "../../utils/api";
+import { IMenuDrawerComponentProps } from "./menu-drawer.type";
 
 type CmsMenuItem = {
   id: number;
@@ -19,26 +19,64 @@ type CmsBootstrap = {
 };
 
 const fallbackSettings: Record<string, string> = {
-  'brand.name': 'ShopQuiet',
-  'brand.story.title': 'Quiet Space',
-  'brand.story.content':
-    'Chúng tôi tin vào vẻ đẹp tĩnh lặng, những đường nét gọn gàng và chất liệu thô mộc tự nhiên mang lại cảm giác bình yên trong cuộc sống hằng ngày.',
-  'brand.story.imageUrl':
-    'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=400&q=80',
-  'support.returnPolicyShort': 'Chính sách đổi trả 7 ngày',
-  'support.hotline': '1900 6868',
+  "brand.name": "ShopQuiet",
+  "brand.story.title": "Quiet Space",
+  "brand.story.content":
+    "Chúng tôi tin vào vẻ đẹp tĩnh lặng, những đường nét gọn gàng và chất liệu thô mộc tự nhiên mang lại cảm giác bình yên trong cuộc sống hằng ngày.",
+  "brand.story.imageUrl":
+    "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=400&q=80",
+  "support.returnPolicyShort": "Chính sách đổi trả 7 ngày",
+  "support.hotline": "1900 6868",
 };
 
 const fallbackMenuItems: CmsMenuItem[] = [
-  { id: 1, section: 'collections', label: 'Minimalist Living', targetType: 'CATEGORY', target: 'home' },
-  { id: 2, section: 'collections', label: 'Summer Breathable', targetType: 'CATEGORY', target: 'clothing' },
-  { id: 3, section: 'collections', label: 'Earth Tones Selection', targetType: 'CATEGORY', target: 'home' },
-  { id: 4, section: 'materials', label: '100% Organic Linen', targetType: 'TOAST', target: '100% Organic Linen' },
-  { id: 5, section: 'materials', label: 'Premium Ceramic', targetType: 'TOAST', target: 'Premium Ceramic' },
-  { id: 6, section: 'materials', label: 'Hand-poured Concrete', targetType: 'TOAST', target: 'Hand-poured Concrete' },
+  {
+    id: 1,
+    section: "collections",
+    label: "Minimalist Living",
+    targetType: "CATEGORY",
+    target: "home",
+  },
+  {
+    id: 2,
+    section: "collections",
+    label: "Summer Breathable",
+    targetType: "CATEGORY",
+    target: "clothing",
+  },
+  {
+    id: 3,
+    section: "collections",
+    label: "Earth Tones Selection",
+    targetType: "CATEGORY",
+    target: "home",
+  },
+  {
+    id: 4,
+    section: "materials",
+    label: "100% Organic Linen",
+    targetType: "TOAST",
+    target: "100% Organic Linen",
+  },
+  {
+    id: 5,
+    section: "materials",
+    label: "Premium Ceramic",
+    targetType: "TOAST",
+    target: "Premium Ceramic",
+  },
+  {
+    id: 6,
+    section: "materials",
+    label: "Hand-poured Concrete",
+    targetType: "TOAST",
+    target: "Hand-poured Concrete",
+  },
 ];
 
-export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (props) => {
+export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
+  props,
+) => {
   const { isOpen, onClose, setSelectedCategory } = props;
   const { showToast } = useCart();
   const [settings, setSettings] = useState(fallbackSettings);
@@ -47,11 +85,13 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (props) 
   useEffect(() => {
     async function loadCms() {
       try {
-        const data = await apiRequest<CmsBootstrap>('/cms/bootstrap');
+        const data = await apiRequest<CmsBootstrap>("/cms/bootstrap");
         setSettings({ ...fallbackSettings, ...(data.settings || {}) });
-        setMenuItems(data.menuItems?.length ? data.menuItems : fallbackMenuItems);
+        setMenuItems(
+          data.menuItems?.length ? data.menuItems : fallbackMenuItems,
+        );
       } catch (e) {
-        console.error('Failed to load drawer CMS:', e);
+        console.error("Failed to load drawer CMS:", e);
       }
     }
 
@@ -60,23 +100,35 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (props) 
 
   if (!isOpen) return null;
 
-  const brandName = settings['brand.name'] || fallbackSettings['brand.name'];
-  const storyTitle = settings['brand.story.title'] || fallbackSettings['brand.story.title'];
-  const storyContent = settings['brand.story.content'] || fallbackSettings['brand.story.content'];
-  const storyImageUrl = settings['brand.story.imageUrl'] || fallbackSettings['brand.story.imageUrl'];
-  const returnPolicy = settings['support.returnPolicyShort'] || fallbackSettings['support.returnPolicyShort'];
-  const hotline = settings['support.hotline'] || fallbackSettings['support.hotline'];
-  const collections = menuItems.filter((item) => item.section === 'collections');
-  const materials = menuItems.filter((item) => item.section === 'materials');
+  const brandName = settings["brand.name"] || fallbackSettings["brand.name"];
+  const storyTitle =
+    settings["brand.story.title"] || fallbackSettings["brand.story.title"];
+  const storyContent =
+    settings["brand.story.content"] || fallbackSettings["brand.story.content"];
+  const storyImageUrl =
+    settings["brand.story.imageUrl"] ||
+    fallbackSettings["brand.story.imageUrl"];
+  const returnPolicy =
+    settings["support.returnPolicyShort"] ||
+    fallbackSettings["support.returnPolicyShort"];
+  const hotline =
+    settings["support.hotline"] || fallbackSettings["support.hotline"];
+  const collections = menuItems.filter(
+    (item) => item.section === "collections",
+  );
+  const materials = menuItems.filter((item) => item.section === "materials");
 
   const handleMenuClick = (item: CmsMenuItem) => {
-    if (item.targetType === 'CATEGORY' && item.target) {
+    if (item.targetType === "CATEGORY" && item.target) {
       setSelectedCategory(item.target);
-      showToast(`Đang lọc bộ sưu tập: ${item.label}`, 'info');
-    } else if (item.targetType === 'TOAST') {
-      showToast(`Đã chọn lọc chất liệu: ${item.target || item.label}`, 'success');
-    } else if (item.targetType === 'URL' && item.target) {
-      window.open(item.target, '_blank');
+      showToast(`Đang lọc bộ sưu tập: ${item.label}`, "info");
+    } else if (item.targetType === "TOAST") {
+      showToast(
+        `Đã chọn lọc chất liệu: ${item.target || item.label}`,
+        "success",
+      );
+    } else if (item.targetType === "URL" && item.target) {
+      window.open(item.target, "_blank");
     }
 
     onClose();
@@ -86,20 +138,34 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (props) 
     <div className="fixed inset-0 z-[100] flex bg-black/45 backdrop-blur-xs animate-fade-in">
       <div className="w-[80%] max-w-[320px] h-full bg-white shadow-2xl flex flex-col border-r border-[#f0edeb] animate-slide-right">
         <div className="px-6 py-5 flex items-center justify-between border-b border-[#f0edeb]">
-          <span className="text-xs font-bold uppercase tracking-[0.3em] text-textColor">{brandName}</span>
+          <span className="text-xs font-bold uppercase tracking-[0.3em] text-textColor">
+            {brandName}
+          </span>
           <button
             onClick={onClose}
             className="p-1.5 hover:bg-[#f0edeb] rounded-full transition-colors active:scale-95 border-none bg-transparent"
           >
-            <svg className="w-5 h-5 text-textColor-variant" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-5 h-5 text-textColor-variant"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
           <div className="space-y-3">
-            <h3 className="text-[10px] font-extrabold text-[#526069]/50 uppercase tracking-widest">Bộ sưu tập độc quyền</h3>
+            <h3 className="text-[10px] font-extrabold text-[#526069]/50 uppercase tracking-widest">
+              Bộ sưu tập độc quyền
+            </h3>
             <div className="space-y-2">
               {collections.map((item) => (
                 <button
@@ -110,8 +176,18 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (props) 
                   <span className="text-xs font-bold text-textColor group-hover:text-primary transition-colors">
                     {item.label}
                   </span>
-                  <svg className="w-3.5 h-3.5 text-[#526069]/40 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  <svg
+                    className="w-3.5 h-3.5 text-[#526069]/40 group-hover:text-primary transition-colors"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                    />
                   </svg>
                 </button>
               ))}
@@ -119,7 +195,9 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (props) 
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-[10px] font-extrabold text-[#526069]/50 uppercase tracking-widest">Chất liệu tự nhiên</h3>
+            <h3 className="text-[10px] font-extrabold text-[#526069]/50 uppercase tracking-widest">
+              Chất liệu tự nhiên
+            </h3>
             <div className="flex flex-wrap gap-2">
               {materials.map((item) => (
                 <button
@@ -134,9 +212,13 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (props) 
           </div>
 
           <div className="space-y-2 pt-2">
-            <h3 className="text-[10px] font-extrabold text-[#526069]/50 uppercase tracking-widest">{storyTitle}</h3>
+            <h3 className="text-[10px] font-extrabold text-[#526069]/50 uppercase tracking-widest">
+              {storyTitle}
+            </h3>
             <div className="bg-[#fbf9f7] rounded-2xl p-4.5 border border-[#f0edeb] space-y-2.5">
-              <p className="text-[10.5px] italic text-[#526069] leading-relaxed">"{storyContent}"</p>
+              <p className="text-[10.5px] italic text-[#526069] leading-relaxed">
+                "{storyContent}"
+              </p>
               <img
                 src={storyImageUrl}
                 alt="Brand mood"

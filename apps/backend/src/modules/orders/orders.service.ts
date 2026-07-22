@@ -90,18 +90,21 @@ export class OrdersService {
 
   async updateUserMembership(zaloUserId: string) {
     if (!zaloUserId) return;
-    
+
     // Sum totalAmount of all COMPLETED and DELIVERED orders
     const completedOrders = await this.prisma.order.findMany({
       where: {
         zaloUserId,
-        status: { in: ['COMPLETED', 'DELIVERED'] }
+        status: { in: ['COMPLETED', 'DELIVERED'] },
       },
-      select: { totalAmount: true }
+      select: { totalAmount: true },
     });
 
-    const totalOrderSpend = completedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
-    
+    const totalOrderSpend = completedOrders.reduce(
+      (sum, order) => sum + order.totalAmount,
+      0,
+    );
+
     // Calculate tier
     let membershipTier = 'Đồng';
     if (totalOrderSpend >= 50000000) {
@@ -116,8 +119,8 @@ export class OrdersService {
     await this.prisma.user.update({
       where: { zaloId: zaloUserId },
       data: {
-        membershipTier
-      }
+        membershipTier,
+      },
     });
   }
 
@@ -145,16 +148,26 @@ export class OrdersService {
 
     // Tính toán bảo mật giá đơn hàng tại Backend dựa trên hạng thành viên và voucher
     const user = await this.prisma.user.findUnique({
-      where: { zaloId: filterUserId }
+      where: { zaloId: filterUserId },
     });
     const tier = user?.membershipTier || 'Đồng';
 
-    const discountPercent = tier === 'Bạc' ? 5 : (tier === 'Vàng' ? 10 : (tier === 'Kim cương' ? 15 : 0));
-    const freeShipThreshold = tier === 'Bạc' ? 150000 : (tier === 'Vàng' ? 100000 : (tier === 'Kim cương' ? 0 : 200000));
+    const discountPercent =
+      tier === 'Bạc' ? 5 : tier === 'Vàng' ? 10 : tier === 'Kim cương' ? 15 : 0;
+    const freeShipThreshold =
+      tier === 'Bạc'
+        ? 150000
+        : tier === 'Vàng'
+          ? 100000
+          : tier === 'Kim cương'
+            ? 0
+            : 200000;
 
     let subtotal = 0;
     for (const item of dto.items) {
-      const product = await this.prisma.product.findUnique({ where: { id: item.productId } });
+      const product = await this.prisma.product.findUnique({
+        where: { id: item.productId },
+      });
       if (product) {
         subtotal += product.price * item.quantity;
       }
@@ -170,7 +183,7 @@ export class OrdersService {
 
     if (dto.voucherCode) {
       const voucher = await this.prisma.voucher.findUnique({
-        where: { code: dto.voucherCode.trim().toUpperCase() }
+        where: { code: dto.voucherCode.trim().toUpperCase() },
       });
       if (voucher) {
         if (voucher.type.toUpperCase() === 'PERCENT') {
@@ -187,7 +200,10 @@ export class OrdersService {
     }
 
     const finalDiscount = tierDiscount + voucherDiscount;
-    const finalTotalAmount = Math.max(0, subtotal + shippingCost - finalDiscount);
+    const finalTotalAmount = Math.max(
+      0,
+      subtotal + shippingCost - finalDiscount,
+    );
 
     // We run the verification, stock decrement, and order creation inside a transaction
     const order = await this.prisma.$transaction(async (tx) => {
@@ -234,8 +250,8 @@ export class OrdersService {
         await tx.product.update({
           where: { id: item.productId },
           data: {
-            soldCount: { increment: item.quantity }
-          }
+            soldCount: { increment: item.quantity },
+          },
         });
       }
 
@@ -258,7 +274,10 @@ export class OrdersService {
 
       // 2. Calculate estimated delivery date
       const shippingMethodCode = dto.shippingMethodCode || 'standard';
-      const deliveryDateRange = calculateEstimatedDeliveryDate(new Date(), shippingMethodCode);
+      const deliveryDateRange = calculateEstimatedDeliveryDate(
+        new Date(),
+        shippingMethodCode,
+      );
 
       // 3. Create the order and items
       return tx.order.create({
@@ -364,12 +383,14 @@ export class OrdersService {
       const earnedPoints = Math.round(order.totalAmount / 1000);
       if (earnedPoints > 0) {
         try {
-          const user = await this.prisma.user.findUnique({ where: { zaloId: order.zaloUserId } });
+          const user = await this.prisma.user.findUnique({
+            where: { zaloId: order.zaloUserId },
+          });
           if (user) {
             const newPoints = (user.gamificationPoints || 0) + earnedPoints;
             await this.prisma.user.update({
               where: { zaloId: order.zaloUserId },
-              data: { gamificationPoints: newPoints }
+              data: { gamificationPoints: newPoints },
             });
 
             await this.prisma.pointsHistory.create({
@@ -377,8 +398,8 @@ export class OrdersService {
                 zaloUserId: order.zaloUserId,
                 points: earnedPoints,
                 reason: `Tích điểm mua sắm đơn hàng #${order.id}`,
-                metadata: { orderId: order.id }
-              }
+                metadata: { orderId: order.id },
+              },
             });
 
             await this.prisma.notification.create({
@@ -387,9 +408,15 @@ export class OrdersService {
                 type: 'order',
                 title: `🎉 Tích điểm thành công`,
                 content: `Bạn được cộng +${earnedPoints} điểm tích lũy từ đơn hàng #${order.id}.`,
-                date: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('vi-VN'),
+                date:
+                  new Date().toLocaleTimeString('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  }) +
+                  ' - ' +
+                  new Date().toLocaleDateString('vi-VN'),
                 read: false,
-              }
+              },
             });
           }
         } catch (e) {
@@ -420,16 +447,18 @@ export class OrdersService {
         },
       }),
       this.prisma.comment.findMany({
-        where: { zaloUserId: filterUserId }
-      })
+        where: { zaloUserId: filterUserId },
+      }),
     ]);
 
-    return orders.map(order => ({
+    return orders.map((order) => ({
       ...order,
-      items: order.items.map(item => ({
+      items: order.items.map((item) => ({
         ...item,
-        isReviewed: reviews.some(r => r.orderId === order.id && r.productId === item.productId)
-      }))
+        isReviewed: reviews.some(
+          (r) => r.orderId === order.id && r.productId === item.productId,
+        ),
+      })),
     }));
   }
 
@@ -465,8 +494,8 @@ export class OrdersService {
         },
       }),
       this.prisma.comment.findMany({
-        where: { zaloUserId: filterUserId }
-      })
+        where: { zaloUserId: filterUserId },
+      }),
     ]);
 
     if (!order) {
@@ -475,17 +504,19 @@ export class OrdersService {
 
     return {
       ...order,
-      items: order.items.map(item => ({
+      items: order.items.map((item) => ({
         ...item,
-        isReviewed: reviews.some(r => r.orderId === order.id && r.productId === item.productId)
-      }))
+        isReviewed: reviews.some(
+          (r) => r.orderId === order.id && r.productId === item.productId,
+        ),
+      })),
     };
   }
 
   async updateStatus(id: string, status: string, trackingNumber?: string) {
     const order = await this.prisma.order.update({
       where: { id },
-      data: { 
+      data: {
         status,
         ...(trackingNumber !== undefined ? { trackingNumber } : {}),
       },
@@ -524,18 +555,27 @@ export class OrdersService {
       if (order.zaloUserId) {
         try {
           const user = await this.prisma.user.findUnique({
-            where: { zaloId: order.zaloUserId }
+            where: { zaloId: order.zaloUserId },
           });
           if (user) {
             const tier = user.membershipTier || 'Đồng';
-            const multiplier = tier === 'Bạc' ? 1.5 : (tier === 'Vàng' ? 2 : (tier === 'Kim cương' ? 3 : 1));
-            const pointsEarned = Math.round((order.totalAmount / 1000) * multiplier);
+            const multiplier =
+              tier === 'Bạc'
+                ? 1.5
+                : tier === 'Vàng'
+                  ? 2
+                  : tier === 'Kim cương'
+                    ? 3
+                    : 1;
+            const pointsEarned = Math.round(
+              (order.totalAmount / 1000) * multiplier,
+            );
 
             if (pointsEarned > 0) {
               const newPoints = (user.gamificationPoints || 0) + pointsEarned;
               await this.prisma.user.update({
                 where: { zaloId: order.zaloUserId },
-                data: { gamificationPoints: newPoints }
+                data: { gamificationPoints: newPoints },
               });
 
               // Create points history log
@@ -544,8 +584,8 @@ export class OrdersService {
                   zaloUserId: order.zaloUserId,
                   points: pointsEarned,
                   reason: `Tích lũy từ đơn hàng #${order.id}`,
-                  metadata: { orderId: order.id }
-                }
+                  metadata: { orderId: order.id },
+                },
               });
 
               // Create notification
@@ -555,9 +595,15 @@ export class OrdersService {
                   type: 'promotion',
                   title: `🎉 Tích điểm thành công`,
                   content: `Chúc mừng! Bạn được cộng +${pointsEarned} điểm tích lũy từ đơn hàng #${order.id} (Hạng ${tier} x${multiplier}).`,
-                  date: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('vi-VN'),
-                  read: false
-                }
+                  date:
+                    new Date().toLocaleTimeString('vi-VN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    }) +
+                    ' - ' +
+                    new Date().toLocaleDateString('vi-VN'),
+                  read: false,
+                },
               });
             }
           }
@@ -663,8 +709,8 @@ export class OrdersService {
         data: {
           adminId: 'admin-zalo-id-1',
           action: 'Cập nhật đơn hàng',
-          details: `Đã cập nhật trạng thái đơn hàng #${order.id} thành ${status}`
-        }
+          details: `Đã cập nhật trạng thái đơn hàng #${order.id} thành ${status}`,
+        },
       });
     } catch (e) {
       console.error('AuditLog error in order status update:', e);
@@ -862,7 +908,12 @@ export class OrdersService {
     }
   }
 
-  async requestReturn(id: string, reason: string, description: string, images?: string[]) {
+  async requestReturn(
+    id: string,
+    reason: string,
+    description: string,
+    images?: string[],
+  ) {
     const order = await this.prisma.order.update({
       where: { id },
       data: {

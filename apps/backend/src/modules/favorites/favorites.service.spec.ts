@@ -57,7 +57,7 @@ describe('FavoritesService', () => {
     }).compile();
 
     service = module.get<FavoritesService>(FavoritesService);
-    prismaService = module.get(PrismaService) as jest.Mocked<any>;
+    prismaService = module.get(PrismaService);
   });
 
   it('should be defined', () => {
@@ -107,9 +107,13 @@ describe('FavoritesService', () => {
     });
 
     it('should throw NotFoundException when product does not exist', async () => {
-      (prismaService.product.findUnique as jest.Mock).mockResolvedValueOnce(null);
+      (prismaService.product.findUnique as jest.Mock).mockResolvedValueOnce(
+        null,
+      );
 
-      await expect(service.add('123456', 999)).rejects.toThrow(NotFoundException);
+      await expect(service.add('123456', 999)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should update existing favorite if already exists', async () => {

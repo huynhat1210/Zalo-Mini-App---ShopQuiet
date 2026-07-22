@@ -43,12 +43,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
             // Determine field name (first word from message)
             const firstWord = msg.split(' ')[0] || '';
             const field = firstWord.replace(/[^a-zA-Z0-9_]/g, '');
-            
+
             // Generate standard error code
             let code = 'VALIDATION_ERROR';
             if (msg.includes('email')) {
               code = 'INVALID_EMAIL';
-            } else if (msg.includes('should not be empty') || msg.includes('empty')) {
+            } else if (
+              msg.includes('should not be empty') ||
+              msg.includes('empty')
+            ) {
               code = 'REQUIRED_FIELD';
             } else {
               code = `INVALID_${field.toUpperCase()}`;
@@ -77,13 +80,17 @@ export class HttpExceptionFilter implements ExceptionFilter {
         {
           message: message,
           field: 'general',
-          code: exception instanceof HttpException ? `HTTP_${status}` : 'INTERNAL_SERVER_ERROR',
+          code:
+            exception instanceof HttpException
+              ? `HTTP_${status}`
+              : 'INTERNAL_SERVER_ERROR',
         },
       ];
     }
 
     const errorResponse = {
-      message: status === HttpStatus.BAD_REQUEST ? 'Validation failed' : message,
+      message:
+        status === HttpStatus.BAD_REQUEST ? 'Validation failed' : message,
       errors: errors,
       meta: {
         request_id: requestId,

@@ -1,2 +1,2 @@
-export * from './profile';
-export * from './profile.type';
+export * from "./profile";
+export * from "./profile.type";

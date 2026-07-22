@@ -11,12 +11,23 @@ import {
   ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { ProductsService } from './products.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { CreateProductDto, UpdateProductDto, CreateVariantDto, UpdateVariantStockDto } from './dto/create-product.dto';
+import {
+  CreateProductDto,
+  UpdateProductDto,
+  CreateVariantDto,
+  UpdateVariantStockDto,
+} from './dto/create-product.dto';
 
 @ApiTags('products')
 @Controller()
@@ -25,12 +36,42 @@ export class ProductsController {
 
   @Get('products')
   @ApiOperation({ summary: 'Get all products with pagination' })
-  @ApiQuery({ name: 'search', required: false, type: String, description: 'Search term for name/description' })
-  @ApiQuery({ name: 'categoryId', required: false, type: String, description: 'Filter by category ID' })
-  @ApiQuery({ name: 'page', required: false, type: String, description: 'Page number (1-based)' })
-  @ApiQuery({ name: 'limit', required: false, type: String, description: 'Legacy limit parameter' })
-  @ApiQuery({ name: 'page_size', required: false, type: String, description: 'Items per page' })
-  @ApiQuery({ name: 'sort', required: false, type: String, description: 'Sorting (e.g. desc:updated_at, asc:price)' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search term for name/description',
+  })
+  @ApiQuery({
+    name: 'categoryId',
+    required: false,
+    type: String,
+    description: 'Filter by category ID',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: String,
+    description: 'Page number (1-based)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: String,
+    description: 'Legacy limit parameter',
+  })
+  @ApiQuery({
+    name: 'page_size',
+    required: false,
+    type: String,
+    description: 'Items per page',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sorting (e.g. desc:updated_at, asc:price)',
+  })
   @ApiResponse({ status: 200, description: 'Products retrieved' })
   async getProducts(
     @Query('search') search?: string,
@@ -41,8 +82,18 @@ export class ProductsController {
     @Query('sort') sort?: string,
   ) {
     const pageNum = page ? parseInt(page, 10) : 1;
-    const limitNum = pageSize ? parseInt(pageSize, 10) : (limit ? parseInt(limit, 10) : 10);
-    return this.productsService.findAll(search, categoryId, pageNum, limitNum, sort);
+    const limitNum = pageSize
+      ? parseInt(pageSize, 10)
+      : limit
+        ? parseInt(limit, 10)
+        : 10;
+    return this.productsService.findAll(
+      search,
+      categoryId,
+      pageNum,
+      limitNum,
+      sort,
+    );
   }
 
   @Get('products/flash-sale')

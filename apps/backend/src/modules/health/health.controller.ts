@@ -41,7 +41,8 @@ export class HealthController {
       checks.cache = 'disconnected';
     }
 
-    const isHealthy = checks.database === 'connected' && checks.cache === 'connected';
+    const isHealthy =
+      checks.database === 'connected' && checks.cache === 'connected';
 
     return {
       status: isHealthy ? 'ok' : 'error',
@@ -58,7 +59,7 @@ export class HealthController {
       await this.prisma.$queryRaw`SELECT 1`;
       await this.cacheManager.set('ready_check', 'ok', 5);
       await this.cacheManager.del('ready_check');
-      
+
       return {
         status: 'ready',
         timestamp: new Date().toISOString(),
@@ -107,7 +108,8 @@ export class HealthController {
       (checks as any).databaseLatency = `${Date.now() - dbStart}ms`;
     } catch (error) {
       checks.database = 'disconnected';
-      (checks as any).databaseError = error instanceof Error ? error.message : 'Unknown error';
+      (checks as any).databaseError =
+        error instanceof Error ? error.message : 'Unknown error';
     }
 
     // Check cache connection with timing
@@ -119,10 +121,12 @@ export class HealthController {
       (checks as any).cacheLatency = `${Date.now() - cacheStart}ms`;
     } catch (error) {
       checks.cache = 'disconnected';
-      (checks as any).cacheError = error instanceof Error ? error.message : 'Unknown error';
+      (checks as any).cacheError =
+        error instanceof Error ? error.message : 'Unknown error';
     }
 
-    const isHealthy = checks.database === 'connected' && checks.cache === 'connected';
+    const isHealthy =
+      checks.database === 'connected' && checks.cache === 'connected';
 
     return {
       status: isHealthy ? 'ok' : 'error',

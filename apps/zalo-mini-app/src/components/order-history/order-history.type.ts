@@ -1,4 +1,4 @@
-import { IOrder, IProduct } from '../../App';
+import { IOrder, IProduct } from "../../App";
 
 export interface IOrderHistoryProps {
   orders: IOrder[];
@@ -8,6 +8,6 @@ export interface IOrderHistoryProps {
   setActiveTab: (tab: string) => void;
   setSelectedOrder: (order: IOrder) => void;
   setSelectedProductDetail: (prod: IProduct) => void;
-  showToast: (message: string, type: 'success' | 'warning' | 'info') => void;
+  showToast: (message: string, type: "success" | "warning" | "info") => void;
   onReviewSuccess: (orderId: string, productId: number) => void;
 }

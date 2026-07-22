@@ -1,9 +1,11 @@
-import React from 'react';
-import { IEmptyStateComponentProps } from './empty-state.type';
+import React from "react";
+import { IEmptyStateComponentProps } from "./empty-state.type";
 
-export const EmptyStateComponent: React.FC<IEmptyStateComponentProps> = (props) => {
+export const EmptyStateComponent: React.FC<IEmptyStateComponentProps> = (
+  props,
+) => {
   const { title, description, icon, actionText, onAction } = props;
-  
+
   return (
     <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-surface">
       {icon ? (

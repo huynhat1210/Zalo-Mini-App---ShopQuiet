@@ -1,2 +1,2 @@
-export * from './menu-drawer.component';
-export * from './menu-drawer.type';
+export * from "./menu-drawer.component";
+export * from "./menu-drawer.type";

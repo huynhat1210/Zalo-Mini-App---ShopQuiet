@@ -1,2 +1,2 @@
-export * from './address-manager.component';
-export * from './address-manager.type';
+export * from "./address-manager.component";
+export * from "./address-manager.type";

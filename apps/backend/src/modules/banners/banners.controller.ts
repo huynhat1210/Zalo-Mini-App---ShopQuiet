@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Delete, Body, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  ParseIntPipe,
+  UseGuards,
+} from '@nestjs/common';
 import { BannersService } from './banners.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -14,7 +23,13 @@ export class BannersController {
   @Post()
   @UseGuards(JwtAuthGuard)
   async createBanner(
-    @Body() body: { imageUrl: string; title?: string; description?: string; link?: string },
+    @Body()
+    body: {
+      imageUrl: string;
+      title?: string;
+      description?: string;
+      link?: string;
+    },
   ) {
     return this.bannersService.create(body);
   }

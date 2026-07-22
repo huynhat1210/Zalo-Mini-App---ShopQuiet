@@ -72,7 +72,10 @@ export class CmsService implements OnModuleInit {
         return doc;
       });
     } catch (error) {
-      console.error(`Failed to load Payload CMS content for ${normalizedType}:`, error);
+      console.error(
+        `Failed to load Payload CMS content for ${normalizedType}:`,
+        error,
+      );
       return [];
     }
   }
@@ -127,23 +130,37 @@ export class CmsService implements OnModuleInit {
   }
 
   async getBootstrap() {
-    const [settings, menuItems, staticPages, shippingMethods, paymentMethods, banners, featuredCategories, news, terms, policies, faq, notifications, advertisements, landingPages] =
-      await Promise.all([
-        this.getSettings(),
-        this.getMenuItems(),
-        this.getStaticPages(),
-        this.getShippingMethods(),
-        this.getPaymentMethods(),
-        this.getContent('banners'),
-        this.getContent('featured_categories'),
-        this.getContent('news'),
-        this.getContent('terms'),
-        this.getContent('policies'),
-        this.getContent('faq'),
-        this.getContent('notifications'),
-        this.getContent('advertisements'),
-        this.getContent('landing_page'),
-      ]);
+    const [
+      settings,
+      menuItems,
+      staticPages,
+      shippingMethods,
+      paymentMethods,
+      banners,
+      featuredCategories,
+      news,
+      terms,
+      policies,
+      faq,
+      notifications,
+      advertisements,
+      landingPages,
+    ] = await Promise.all([
+      this.getSettings(),
+      this.getMenuItems(),
+      this.getStaticPages(),
+      this.getShippingMethods(),
+      this.getPaymentMethods(),
+      this.getContent('banners'),
+      this.getContent('featured_categories'),
+      this.getContent('news'),
+      this.getContent('terms'),
+      this.getContent('policies'),
+      this.getContent('faq'),
+      this.getContent('notifications'),
+      this.getContent('advertisements'),
+      this.getContent('landing_page'),
+    ]);
 
     return {
       settings,
@@ -420,9 +437,11 @@ export class CmsService implements OnModuleInit {
 
   private getModelKey(modelName: string): string {
     const prismaKeys = Object.keys(this.prisma).filter(
-      (k) => !k.startsWith('_') && !k.startsWith('$')
+      (k) => !k.startsWith('_') && !k.startsWith('$'),
     );
-    const matched = prismaKeys.find((k) => k.toLowerCase() === modelName.toLowerCase());
+    const matched = prismaKeys.find(
+      (k) => k.toLowerCase() === modelName.toLowerCase(),
+    );
     if (!matched) {
       throw new NotFoundException(`Model ${modelName} does not exist`);
     }
@@ -442,7 +461,7 @@ export class CmsService implements OnModuleInit {
       (k) =>
         !k.startsWith('_') &&
         !k.startsWith('$') &&
-        typeof (this.prisma as any)[k]?.count === 'function'
+        typeof (this.prisma as any)[k]?.count === 'function',
     );
 
     const summary = await Promise.all(
@@ -452,14 +471,14 @@ export class CmsService implements OnModuleInit {
           model: key.charAt(0).toUpperCase() + key.slice(1),
           count,
         };
-      })
+      }),
     );
     return summary;
   }
 
   async getRecords(modelName: string) {
     const modelKey = this.getModelKey(modelName);
-    
+
     const include: any = {};
     if (modelKey === 'order') {
       include.items = {
@@ -509,8 +528,8 @@ export class CmsService implements OnModuleInit {
         data: {
           adminId: 'admin-zalo-id-1',
           action: `Tạo ${modelName}`,
-          details: `Đã tạo bản ghi mới trong bảng ${modelName} với dữ liệu: ${JSON.stringify(cleanData).substring(0, 500)}`
-        }
+          details: `Đã tạo bản ghi mới trong bảng ${modelName} với dữ liệu: ${JSON.stringify(cleanData).substring(0, 500)}`,
+        },
       });
     } catch (e) {
       console.error('AuditLog error:', e);
@@ -537,8 +556,8 @@ export class CmsService implements OnModuleInit {
         data: {
           adminId: 'admin-zalo-id-1',
           action: `Sửa ${modelName}`,
-          details: `Đã cập nhật bản ghi ID ${id} trong bảng ${modelName} với dữ liệu mới: ${JSON.stringify(cleanData).substring(0, 500)}`
-        }
+          details: `Đã cập nhật bản ghi ID ${id} trong bảng ${modelName} với dữ liệu mới: ${JSON.stringify(cleanData).substring(0, 500)}`,
+        },
       });
     } catch (e) {
       console.error('AuditLog error:', e);
@@ -559,8 +578,8 @@ export class CmsService implements OnModuleInit {
         data: {
           adminId: 'admin-zalo-id-1',
           action: `Xóa ${modelName}`,
-          details: `Đã xóa bản ghi ID ${id} khỏi bảng ${modelName}`
-        }
+          details: `Đã xóa bản ghi ID ${id} khỏi bảng ${modelName}`,
+        },
       });
     } catch (e) {
       console.error('AuditLog error:', e);
@@ -580,21 +599,27 @@ export class CmsService implements OnModuleInit {
     // 1. Calculate total sales (sum of COMPLETED and DELIVERED orders)
     const completedOrders = await this.prisma.order.findMany({
       where: {
-        status: { in: ['COMPLETED', 'DELIVERED'] }
+        status: { in: ['COMPLETED', 'DELIVERED'] },
       },
-      select: { totalAmount: true, createdAt: true }
+      select: { totalAmount: true, createdAt: true },
     });
 
-    const totalRevenue = completedOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+    const totalRevenue = completedOrders.reduce(
+      (sum, order) => sum + order.totalAmount,
+      0,
+    );
 
     // 2. Count total orders by status
     const allOrders = await this.prisma.order.findMany({
-      select: { status: true }
+      select: { status: true },
     });
-    const orderStatusCounts = allOrders.reduce<Record<string, number>>((acc, order) => {
-      acc[order.status] = (acc[order.status] || 0) + 1;
-      return acc;
-    }, {});
+    const orderStatusCounts = allOrders.reduce<Record<string, number>>(
+      (acc, order) => {
+        acc[order.status] = (acc[order.status] || 0) + 1;
+        return acc;
+      },
+      {},
+    );
 
     // 3. Count total users
     const totalUsers = await this.prisma.user.count();
@@ -602,21 +627,27 @@ export class CmsService implements OnModuleInit {
     // 4. Low stock variants alert (stock < 10)
     const lowStockVariants = await this.prisma.productVariant.findMany({
       where: {
-        stock: { lt: 10 }
+        stock: { lt: 10 },
       },
       include: {
         product: {
-          select: { name: true }
-        }
+          select: { name: true },
+        },
       },
-      take: 10
+      take: 10,
     });
 
     // 5. Best selling products (sorted by soldCount desc)
     const bestSellers = await this.prisma.product.findMany({
       orderBy: { soldCount: 'desc' },
       take: 5,
-      select: { id: true, name: true, price: true, soldCount: true, images: true }
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        soldCount: true,
+        images: true,
+      },
     });
 
     // 6. Generate 30 days revenue chart data
@@ -624,56 +655,67 @@ export class CmsService implements OnModuleInit {
     const now = new Date();
     for (let i = 29; i >= 0; i--) {
       const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-      const dateString = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+      const dateString = date.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+      });
       dailyRevenue[dateString] = 0;
     }
 
-    completedOrders.forEach(order => {
+    completedOrders.forEach((order) => {
       const orderDate = new Date(order.createdAt);
-      const dateString = orderDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+      const dateString = orderDate.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+      });
       if (dailyRevenue[dateString] !== undefined) {
         dailyRevenue[dateString] += order.totalAmount;
       }
     });
 
-    const revenueChartData = Object.keys(dailyRevenue).map(date => ({
+    const revenueChartData = Object.keys(dailyRevenue).map((date) => ({
       date,
-      revenue: dailyRevenue[date]
+      revenue: dailyRevenue[date],
     }));
 
     // 7. Get category products sold count
     const categories = await this.prisma.category.findMany({
       include: {
         products: {
-          select: { soldCount: true }
-        }
-      }
+          select: { soldCount: true },
+        },
+      },
     });
-    const categoryChartData = categories.map(cat => {
-      const totalSold = cat.products.reduce((sum, p) => sum + (p.soldCount || 0), 0);
-      return {
-        name: cat.name,
-        value: totalSold
-      };
-    }).filter(c => c.value > 0);
+    const categoryChartData = categories
+      .map((cat) => {
+        const totalSold = cat.products.reduce(
+          (sum, p) => sum + (p.soldCount || 0),
+          0,
+        );
+        return {
+          name: cat.name,
+          value: totalSold,
+        };
+      })
+      .filter((c) => c.value > 0);
 
     return {
       stats: {
         totalRevenue,
         totalOrders: allOrders.length,
         totalUsers,
-        statusCounts: orderStatusCounts
+        statusCounts: orderStatusCounts,
       },
       lowStockVariants,
       bestSellers,
       revenueChartData,
-      categoryChartData
+      categoryChartData,
     };
   }
 
   async getShopStatus() {
     const setting = await this.prisma.siteSetting.findUnique({
-      where: { key: 'shop.status' }
+      where: { key: 'shop.status' },
     });
     return { status: setting?.value || 'ONLINE' };
   }
@@ -686,8 +728,8 @@ export class CmsService implements OnModuleInit {
         key: 'shop.status',
         label: 'Trạng thái hoạt động của Shop',
         value: status,
-        group: 'support'
-      }
+        group: 'support',
+      },
     });
     return { success: true, status };
   }

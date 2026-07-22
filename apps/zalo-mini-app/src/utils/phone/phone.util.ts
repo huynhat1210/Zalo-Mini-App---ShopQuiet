@@ -26,10 +26,14 @@ export async function getDecryptedZaloPhone(): Promise<string> {
 
           try {
             // 3. Gửi token và accessToken lên backend để giải mã qua Zalo Graph API
-            const res = await apiRequest<IPhoneDecryptResult>('/users/decrypt-phone', 'POST', {
-              token,
-              accessToken,
-            });
+            const res = await apiRequest<IPhoneDecryptResult>(
+              "/users/decrypt-phone",
+              "POST",
+              {
+                token,
+                accessToken,
+              },
+            );
 
             if (res && res.phoneNumber) {
               resolve(res.phoneNumber);

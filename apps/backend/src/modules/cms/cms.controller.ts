@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+} from '@nestjs/common';
 import { CmsService, CmsContentType } from './cms.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -15,7 +27,10 @@ export class CmsController {
   }
 
   @Get('content/:type')
-  async getContent(@Param('type') type: string, @Query('limit') limit?: string) {
+  async getContent(
+    @Param('type') type: string,
+    @Query('limit') limit?: string,
+  ) {
     return this.cmsService.getContent(type as CmsContentType, limit);
   }
 
@@ -68,10 +83,7 @@ export class CmsController {
   @Post('database/models/:modelName')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  async createRecord(
-    @Param('modelName') modelName: string,
-    @Body() body: any,
-  ) {
+  async createRecord(@Param('modelName') modelName: string, @Body() body: any) {
     return this.cmsService.createRecord(modelName, body);
   }
 
@@ -132,14 +144,14 @@ export class CmsController {
     }
     const fs = require('fs');
     const path = require('path');
-    
+
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
 
     const fileExtension = path.extname(file.originalname);
-    const fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${fileExtension}`;
+    const fileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${fileExtension}`;
     const filePath = path.join(uploadsDir, fileName);
 
     fs.writeFileSync(filePath, file.buffer);

@@ -24,9 +24,7 @@ describe('UsersController (e2e)', () => {
 
   describe('/users (GET)', () => {
     it('should fail without authentication', () => {
-      return request(app.getHttpServer())
-        .get('/users')
-        .expect(401);
+      return request(app.getHttpServer()).get('/users').expect(401);
     });
   });
 });

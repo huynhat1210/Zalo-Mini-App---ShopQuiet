@@ -1,2 +1,2 @@
-export * from './voucher-wallet.component';
-export * from './voucher-wallet.type';
+export * from "./voucher-wallet.component";
+export * from "./voucher-wallet.type";

@@ -14,7 +14,10 @@ describe('AppController', () => {
     appController = app.get<AppController>(AppController);
   });
 
-    it('should return server status', () => {
-      expect(appController.getHello()).toEqual({ status: 'ok', message: 'Server is running' });
+  it('should return server status', () => {
+    expect(appController.getHello()).toEqual({
+      status: 'ok',
+      message: 'Server is running',
     });
+  });
 });

@@ -1,2 +1,2 @@
-export * from './voucher-exchange-modal.component';
-export * from './voucher-exchange-modal.type';
+export * from "./voucher-exchange-modal.component";
+export * from "./voucher-exchange-modal.type";

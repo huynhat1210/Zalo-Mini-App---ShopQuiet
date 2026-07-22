@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Delete, Param, UseInterceptors, UploadedFile, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  UseInterceptors,
+  UploadedFile,
+  UseGuards,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import * as path from 'path';
@@ -24,9 +33,17 @@ export class MediaController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: path.join(__dirname, '..', '..', '..', 'public', 'uploads'),
+        destination: path.join(
+          __dirname,
+          '..',
+          '..',
+          '..',
+          'public',
+          'uploads',
+        ),
         filename: (req: any, file: any, cb: any) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
           const ext = path.extname(file.originalname);
           cb(null, `file-${uniqueSuffix}${ext}`);
         },

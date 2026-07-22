@@ -5,8 +5,10 @@ import * as crypto from 'crypto';
 @Injectable()
 export class RequestIdMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
-    const requestId = (req.headers['x-request-id'] as string) || crypto.randomUUID();
-    const traceId = (req.headers['x-trace-id'] as string) || crypto.randomUUID();
+    const requestId =
+      (req.headers['x-request-id'] as string) || crypto.randomUUID();
+    const traceId =
+      (req.headers['x-trace-id'] as string) || crypto.randomUUID();
 
     const rawReq = req as any;
     rawReq['request_id'] = requestId;

@@ -86,7 +86,7 @@ export class VouchersController {
   @Roles('admin')
   async distributeVoucher(
     @Param('code') code: string,
-    @Body('segment') segment: string
+    @Body('segment') segment: string,
   ) {
     if (!segment) {
       throw new BadRequestException('Phân khúc khách hàng là bắt buộc');

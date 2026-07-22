@@ -91,6 +91,7 @@ export const Products: React.FC<IProductsProps> = (_props) => {
       await apiRequest(`/products/${id}`, 'DELETE');
       setProducts(products.filter((p) => p.id !== id));
     } catch (err) {
+      console.error('Lỗi khi xóa sản phẩm:', err);
       alert('Không thể xóa sản phẩm. Lỗi kết nối.');
     }
   };

@@ -116,7 +116,7 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
     setIsFilterPanelOpen(false);
     fetchRecords();
     setIsDrawerOpen(false);
-    setEditingRecord(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelName]);
 
   // Close drawer on Escape key
@@ -326,7 +326,8 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
             } else if (typeof parsed === 'string') {
               imgUrl = parsed;
             }
-          } catch (e) {
+          } catch (err) {
+            console.error('Lỗi parse hình ảnh sản phẩm:', err);
             imgUrl = product.images;
           }
         }

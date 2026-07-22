@@ -5,7 +5,7 @@
 :root {
   --zmp-primary-color: #0e6877;
   --zmp-background-color: #fbf9f7;
-  
+
   /* Modern Colors & Accents */
   --color-brand-primary: #0e6877;
   --color-brand-light: #ecf6f7;
@@ -16,7 +16,10 @@
   --color-bg-canvas: #fbf9f7;
 }
 
-html, body, #app, #root {
+html,
+body,
+#app,
+#root {
   height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
@@ -24,7 +27,15 @@ html, body, #app, #root {
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
   background-color: var(--color-bg-canvas);
   color: var(--color-neutral-dark);
   margin: 0;
@@ -48,7 +59,12 @@ body {
 }
 
 /* Premium Typography Adjustments */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   letter-spacing: -0.02em;
   font-weight: 700;
 }
@@ -181,7 +197,8 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Add-to-cart Bounce Animation */
 @keyframes cartBounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
@@ -202,13 +219,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Premium Swiper Pagination Dot Styles & Hardware Acceleration */
-.zmp-swiper, .zaui-swiper, .swiper {
-  transform: translate3d(0,0,0);
+.zmp-swiper,
+.zaui-swiper,
+.swiper {
+  transform: translate3d(0, 0, 0);
   will-change: transform;
 }
 
-.zmp-swiper-slide, .zaui-swiper-slide, .swiper-slide {
-  transform: translate3d(0,0,0);
+.zmp-swiper-slide,
+.zaui-swiper-slide,
+.swiper-slide {
+  transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   will-change: transform;
 }

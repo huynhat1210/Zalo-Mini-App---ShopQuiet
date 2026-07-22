@@ -1,4 +1,9 @@
-import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
+import {
+  Module,
+  NestModule,
+  MiddlewareConsumer,
+  RequestMethod,
+} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
@@ -52,12 +57,12 @@ import { LoggerModule } from './common/logger/logger.module';
               port: parseInt(process.env.REDIS_PORT || '6379', 10),
             },
           };
-          
+
           // Add password if provided
           if (process.env.REDIS_PASSWORD) {
             redisConfig.password = process.env.REDIS_PASSWORD;
           }
-          
+
           return {
             store: await redisStore(redisConfig),
           };
@@ -94,6 +99,8 @@ import { LoggerModule } from './common/logger/logger.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestIdMiddleware).forRoutes({ path: '*path', method: RequestMethod.ALL });
+    consumer
+      .apply(RequestIdMiddleware)
+      .forRoutes({ path: '*path', method: RequestMethod.ALL });
   }
 }

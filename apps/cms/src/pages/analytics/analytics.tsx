@@ -1,337 +1,464 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { apiRequest } from '../../utils/api';
-import { 
-  TrendingUp, 
-  DollarSign, 
+import {
+  TrendingUp,
+  DollarSign,
   ShoppingBag,
-  Layers
+  Eye,
+  ShoppingCart,
+  Users,
+  ArrowUpRight,
+  ArrowDownRight,
 } from 'lucide-react';
-import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from 'recharts';
 import type { IAnalyticsProps } from './analytics.type';
 
-interface AnalyticsData {
-  allOrders: any[];
+// ─── Interfaces ──────────────────────────────────────────────────────────────
+interface IOrder {
+  id: number;
+  status: string;
+  totalAmount: number;
+  createdAt: string;
+  items?: { product?: { id: number; name: string }; price: number; quantity: number; productId: number }[];
 }
 
+interface IDailyStatPoint {
+  date: string;
+  views: number;
+  addToCarts: number;
+  purchases: number;
+  searches: number;
+}
+
+interface ITopProduct {
+  productId: number;
+  productName: string;
+  views: number;
+  productPrice: number;
+}
+
+interface IFunnelData {
+  views: number;
+  addToCarts: number;
+  purchases: number;
+  searches: number;
+  conversionRates: {
+    viewToCart: string;
+    cartToPurchase: string;
+    viewToPurchase: string;
+  };
+}
+
+// ─── Component ───────────────────────────────────────────────────────────────
 export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
-  const [data, setData] = useState<AnalyticsData>({ allOrders: [] });
+  const [allOrders, setAllOrders] = useState<IOrder[]>([]);
+  const [dailyStats, setDailyStats] = useState<IDailyStatPoint[]>([]);
+  const [topProducts, setTopProducts] = useState<ITopProduct[]>([]);
+  const [funnelData, setFunnelData] = useState<IFunnelData | null>(null);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<7 | 30>(7);
 
+  // ─── Fetch All Data ─────────────────────────────────────────────────────────
   useEffect(() => {
-    const fetchAnalyticsData = async (isSilent = false) => {
+    const fetchAll = async (isSilent = false) => {
       try {
         if (!isSilent) setLoading(true);
-        const orders = await apiRequest('/orders/admin/all').catch(() => []);
-        setData({
-          allOrders: Array.isArray(orders) ? orders : []
-        });
+
+        const [orders, daily, topProds, funnel] = await Promise.allSettled([
+          apiRequest<IOrder[]>('/orders/admin/all').catch(() => []),
+          apiRequest<IDailyStatPoint[]>(`/analytics/daily-stats?days=${timeRange}`).catch(() => []),
+          apiRequest<ITopProduct[]>('/analytics/top-products?limit=8').catch(() => []),
+          apiRequest<IFunnelData>('/analytics/funnel').catch(() => null),
+        ]);
+
+        if (orders.status === 'fulfilled') setAllOrders(Array.isArray(orders.value) ? orders.value : []);
+        if (daily.status === 'fulfilled') setDailyStats(Array.isArray(daily.value) ? daily.value : []);
+        if (topProds.status === 'fulfilled') setTopProducts(Array.isArray(topProds.value) ? topProds.value : []);
+        if (funnel.status === 'fulfilled' && funnel.value) setFunnelData(funnel.value);
       } catch (err) {
-        console.error('Failed to fetch analytics database:', err);
+        console.error('Analytics fetch error:', err);
       } finally {
         if (!isSilent) setLoading(false);
       }
     };
-    fetchAnalyticsData();
-    const interval = setInterval(() => {
-      fetchAnalyticsData(true);
-    }, 30000); // 30s polling
+
+    fetchAll();
+    const interval = setInterval(() => fetchAll(true), 30_000);
     return () => clearInterval(interval);
-  }, []);
+  }, [timeRange]);
 
-  const formatPrice = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-  };
+  // ─── Formatters ─────────────────────────────────────────────────────────────
+  const formatPrice = (n: number) =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
 
-  // Process data for line chart dynamically based on timeRange
-  const revenueChartData = useMemo(() => {
-    const chartPoints = [];
-    const today = new Date();
-    for (let i = timeRange - 1; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-      
-      const dayRevenue = data.allOrders
-        .filter((o: any) => {
-          const orderDate = new Date(o.createdAt);
-          return orderDate.toDateString() === date.toDateString() && 
-                 (o.status === 'COMPLETED' || o.status === 'DELIVERED' || o.status === 'PROCESSING' || o.status === 'SHIPPED');
-        })
-        .reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0);
-      
-      chartPoints.push({ date: dateStr, revenue: dayRevenue });
-    }
-    return chartPoints;
-  }, [data.allOrders, timeRange]);
-
-  // Order status distribution
-  const orderStatusData = useMemo(() => {
-    const statusCounts = {
-      COMPLETED: 0,
-      DELIVERED: 0,
-      PROCESSING: 0,
-      SHIPPED: 0,
-      PENDING: 0,
-      CANCELLED: 0
-    };
-    
-    data.allOrders.forEach((order: any) => {
-      const status = order.status;
-      if (statusCounts.hasOwnProperty(status)) {
-        statusCounts[status as keyof typeof statusCounts]++;
-      }
-    });
-    
-    return [
-      { name: 'Hoàn thành', value: statusCounts.COMPLETED + statusCounts.DELIVERED, color: '#10b981' },
-      { name: 'Đang xử lý', value: statusCounts.PROCESSING, color: '#3b82f6' },
-      { name: 'Đang giao', value: statusCounts.SHIPPED, color: '#6366f1' },
-      { name: 'Chờ thanh toán', value: statusCounts.PENDING, color: '#f59e0b' },
-      { name: 'Đã hủy', value: statusCounts.CANCELLED, color: '#ef4444' }
-    ].filter(item => item.value > 0);
-  }, [data.allOrders]);
-
-  // Top selling products
-  const topSellingProducts = useMemo(() => {
-    const productSales: Record<number, { name: string; revenue: number; quantity: number }> = {};
-    
-    data.allOrders.forEach((order: any) => {
-      if (['COMPLETED', 'DELIVERED'].includes(order.status) && Array.isArray(order.items)) {
-        order.items.forEach((item: any) => {
-          const productId = item.product?.id;
-          const productName = item.product?.name || 'Sản phẩm không tên';
-          const price = item.price || 0;
-          const quantity = item.quantity || 1;
-          
-          if (productId) {
-            if (!productSales[productId]) {
-              productSales[productId] = { name: productName, revenue: 0, quantity: 0 };
-            }
-            productSales[productId].revenue += price * quantity;
-            productSales[productId].quantity += quantity;
-          }
-        });
-      }
-    });
-    
-    return Object.values(productSales)
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 5);
-  }, [data.allOrders]);
-
-  // Summary Metrics
+  // ─── Computed Metrics from Orders ───────────────────────────────────────────
   const summaryMetrics = useMemo(() => {
-    const completedOrders = data.allOrders.filter(o => ['COMPLETED', 'DELIVERED'].includes(o.status));
-    const totalRev = completedOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-    const avgOrderValue = completedOrders.length > 0 ? totalRev / completedOrders.length : 0;
-    
-    return {
-      totalRevenue: totalRev,
-      avgOrderValue,
-      completedCount: completedOrders.length,
-      conversionRate: data.allOrders.length > 0 ? (completedOrders.length / data.allOrders.length) * 100 : 0
-    };
-  }, [data.allOrders]);
+    const done = allOrders.filter((o) => ['COMPLETED', 'DELIVERED'].includes(o.status));
+    const totalRevenue = done.reduce((s, o) => s + (o.totalAmount || 0), 0);
+    const avgOrderValue = done.length > 0 ? totalRevenue / done.length : 0;
+    const conversionRate = allOrders.length > 0 ? (done.length / allOrders.length) * 100 : 0;
 
+    // Compare with previous period
+    const now = new Date();
+    const cutoff = new Date(now);
+    cutoff.setDate(cutoff.getDate() - timeRange);
+    const prevCutoff = new Date(cutoff);
+    prevCutoff.setDate(prevCutoff.getDate() - timeRange);
+
+    const currentPeriodOrders = allOrders.filter((o) => new Date(o.createdAt) >= cutoff);
+    const prevPeriodOrders = allOrders.filter(
+      (o) => new Date(o.createdAt) >= prevCutoff && new Date(o.createdAt) < cutoff,
+    );
+    const currentRevenue = currentPeriodOrders
+      .filter((o) => ['COMPLETED', 'DELIVERED'].includes(o.status))
+      .reduce((s, o) => s + (o.totalAmount || 0), 0);
+    const prevRevenue = prevPeriodOrders
+      .filter((o) => ['COMPLETED', 'DELIVERED'].includes(o.status))
+      .reduce((s, o) => s + (o.totalAmount || 0), 0);
+    const revenueGrowth = prevRevenue > 0 ? ((currentRevenue - prevRevenue) / prevRevenue) * 100 : null;
+
+    return { totalRevenue, avgOrderValue, conversionRate, completedCount: done.length, revenueGrowth, currentRevenue };
+  }, [allOrders, timeRange]);
+
+  // ─── Revenue Chart (from orders, day by day) ────────────────────────────────
+  const revenueChartData = useMemo(() => {
+    const today = new Date();
+    return Array.from({ length: timeRange }, (_, i) => {
+      const date = new Date(today);
+      date.setDate(date.getDate() - (timeRange - 1 - i));
+      const dateStr = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+      const isoDate = date.toISOString().split('T')[0];
+
+      const dayRevenue = allOrders
+        .filter((o) => {
+          const od = new Date(o.createdAt).toISOString().split('T')[0];
+          return od === isoDate && ['COMPLETED', 'DELIVERED', 'PROCESSING', 'SHIPPED'].includes(o.status);
+        })
+        .reduce((s, o) => s + (o.totalAmount || 0), 0);
+
+      const stat = dailyStats.find((d) => d.date === isoDate);
+
+      return { date: dateStr, revenue: dayRevenue, views: stat?.views || 0, addToCarts: stat?.addToCarts || 0 };
+    });
+  }, [allOrders, dailyStats, timeRange]);
+
+  // ─── Order Status Pie ────────────────────────────────────────────────────────
+  const orderStatusData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    allOrders.forEach((o) => { counts[o.status] = (counts[o.status] || 0) + 1; });
+    const labels: Record<string, string> = {
+      COMPLETED: 'Hoàn thành', DELIVERED: 'Đã giao', PROCESSING: 'Đang xử lý',
+      SHIPPED: 'Đang giao', PENDING: 'Chờ xác nhận', CANCELLED: 'Đã hủy',
+    };
+    const colors: Record<string, string> = {
+      COMPLETED: '#10b981', DELIVERED: '#3b82f6', PROCESSING: '#f59e0b',
+      SHIPPED: '#8b5cf6', PENDING: '#6b7280', CANCELLED: '#ef4444',
+    };
+    return Object.entries(counts)
+      .filter(([, v]) => v > 0)
+      .map(([k, v]) => ({ name: labels[k] || k, value: v, color: colors[k] || '#94a3b8' }));
+  }, [allOrders]);
+
+  // ─── Top Products from Orders ────────────────────────────────────────────────
+  const topSellingProducts = useMemo(() => {
+    const map: Record<number, { name: string; revenue: number; count: number }> = {};
+    allOrders
+      .filter((o) => ['COMPLETED', 'DELIVERED'].includes(o.status))
+      .forEach((o) => {
+        o.items?.forEach((item) => {
+          const id = item.productId;
+          if (!map[id]) map[id] = { name: item.product?.name || `#${id}`, revenue: 0, count: 0 };
+          map[id].revenue += item.price * item.quantity;
+          map[id].count += item.quantity;
+        });
+      });
+    return Object.values(map).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+  }, [allOrders]);
+
+  // ─── Funnel Chart Data ───────────────────────────────────────────────────────
+  const funnelChartData = useMemo(() => {
+    if (!funnelData) return [];
+    return [
+      { label: '👁 Lượt xem', value: funnelData.views, color: '#0e6877', pct: '100%' },
+      { label: '🛒 Thêm giỏ', value: funnelData.addToCarts, color: '#3b82f6', pct: funnelData.conversionRates.viewToCart },
+      { label: '💳 Mua hàng', value: funnelData.purchases, color: '#10b981', pct: funnelData.conversionRates.viewToPurchase },
+    ];
+  }, [funnelData]);
+
+  // ─── Top Products Bar Chart (from analytics API) ─────────────────────────────
+  const topProductsBarData = useMemo(() =>
+    topProducts.slice(0, 8).map((p) => ({ name: p.productName.slice(0, 15) + (p.productName.length > 15 ? '…' : ''), views: p.views })),
+    [topProducts],
+  );
+
+  // ─── Loading ─────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-4 animate-fadeIn">
-        <div className="w-12 h-12 border-4 border-[#0e6877] border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-[#526069] text-sm font-medium">Đang chuẩn bị báo cáo...</p>
+      <div className="h-screen flex flex-col items-center justify-center gap-4 bg-gray-50">
+        <div className="w-12 h-12 border-4 border-[#0e6877] border-t-transparent rounded-full animate-spin" />
+        <p className="text-gray-500 text-sm font-semibold">Đang tải dữ liệu phân tích...</p>
       </div>
     );
   }
 
+  // ─── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-8 animate-fadeIn text-[#1b1c1b] max-w-7xl mx-auto px-2">
-      {/* Header with Selector */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200">
+    <div className="p-6 bg-gray-50 min-h-screen space-y-6">
+
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-black text-slate-800 tracking-tight">Báo cáo & Thống kê</h2>
-          <p className="text-[#526069] text-xs font-medium mt-1">Phân tích doanh thu và hiệu suất bán hàng tổng quan</p>
+          <h1 className="text-2xl font-black text-gray-900">📊 Phân Tích & Báo Cáo</h1>
+          <p className="text-gray-500 text-xs mt-1">Tổng quan hiệu suất kinh doanh theo thời gian thực</p>
         </div>
-        
-        {/* Time Selector Dropdown */}
-        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl p-1.5 shadow-xs">
-          <button 
-            onClick={() => setTimeRange(7)}
-            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer border-none ${
-              timeRange === 7 
-                ? 'bg-[#0e6877] text-white shadow-xs' 
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            7 ngày qua
-          </button>
-          <button 
-            onClick={() => setTimeRange(30)}
-            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer border-none ${
-              timeRange === 30 
-                ? 'bg-[#0e6877] text-white shadow-xs' 
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            30 ngày qua
-          </button>
+        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-2xl p-1">
+          {([7, 30] as const).map((r) => (
+            <button
+              key={r}
+              onClick={() => setTimeRange(r)}
+              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer border-none ${
+                timeRange === r ? 'bg-[#0e6877] text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              {r} ngày
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Summary Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center gap-4">
-          <div className="p-3 bg-[#ecf6f7] rounded-2xl text-[#0e6877]">
-            <DollarSign size={22} />
+      {/* ── KPI Cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          {
+            icon: <DollarSign className="w-5 h-5" />,
+            bg: 'bg-teal-50', text: 'text-teal-600',
+            label: 'Doanh thu tích lũy',
+            value: formatPrice(summaryMetrics.totalRevenue),
+            growth: summaryMetrics.revenueGrowth,
+          },
+          {
+            icon: <ShoppingBag className="w-5 h-5" />,
+            bg: 'bg-blue-50', text: 'text-blue-600',
+            label: 'Đơn hoàn thành',
+            value: `${summaryMetrics.completedCount} đơn`,
+            growth: null,
+          },
+          {
+            icon: <TrendingUp className="w-5 h-5" />,
+            bg: 'bg-purple-50', text: 'text-purple-600',
+            label: 'Giá trị đơn TB',
+            value: formatPrice(summaryMetrics.avgOrderValue),
+            growth: null,
+          },
+          {
+            icon: <Users className="w-5 h-5" />,
+            bg: 'bg-emerald-50', text: 'text-emerald-600',
+            label: 'Tỉ lệ hoàn thành',
+            value: `${summaryMetrics.conversionRate.toFixed(1)}%`,
+            growth: null,
+          },
+        ].map((card, i) => (
+          <div key={i} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-3">
+              <div className={`${card.bg} ${card.text} p-2.5 rounded-xl`}>{card.icon}</div>
+              {card.growth !== null && (
+                <span className={`flex items-center gap-0.5 text-xs font-bold ${
+                  card.growth >= 0 ? 'text-emerald-600' : 'text-red-500'
+                }`}>
+                  {card.growth >= 0 ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                  {Math.abs(card.growth).toFixed(1)}%
+                </span>
+              )}
+            </div>
+            <p className="text-gray-400 text-[10px] font-semibold uppercase tracking-wider">{card.label}</p>
+            <p className="text-lg font-black text-gray-900 mt-1">{card.value}</p>
           </div>
-          <div>
-            <p className="text-[#526069] text-[10px] font-extrabold uppercase tracking-wider">Doanh thu tích lũy</p>
-            <h3 className="text-lg font-black text-slate-850 mt-1">{formatPrice(summaryMetrics.totalRevenue)}</h3>
-          </div>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center gap-4">
-          <div className="p-3 bg-blue-50 rounded-2xl text-blue-600">
-            <ShoppingBag size={22} />
-          </div>
-          <div>
-            <p className="text-[#526069] text-[10px] font-extrabold uppercase tracking-wider">Đơn hàng hoàn tất</p>
-            <h3 className="text-lg font-black text-slate-850 mt-1">{summaryMetrics.completedCount} đơn hàng</h3>
-          </div>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center gap-4">
-          <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600">
-            <TrendingUp size={22} />
-          </div>
-          <div>
-            <p className="text-[#526069] text-[10px] font-extrabold uppercase tracking-wider">Giá trị đơn trung bình</p>
-            <h3 className="text-lg font-black text-slate-850 mt-1">{formatPrice(summaryMetrics.avgOrderValue)}</h3>
-          </div>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-350 flex items-center gap-4">
-          <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600">
-            <Layers size={22} />
-          </div>
-          <div>
-            <p className="text-[#526069] text-[10px] font-extrabold uppercase tracking-wider">Tỷ lệ mua hàng</p>
-            <h3 className="text-lg font-black text-slate-850 mt-1">{summaryMetrics.conversionRate.toFixed(1)}%</h3>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Main Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Revenue line chart */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-sm">
-          <div>
-            <h3 className="text-base font-bold text-slate-850">Xu hướng Doanh thu</h3>
-            <p className="text-[#526069] text-xs font-semibold">Tổng doanh số tích lũy của cửa hàng trong {timeRange} ngày qua</p>
-          </div>
-          <div className="w-full h-[320px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={revenueChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="date" stroke="#94a3b8" fontSize={11} tick={{ fill: '#64748b' }} />
-                <YAxis stroke="#94a3b8" fontSize={11} tick={{ fill: '#64748b' }} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'rgba(255, 255, 255, 0.96)', 
-                    border: '1px solid #e2e8f0', 
-                    borderRadius: '16px',
-                    color: '#0f172a',
-                    fontSize: '12px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
-                  }}
-                  formatter={(value: any) => [formatPrice(Number(value || 0)), 'Doanh thu']}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="#0e6877" 
-                  strokeWidth={3}
-                  dot={{ fill: '#0e6877', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 7, stroke: '#0e6877', strokeWidth: 2 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+      {/* ── Revenue + Views Chart ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <h3 className="text-sm font-bold text-gray-800 mb-1">Xu hướng Doanh thu & Lượt xem</h3>
+          <p className="text-gray-400 text-xs mb-4">{timeRange} ngày qua — kết hợp dữ liệu đơn hàng và analytics tracking</p>
+          <ResponsiveContainer width="100%" height={220}>
+            <LineChart data={revenueChartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#94a3b8' }} />
+              <YAxis yAxisId="left" tick={{ fontSize: 10, fill: '#94a3b8' }} tickFormatter={(v) => `${(v / 1e6).toFixed(0)}M`} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: '#94a3b8' }} />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, fontSize: 12 }}
+                formatter={((value: any, name: any) => [
+                  name === 'revenue' ? formatPrice(Number(value)) : value,
+                  name === 'revenue' ? 'Doanh thu' : name === 'views' ? 'Lượt xem' : 'Thêm giỏ',
+                ]) as any}
+              />
+              <Legend formatter={(v) => (v === 'revenue' ? 'Doanh thu' : v === 'views' ? 'Lượt xem' : 'Thêm giỏ')} />
+              <Line yAxisId="left" type="monotone" dataKey="revenue" stroke="#0e6877" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+              <Line yAxisId="right" type="monotone" dataKey="views" stroke="#3b82f6" strokeWidth={2} strokeDasharray="4 2" dot={false} />
+              <Line yAxisId="right" type="monotone" dataKey="addToCarts" stroke="#f59e0b" strokeWidth={2} strokeDasharray="4 2" dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
 
-        {/* Order Status Distribution */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-sm flex flex-col justify-between">
-          <div>
-            <h3 className="text-base font-bold text-slate-850">Cơ cấu Đơn hàng</h3>
-            <p className="text-[#526069] text-xs font-semibold">Tỷ lệ đơn hàng phân bổ theo trạng thái</p>
-          </div>
-          <div className="w-full h-[220px] relative flex justify-center items-center">
-            {orderStatusData.length === 0 ? (
-              <p className="text-slate-400 text-xs">Chưa có dữ liệu đơn hàng</p>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
+        {/* Order Status Pie */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col">
+          <h3 className="text-sm font-bold text-gray-800 mb-1">Cơ cấu Đơn hàng</h3>
+          <p className="text-gray-400 text-xs mb-4">Phân bổ theo trạng thái</p>
+          {orderStatusData.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={160}>
                 <PieChart>
-                  <Pie
-                    data={orderStatusData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={4}
-                    dataKey="value"
-                  >
-                    {orderStatusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
+                  <Pie data={orderStatusData} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={3} dataKey="value">
+                    {orderStatusData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                   </Pie>
-                  <Tooltip formatter={(value: any) => [`${value} đơn`, 'Số lượng']} />
+                  <Tooltip formatter={(v) => [`${v} đơn`, 'Số lượng']} />
                 </PieChart>
               </ResponsiveContainer>
-            )}
-          </div>
-          {/* Custom Legends */}
-          <div className="grid grid-cols-2 gap-3 text-xs pt-4 border-t border-slate-100">
-            {orderStatusData.map((item, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
-                <span className="text-slate-700 font-bold truncate">{item.name} ({item.value})</span>
+              <div className="grid grid-cols-2 gap-2 mt-auto pt-4 border-t border-gray-100">
+                {orderStatusData.map((item, i) => (
+                  <div key={i} className="flex items-center gap-1.5 text-xs">
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                    <span className="text-gray-600 truncate">{item.name} ({item.value})</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Chưa có dữ liệu</div>
+          )}
         </div>
       </div>
 
-      {/* Top Selling Products Bento Box Section */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
-        <div>
-          <h3 className="text-base font-bold text-slate-850">Top 5 Sản phẩm bán chạy nhất</h3>
-          <p className="text-[#526069] text-xs font-semibold">Danh sách sản phẩm đem lại doanh thu cao nhất (Dựa trên đơn hoàn tất)</p>
+      {/* ── Funnel Conversion + Top Products BarChart ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {/* Conversion Funnel */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <h3 className="text-sm font-bold text-gray-800 mb-1">Phễu Chuyển Đổi</h3>
+          <p className="text-gray-400 text-xs mb-5">Lượt xem → Thêm giỏ → Mua hàng (dữ liệu analytics thực tế)</p>
+          {funnelChartData.length > 0 ? (
+            <div className="space-y-3">
+              {funnelChartData.map((step, i) => {
+                const maxVal = funnelChartData[0]?.value || 1;
+                const pct = Math.round((step.value / maxVal) * 100);
+                return (
+                  <div key={i}>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs font-bold text-gray-700">{step.label}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400">{step.value.toLocaleString()}</span>
+                        {i > 0 && (
+                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full" style={{ backgroundColor: step.color + '20', color: step.color }}>
+                            {step.pct}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-3">
+                      <div
+                        className="h-3 rounded-full transition-all duration-700"
+                        style={{ width: `${pct}%`, backgroundColor: step.color }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-3 gap-3 text-center">
+                <div>
+                  <p className="text-[10px] text-gray-400 font-semibold">View → Giỏ</p>
+                  <p className="text-sm font-black text-blue-600">{funnelData?.conversionRates.viewToCart || '0%'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-400 font-semibold">Giỏ → Mua</p>
+                  <p className="text-sm font-black text-teal-600">{funnelData?.conversionRates.cartToPurchase || '0%'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-gray-400 font-semibold">View → Mua</p>
+                  <p className="text-sm font-black text-emerald-600">{funnelData?.conversionRates.viewToPurchase || '0%'}</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-32 text-gray-400 text-sm">
+              Chưa có dữ liệu analytics. Hãy chắc chắn Mini App đang track events.
+            </div>
+          )}
         </div>
 
+        {/* Top Products Bar Chart */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <h3 className="text-sm font-bold text-gray-800 mb-1">Top Sản phẩm được xem nhiều nhất</h3>
+          <p className="text-gray-400 text-xs mb-4">Dữ liệu từ Analytics API — lượt xem sản phẩm</p>
+          {topProductsBarData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={topProductsBarData} layout="vertical" margin={{ left: 0, right: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: '#374151' }} width={100} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 12 }}
+                  formatter={(v: any) => [`${v} lượt xem`, 'Lượt xem']}
+                />
+                <Bar dataKey="views" fill="#0e6877" radius={[0, 6, 6, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-32 text-gray-400 text-sm">
+              Chưa có dữ liệu. Analytics events chưa được ghi nhận.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Top Selling Products Table (from Orders) ── */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-bold text-gray-800">Top 5 Sản phẩm Doanh thu cao nhất</h3>
+            <p className="text-gray-400 text-xs mt-0.5">Tính từ đơn hàng hoàn thành (COMPLETED / DELIVERED)</p>
+          </div>
+          <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-3 py-1 rounded-full border border-teal-200">Từ đơn hàng</span>
+        </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-150 text-[#526069] font-extrabold uppercase tracking-wider">
-                <th className="py-4 px-4">Tên sản phẩm</th>
-                <th className="py-4 px-4 text-center">Số lượng bán ra</th>
-                <th className="py-4 px-4 text-right">Doanh thu thu về</th>
+              <tr className="text-[10px] text-gray-400 font-bold uppercase tracking-wider border-b border-gray-100">
+                <th className="text-left py-3 px-2">#</th>
+                <th className="text-left py-3 px-2">Sản phẩm</th>
+                <th className="text-center py-3 px-2">SL bán</th>
+                <th className="text-right py-3 px-2">Doanh thu</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-700">
+            <tbody>
               {topSellingProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="py-8 text-center text-slate-400 font-medium">Chưa có dữ liệu sản phẩm.</td>
+                  <td colSpan={4} className="py-8 text-center text-gray-400 text-sm">Chưa có đơn hàng hoàn thành nào.</td>
                 </tr>
               ) : (
-                topSellingProducts.map((prod, index) => (
-                  <tr key={index} className="hover:bg-slate-50 transition-colors">
-                    <td className="py-4 px-4 font-bold text-slate-850 flex items-center gap-3">
-                      <span className="w-5 h-5 bg-[#ecf6f7] text-[#0e6877] rounded-full flex items-center justify-center font-bold text-[10px]">
-                        {index + 1}
-                      </span>
-                      {prod.name}
+                topSellingProducts.map((prod, i) => (
+                  <tr key={i} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                    <td className="py-3.5 px-2">
+                      <span className="w-6 h-6 bg-teal-50 text-teal-700 rounded-full flex items-center justify-center text-[10px] font-black">{i + 1}</span>
                     </td>
-                    <td className="py-4 px-4 text-center font-bold">{prod.quantity} chiếc</td>
-                    <td className="py-4 px-4 text-right font-black text-[#0e6877]">{formatPrice(prod.revenue)}</td>
+                    <td className="py-3.5 px-2 text-sm font-semibold text-gray-800">{prod.name}</td>
+                    <td className="py-3.5 px-2 text-center text-sm text-gray-500">{prod.count}</td>
+                    <td className="py-3.5 px-2 text-right text-sm font-black text-teal-700">{formatPrice(prod.revenue)}</td>
                   </tr>
                 ))
               )}
@@ -339,7 +466,29 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
           </table>
         </div>
       </div>
+
+      {/* ── Analytics Quick Stats ── */}
+      {funnelData && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            { icon: <Eye className="w-4 h-4" />, label: 'Tổng lượt xem SP', value: funnelData.views.toLocaleString(), bg: 'bg-blue-50', text: 'text-blue-600' },
+            { icon: <ShoppingCart className="w-4 h-4" />, label: 'Lần thêm giỏ', value: funnelData.addToCarts.toLocaleString(), bg: 'bg-amber-50', text: 'text-amber-600' },
+            { icon: <ShoppingBag className="w-4 h-4" />, label: 'Lần mua hàng', value: funnelData.purchases.toLocaleString(), bg: 'bg-emerald-50', text: 'text-emerald-600' },
+            { icon: <TrendingUp className="w-4 h-4" />, label: 'Lượt tìm kiếm', value: funnelData.searches.toLocaleString(), bg: 'bg-purple-50', text: 'text-purple-600' },
+          ].map((stat, i) => (
+            <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-3">
+              <div className={`${stat.bg} ${stat.text} p-2 rounded-xl`}>{stat.icon}</div>
+              <div>
+                <p className="text-[10px] text-gray-400 font-semibold">{stat.label}</p>
+                <p className="text-base font-black text-gray-900">{stat.value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
     </div>
   );
 };
+
 export default Analytics;

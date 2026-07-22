@@ -16,7 +16,9 @@ import { PrismaService } from '../../prisma/prisma.service';
     origin: '*',
   },
 })
-export class OrderTrackingGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class OrderTrackingGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
@@ -72,7 +74,7 @@ export class OrderTrackingGateway implements OnGatewayConnection, OnGatewayDisco
   }
 
   // Method to broadcast order status update to all clients listening to this order
-  async broadcastOrderStatus(orderId: string, status: string) {
+  broadcastOrderStatus(orderId: string, status: string) {
     this.server.to(`order_${orderId}`).emit('orderStatus', {
       orderId,
       status,
@@ -81,7 +83,10 @@ export class OrderTrackingGateway implements OnGatewayConnection, OnGatewayDisco
   }
 
   // Method to broadcast estimated delivery date update
-  async broadcastDeliveryDateUpdate(orderId: string, estimatedDeliveryDate: Date) {
+  broadcastDeliveryDateUpdate(
+    orderId: string,
+    estimatedDeliveryDate: Date,
+  ) {
     this.server.to(`order_${orderId}`).emit('deliveryDateUpdate', {
       orderId,
       estimatedDeliveryDate,

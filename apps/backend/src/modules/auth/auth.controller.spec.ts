@@ -84,7 +84,9 @@ describe('AuthController', () => {
       const result = await controller.verify(verifyTokenDto);
 
       expect(result).toEqual(decodedToken);
-      expect(authService.verifyToken).toHaveBeenCalledWith(verifyTokenDto.token);
+      expect(authService.verifyToken).toHaveBeenCalledWith(
+        verifyTokenDto.token,
+      );
     });
   });
 

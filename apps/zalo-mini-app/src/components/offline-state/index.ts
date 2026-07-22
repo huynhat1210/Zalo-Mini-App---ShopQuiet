@@ -1,2 +1,2 @@
-export * from './offline-state.component';
-export * from './offline-state.type';
+export * from "./offline-state.component";
+export * from "./offline-state.type";

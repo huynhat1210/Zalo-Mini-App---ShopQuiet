@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+import type { Dispatch, SetStateAction } from "react";
 
 export interface IOrderItem {
   id?: number;
@@ -78,7 +78,7 @@ export interface ICartItem {
   color: string;
 }
 
-export type TToastType = 'success' | 'warning' | 'info';
+export type TToastType = "success" | "warning" | "info";
 
 export interface IToastState {
   message: string;
@@ -99,11 +99,27 @@ export interface IZaloUser {
 
 export interface ICartContextType {
   cart: ICartItem[];
-  addToCart: (product: IProduct, quantity?: number, size?: string, color?: string) => void;
+  addToCart: (
+    product: IProduct,
+    quantity?: number,
+    size?: string,
+    color?: string,
+  ) => void;
   removeFromCart: (productId: number, size?: string, color?: string) => void;
-  updateQuantity: (productId: number, qty: number, size?: string, color?: string) => void;
+  updateQuantity: (
+    productId: number,
+    qty: number,
+    size?: string,
+    color?: string,
+  ) => void;
   clearCart: () => void;
-  updateItemVariant: (productId: number, oldSize: string, newSize: string, oldColor: string, newColor: string) => void;
+  updateItemVariant: (
+    productId: number,
+    oldSize: string,
+    newSize: string,
+    oldColor: string,
+    newColor: string,
+  ) => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   selectedProductDetail: IProduct | null;
@@ -138,5 +154,8 @@ export interface ICartContextType {
   claimDailyReward: () => Promise<void>;
   recommendations: IProduct[];
   fetchRecommendations: () => Promise<void>;
-  exchangeVoucher: (voucherCode: string, pointsCost: number) => Promise<boolean>;
+  exchangeVoucher: (
+    voucherCode: string,
+    pointsCost: number,
+  ) => Promise<boolean>;
 }

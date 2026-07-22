@@ -1,19 +1,37 @@
-import { useState, useEffect } from 'react';
-import { Page, Box, Swiper } from 'zmp-ui';
-import { IProduct, useCart } from '../../App';
-import api from 'zmp-sdk';
-import { apiRequest, API_BASE_URL, trackAnalyticsEvent } from '../../utils';
-import { ChevronLeftIcon, ShareIcon, ShoppingBagIcon, HeartIcon as HeartOutline, ChatBubbleOvalLeftEllipsisIcon } from '@heroicons/react/24/outline';
-import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
-import { IProductDetailProps } from './product-detail.type';
-import { LazyImageComponent } from '../../components';
+import { useState, useEffect } from "react";
+import { Page, Box, Swiper } from "zmp-ui";
+import { IProduct, useCart } from "../../App";
+import api from "zmp-sdk";
+import { apiRequest, API_BASE_URL, trackAnalyticsEvent } from "../../utils";
+import {
+  ChevronLeftIcon,
+  ShareIcon,
+  ShoppingBagIcon,
+  HeartIcon as HeartOutline,
+  ChatBubbleOvalLeftEllipsisIcon,
+} from "@heroicons/react/24/outline";
+import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
+import { IProductDetailProps } from "./product-detail.type";
+import { LazyImageComponent } from "../../components";
 
 const PageCast = Page as any;
 const BoxCast = Box as any;
 
 export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
   const { product, onClose, onAddToCart } = props;
-  const { toggleSavedItem, isSavedItem, setActiveTab, showToast, setBuyNowItem, setSelectedProductDetail, cart, setIsCartOpen, setIsChatOpen, setChatContextProduct, zaloUser } = useCart();
+  const {
+    toggleSavedItem,
+    isSavedItem,
+    setActiveTab,
+    showToast,
+    setBuyNowItem,
+    setSelectedProductDetail,
+    cart,
+    setIsCartOpen,
+    setIsChatOpen,
+    setChatContextProduct,
+    zaloUser,
+  } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [likeCount, setLikeCount] = useState(product.likeCount || 0);
 
@@ -23,21 +41,25 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
 
   // Scroll to top when product ID changes
   useEffect(() => {
-    const overlays = document.querySelectorAll('.fixed.inset-0.z-\\[100\\], .bg-surface.fixed.inset-0');
-    overlays.forEach(el => {
+    const overlays = document.querySelectorAll(
+      ".fixed.inset-0.z-\\[100\\], .bg-surface.fixed.inset-0",
+    );
+    overlays.forEach((el) => {
       el.scrollTop = 0;
     });
   }, [product.id]);
-  
+
   // Accordion toggle states
-  const [expandedSection, setExpandedSection] = useState<string | null>('materials');
+  const [expandedSection, setExpandedSection] = useState<string | null>(
+    "materials",
+  );
 
   // DB-backed detail states
   const [productDetails, setProductDetails] = useState<any>(null);
-  
+
   // Variant selections
-  const [selectedColor, setSelectedColor] = useState<string>('');
-  const [selectedSize, setSelectedSize] = useState<string>('');
+  const [selectedColor, setSelectedColor] = useState<string>("");
+  const [selectedSize, setSelectedSize] = useState<string>("");
 
   const [comments, setComments] = useState<any[]>([]);
   const [relatedProducts, setRelatedProducts] = useState<IProduct[]>([]);
@@ -49,7 +71,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
         if (details) {
           setProductDetails(details);
           setComments(details.comments || []);
-          
+
           if (details.variants && details.variants.length > 0) {
             // Find first available variant
             const available = details.variants.find((v: any) => v.stock > 0);
@@ -60,11 +82,16 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
 
           // Track view event
           if (zaloUser?.id) {
-            trackAnalyticsEvent(zaloUser.id, 'view', product.id, product.category?.id);
+            trackAnalyticsEvent(
+              zaloUser.id,
+              "view",
+              product.id,
+              product.category?.id,
+            );
           }
         }
       } catch (e) {
-        console.error('Error fetching product details:', e);
+        console.error("Error fetching product details:", e);
       }
     };
 
@@ -73,12 +100,14 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
       if (!catId) return;
       try {
         const listRes = await apiRequest<any>(`/products?categoryId=${catId}`);
-        const list = Array.isArray(listRes) ? listRes : (listRes?.data || []);
+        const list = Array.isArray(listRes) ? listRes : listRes?.data || [];
         if (list && Array.isArray(list)) {
-          setRelatedProducts(list.filter((p: IProduct) => p.id !== product.id).slice(0, 4));
+          setRelatedProducts(
+            list.filter((p: IProduct) => p.id !== product.id).slice(0, 4),
+          );
         }
       } catch (e) {
-        console.error('Error fetching related products:', e);
+        console.error("Error fetching related products:", e);
       }
     };
 
@@ -88,33 +117,56 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
 
   const isLiked = isSavedItem(product.id);
 
-  let images: string[] = ['https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80'];
+  let images: string[] = [
+    "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80",
+  ];
   try {
     const parsed = JSON.parse(product.images);
     if (parsed && Array.isArray(parsed) && parsed.length > 0) images = parsed;
   } catch (e) {
-    if (typeof product.images === 'string' && product.images) {
+    if (typeof product.images === "string" && product.images) {
       images = [product.images];
     }
   }
 
   // Get unique colors and sizes
-  const uniqueColors = Array.from(new Set(productDetails?.variants?.map((v: any) => v.color).filter((c: string) => c && c !== 'DEFAULT'))) as string[];
-  
-  // Sizes available for the selected color
-  const sizesForColor = productDetails?.variants?.filter((v: any) => v.color === (selectedColor || 'DEFAULT')) || [];
-  const uniqueSizes = Array.from(new Set(sizesForColor.map((v: any) => v.size).filter((s: string) => s && s !== 'DEFAULT'))) as string[];
+  const uniqueColors = Array.from(
+    new Set(
+      productDetails?.variants
+        ?.map((v: any) => v.color)
+        .filter((c: string) => c && c !== "DEFAULT"),
+    ),
+  ) as string[];
 
-  const selectedVariant = productDetails?.variants?.find((v: any) => v.color === (selectedColor || 'DEFAULT') && v.size === (selectedSize || 'DEFAULT'));
+  // Sizes available for the selected color
+  const sizesForColor =
+    productDetails?.variants?.filter(
+      (v: any) => v.color === (selectedColor || "DEFAULT"),
+    ) || [];
+  const uniqueSizes = Array.from(
+    new Set(
+      sizesForColor
+        .map((v: any) => v.size)
+        .filter((s: string) => s && s !== "DEFAULT"),
+    ),
+  ) as string[];
+
+  const selectedVariant = productDetails?.variants?.find(
+    (v: any) =>
+      v.color === (selectedColor || "DEFAULT") &&
+      v.size === (selectedSize || "DEFAULT"),
+  );
   const stockCount = selectedVariant ? selectedVariant.stock : 0;
-  
+
   const hasColors = uniqueColors.length > 0;
   const hasSizes = uniqueSizes.length > 0;
 
   // Auto-select first available size when color changes
   useEffect(() => {
     if (hasSizes && selectedColor) {
-      const sizes = productDetails?.variants?.filter((v: any) => v.color === selectedColor);
+      const sizes = productDetails?.variants?.filter(
+        (v: any) => v.color === selectedColor,
+      );
       if (sizes && sizes.length > 0) {
         const available = sizes.find((v: any) => v.stock > 0);
         setSelectedSize(available ? available.size : sizes[0].size);
@@ -125,78 +177,90 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
   const handleAdd = () => {
     // If product has variants, require selection and check stock
     if (hasColors || hasSizes) {
-      const size = selectedSize || 'DEFAULT';
-      const color = selectedColor || 'DEFAULT';
+      const size = selectedSize || "DEFAULT";
+      const color = selectedColor || "DEFAULT";
       if (stockCount <= 0) {
-        showToast('Sản phẩm với phân loại này đã hết hàng!', 'warning');
+        showToast("Sản phẩm với phân loại này đã hết hàng!", "warning");
         return;
       }
       onAddToCart(product, quantity, size, color);
     } else {
       // Product has no variants, add directly
-      onAddToCart(product, quantity, 'DEFAULT', 'DEFAULT');
-    }
-    
-    // Track add_to_cart event
-    if (zaloUser?.id) {
-      trackAnalyticsEvent(zaloUser.id, 'add_to_cart', product.id, product.category?.id, { quantity });
+      onAddToCart(product, quantity, "DEFAULT", "DEFAULT");
     }
 
-    showToast(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`, 'success');
+    // Track add_to_cart event
+    if (zaloUser?.id) {
+      trackAnalyticsEvent(
+        zaloUser.id,
+        "add_to_cart",
+        product.id,
+        product.category?.id,
+        { quantity },
+      );
+    }
+
+    showToast(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`, "success");
   };
 
   const handleBuyNow = () => {
     // If product has variants, require selection and check stock
     if (hasColors || hasSizes) {
-      const size = selectedSize || 'DEFAULT';
-      const color = selectedColor || 'DEFAULT';
+      const size = selectedSize || "DEFAULT";
+      const color = selectedColor || "DEFAULT";
       if (stockCount <= 0) {
-        showToast('Sản phẩm với phân loại này đã hết hàng!', 'warning');
+        showToast("Sản phẩm với phân loại này đã hết hàng!", "warning");
         return;
       }
       setBuyNowItem({ product, quantity, size, color });
     } else {
       // Product has no variants, buy directly
-      setBuyNowItem({ product, quantity, size: 'DEFAULT', color: 'DEFAULT' });
+      setBuyNowItem({ product, quantity, size: "DEFAULT", color: "DEFAULT" });
     }
     onClose();
-    setActiveTab('checkout');
+    setActiveTab("checkout");
   };
 
-  const handleVoteReview = (reviewId: number, voteType: 'helpful' | 'unhelpful') => {
-    const votes = JSON.parse(localStorage.getItem('review_votes') || '{}');
-    const key = `${reviewId}_${zaloUser?.id || 'guest'}`;
+  const handleVoteReview = (
+    reviewId: number,
+    voteType: "helpful" | "unhelpful",
+  ) => {
+    const votes = JSON.parse(localStorage.getItem("review_votes") || "{}");
+    const key = `${reviewId}_${zaloUser?.id || "guest"}`;
 
     if (votes[key] === voteType) {
       delete votes[key];
-      showToast('Đã hủy đánh giá', 'info');
+      showToast("Đã hủy đánh giá", "info");
     } else {
       votes[key] = voteType;
-      showToast(voteType === 'helpful' ? 'Đánh giá hữu ích!' : 'Đánh giá không hữu ích', 'success');
+      showToast(
+        voteType === "helpful" ? "Đánh giá hữu ích!" : "Đánh giá không hữu ích",
+        "success",
+      );
     }
 
-    localStorage.setItem('review_votes', JSON.stringify(votes));
+    localStorage.setItem("review_votes", JSON.stringify(votes));
 
     setComments((prev: any[]) =>
       prev.map((rev) => {
         if (rev.id === reviewId) {
-          if (voteType === 'helpful') {
+          if (voteType === "helpful") {
             return { ...rev, helpfulCount: (rev.helpfulCount || 0) + 1 };
           } else {
             return { ...rev, unhelpfulCount: (rev.unhelpfulCount || 0) + 1 };
           }
         }
         return rev;
-      })
+      }),
     );
   };
 
   const formatDate = (dateStr: string) => {
     try {
       const d = new Date(dateStr);
-      return d.toLocaleDateString('vi-VN');
+      return d.toLocaleDateString("vi-VN");
     } catch (e) {
-      return 'Gần đây';
+      return "Gần đây";
     }
   };
 
@@ -213,7 +277,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
         >
           <ChevronLeftIcon className="w-5.5 h-5.5" strokeWidth={2.5} />
         </button>
-        
+
         <div className="flex gap-2 pointer-events-auto">
           {/* Share Button */}
           <button
@@ -223,30 +287,38 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                 if (apiAny.shareApp) {
                   apiAny.shareApp({
                     title: product.name,
-                    desc: product.description || 'Khám phá sản phẩm cao cấp tại ShopQuiet!',
+                    desc:
+                      product.description ||
+                      "Khám phá sản phẩm cao cấp tại ShopQuiet!",
                     thumb: images[0],
                     path: `pages/product-detail?id=${product.id}`,
-                    success: () => showToast('Đã mở chia sẻ Zalo!', 'success'),
+                    success: () => showToast("Đã mở chia sẻ Zalo!", "success"),
                     fail: () => {
-                      navigator.clipboard?.writeText(window.location.href || '').catch(() => {});
-                      showToast('Đã sao chép liên kết chia sẻ!', 'success');
-                    }
+                      navigator.clipboard
+                        ?.writeText(window.location.href || "")
+                        .catch(() => {});
+                      showToast("Đã sao chép liên kết chia sẻ!", "success");
+                    },
                   });
                 } else if (apiAny.shareCurrentPage) {
                   apiAny.shareCurrentPage({
                     title: product.name,
-                    desc: product.description || 'ShopQuiet',
+                    desc: product.description || "ShopQuiet",
                     thumb: images[0],
-                    success: () => showToast('Chia sẻ thành công!', 'success'),
-                    fail: () => showToast('Chia sẻ thất bại!', 'warning')
+                    success: () => showToast("Chia sẻ thành công!", "success"),
+                    fail: () => showToast("Chia sẻ thất bại!", "warning"),
                   });
                 } else {
-                  navigator.clipboard?.writeText(window.location.href || '').catch(() => {});
-                  showToast('Đã sao chép liên kết sản phẩm!', 'success');
+                  navigator.clipboard
+                    ?.writeText(window.location.href || "")
+                    .catch(() => {});
+                  showToast("Đã sao chép liên kết sản phẩm!", "success");
                 }
               } catch (e) {
-                navigator.clipboard?.writeText(window.location.href || '').catch(() => {});
-                showToast('Đã sao chép liên kết sản phẩm!', 'success');
+                navigator.clipboard
+                  ?.writeText(window.location.href || "")
+                  .catch(() => {});
+                showToast("Đã sao chép liên kết sản phẩm!", "success");
               }
             }}
             className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center text-white active:scale-95 transition-all border-none cursor-pointer"
@@ -266,7 +338,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
             <ShoppingBagIcon className="w-5.5 h-5.5" strokeWidth={2.2} />
             {cartItemCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">
-                {cartItemCount > 99 ? '99+' : cartItemCount}
+                {cartItemCount > 99 ? "99+" : cartItemCount}
               </span>
             )}
           </button>
@@ -294,30 +366,46 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
         {/* Price & Name Section */}
         <div className="px-4 py-4 space-y-2 text-left bg-white rounded-t-2xl">
           <div className="flex items-end justify-between">
-            <span className="text-xl font-extrabold text-primary">{product.price.toLocaleString('vi-VN')} đ</span>
+            <span className="text-xl font-extrabold text-primary">
+              {product.price.toLocaleString("vi-VN")} đ
+            </span>
           </div>
-          
-          <h1 className="text-base font-medium text-textColor leading-tight">{product.name}</h1>
-          
+
+          <h1 className="text-base font-medium text-textColor leading-tight">
+            {product.name}
+          </h1>
+
           {/* Sales & Likes metrics (Shopee Style) */}
           <div className="flex items-center text-xs text-textColor-variant gap-3 pt-1">
             <div className="flex items-center gap-1">
               <span className="text-amber-500">★</span>
-              <span>{comments.length > 0 ? (comments.reduce((acc, c) => acc + c.rating, 0) / comments.length).toFixed(1) : '5.0'}</span>
+              <span>
+                {comments.length > 0
+                  ? (
+                      comments.reduce((acc, c) => acc + c.rating, 0) /
+                      comments.length
+                    ).toFixed(1)
+                  : "5.0"}
+              </span>
             </div>
             <div className="w-px h-3 bg-neutral-300"></div>
             <span>Đã bán {product.soldCount || 0}</span>
             <div className="w-px h-3 bg-neutral-300"></div>
-            
+
             <button
               onClick={() => {
                 toggleSavedItem(product);
                 if (isLiked) {
-                  setLikeCount(prev => Math.max(0, prev - 1));
+                  setLikeCount((prev) => Math.max(0, prev - 1));
                 } else {
-                  setLikeCount(prev => prev + 1);
+                  setLikeCount((prev) => prev + 1);
                 }
-                showToast(isLiked ? `Đã bỏ lưu ${product.name}` : `Đã lưu ${product.name}`, 'success');
+                showToast(
+                  isLiked
+                    ? `Đã bỏ lưu ${product.name}`
+                    : `Đã lưu ${product.name}`,
+                  "success",
+                );
               }}
               className="flex items-center gap-1 ml-auto border-none bg-transparent"
             >
@@ -330,7 +418,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
             </button>
           </div>
         </div>
-        
+
         {/* Description Snippet */}
         <div className="px-4 pb-4 text-left bg-white">
           <p className="text-xs text-[#526069] leading-relaxed line-clamp-3">
@@ -342,43 +430,64 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
       {/* Visual Variations Selector */}
       {(hasColors || hasSizes) && (
         <div className="mt-2 bg-white px-4 py-4 space-y-4">
-          
           {/* Color Option */}
           {hasColors && (
             <div className="text-left">
-              <h3 className="text-xs font-semibold text-textColor mb-3">Màu sắc: {selectedColor}</h3>
+              <h3 className="text-xs font-semibold text-textColor mb-3">
+                Màu sắc: {selectedColor}
+              </h3>
               <div className="flex gap-3 flex-wrap">
                 {uniqueColors.map((color) => {
                   const isActive = selectedColor === color;
                   // Get thumbnail for color if available
-                  const variantForColor = productDetails?.variants?.find((v: any) => v.color === color && v.colorImage);
+                  const variantForColor = productDetails?.variants?.find(
+                    (v: any) => v.color === color && v.colorImage,
+                  );
                   const colorThumbnail = variantForColor?.colorImage;
-                  
+
                   return (
                     <button
                       key={color}
                       onClick={() => setSelectedColor(color)}
                       className={`relative overflow-hidden rounded-md border-2 transition-all cursor-pointer flex flex-col items-center justify-center p-1 ${
-                        isActive 
-                          ? 'border-primary' 
-                          : 'border-transparent bg-neutral-100 hover:bg-neutral-200'
+                        isActive
+                          ? "border-primary"
+                          : "border-transparent bg-neutral-100 hover:bg-neutral-200"
                       }`}
-                      style={{ minWidth: colorThumbnail ? '60px' : 'auto' }}
+                      style={{ minWidth: colorThumbnail ? "60px" : "auto" }}
                     >
                       {colorThumbnail ? (
                         <>
                           <div className="w-10 h-10 mb-1">
-                            <LazyImageComponent src={colorThumbnail} alt={color} className="w-full h-full object-cover rounded-sm" />
+                            <LazyImageComponent
+                              src={colorThumbnail}
+                              alt={color}
+                              className="w-full h-full object-cover rounded-sm"
+                            />
                           </div>
-                          <span className="text-[10px] whitespace-nowrap px-1">{color}</span>
+                          <span className="text-[10px] whitespace-nowrap px-1">
+                            {color}
+                          </span>
                         </>
                       ) : (
                         <span className="text-xs px-3 py-1">{color}</span>
                       )}
-                      
+
                       {isActive && (
                         <div className="absolute bottom-0 right-0 w-4 h-4 bg-primary text-white flex items-center justify-center rounded-tl-md">
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="3"
+                              d="M5 13l4 4L19 7"
+                            ></path>
+                          </svg>
                         </div>
                       )}
                     </button>
@@ -391,23 +500,28 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
           {/* Size Option */}
           {hasSizes && (
             <div className="text-left">
-              <h3 className="text-xs font-semibold text-textColor mb-3">Kích Cỡ: {selectedSize}</h3>
+              <h3 className="text-xs font-semibold text-textColor mb-3">
+                Kích Cỡ: {selectedSize}
+              </h3>
               <div className="flex gap-2 flex-wrap">
                 {uniqueSizes.map((size) => {
-                  const variantForSize = sizesForColor.find((v: any) => v.size === size);
+                  const variantForSize = sizesForColor.find(
+                    (v: any) => v.size === size,
+                  );
                   const isActive = selectedSize === size;
-                  const isOutOfStock = !variantForSize || variantForSize.stock <= 0;
+                  const isOutOfStock =
+                    !variantForSize || variantForSize.stock <= 0;
                   return (
                     <button
                       key={size}
                       disabled={isOutOfStock}
                       onClick={() => setSelectedSize(size)}
                       className={`text-xs px-4 py-2 rounded-md border transition-all relative cursor-pointer ${
-                        isActive 
-                          ? 'border-primary bg-primary/10 text-primary font-semibold' 
+                        isActive
+                          ? "border-primary bg-primary/10 text-primary font-semibold"
                           : isOutOfStock
-                            ? 'border-neutral-200 text-neutral-400 bg-neutral-50 cursor-not-allowed opacity-60'
-                            : 'border-neutral-200 text-textColor bg-white hover:border-primary/50'
+                            ? "border-neutral-200 text-neutral-400 bg-neutral-50 cursor-not-allowed opacity-60"
+                            : "border-neutral-200 text-textColor bg-white hover:border-primary/50"
                       }`}
                     >
                       {size}
@@ -444,7 +558,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
             </div>
           </div>
           <div className="text-right text-[10px] text-textColor-variant pt-1">
-            {stockCount > 0 ? `Còn ${stockCount} sản phẩm` : 'Đã hết hàng'}
+            {stockCount > 0 ? `Còn ${stockCount} sản phẩm` : "Đã hết hàng"}
           </div>
         </div>
       )}
@@ -454,15 +568,22 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
         {/* Materials & Care */}
         <div className="border-b border-[#f0edeb]">
           <button
-            onClick={() => setExpandedSection(expandedSection === 'materials' ? null : 'materials')}
+            onClick={() =>
+              setExpandedSection(
+                expandedSection === "materials" ? null : "materials",
+              )
+            }
             className="w-full px-4 py-4 flex items-center justify-between text-sm font-medium text-textColor transition-colors hover:bg-neutral-50 border-none text-left bg-transparent"
           >
             <span>Chất liệu & Cách bảo quản</span>
-            <ChevronLeftIcon className={`w-4 h-4 text-textColor-variant transition-transform duration-200 ${expandedSection === 'materials' ? 'rotate-90' : '-rotate-90'}`} />
+            <ChevronLeftIcon
+              className={`w-4 h-4 text-textColor-variant transition-transform duration-200 ${expandedSection === "materials" ? "rotate-90" : "-rotate-90"}`}
+            />
           </button>
-          {expandedSection === 'materials' && (
+          {expandedSection === "materials" && (
             <div className="px-4 pb-4 text-xs text-[#526069] leading-relaxed text-left">
-              {productDetails?.materialCare || 'Chất liệu sản xuất tự nhiên cao cấp, độ bền cao. Khuyến khích giặt bằng tay hoặc giặt máy chế độ nhẹ.'}
+              {productDetails?.materialCare ||
+                "Chất liệu sản xuất tự nhiên cao cấp, độ bền cao. Khuyến khích giặt bằng tay hoặc giặt máy chế độ nhẹ."}
             </div>
           )}
         </div>
@@ -470,15 +591,22 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
         {/* Shipping & Returns */}
         <div className="border-b border-[#f0edeb]">
           <button
-            onClick={() => setExpandedSection(expandedSection === 'shipping' ? null : 'shipping')}
+            onClick={() =>
+              setExpandedSection(
+                expandedSection === "shipping" ? null : "shipping",
+              )
+            }
             className="w-full px-4 py-4 flex items-center justify-between text-sm font-medium text-textColor transition-colors hover:bg-neutral-50 border-none text-left bg-transparent"
           >
             <span>Vận chuyển & Đổi trả</span>
-            <ChevronLeftIcon className={`w-4 h-4 text-textColor-variant transition-transform duration-200 ${expandedSection === 'shipping' ? 'rotate-90' : '-rotate-90'}`} />
+            <ChevronLeftIcon
+              className={`w-4 h-4 text-textColor-variant transition-transform duration-200 ${expandedSection === "shipping" ? "rotate-90" : "-rotate-90"}`}
+            />
           </button>
-          {expandedSection === 'shipping' && (
+          {expandedSection === "shipping" && (
             <div className="px-4 pb-4 text-xs text-[#526069] leading-relaxed text-left">
-              {productDetails?.shippingReturn || 'Miễn phí vận chuyển toàn quốc cho đơn hàng từ 2.500.000 đ. Đổi trả miễn phí trong vòng 30 ngày.'}
+              {productDetails?.shippingReturn ||
+                "Miễn phí vận chuyển toàn quốc cho đơn hàng từ 2.500.000 đ. Đổi trả miễn phí trong vòng 30 ngày."}
             </div>
           )}
         </div>
@@ -487,13 +615,15 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
       {/* Reviews */}
       <div className="mt-2 bg-white px-4 py-4">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-sm font-medium text-textColor">Đánh giá sản phẩm ({comments.length})</h3>
+          <h3 className="text-sm font-medium text-textColor">
+            Đánh giá sản phẩm ({comments.length})
+          </h3>
           <div className="flex items-center text-xs text-primary">
             <span>Xem tất cả</span>
             <ChevronLeftIcon className="w-3 h-3 ml-1 rotate-180" />
           </div>
         </div>
-        
+
         <div className="divide-y divide-neutral-100 space-y-4">
           {comments.length === 0 ? (
             <div className="text-center py-6 text-xs text-textColor-variant">
@@ -505,40 +635,72 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     {rev.user?.avatar ? (
-                      <img src={rev.user.avatar} className="w-6 h-6 rounded-full object-cover" alt="" />
+                      <img
+                        src={rev.user.avatar}
+                        className="w-6 h-6 rounded-full object-cover"
+                        alt=""
+                      />
                     ) : (
                       <div className="w-6 h-6 rounded-full bg-primary-light text-primary flex items-center justify-center font-bold text-[10px]">
-                        {rev.user?.name ? rev.user.name[0].toUpperCase() : 'U'}
+                        {rev.user?.name ? rev.user.name[0].toUpperCase() : "U"}
                       </div>
                     )}
-                    <span className="text-xs text-textColor">{rev.user?.name || 'Khách hàng'}</span>
+                    <span className="text-xs text-textColor">
+                      {rev.user?.name || "Khách hàng"}
+                    </span>
                   </div>
                 </div>
-                
+
                 <div className="flex text-amber-500 text-[10px] gap-0.5">
-                  {'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}
+                  {"★".repeat(rev.rating)}
+                  {"☆".repeat(5 - rev.rating)}
                 </div>
-                
-                <p className="text-textColor text-xs leading-relaxed">{rev.content}</p>
-                <div className="text-[10px] text-textColor-variant">{formatDate(rev.createdAt)} | Phân loại: {rev.color || 'Mặc định'}, Size: {rev.size || 'Mặc định'}</div>
+
+                <p className="text-textColor text-xs leading-relaxed">
+                  {rev.content}
+                </p>
+                <div className="text-[10px] text-textColor-variant">
+                  {formatDate(rev.createdAt)} | Phân loại:{" "}
+                  {rev.color || "Mặc định"}, Size: {rev.size || "Mặc định"}
+                </div>
 
                 {/* Helpful voting */}
                 <div className="flex items-center gap-3 mt-2">
                   <button
-                    onClick={() => handleVoteReview(rev.id, 'helpful')}
+                    onClick={() => handleVoteReview(rev.id, "helpful")}
                     className="flex items-center gap-1 text-[10px] text-textColor-variant hover:text-primary transition-colors"
                   >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"
+                      />
                     </svg>
                     <span>Hữu ích ({rev.helpfulCount || 0})</span>
                   </button>
                   <button
-                    onClick={() => handleVoteReview(rev.id, 'unhelpful')}
+                    onClick={() => handleVoteReview(rev.id, "unhelpful")}
                     className="flex items-center gap-1 text-[10px] text-textColor-variant hover:text-red-500 transition-colors"
                   >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v5a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v5a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"
+                      />
                     </svg>
                     <span>Không hữu ích ({rev.unhelpfulCount || 0})</span>
                   </button>
@@ -552,20 +714,38 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                         const parsed = JSON.parse(rev.images);
                         if (Array.isArray(parsed) && parsed.length > 0) {
                           return parsed.map((imgUrl: string, idx: number) => {
-                            const fullUrl = imgUrl.startsWith('http') ? imgUrl : `${API_BASE_URL.replace('/api/v1', '')}${imgUrl}`;
+                            const fullUrl = imgUrl.startsWith("http")
+                              ? imgUrl
+                              : `${API_BASE_URL.replace("/api/v1", "")}${imgUrl}`;
                             return (
-                              <div key={idx} className="w-16 h-16 rounded overflow-hidden border border-[#f0edeb] bg-neutral-50">
-                                <img src={fullUrl} className="w-full h-full object-cover" alt="" />
+                              <div
+                                key={idx}
+                                className="w-16 h-16 rounded overflow-hidden border border-[#f0edeb] bg-neutral-50"
+                              >
+                                <img
+                                  src={fullUrl}
+                                  className="w-full h-full object-cover"
+                                  alt=""
+                                />
                               </div>
                             );
                           });
                         }
                       } catch (e) {
-                        if (typeof rev.images === 'string' && rev.images.trim()) {
-                          const fullUrl = rev.images.startsWith('http') ? rev.images : `${API_BASE_URL.replace('/api/v1', '')}${rev.images}`;
+                        if (
+                          typeof rev.images === "string" &&
+                          rev.images.trim()
+                        ) {
+                          const fullUrl = rev.images.startsWith("http")
+                            ? rev.images
+                            : `${API_BASE_URL.replace("/api/v1", "")}${rev.images}`;
                           return (
                             <div className="w-16 h-16 rounded overflow-hidden border border-[#f0edeb] bg-neutral-50">
-                              <img src={fullUrl} className="w-full h-full object-cover" alt="" />
+                              <img
+                                src={fullUrl}
+                                className="w-full h-full object-cover"
+                                alt=""
+                              />
                             </div>
                           );
                         }
@@ -583,10 +763,13 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
       {/* Suggested Products Section */}
       {relatedProducts.length > 0 && (
         <div className="mt-2 bg-white px-4 py-4 space-y-4">
-          <h3 className="text-sm font-medium text-textColor mb-2 text-left">Sản Phẩm Gợi Ý</h3>
+          <h3 className="text-sm font-medium text-textColor mb-2 text-left">
+            Sản Phẩm Gợi Ý
+          </h3>
           <div className="grid grid-cols-2 gap-3">
             {relatedProducts.map((prod) => {
-              let imgUrl = 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80';
+              let imgUrl =
+                "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80";
               try {
                 const parsed = JSON.parse(prod.images);
                 if (parsed && parsed.length > 0) imgUrl = parsed[0];
@@ -610,9 +793,13 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                       {prod.name}
                     </h4>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold text-primary">{prod.price.toLocaleString('vi-VN')} đ</span>
+                      <span className="text-sm font-bold text-primary">
+                        {prod.price.toLocaleString("vi-VN")} đ
+                      </span>
                     </div>
-                    <div className="text-[9px] text-textColor-variant">Đã bán {prod.soldCount || 0}</div>
+                    <div className="text-[9px] text-textColor-variant">
+                      Đã bán {prod.soldCount || 0}
+                    </div>
                   </div>
                 </div>
               );
@@ -631,11 +818,14 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
           }}
           className="flex-1 max-w-[60px] flex flex-col items-center justify-center border-r border-neutral-100 bg-teal-50/50 hover:bg-teal-50 active:bg-teal-100 border-none cursor-pointer"
         >
-          <ChatBubbleOvalLeftEllipsisIcon className="w-5 h-5 text-teal-600 mb-0.5" strokeWidth={2} />
-          <span className="text-[9px] text-teal-700 font-medium">Chat ngay</span>
+          <ChatBubbleOvalLeftEllipsisIcon
+            className="w-5 h-5 text-teal-600 mb-0.5"
+            strokeWidth={2}
+          />
+          <span className="text-[9px] text-teal-700 font-medium">
+            Chat ngay
+          </span>
         </button>
-        
-
 
         {/* Add to Cart Button */}
         <button
@@ -653,9 +843,9 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
           onClick={handleBuyNow}
           className="flex-[1.8] bg-primary hover:bg-primary-dark text-white font-semibold text-[13px] flex items-center justify-center active:bg-primary-darker transition-colors border-none cursor-pointer disabled:bg-neutral-400"
         >
-          {(hasColors || hasSizes) && stockCount <= 0 ? 'Hết hàng' : 'Mua ngay'}
+          {(hasColors || hasSizes) && stockCount <= 0 ? "Hết hàng" : "Mua ngay"}
         </button>
       </div>
     </PageCast>
   );
-}
+};

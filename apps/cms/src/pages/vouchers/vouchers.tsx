@@ -93,6 +93,7 @@ export const Vouchers: React.FC<IVouchersProps> = (_props) => {
       await apiRequest(`/vouchers/${code}`, 'DELETE');
       setVouchers(vouchers.filter((v) => v.code !== code));
     } catch (err) {
+      console.error('Lỗi khi xóa voucher:', err);
       alert('Không thể xóa mã giảm giá. Lỗi kết nối.');
     }
   };

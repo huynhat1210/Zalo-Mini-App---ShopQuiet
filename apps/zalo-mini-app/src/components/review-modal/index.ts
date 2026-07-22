@@ -1,2 +1,2 @@
-export * from './review-modal.component';
-export * from './review-modal.type';
+export * from "./review-modal.component";
+export * from "./review-modal.type";

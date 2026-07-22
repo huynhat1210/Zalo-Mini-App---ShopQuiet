@@ -1,2 +1,2 @@
-export * from './notifications';
-export * from './notifications.type';
+export * from "./notifications";
+export * from "./notifications.type";

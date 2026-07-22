@@ -1,4 +1,4 @@
-import { DeliveryDateRange } from './delivery-date.type';
+import { DeliveryDateRange } from "./delivery-date.type";
 
 /**
  * Calculate estimated delivery date range
@@ -10,25 +10,25 @@ import { DeliveryDateRange } from './delivery-date.type';
  */
 export function calculateEstimatedDeliveryDate(
   createdAt: Date | string,
-  shippingMethodCode: string = 'standard',
+  shippingMethodCode: string = "standard",
   minDays?: number,
-  maxDays?: number
+  maxDays?: number,
 ): DeliveryDateRange {
   const baseDate = new Date(createdAt);
-  
+
   // Default business days based on shipping method
   const defaultDays: Record<string, { min: number; max: number }> = {
     standard: { min: 3, max: 5 },
     express: { min: 1, max: 2 },
   };
-  
+
   const days = defaultDays[shippingMethodCode] || { min: 3, max: 5 };
   const minBusinessDays = minDays ?? days.min;
   const maxBusinessDays = maxDays ?? days.max;
-  
+
   const minDate = addBusinessDays(baseDate, minBusinessDays);
   const maxDate = addBusinessDays(baseDate, maxBusinessDays);
-  
+
   return {
     minDate,
     maxDate,
@@ -47,17 +47,17 @@ export function calculateEstimatedDeliveryDate(
 function addBusinessDays(date: Date, businessDays: number): Date {
   const result = new Date(date);
   let daysAdded = 0;
-  
+
   while (daysAdded < businessDays) {
     result.setDate(result.getDate() + 1);
     const dayOfWeek = result.getDay();
-    
+
     // Skip Saturday (6) and Sunday (0)
     if (dayOfWeek !== 0 && dayOfWeek !== 6) {
       daysAdded++;
     }
   }
-  
+
   return result;
 }
 
@@ -67,8 +67,8 @@ function addBusinessDays(date: Date, businessDays: number): Date {
  * @returns Formatted date string
  */
 function formatDate(date: Date): string {
-  const day = date.getDate().toString().padStart(2, '0');
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
   const year = date.getFullYear();
   return `${day}/${month}/${year}`;
 }
@@ -81,13 +81,13 @@ function formatDate(date: Date): string {
 export function getRemainingDays(estimatedDate: Date | string): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const delivery = new Date(estimatedDate);
   delivery.setHours(0, 0, 0, 0);
-  
+
   const diffTime = delivery.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
+
   return Math.max(0, diffDays);
 }
 
@@ -97,8 +97,8 @@ export function getRemainingDays(estimatedDate: Date | string): number {
  * @returns Status text
  */
 export function getDeliveryStatusText(remainingDays: number): string {
-  if (remainingDays === 0) return 'Hôm nay';
-  if (remainingDays === 1) return 'Ngày mai';
+  if (remainingDays === 0) return "Hôm nay";
+  if (remainingDays === 1) return "Ngày mai";
   if (remainingDays <= 3) return `Còn ${remainingDays} ngày`;
   return `${remainingDays} ngày nữa`;
 }

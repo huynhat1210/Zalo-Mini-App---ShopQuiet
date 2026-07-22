@@ -1,6 +1,9 @@
-import { Component, ErrorInfo } from 'react';
-import { Page } from 'zmp-ui';
-import { IErrorBoundaryComponentProps, IErrorBoundaryComponentState } from './error-boundary.type';
+import { Component, ErrorInfo } from "react";
+import { Page } from "zmp-ui";
+import {
+  IErrorBoundaryComponentProps,
+  IErrorBoundaryComponentState,
+} from "./error-boundary.type";
 
 const PageCast = Page as any;
 
@@ -14,13 +17,15 @@ export class ErrorBoundaryComponent extends Component<
     errorInfo: null,
   };
 
-  public static getDerivedStateFromError(error: Error): IErrorBoundaryComponentState {
+  public static getDerivedStateFromError(
+    error: Error,
+  ): IErrorBoundaryComponentState {
     return { hasError: true, error, errorInfo: null };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ errorInfo });
-    console.error('Uncaught error:', error, errorInfo);
+    console.error("Uncaught error:", error, errorInfo);
   }
 
   private handleReload = () => {
@@ -29,7 +34,7 @@ export class ErrorBoundaryComponent extends Component<
 
   private handleGoHome = () => {
     try {
-      localStorage.removeItem('shopquiet-app-storage');
+      localStorage.removeItem("shopquiet-app-storage");
     } catch (e) {}
     window.location.href = window.location.origin + window.location.pathname;
   };
@@ -44,8 +49,18 @@ export class ErrorBoundaryComponent extends Component<
           <div className="bg-white rounded-3xl border border-[#f0edeb] p-8 max-w-sm w-full shadow-md space-y-6 animate-scale-up">
             {/* Warning Icon */}
             <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto shadow-inner">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              <svg
+                className="w-8 h-8"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                />
               </svg>
             </div>
 
@@ -54,7 +69,8 @@ export class ErrorBoundaryComponent extends Component<
                 Đã xảy ra sự cố
               </h2>
               <p className="text-[11px] text-textColor-variant leading-relaxed">
-                Rất tiếc, đã có lỗi xảy ra khi tải nội dung này. Vui lòng thử tải lại trang hoặc quay về trang chủ.
+                Rất tiếc, đã có lỗi xảy ra khi tải nội dung này. Vui lòng thử
+                tải lại trang hoặc quay về trang chủ.
               </p>
             </div>
 

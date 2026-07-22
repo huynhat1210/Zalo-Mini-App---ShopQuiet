@@ -5,7 +5,10 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { SuccessResponseDto, ErrorResponseDto } from './common/dto/api-response.dto';
+import {
+  SuccessResponseDto,
+  ErrorResponseDto,
+} from './common/dto/api-response.dto';
 import { PinoLogger } from './common/logger/logger.service';
 
 import * as fs from 'fs';
@@ -134,8 +137,12 @@ async function bootstrap() {
   const host = process.env.HOST ?? '0.0.0.0';
   await app.listen(port, host);
 
-  logger.log(`Application is running on: http://${host === '0.0.0.0' ? '0.0.0.0' : host}:${port}`);
-  logger.log(`API documentation available at: http://${host === '0.0.0.0' ? '0.0.0.0' : host}:${port}/api/docs`);
+  logger.log(
+    `Application is running on: http://${host === '0.0.0.0' ? '0.0.0.0' : host}:${port}`,
+  );
+  logger.log(
+    `API documentation available at: http://${host === '0.0.0.0' ? '0.0.0.0' : host}:${port}/api/docs`,
+  );
 }
 
 void bootstrap();

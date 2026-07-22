@@ -43,7 +43,12 @@ export class RecommendationsService {
     if (recommendations.length < limit) {
       const popularProducts = await this.prisma.product.findMany({
         where: {
-          id: { notIn: [...purchasedProductIds, ...recommendations.map((p) => p.id)] },
+          id: {
+            notIn: [
+              ...purchasedProductIds,
+              ...recommendations.map((p) => p.id),
+            ],
+          },
         },
         include: { category: true },
         take: limit - recommendations.length,

@@ -1,21 +1,19 @@
-import { useEffect, useState } from 'react';
-import { Page } from 'zmp-ui';
-import { useCart, IOrder } from '../../App';
-import { apiRequest, useTranslation } from '../../utils';
-import { IProfileProps } from './profile.type';
+import { useEffect, useState } from "react";
+import { Page } from "zmp-ui";
+import { useCart, IOrder } from "../../App";
+import { apiRequest, useTranslation } from "../../utils";
+import { IProfileProps } from "./profile.type";
 
 // Import sub-components from global components folder
-import { 
-  MembershipCard, 
-  AddressManager, 
-  EditProfile, 
-  VoucherWallet, 
+import {
+  MembershipCard,
+  AddressManager,
+  EditProfile,
+  VoucherWallet,
   OrderHistory,
   LuckyWheel,
-  VoucherExchangeModal
-} from '../../components';
-
-
+  VoucherExchangeModal,
+} from "../../components";
 
 const PageCast = Page as any;
 
@@ -34,7 +32,7 @@ type CmsBootstrap = {
 };
 
 export const Profile: React.FC<IProfileProps> = (props) => {
-  const { initialSubPage = 'profile' } = props;
+  const { initialSubPage = "profile" } = props;
   const { t, lang, setLanguage } = useTranslation();
   const {
     setActiveTab,
@@ -55,7 +53,9 @@ export const Profile: React.FC<IProfileProps> = (props) => {
   } = useCart();
 
   const [orders, setOrders] = useState<IOrder[]>([]);
-  const [recommendationProducts, setRecommendationProducts] = useState<any[]>([]);
+  const [recommendationProducts, setRecommendationProducts] = useState<any[]>(
+    [],
+  );
   const [loading, setLoading] = useState(true);
 
   // Modals state
@@ -67,50 +67,50 @@ export const Profile: React.FC<IProfileProps> = (props) => {
   const [isLuckyWheelOpen, setIsLuckyWheelOpen] = useState(false);
   const [isVoucherExchangeOpen, setIsVoucherExchangeOpen] = useState(false);
 
-
   const [userVouchersCount, setUserVouchersCount] = useState(0);
   const [usersList, setUsersList] = useState<any[]>([]);
   const [cmsSettings, setCmsSettings] = useState<Record<string, string>>({});
   const [staticPages, setStaticPages] = useState<CmsStaticPage[]>([]);
-  const [activeStaticPageSlug, setActiveStaticPageSlug] = useState('help-support');
+  const [activeStaticPageSlug, setActiveStaticPageSlug] =
+    useState("help-support");
 
   // Dynamic membership ranking badge settings
-  const currentTier = zaloUser?.membershipTier || 'Đồng';
-  let tierBadge = 'ĐỒNG';
-  let badgeColor = 'bg-neutral-400 text-white';
+  const currentTier = zaloUser?.membershipTier || "Đồng";
+  let tierBadge = "ĐỒNG";
+  let badgeColor = "bg-neutral-400 text-white";
 
-  if (currentTier === 'Kim cương') {
-    tierBadge = 'KIM CƯƠNG';
-    badgeColor = 'bg-cyan-400 text-teal-950';
-  } else if (currentTier === 'Vàng') {
-    tierBadge = 'VÀNG';
-    badgeColor = 'bg-yellow-400 text-teal-950';
-  } else if (currentTier === 'Bạc') {
-    tierBadge = 'BẠC';
-    badgeColor = 'bg-slate-300 text-teal-950';
+  if (currentTier === "Kim cương") {
+    tierBadge = "KIM CƯƠNG";
+    badgeColor = "bg-cyan-400 text-teal-950";
+  } else if (currentTier === "Vàng") {
+    tierBadge = "VÀNG";
+    badgeColor = "bg-yellow-400 text-teal-950";
+  } else if (currentTier === "Bạc") {
+    tierBadge = "BẠC";
+    badgeColor = "bg-slate-300 text-teal-950";
   } else {
-    tierBadge = 'ĐỒNG';
-    badgeColor = 'bg-amber-600 text-white';
+    tierBadge = "ĐỒNG";
+    badgeColor = "bg-amber-600 text-white";
   }
 
   const profile = {
-    name: zaloUser?.name || '',
-    phone: zaloUser?.phone || '',
-    email: zaloUser?.email || '',
-    avatar: zaloUser?.avatar || '',
-    zaloId: zaloUser?.id || '',
-    birthday: zaloUser?.birthday || '',
-    gender: zaloUser?.gender || '',
+    name: zaloUser?.name || "",
+    phone: zaloUser?.phone || "",
+    email: zaloUser?.email || "",
+    avatar: zaloUser?.avatar || "",
+    zaloId: zaloUser?.id || "",
+    birthday: zaloUser?.birthday || "",
+    gender: zaloUser?.gender || "",
   };
 
   const fetchUsersList = async () => {
     try {
-      const res = await apiRequest<any[]>('/users');
+      const res = await apiRequest<any[]>("/users");
       if (res && Array.isArray(res)) {
         setUsersList(res);
       }
     } catch (e) {
-      console.error('Failed to fetch user list:', e);
+      console.error("Failed to fetch user list:", e);
     }
   };
 
@@ -123,11 +123,11 @@ export const Profile: React.FC<IProfileProps> = (props) => {
   useEffect(() => {
     async function fetchCmsProfileConfig() {
       try {
-        const data = await apiRequest<CmsBootstrap>('/cms/bootstrap');
+        const data = await apiRequest<CmsBootstrap>("/cms/bootstrap");
         setCmsSettings(data.settings || {});
         setStaticPages(data.staticPages || []);
       } catch (e) {
-        console.error('Failed to fetch profile CMS config:', e);
+        console.error("Failed to fetch profile CMS config:", e);
       }
     }
     fetchCmsProfileConfig();
@@ -137,25 +137,33 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     if (!zaloUser?.id) return;
     const userId = zaloUser.id;
     try {
-      const [fetchedOrders, fetchedProducts, fetchedVouchers] = await Promise.all([
-        apiRequest<IOrder[]>('/orders'), // Lấy đơn hàng của chính user hiện tại
-        apiRequest<any>('/products?page=1&limit=10'),
-        apiRequest<any[]>('/vouchers').catch(() => []),
-      ]);
+      const [fetchedOrders, fetchedProducts, fetchedVouchers] =
+        await Promise.all([
+          apiRequest<IOrder[]>("/orders"), // Lấy đơn hàng của chính user hiện tại
+          apiRequest<any>("/products?page=1&limit=10"),
+          apiRequest<any[]>("/vouchers").catch(() => []),
+        ]);
 
       setOrders(fetchedOrders);
       setUserVouchersCount(fetchedVouchers.length);
 
-      const productList = Array.isArray(fetchedProducts) ? fetchedProducts : fetchedProducts?.data || [];
+      const productList = Array.isArray(fetchedProducts)
+        ? fetchedProducts
+        : fetchedProducts?.data || [];
       const recs = productList.slice(0, 3);
       setRecommendationProducts(recs);
 
       // Cache fresh data
-      localStorage.setItem(`cache_orders_${userId}`, JSON.stringify(fetchedOrders));
-      localStorage.setItem('cache_rec_products', JSON.stringify(recs));
+      localStorage.setItem(
+        `cache_orders_${userId}`,
+        JSON.stringify(fetchedOrders),
+      );
+      localStorage.setItem("cache_rec_products", JSON.stringify(recs));
     } catch (err) {
-      console.error('Failed to fetch profile page data:', err);
-      const local = JSON.parse(localStorage.getItem(`offline_orders_${userId}`) || '[]');
+      console.error("Failed to fetch profile page data:", err);
+      const local = JSON.parse(
+        localStorage.getItem(`offline_orders_${userId}`) || "[]",
+      );
       setOrders(local);
     } finally {
       setLoading(false);
@@ -169,7 +177,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     }
     const userId = zaloUser.id;
     const cachedOrders = localStorage.getItem(`cache_orders_${userId}`);
-    const cachedRecs = localStorage.getItem('cache_rec_products');
+    const cachedRecs = localStorage.getItem("cache_rec_products");
     if (cachedOrders) {
       setOrders(JSON.parse(cachedOrders));
       setLoading(false);
@@ -201,7 +209,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
           };
         }
         return o;
-      })
+      }),
     );
     // Refetch to ensure sync with server
     fetchOrdersAndProducts();
@@ -209,14 +217,14 @@ export const Profile: React.FC<IProfileProps> = (props) => {
 
   const activeStaticPage =
     staticPages.find((page) => page.slug === activeStaticPageSlug) ||
-    staticPages.find((page) => page.slug === 'help-support');
+    staticPages.find((page) => page.slug === "help-support");
 
   // Subpages Router
-  if (initialSubPage === 'ranking') {
+  if (initialSubPage === "ranking") {
     return <MembershipCard zaloUser={zaloUser} setActiveTab={setActiveTab} />;
   }
 
-  if (initialSubPage === 'orders') {
+  if (initialSubPage === "orders") {
     return (
       <OrderHistory
         orders={orders}
@@ -237,7 +245,9 @@ export const Profile: React.FC<IProfileProps> = (props) => {
       <PageCast className="bg-[#f7f7f7] relative flex flex-col w-full h-full overscroll-none scrollbar-none items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-          <span className="text-[10px] font-bold text-[#526069] tracking-wider uppercase">Đang tải thông tin cá nhân...</span>
+          <span className="text-[10px] font-bold text-[#526069] tracking-wider uppercase">
+            Đang tải thông tin cá nhân...
+          </span>
         </div>
       </PageCast>
     );
@@ -250,19 +260,37 @@ export const Profile: React.FC<IProfileProps> = (props) => {
         {/* Navigation Bar */}
         <div className="flex justify-between items-center mb-6">
           <button
-            onClick={() => setActiveTab('home')}
+            onClick={() => setActiveTab("home")}
             className="p-2 -ml-2 bg-white/10 hover:bg-white/20 active:scale-95 rounded-full transition-colors border-none text-white cursor-pointer"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15.75 19.5L8.25 12l7.5-7.5"
+              />
             </svg>
           </button>
-          <span className="text-xs font-black uppercase tracking-[0.2em] font-sans">ShopQuiet ID</span>
+          <span className="text-xs font-black uppercase tracking-[0.2em] font-sans">
+            ShopQuiet ID
+          </span>
           <button
             onClick={() => setIsEditProfileOpen(true)}
             className="p-2 -mr-2 bg-white/10 hover:bg-white/20 active:scale-95 rounded-full transition-colors border-none text-white cursor-pointer"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -275,7 +303,11 @@ export const Profile: React.FC<IProfileProps> = (props) => {
         {/* User Card Row */}
         <div className="flex items-center gap-4.5">
           <div className="relative">
-            <img src={profile.avatar} alt={profile.name} className="w-19 h-19 rounded-full object-cover border-3 border-white/90 shadow-md" />
+            <img
+              src={profile.avatar}
+              alt={profile.name}
+              className="w-19 h-19 rounded-full object-cover border-3 border-white/90 shadow-md"
+            />
             <span className="absolute bottom-0 right-0 w-5 h-5 bg-amber-400 text-teal-950 rounded-full flex items-center justify-center font-bold text-[9px] border-2 border-white shadow-xs">
               ✓
             </span>
@@ -283,67 +315,96 @@ export const Profile: React.FC<IProfileProps> = (props) => {
 
           <div className="flex-1 text-left space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-base font-bold tracking-tight line-clamp-1">{profile.name}</h2>
-              <span className={`${badgeColor} font-black tracking-widest text-[8px] uppercase px-2 py-0.5 rounded flex items-center gap-1 shadow-xs`}>
+              <h2 className="text-base font-bold tracking-tight line-clamp-1">
+                {profile.name}
+              </h2>
+              <span
+                className={`${badgeColor} font-black tracking-widest text-[8px] uppercase px-2 py-0.5 rounded flex items-center gap-1 shadow-xs`}
+              >
                 ★ {tierBadge}
               </span>
-              
+
               {/* Render unlocked badges mini list */}
-              {gamificationData?.achievements && gamificationData.achievements.length > 0 && (
-                <div className="flex items-center gap-1 bg-white/10 px-1.5 py-0.5 rounded-full backdrop-blur-xs">
-                  {gamificationData.achievements.map((ach: any) => (
-                    <span 
-                      key={ach.id} 
-                      className="text-[10px] filter drop-shadow-xs" 
-                      title={ach.name}
-                    >
-                      {ach.icon}
-                    </span>
-                  ))}
-                </div>
-              )}
+              {gamificationData?.achievements &&
+                gamificationData.achievements.length > 0 && (
+                  <div className="flex items-center gap-1 bg-white/10 px-1.5 py-0.5 rounded-full backdrop-blur-xs">
+                    {gamificationData.achievements.map((ach: any) => (
+                      <span
+                        key={ach.id}
+                        className="text-[10px] filter drop-shadow-xs"
+                        title={ach.name}
+                      >
+                        {ach.icon}
+                      </span>
+                    ))}
+                  </div>
+                )}
             </div>
 
             <div className="space-y-0.5 text-[10.5px] text-white/80 font-medium">
               <p className="flex items-center gap-1.5">
-                <svg className="w-3.5 h-3.5 opacity-75" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <svg
+                  className="w-3.5 h-3.5 opacity-75"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.387a12.035 12.035 0 01-7.108-7.108c-.155-.44.01-1.03.387-1.312l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.318A2.25 2.25 0 002.1 4.5v2.25z"
                   />
                 </svg>
-                <span>{profile.phone || 'Chưa cập nhật số điện thoại'}</span>
+                <span>{profile.phone || "Chưa cập nhật số điện thoại"}</span>
               </p>
               <p className="flex items-center gap-1.5">
-                <svg className="w-3.5 h-3.5 opacity-75" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <svg
+                  className="w-3.5 h-3.5 opacity-75"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
                   />
                 </svg>
-                <span>{profile.email || 'Chưa cập nhật email'}</span>
+                <span>{profile.email || "Chưa cập nhật email"}</span>
               </p>
               <p className="flex items-center gap-1.5">
-                <svg className="w-3.5 h-3.5 opacity-75" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <svg
+                  className="w-3.5 h-3.5 opacity-75"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
                   />
                 </svg>
-                <span>{profile.birthday || 'Chưa cập nhật ngày sinh'}</span>
+                <span>{profile.birthday || "Chưa cập nhật ngày sinh"}</span>
               </p>
               <p className="flex items-center gap-1.5">
-                <svg className="w-3.5 h-3.5 opacity-75" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <svg
+                  className="w-3.5 h-3.5 opacity-75"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <span>{profile.gender || 'Chưa cập nhật giới tính'}</span>
+                <span>{profile.gender || "Chưa cập nhật giới tính"}</span>
               </p>
             </div>
           </div>
@@ -353,29 +414,39 @@ export const Profile: React.FC<IProfileProps> = (props) => {
       {/* Quick Dashboard Counter Stats Card */}
       <div className="mx-6 -mt-5 bg-white rounded-2xl p-4 shadow-sm border border-[#f0edeb] grid grid-cols-3 divide-x divide-neutral-100 z-10 relative text-center">
         <button
-          onClick={() => setActiveTab('saved-items')}
+          onClick={() => setActiveTab("saved-items")}
           className="flex flex-col items-center justify-center border-none bg-transparent cursor-pointer active:scale-95 transition-transform"
         >
-          <span className="text-base font-extrabold text-textColor">{savedItems.length}</span>
-          <span className="text-[10px] text-[#526069]/65 font-bold uppercase tracking-wider mt-1">Yêu thích</span>
+          <span className="text-base font-extrabold text-textColor">
+            {savedItems.length}
+          </span>
+          <span className="text-[10px] text-[#526069]/65 font-bold uppercase tracking-wider mt-1">
+            Yêu thích
+          </span>
         </button>
         <button
           onClick={() => setIsCartOpen(true)}
           className="flex flex-col items-center justify-center border-none bg-transparent cursor-pointer active:scale-95 transition-transform"
         >
-          <span className="text-base font-extrabold text-textColor">{cart.reduce((sum: number, item: any) => sum + item.quantity, 0)}</span>
-          <span className="text-[10px] text-[#526069]/65 font-bold uppercase tracking-wider mt-1">Giỏ hàng</span>
+          <span className="text-base font-extrabold text-textColor">
+            {cart.reduce((sum: number, item: any) => sum + item.quantity, 0)}
+          </span>
+          <span className="text-[10px] text-[#526069]/65 font-bold uppercase tracking-wider mt-1">
+            Giỏ hàng
+          </span>
         </button>
         <button
-          onClick={() => setActiveTab('orders')}
+          onClick={() => setActiveTab("orders")}
           className="flex flex-col items-center justify-center border-none bg-transparent cursor-pointer active:scale-95 transition-transform"
         >
-          <span className="text-base font-extrabold text-teal-600">{orders.length}</span>
-          <span className="text-[10px] text-[#526069]/65 font-bold uppercase tracking-wider mt-1">Đơn hàng</span>
+          <span className="text-base font-extrabold text-teal-600">
+            {orders.length}
+          </span>
+          <span className="text-[10px] text-[#526069]/65 font-bold uppercase tracking-wider mt-1">
+            Đơn hàng
+          </span>
         </button>
       </div>
-
-
 
       {/* Profile menu categories list */}
       <div className="flex-1 overflow-y-auto px-6 py-5.5 space-y-5 pb-28">
@@ -387,7 +458,10 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                 <span>🏆</span> Điểm thưởng & Thành tựu
               </h4>
               <p className="text-[10px] text-textColor-variant mt-0.5 font-semibold">
-                Điểm tích lũy: <span className="text-primary font-bold">{gamificationData?.points || 0}</span>
+                Điểm tích lũy:{" "}
+                <span className="text-primary font-bold">
+                  {gamificationData?.points || 0}
+                </span>
               </p>
             </div>
             <button
@@ -395,38 +469,59 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               disabled={gamificationData?.hasClaimedToday}
               className={`px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border-none transition-all active:scale-95 cursor-pointer ${
                 gamificationData?.hasClaimedToday
-                  ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
-                  : 'bg-primary hover:bg-primary-dark text-white shadow-sm'
+                  ? "bg-neutral-100 text-neutral-400 cursor-not-allowed"
+                  : "bg-primary hover:bg-primary-dark text-white shadow-sm"
               }`}
             >
-              {gamificationData?.hasClaimedToday ? 'Đã điểm danh ✓' : '📍 Điểm danh (+10đ)'}
+              {gamificationData?.hasClaimedToday
+                ? "Đã điểm danh ✓"
+                : "📍 Điểm danh (+10đ)"}
             </button>
           </div>
 
           <div className="border-t border-[#f0edeb] pt-3">
             <div className="grid grid-cols-5 gap-1 pt-1">
               {[
-                { id: 1, name: 'Tân thủ', desc: 'Đặt 1 đơn', icon: '🎉' },
-                { id: 2, name: 'Mua sắm', desc: 'Đặt 5 đơn', icon: '🛍️' },
-                { id: 3, name: 'Sành điệu', desc: 'Lưu 10 tim', icon: '❤️' },
-                { id: 4, name: 'Đánh giá', desc: 'Viết 5 bình luận', icon: '⭐' },
-                { id: 5, name: 'VIP', desc: 'Tiêu > 1Tr', icon: '👑' },
+                { id: 1, name: "Tân thủ", desc: "Đặt 1 đơn", icon: "🎉" },
+                { id: 2, name: "Mua sắm", desc: "Đặt 5 đơn", icon: "🛍️" },
+                { id: 3, name: "Sành điệu", desc: "Lưu 10 tim", icon: "❤️" },
+                {
+                  id: 4,
+                  name: "Đánh giá",
+                  desc: "Viết 5 bình luận",
+                  icon: "⭐",
+                },
+                { id: 5, name: "VIP", desc: "Tiêu > 1Tr", icon: "👑" },
               ].map((badge) => {
-                const isUnlocked = gamificationData?.achievements?.some((a: any) => a.id === badge.id);
+                const isUnlocked = gamificationData?.achievements?.some(
+                  (a: any) => a.id === badge.id,
+                );
                 return (
-                  <div key={badge.id} className="flex flex-col items-center text-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-xs border relative transition-all duration-300 ${
-                      isUnlocked 
-                        ? 'bg-amber-50 border-amber-400 scale-105' 
-                        : 'bg-neutral-50 border-neutral-200 filter grayscale opacity-40'
-                    }`} title={badge.desc}>
+                  <div
+                    key={badge.id}
+                    className="flex flex-col items-center text-center"
+                  >
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-xs border relative transition-all duration-300 ${
+                        isUnlocked
+                          ? "bg-amber-50 border-amber-400 scale-105"
+                          : "bg-neutral-50 border-neutral-200 filter grayscale opacity-40"
+                      }`}
+                      title={badge.desc}
+                    >
                       {badge.icon}
                       {isUnlocked && (
-                        <span className="absolute -top-1 -right-1 bg-amber-400 text-[7px] w-3 h-3 rounded-full text-teal-950 font-bold border border-white flex items-center justify-center">✓</span>
+                        <span className="absolute -top-1 -right-1 bg-amber-400 text-[7px] w-3 h-3 rounded-full text-teal-950 font-bold border border-white flex items-center justify-center">
+                          ✓
+                        </span>
                       )}
                     </div>
-                    <span className="text-[7.5px] font-bold text-textColor mt-1.5 line-clamp-1 w-full">{badge.name}</span>
-                    <span className="text-[6.5px] text-textColor-variant scale-90 origin-top mt-0.5 line-clamp-1 w-full">{badge.desc}</span>
+                    <span className="text-[7.5px] font-bold text-textColor mt-1.5 line-clamp-1 w-full">
+                      {badge.name}
+                    </span>
+                    <span className="text-[6.5px] text-textColor-variant scale-90 origin-top mt-0.5 line-clamp-1 w-full">
+                      {badge.desc}
+                    </span>
                   </div>
                 );
               })}
@@ -436,64 +531,124 @@ export const Profile: React.FC<IProfileProps> = (props) => {
 
         {/* Section 1: Shopping */}
         <div className="space-y-2.5">
-          <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-2">{t('profile.section.shopping')}</h3>
+          <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-2">
+            {t("profile.section.shopping")}
+          </h3>
           <div className="bg-white rounded-2xl border border-[#f0edeb] overflow-hidden shadow-xs divide-y divide-[#f0edeb]">
             <button
-              onClick={() => setActiveTab('orders')}
+              onClick={() => setActiveTab("orders")}
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-textColor/60" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5 text-textColor/60"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
                   />
                 </svg>
-                <span className="font-semibold text-textColor">{t('profile.myOrders')}</span>
+                <span className="font-semibold text-textColor">
+                  {t("profile.myOrders")}
+                </span>
               </div>
-              <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              <svg
+                className="w-4 h-4 text-[#526069]/40"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                />
               </svg>
             </button>
 
             <button
-              onClick={() => setActiveTab('saved-items')}
+              onClick={() => setActiveTab("saved-items")}
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-textColor/60" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5 text-textColor/60"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
                   />
                 </svg>
-                <span className="font-semibold text-textColor">{t('profile.favorites')}</span>
+                <span className="font-semibold text-textColor">
+                  {t("profile.favorites")}
+                </span>
               </div>
-              <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              <svg
+                className="w-4 h-4 text-[#526069]/40"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                />
               </svg>
             </button>
 
             <button
-              onClick={() => setActiveTab('ranking')}
+              onClick={() => setActiveTab("ranking")}
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5 text-amber-500"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0"
                   />
                 </svg>
-                <span className="font-semibold text-textColor">{t('profile.membership')}</span>
+                <span className="font-semibold text-textColor">
+                  {t("profile.membership")}
+                </span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className={`font-black text-[9px] uppercase px-2.5 py-0.5 rounded shadow-xs ${badgeColor}`}>★ {tierBadge}</span>
-                <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                <span
+                  className={`font-black text-[9px] uppercase px-2.5 py-0.5 rounded shadow-xs ${badgeColor}`}
+                >
+                  ★ {tierBadge}
+                </span>
+                <svg
+                  className="w-4 h-4 text-[#526069]/40"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                  />
                 </svg>
               </div>
             </button>
@@ -502,21 +657,49 @@ export const Profile: React.FC<IProfileProps> = (props) => {
 
         {/* Section 2: Account */}
         <div className="space-y-2.5">
-          <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-2">{t('profile.section.settings')}</h3>
+          <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-2">
+            {t("profile.section.settings")}
+          </h3>
           <div className="bg-white rounded-2xl border border-[#f0edeb] overflow-hidden shadow-xs divide-y divide-[#f0edeb]">
             <button
               onClick={() => setIsAddressModalOpen(true)}
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-textColor/60" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                <svg
+                  className="w-5 h-5 text-textColor/60"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
+                  />
                 </svg>
-                <span className="font-semibold text-textColor">{t('profile.addresses')}</span>
+                <span className="font-semibold text-textColor">
+                  {t("profile.addresses")}
+                </span>
               </div>
-              <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              <svg
+                className="w-4 h-4 text-[#526069]/40"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                />
               </svg>
             </button>
 
@@ -525,21 +708,39 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-textColor/60" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5 text-textColor/60"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185zM9.75 9h.008v.008H9.75V9zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 4.5h.008v.008h-.008V13.5zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
                   />
                 </svg>
-                <span className="font-semibold text-textColor">{t('profile.myVouchers')}</span>
+                <span className="font-semibold text-textColor">
+                  {t("profile.myVouchers")}
+                </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="bg-teal-50 text-teal-600 font-bold text-[10px] px-2 py-0.5 rounded-full">
-                  {userVouchersCount > 0 ? `${userVouchersCount} mã` : ''}
+                  {userVouchersCount > 0 ? `${userVouchersCount} mã` : ""}
                 </span>
-                <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                <svg
+                  className="w-4 h-4 text-[#526069]/40"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                  />
                 </svg>
               </div>
             </button>
@@ -550,10 +751,22 @@ export const Profile: React.FC<IProfileProps> = (props) => {
             >
               <div className="flex items-center gap-3">
                 <span className="text-lg leading-none">🎡</span>
-                <span className="font-semibold text-textColor">{t('profile.luckyWheel')}</span>
+                <span className="font-semibold text-textColor">
+                  {t("profile.luckyWheel")}
+                </span>
               </div>
-              <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              <svg
+                className="w-4 h-4 text-[#526069]/40"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                />
               </svg>
             </button>
 
@@ -563,27 +776,51 @@ export const Profile: React.FC<IProfileProps> = (props) => {
             >
               <div className="flex items-center gap-3">
                 <span className="text-lg leading-none">🎁</span>
-                <span className="font-semibold text-textColor">{t('profile.exchangeVoucher')}</span>
+                <span className="font-semibold text-textColor">
+                  {t("profile.exchangeVoucher")}
+                </span>
               </div>
-              <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              <svg
+                className="w-4 h-4 text-[#526069]/40"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                />
               </svg>
             </button>
 
             {/* Language Switcher */}
             <div className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent">
               <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-textColor/60" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-.778.099-1.533.284-2.253" />
+                <svg
+                  className="w-5 h-5 text-textColor/60"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-.778.099-1.533.284-2.253"
+                  />
                 </svg>
-                <span className="font-semibold text-textColor">{t('lang.switch')}</span>
+                <span className="font-semibold text-textColor">
+                  {t("lang.switch")}
+                </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <button
-                  onClick={() => setLanguage(lang === 'vi' ? 'en' : 'vi')}
+                  onClick={() => setLanguage(lang === "vi" ? "en" : "vi")}
                   className="px-2.5 py-1 bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-black uppercase tracking-wider rounded-lg border-none cursor-pointer active:scale-95 transition-all"
                 >
-                  {lang === 'vi' ? 'English' : 'Tiếng Việt'}
+                  {lang === "vi" ? "English" : "Tiếng Việt"}
                 </button>
               </div>
             </div>
@@ -592,24 +829,44 @@ export const Profile: React.FC<IProfileProps> = (props) => {
 
         {/* Section 3: General */}
         <div className="space-y-2.5">
-          <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-2">{t('profile.section.general')}</h3>
+          <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-2">
+            {t("profile.section.general")}
+          </h3>
           <div className="bg-white rounded-2xl border border-[#f0edeb] overflow-hidden shadow-xs divide-y divide-[#f0edeb]">
             <button
-              onClick={() => setActiveTab('notifications')}
+              onClick={() => setActiveTab("notifications")}
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-textColor/60" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5 text-textColor/60"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     d="M14.857 17.082a9.04 9.04 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0M3.124 7.5A8.969 8.969 0 015.292 3m13.416 0a8.969 8.969 0 012.168 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <span className="font-semibold text-textColor">{t('tab.notifications')}</span>
+                <span className="font-semibold text-textColor">
+                  {t("tab.notifications")}
+                </span>
               </div>
-              <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              <svg
+                className="w-4 h-4 text-[#526069]/40"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                />
               </svg>
             </button>
 
@@ -620,39 +877,75 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-textColor/60" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5 text-textColor/60"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"
                   />
                 </svg>
-                <span className="font-semibold text-textColor">{t('profile.helpCenter')}</span>
+                <span className="font-semibold text-textColor">
+                  {t("profile.helpCenter")}
+                </span>
               </div>
-              <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              <svg
+                className="w-4 h-4 text-[#526069]/40"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                />
               </svg>
             </button>
 
             <button
               onClick={() => {
-                setActiveStaticPageSlug('about-shopquiet');
+                setActiveStaticPageSlug("about-shopquiet");
                 setIsHelpModalOpen(true);
               }}
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <svg className="w-5 h-5 text-textColor/60" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                <svg
+                  className="w-5 h-5 text-textColor/60"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     d="M11.25 11.25l.041-.02a.75.75 0 111.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
                   />
                 </svg>
-                <span className="font-semibold text-textColor">{t('profile.about')}</span>
+                <span className="font-semibold text-textColor">
+                  {t("profile.about")}
+                </span>
               </div>
-              <svg className="w-4 h-4 text-[#526069]/40" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              <svg
+                className="w-4 h-4 text-[#526069]/40"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                />
               </svg>
             </button>
           </div>
@@ -685,18 +978,33 @@ export const Profile: React.FC<IProfileProps> = (props) => {
       {isHelpModalOpen && (
         <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-center justify-center p-6 animate-fade-in">
           <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up text-left">
-            <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">{activeStaticPage?.title || 'Trợ giúp & Hỗ trợ'}</h3>
+            <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">
+              {activeStaticPage?.title || "Trợ giúp & Hỗ trợ"}
+            </h3>
 
             <div className="space-y-3 text-xs leading-relaxed text-textColor-variant">
-              {(activeStaticPage?.content || 'Chào mừng bạn đến với tổng đài hỗ trợ của ShopQuiet.')
-                .split('\n')
+              {(
+                activeStaticPage?.content ||
+                "Chào mừng bạn đến với tổng đài hỗ trợ của ShopQuiet."
+              )
+                .split("\n")
                 .filter(Boolean)
                 .map((paragraph, index) => (
                   <p key={index}>{paragraph}</p>
                 ))}
               <div className="bg-neutral-50 p-3 rounded-2xl border border-neutral-100 font-mono text-[11px] text-textColor space-y-1">
-                <p>📞 Hotline: {activeStaticPage?.contactPhone || cmsSettings['support.hotline'] || '1900 6000'}</p>
-                <p>📧 Email: {activeStaticPage?.contactEmail || cmsSettings['support.email'] || 'support@shopquiet.vn'}</p>
+                <p>
+                  📞 Hotline:{" "}
+                  {activeStaticPage?.contactPhone ||
+                    cmsSettings["support.hotline"] ||
+                    "1900 6000"}
+                </p>
+                <p>
+                  📧 Email:{" "}
+                  {activeStaticPage?.contactEmail ||
+                    cmsSettings["support.email"] ||
+                    "support@shopquiet.vn"}
+                </p>
               </div>
             </div>
 
@@ -714,18 +1022,33 @@ export const Profile: React.FC<IProfileProps> = (props) => {
       {isAdminModalOpen && (
         <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-center justify-center p-6 animate-fade-in">
           <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up flex flex-col max-h-[80vh] text-left">
-            <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">Người dùng đã đăng nhập</h3>
+            <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">
+              Người dùng đã đăng nhập
+            </h3>
 
             <div className="flex-1 overflow-y-auto space-y-3 pr-1">
               {usersList.length === 0 ? (
-                <p className="text-xs text-neutral-400 text-center py-8">Chưa có người dùng nào đăng ký.</p>
+                <p className="text-xs text-neutral-400 text-center py-8">
+                  Chưa có người dùng nào đăng ký.
+                </p>
               ) : (
                 usersList.map((usr: any) => (
-                  <div key={usr.id} className="p-3 border border-neutral-100 bg-neutral-50/50 rounded-2xl flex gap-3 items-center">
-                    <img src={usr.avatar} alt="" className="w-9 h-9 rounded-full object-cover border border-neutral-200" />
+                  <div
+                    key={usr.id}
+                    className="p-3 border border-neutral-100 bg-neutral-50/50 rounded-2xl flex gap-3 items-center"
+                  >
+                    <img
+                      src={usr.avatar}
+                      alt=""
+                      className="w-9 h-9 rounded-full object-cover border border-neutral-200"
+                    />
                     <div>
-                      <p className="font-bold text-xs text-textColor">{usr.name}</p>
-                      <p className="text-[10px] text-textColor-variant">ZaloID: {usr.zaloId}</p>
+                      <p className="font-bold text-xs text-textColor">
+                        {usr.name}
+                      </p>
+                      <p className="text-[10px] text-textColor-variant">
+                        ZaloID: {usr.zaloId}
+                      </p>
                     </div>
                   </div>
                 ))

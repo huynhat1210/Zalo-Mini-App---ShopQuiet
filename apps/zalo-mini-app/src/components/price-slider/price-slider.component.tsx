@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from "react";
 
 interface PriceSliderProps {
   min: number;
@@ -11,7 +11,7 @@ export const PriceSlider: React.FC<PriceSliderProps> = ({
   min,
   max,
   value,
-  onChange
+  onChange,
 }) => {
   const [minVal, setMinVal] = useState(value[0]);
   const [maxVal, setMaxVal] = useState(value[1]);
@@ -57,7 +57,7 @@ export const PriceSlider: React.FC<PriceSliderProps> = ({
         <div
           ref={range}
           className="absolute h-1.5 bg-primary rounded-full"
-          style={{ left: '0%', width: '100%' }}
+          style={{ left: "0%", width: "100%" }}
         />
       </div>
       <input
@@ -72,7 +72,7 @@ export const PriceSlider: React.FC<PriceSliderProps> = ({
           onChange([value, maxVal]);
         }}
         className="absolute w-full h-6 bg-transparent appearance-none cursor-pointer pointer-events-none z-10"
-        style={{ pointerEvents: 'auto' }}
+        style={{ pointerEvents: "auto" }}
       />
       <input
         type="range"
@@ -86,7 +86,7 @@ export const PriceSlider: React.FC<PriceSliderProps> = ({
           onChange([minVal, value]);
         }}
         className="absolute w-full h-6 bg-transparent appearance-none cursor-pointer pointer-events-none z-10"
-        style={{ pointerEvents: 'auto' }}
+        style={{ pointerEvents: "auto" }}
       />
       <style>{`
         input[type="range"]::-webkit-slider-thumb {

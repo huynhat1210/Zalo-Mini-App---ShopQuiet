@@ -1,2 +1,2 @@
-export * from './payment-simulate';
-export * from './payment-simulate.type';
+export * from "./payment-simulate";
+export * from "./payment-simulate.type";

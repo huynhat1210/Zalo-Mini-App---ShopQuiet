@@ -1,2 +1,2 @@
-export * from './i18n.util';
-export * from './i18n.type';
+export * from "./i18n.util";
+export * from "./i18n.type";

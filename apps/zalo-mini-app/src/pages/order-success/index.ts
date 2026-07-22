@@ -1,2 +1,2 @@
-export * from './order-success';
-export * from './order-success.type';
+export * from "./order-success";
+export * from "./order-success.type";

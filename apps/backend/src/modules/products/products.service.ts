@@ -11,10 +11,16 @@ export class ProductsService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  async findAll(search?: string, categoryId?: string, page: number = 1, limit: number = 10, sort?: string) {
+  async findAll(
+    search?: string,
+    categoryId?: string,
+    page: number = 1,
+    limit: number = 10,
+    sort?: string,
+  ) {
     const cacheKey = `products_${search || ''}_${categoryId || ''}_${page}_${limit}_${sort || ''}`;
     const cachedData = await this.cacheManager.get(cacheKey);
-    
+
     if (cachedData) {
       return cachedData;
     }
@@ -89,7 +95,7 @@ export class ProductsService {
   async findOne(id: number) {
     const cacheKey = `product_${id}`;
     const cachedData = await this.cacheManager.get(cacheKey);
-    
+
     if (cachedData) {
       return cachedData;
     }
@@ -114,20 +120,20 @@ export class ProductsService {
     if (product) {
       await this.cacheManager.set(cacheKey, product, 300000);
     }
-    
+
     return product;
   }
 
   async findCategories() {
     const cacheKey = 'categories_all';
     const cachedData = await this.cacheManager.get(cacheKey);
-    
+
     if (cachedData) {
       return cachedData;
     }
 
     const categories = await this.prisma.category.findMany();
-    
+
     // Cache for 30 minutes - categories rarely change
     await this.cacheManager.set(cacheKey, categories, 1800000);
     return categories;
@@ -173,7 +179,7 @@ export class ProductsService {
     // Invalidate caches after creation
     await this.invalidateProductsListCache();
     await this.invalidateCategoriesCache();
-    
+
     return product;
   }
 
@@ -198,7 +204,7 @@ export class ProductsService {
 
     // Invalidate caches after update
     await this.invalidateProductCache(id);
-    
+
     return product;
   }
 
@@ -210,7 +216,7 @@ export class ProductsService {
     // Invalidate caches after deletion
     await this.invalidateProductCache(id);
     await this.invalidateProductsListCache();
-    
+
     return product;
   }
 
@@ -258,20 +264,35 @@ export class ProductsService {
     const flashSaleProducts = allProducts.filter((product) => {
       if (!product.tags) return false;
       const normalizedTag = product.tags.toLowerCase();
-      return normalizedTag.includes('flash sale') || normalizedTag.includes('giảm') || normalizedTag.includes('giam');
+      return (
+        normalizedTag.includes('flash sale') ||
+        normalizedTag.includes('giảm') ||
+        normalizedTag.includes('giam')
+      );
     });
 
     // If flash sale count is less than 4, enrich it with standard products as fallback
     if (flashSaleProducts.length < 4 && allProducts.length > 0) {
-      const existingIds = new Set(flashSaleProducts.map(p => p.id));
-      const remainingProducts = allProducts.filter(p => !existingIds.has(p.id));
-      
-      const neededCount = Math.min(4 - flashSaleProducts.length, remainingProducts.length);
+      const existingIds = new Set(flashSaleProducts.map((p) => p.id));
+      const remainingProducts = allProducts.filter(
+        (p) => !existingIds.has(p.id),
+      );
+
+      const neededCount = Math.min(
+        4 - flashSaleProducts.length,
+        remainingProducts.length,
+      );
       const fallbacksToAdd = remainingProducts.slice(0, neededCount);
 
-      const discountOptions = ['Giảm 15%', 'Giảm 23%', 'Giảm 30%', 'Flash Sale (Giảm 10%)'];
+      const discountOptions = [
+        'Giảm 15%',
+        'Giảm 23%',
+        'Giảm 30%',
+        'Flash Sale (Giảm 10%)',
+      ];
       for (let i = 0; i < fallbacksToAdd.length; i++) {
-        const randomTag = discountOptions[Math.floor(Math.random() * discountOptions.length)];
+        const randomTag =
+          discountOptions[Math.floor(Math.random() * discountOptions.length)];
         await this.prisma.product.update({
           where: { id: fallbacksToAdd[i].id },
           data: { tags: randomTag },
@@ -283,13 +304,18 @@ export class ProductsService {
     const mappedProducts = flashSaleProducts.map((product) => {
       const tag = product.tags || '';
       let discountPercent = 20;
-      
-      const percentMatch = tag.match(/giảm\s*(\d+)%/i) || tag.match(/giam\s*(\d+)%/i) || tag.match(/(\d+)%/);
+
+      const percentMatch =
+        tag.match(/giảm\s*(\d+)%/i) ||
+        tag.match(/giam\s*(\d+)%/i) ||
+        tag.match(/(\d+)%/);
       if (percentMatch && percentMatch[1]) {
         discountPercent = parseInt(percentMatch[1], 10);
       }
 
-      const originalPrice = Math.round(product.price / (1 - discountPercent / 100));
+      const originalPrice = Math.round(
+        product.price / (1 - discountPercent / 100),
+      );
 
       return {
         ...product,

@@ -494,7 +494,9 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
                             </div>
                           );
                         }
-                      } catch (e) {}
+                      } catch (err) {
+                        console.error('Lỗi parse JSON metadata:', err);
+                      }
                       return null;
                     })()}
                   </div>

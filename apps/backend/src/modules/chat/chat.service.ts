@@ -50,7 +50,7 @@ export class ChatService {
     const sessions = [];
     for (const session of rawSessions) {
       const zaloUserId = session.zaloUserId;
-      
+
       // Get the last message content
       const lastMsg = await this.prisma.chatMessage.findFirst({
         where: { zaloUserId },
@@ -69,9 +69,12 @@ export class ChatService {
       sessions.push({
         zaloUserId,
         userName: session.userName || 'Người dùng Zalo',
-        userAvatar: session.userAvatar || 'https://zalo-api.zdn.vn/api/emoticon/avatar',
+        userAvatar:
+          session.userAvatar || 'https://zalo-api.zdn.vn/api/emoticon/avatar',
         lastMessage: lastMsg ? lastMsg.content : '',
-        lastMessageTime: lastMsg ? lastMsg.createdAt : session.latestMessageTime,
+        lastMessageTime: lastMsg
+          ? lastMsg.createdAt
+          : session.latestMessageTime,
         unreadCount,
       });
     }

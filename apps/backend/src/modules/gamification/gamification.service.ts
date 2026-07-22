@@ -61,7 +61,9 @@ export class GamificationService {
       select: { membershipTier: true },
     });
 
-    const tierMultiplier = await this.usersService.getTierDailyPointsMultiplier(user?.membershipTier || 'Đồng');
+    const tierMultiplier = await this.usersService.getTierDailyPointsMultiplier(
+      user?.membershipTier || 'Đồng',
+    );
 
     // Reward formula: base 10 points + 5 points per consecutive day (max 7 days), then apply tier multiplier
     const basePoints = Math.min(10 + (consecutiveDays - 1) * 5, 45);
@@ -90,7 +92,13 @@ export class GamificationService {
           type: 'promotion',
           title: `📍 Điểm danh thành công`,
           content: `Chúc mừng! Bạn đã nhận được +${rewardPoints} điểm thưởng (chuỗi điểm danh liên tục: ${consecutiveDays} ngày).`,
-          date: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('vi-VN'),
+          date:
+            new Date().toLocaleTimeString('vi-VN', {
+              hour: '2-digit',
+              minute: '2-digit',
+            }) +
+            ' - ' +
+            new Date().toLocaleDateString('vi-VN'),
           read: false,
         },
       });
@@ -106,7 +114,12 @@ export class GamificationService {
     };
   }
 
-  async addPoints(zaloUserId: string, points: number, reason: string, metadata?: Record<string, any>) {
+  async addPoints(
+    zaloUserId: string,
+    points: number,
+    reason: string,
+    metadata?: Record<string, any>,
+  ) {
     // Update user gamification points
     const user = await this.prisma.user.findUnique({
       where: { zaloId: zaloUserId },
@@ -140,13 +153,20 @@ export class GamificationService {
     try {
       await this.checkAchievements(zaloUserId);
     } catch (e) {
-      console.error('Error pre-checking achievements in getUserGamification:', e);
+      console.error(
+        'Error pre-checking achievements in getUserGamification:',
+        e,
+      );
     }
 
     const [user, todayClaim, achievements, pointsHistory] = await Promise.all([
       this.prisma.user.findUnique({
         where: { zaloId: zaloUserId },
-        select: { totalSpent: true, membershipTier: true, gamificationPoints: true },
+        select: {
+          totalSpent: true,
+          membershipTier: true,
+          gamificationPoints: true,
+        },
       }),
       this.prisma.dailyRewardClaim.findFirst({
         where: {
@@ -183,11 +203,41 @@ export class GamificationService {
   async checkAchievements(zaloUserId: string) {
     // 1. Seed static achievements dynamically if not exists
     const achievementsToSeed = [
-      { id: 1, name: 'Khách hàng mới', description: 'Đặt đơn hàng đầu tiên', icon: '🎉', condition: 'orders >= 1' },
-      { id: 2, name: 'Người mua sắm', description: 'Đặt 5 đơn hàng', icon: '🛍️', condition: 'orders >= 5' },
-      { id: 3, name: 'Sành điệu', description: 'Lưu 10 sản phẩm', icon: '❤️', condition: 'favorites >= 10' },
-      { id: 4, name: 'Người đánh giá', description: 'Viết 5 đánh giá', icon: '⭐', condition: 'comments >= 5' },
-      { id: 5, name: 'VIP', description: 'Chi tiêu trên 1 triệu', icon: '👑', condition: 'points >= 1000000' },
+      {
+        id: 1,
+        name: 'Khách hàng mới',
+        description: 'Đặt đơn hàng đầu tiên',
+        icon: '🎉',
+        condition: 'orders >= 1',
+      },
+      {
+        id: 2,
+        name: 'Người mua sắm',
+        description: 'Đặt 5 đơn hàng',
+        icon: '🛍️',
+        condition: 'orders >= 5',
+      },
+      {
+        id: 3,
+        name: 'Sành điệu',
+        description: 'Lưu 10 sản phẩm',
+        icon: '❤️',
+        condition: 'favorites >= 10',
+      },
+      {
+        id: 4,
+        name: 'Người đánh giá',
+        description: 'Viết 5 đánh giá',
+        icon: '⭐',
+        condition: 'comments >= 5',
+      },
+      {
+        id: 5,
+        name: 'VIP',
+        description: 'Chi tiêu trên 1 triệu',
+        icon: '👑',
+        condition: 'points >= 1000000',
+      },
     ];
 
     for (const ach of achievementsToSeed) {
@@ -267,7 +317,10 @@ export class GamificationService {
     ];
 
     for (const achievement of achievements) {
-      if (achievement.condition && !unlockedAchievementIds.includes(achievement.id)) {
+      if (
+        achievement.condition &&
+        !unlockedAchievementIds.includes(achievement.id)
+      ) {
         await this.prisma.userAchievement.create({
           data: {
             zaloUserId,
@@ -283,14 +336,26 @@ export class GamificationService {
               type: 'promotion',
               title: `🏆 Đạt huy hiệu mới: ${achievement.name}`,
               content: `Chúc mừng bạn đã đạt được thành tựu "${achievement.name}" (${achievement.description})!`,
-              date: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('vi-VN'),
+              date:
+                new Date().toLocaleTimeString('vi-VN', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                }) +
+                ' - ' +
+                new Date().toLocaleDateString('vi-VN'),
               read: false,
             },
           });
         } catch (e) {
-          console.error(`Failed to create notification for achievement ${achievement.name}:`, e);
+          console.error(
+            `Failed to create notification for achievement ${achievement.name}:`,
+            e,
+          );
         }
-      } else if (!achievement.condition && unlockedAchievementIds.includes(achievement.id)) {
+      } else if (
+        !achievement.condition &&
+        unlockedAchievementIds.includes(achievement.id)
+      ) {
         // Remove achievement if condition is no longer met
         await this.prisma.userAchievement.delete({
           where: {
@@ -327,12 +392,34 @@ export class GamificationService {
     }));
   }
 
-  async exchangeVoucher(zaloUserId: string, voucherCode: string, pointsCost: number) {
+  async exchangeVoucher(
+    zaloUserId: string,
+    voucherCode: string,
+    pointsCost: number,
+  ) {
     // 1. Ensure the voucher exists (seed/upsert statically if not in DB to prevent failure)
     const vouchersToSeed = [
-      { code: 'DISCOUNT10', type: 'fixed', value: 10000, minOrderVal: 50000, maxDiscount: 10000 },
-      { code: 'DISCOUNT20', type: 'fixed', value: 20000, minOrderVal: 100000, maxDiscount: 20000 },
-      { code: 'DISCOUNT50', type: 'fixed', value: 50000, minOrderVal: 200000, maxDiscount: 50000 },
+      {
+        code: 'DISCOUNT10',
+        type: 'fixed',
+        value: 10000,
+        minOrderVal: 50000,
+        maxDiscount: 10000,
+      },
+      {
+        code: 'DISCOUNT20',
+        type: 'fixed',
+        value: 20000,
+        minOrderVal: 100000,
+        maxDiscount: 20000,
+      },
+      {
+        code: 'DISCOUNT50',
+        type: 'fixed',
+        value: 50000,
+        minOrderVal: 200000,
+        maxDiscount: 50000,
+      },
     ];
 
     for (const v of vouchersToSeed) {
@@ -413,7 +500,13 @@ export class GamificationService {
           type: 'promotion',
           title: `🎁 Đổi quà thành công`,
           content: `Chúc mừng bạn đã đổi thành công mã voucher: ${voucherCode} (-${voucher.value.toLocaleString('vi-VN')}đ) bằng ${pointsCost} điểm tích lũy. Áp dụng ngay khi thanh toán!`,
-          date: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('vi-VN'),
+          date:
+            new Date().toLocaleTimeString('vi-VN', {
+              hour: '2-digit',
+              minute: '2-digit',
+            }) +
+            ' - ' +
+            new Date().toLocaleDateString('vi-VN'),
           read: false,
         },
       });

@@ -208,7 +208,12 @@ export class CartService {
     return this.getCart(userId);
   }
 
-  async removeFromCart(productId: number, size?: string, color?: string, zaloUserId?: string) {
+  async removeFromCart(
+    productId: number,
+    size?: string,
+    color?: string,
+    zaloUserId?: string,
+  ) {
     const userId = zaloUserId || 'cust-zalo-id-1';
     await this.ensureUserExists(userId);
     const itemSize = size || 'DEFAULT';

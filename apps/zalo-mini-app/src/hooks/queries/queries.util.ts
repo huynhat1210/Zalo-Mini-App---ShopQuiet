@@ -1,12 +1,14 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { apiRequest } from '../../utils/api';
-import type { IProduct, IProductCategory, INotification } from '../../App.type';
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { apiRequest } from "../../utils/api";
+import type { IProduct, IProductCategory, INotification } from "../../App.type";
 
 export function useInfiniteProducts(limit = 10) {
   return useInfiniteQuery({
-    queryKey: ['products'],
+    queryKey: ["products"],
     queryFn: async ({ pageParam = 1 }) => {
-      const res = await apiRequest<any>(`/products?page=${pageParam}&limit=${limit}`);
+      const res = await apiRequest<any>(
+        `/products?page=${pageParam}&limit=${limit}`,
+      );
       return res;
     },
     getNextPageParam: (lastPage: any) => {
@@ -22,9 +24,9 @@ export function useInfiniteProducts(limit = 10) {
 
 export function useCategories() {
   return useQuery({
-    queryKey: ['categories'],
+    queryKey: ["categories"],
     queryFn: async () => {
-      const res = await apiRequest<IProductCategory[]>('/categories');
+      const res = await apiRequest<IProductCategory[]>("/categories");
       return res.map((cat) => ({ ...cat, icon: undefined }));
     },
   });
@@ -32,15 +34,15 @@ export function useCategories() {
 
 export function useBanners() {
   return useQuery({
-    queryKey: ['banners'],
-    queryFn: () => apiRequest<any[]>('/banners'),
+    queryKey: ["banners"],
+    queryFn: () => apiRequest<any[]>("/banners"),
   });
 }
 
 export function useNotifications(zaloUserId?: string) {
   return useQuery({
-    queryKey: ['notifications', zaloUserId || 'guest'],
-    queryFn: () => apiRequest<INotification[]>('/notifications'),
+    queryKey: ["notifications", zaloUserId || "guest"],
+    queryFn: () => apiRequest<INotification[]>("/notifications"),
     refetchInterval: zaloUserId ? 5000 : false, // Only poll if logged in
     enabled: !!zaloUserId, // Only run the query if a user is logged in
   });
@@ -48,9 +50,9 @@ export function useNotifications(zaloUserId?: string) {
 
 export function useAllProducts() {
   return useQuery({
-    queryKey: ['allProducts'],
+    queryKey: ["allProducts"],
     queryFn: async () => {
-      const res = await apiRequest<any>('/products?page=1&limit=200');
+      const res = await apiRequest<any>("/products?page=1&limit=200");
       return (res.data || res) as IProduct[];
     },
   });

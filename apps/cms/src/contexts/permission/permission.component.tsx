@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext } from 'react';
 import type { ReactNode } from 'react';
 import type { Role, Permission } from '../../utils/permissions';
 import { hasPermission, hasAnyPermission, hasAllPermissions, roleDefinitions } from '../../utils/permissions';
@@ -14,15 +14,9 @@ interface PermissionContextType {
   setRole: (role: Role) => void;
 }
 
-const PermissionContext = createContext<PermissionContextType | undefined>(undefined);
-
-export const usePermissions = () => {
-  const context = useContext(PermissionContext);
-  if (!context) {
-    throw new Error('usePermissions must be used within PermissionProvider');
-  }
-  return context;
-};
+export const PermissionContext = createContext<PermissionContextType | undefined>(undefined);
+import { usePermissions } from './permission.hook';
+export { usePermissions };
 
 
 

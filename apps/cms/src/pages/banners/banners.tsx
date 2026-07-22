@@ -67,6 +67,7 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
       await apiRequest(`/banners/${id}`, 'DELETE');
       setBanners(banners.filter((b) => b.id !== id));
     } catch (err) {
+      console.error('Lỗi khi xóa banner:', err);
       alert('Không thể xóa banner. Lỗi kết nối.');
     }
   };

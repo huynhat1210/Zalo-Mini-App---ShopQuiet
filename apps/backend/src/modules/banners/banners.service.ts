@@ -13,7 +13,7 @@ export class BannersService {
   async findAll() {
     const cacheKey = 'banners_all';
     const cachedData = await this.cacheManager.get(cacheKey);
-    
+
     if (cachedData) {
       return cachedData;
     }
@@ -26,7 +26,9 @@ export class BannersService {
         const response = await fetch(`${payloadUrl}/api/cms/banners`);
         if (response.ok) {
           const payload = await response.json();
-          const items = Array.isArray(payload) ? payload : payload?.docs ?? [];
+          const items = Array.isArray(payload)
+            ? payload
+            : (payload?.docs ?? []);
           if (items.length) {
             banners = items.map((item: any) => {
               if (item && item.image && typeof item.image === 'object') {
@@ -64,7 +66,12 @@ export class BannersService {
     await this.cacheManager.del('banners_all');
   }
 
-  async create(data: { imageUrl: string; title?: string; description?: string; link?: string }) {
+  async create(data: {
+    imageUrl: string;
+    title?: string;
+    description?: string;
+    link?: string;
+  }) {
     const banner = await this.prisma.banner.create({
       data: {
         imageUrl: data.imageUrl,

@@ -15,4 +15,3 @@ export interface ISuccessOrder {
   estimatedDeliveryDate?: string;
   shippingMethodCode?: string;
 }
-

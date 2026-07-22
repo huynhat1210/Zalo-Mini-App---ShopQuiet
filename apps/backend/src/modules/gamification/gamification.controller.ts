@@ -21,18 +21,34 @@ export class GamificationController {
 
   @Post('add-points')
   @UseGuards(JwtAuthGuard)
-  async addPoints(@CurrentUser() user: any, @Body() body: { points: number; reason: string }) {
-    return this.gamificationService.addPoints(user.zaloId, body.points, body.reason);
+  async addPoints(
+    @CurrentUser() user: any,
+    @Body() body: { points: number; reason: string },
+  ) {
+    return this.gamificationService.addPoints(
+      user.zaloId,
+      body.points,
+      body.reason,
+    );
   }
 
   @Get('leaderboard')
   async getLeaderboard(@Query('limit') limit?: string) {
-    return this.gamificationService.getLeaderboard(limit ? parseInt(limit, 10) : 10);
+    return this.gamificationService.getLeaderboard(
+      limit ? parseInt(limit, 10) : 10,
+    );
   }
 
   @Post('exchange-voucher')
   @UseGuards(JwtAuthGuard)
-  async exchangeVoucher(@CurrentUser() user: any, @Body() body: { voucherCode: string; pointsCost: number }) {
-    return this.gamificationService.exchangeVoucher(user.zaloId, body.voucherCode, body.pointsCost);
+  async exchangeVoucher(
+    @CurrentUser() user: any,
+    @Body() body: { voucherCode: string; pointsCost: number },
+  ) {
+    return this.gamificationService.exchangeVoucher(
+      user.zaloId,
+      body.voucherCode,
+      body.pointsCost,
+    );
   }
 }

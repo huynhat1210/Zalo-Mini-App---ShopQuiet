@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useState, useCallback } from 'react';
 import type { Toast, ToastType } from '../../components/toast';
 
 interface ToastContextType {
@@ -11,15 +11,9 @@ interface ToastContextType {
   removeToast: (id: string) => void;
 }
 
-const ToastContext = createContext<ToastContextType | undefined>(undefined);
-
-export const useToast = () => {
-  const context = useContext(ToastContext);
-  if (!context) {
-    throw new Error('useToast must be used within ToastProvider');
-  }
-  return context;
-};
+export const ToastContext = createContext<ToastContextType | undefined>(undefined);
+import { useToast } from './toast.hook';
+export { useToast };
 
 import type { IToastComponentProps } from './toast.type';
 

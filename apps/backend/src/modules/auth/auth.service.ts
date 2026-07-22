@@ -21,14 +21,18 @@ export class AuthService {
     return user;
   }
 
-  async validateZaloAccessToken(accessToken: string): Promise<{ zaloId: string; name: string; avatar: string } | null> {
+  async validateZaloAccessToken(
+    accessToken: string,
+  ): Promise<{ zaloId: string; name: string; avatar: string } | null> {
     // 1. If it's a mock token for local testing, return mock data
     if (accessToken.startsWith('mock_zalo_token_')) {
-      const mockId = accessToken.replace('mock_zalo_token_', '') || 'cust-zalo-id-1';
+      const mockId =
+        accessToken.replace('mock_zalo_token_', '') || 'cust-zalo-id-1';
       return {
         zaloId: mockId,
         name: `Zalo User ${mockId}`,
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+        avatar:
+          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
       };
     }
 
@@ -45,10 +49,13 @@ export class AuthService {
         headers['appsecret_proof'] = appsecretProof;
       }
 
-      const response = await fetch('https://graph.zalo.me/v2.0/me?fields=id,name,picture', {
-        method: 'GET',
-        headers,
-      });
+      const response = await fetch(
+        'https://graph.zalo.me/v2.0/me?fields=id,name,picture',
+        {
+          method: 'GET',
+          headers,
+        },
+      );
 
       if (!response.ok) {
         throw new Error(`Zalo API returned status ${response.status}`);
@@ -56,12 +63,16 @@ export class AuthService {
 
       const data = await response.json();
       if (data && data.error === -501) {
-        console.warn('[Zalo Auth] Server IP is outside Vietnam (Error -501). Zalo blocked profile retrieval. Bypassing validation for demo.');
+        console.warn(
+          '[Zalo Auth] Server IP is outside Vietnam (Error -501). Zalo blocked profile retrieval. Bypassing validation for demo.',
+        );
         return null;
       }
       if (!data || !data.id) {
         console.error('[Zalo Auth] Invalid Zalo profile response:', data);
-        throw new Error(data?.message || 'Zalo API returned invalid profile data');
+        throw new Error(
+          data?.message || 'Zalo API returned invalid profile data',
+        );
       }
 
       return {
@@ -83,7 +94,13 @@ export class AuthService {
     }
   }
 
-  async login(zaloId: any, name: string, avatar?: string, password?: string, accessToken?: string) {
+  async login(
+    zaloId: any,
+    name: string,
+    avatar?: string,
+    password?: string,
+    accessToken?: string,
+  ) {
     let targetZaloId = String(zaloId);
     let targetName = name;
     let targetAvatar = avatar;
@@ -105,51 +122,72 @@ export class AuthService {
           targetAvatar = avatar;
         }
       } catch (err) {
-        console.warn('[Zalo Auth] validateZaloAccessToken failed, falling back to client-provided parameters:', err);
+        console.warn(
+          '[Zalo Auth] validateZaloAccessToken failed, falling back to client-provided parameters:',
+          err,
+        );
         targetZaloId = String(zaloId);
         targetName = name;
         targetAvatar = avatar;
       }
     } else {
       // In production, we require an accessToken for non-admin users to log in securely
-      const isAdminId = String(zaloId).toLowerCase() === 'admin' || String(zaloId).toLowerCase() === 'admin-zalo-id-1';
+      const isAdminId =
+        String(zaloId).toLowerCase() === 'admin' ||
+        String(zaloId).toLowerCase() === 'admin-zalo-id-1';
       if (!isAdminId && process.env.NODE_ENV === 'production') {
-        throw new UnauthorizedException('Yêu cầu Zalo Access Token để đăng nhập an toàn.');
+        throw new UnauthorizedException(
+          'Yêu cầu Zalo Access Token để đăng nhập an toàn.',
+        );
       }
     }
 
-    const isAdminId = String(targetZaloId).toLowerCase() === 'admin' || String(targetZaloId).toLowerCase() === 'admin-zalo-id-1';
+    const isAdminId =
+      String(targetZaloId).toLowerCase() === 'admin' ||
+      String(targetZaloId).toLowerCase() === 'admin-zalo-id-1';
     if (isAdminId) {
-      const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH || 
+      const adminPasswordHash =
+        process.env.ADMIN_PASSWORD_HASH ||
         '$2b$10$tZ/n07XU0mD65fH4kY/vveHWh3h7FvFv.u9k5CjEszkX9H/7CveQ2'; // default bcrypt hash for 'admin123'
-      
-      const isPasswordMatch = password && await bcrypt.compare(password, adminPasswordHash);
+
+      const isPasswordMatch =
+        password && (await bcrypt.compare(password, adminPasswordHash));
       if (!isPasswordMatch) {
-        throw new UnauthorizedException('Mật khẩu quản trị viên không chính xác');
+        throw new UnauthorizedException(
+          'Mật khẩu quản trị viên không chính xác',
+        );
       }
     }
-    const user = await this.usersService.syncUser(targetZaloId, targetName, targetAvatar);
+    const user = await this.usersService.syncUser(
+      targetZaloId,
+      targetName,
+      targetAvatar,
+    );
     if (!user) {
       throw new UnauthorizedException();
     }
-    
-    const payload = { sub: user.zaloId, zaloId: user.zaloId, role: user.role || 'user' };
-    
+
+    const payload = {
+      sub: user.zaloId,
+      zaloId: user.zaloId,
+      role: user.role || 'user',
+    };
+
     // Generate access token (short-lived: 15 minutes)
     const access_token = this.jwtService.sign(payload, { expiresIn: '15m' });
-    
+
     // Generate refresh token (long-lived: 7 days)
     const refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' });
-    
+
     // Store refresh token in database
     const refreshTokenExpiresAt = new Date();
     refreshTokenExpiresAt.setDate(refreshTokenExpiresAt.getDate() + 7);
-    
+
     // Delete old refresh tokens for this user
     await this.prisma.refreshToken.deleteMany({
-      where: { zaloUserId: user.zaloId }
+      where: { zaloUserId: user.zaloId },
     });
-    
+
     // Create new refresh token
     await this.prisma.refreshToken.create({
       data: {
@@ -158,7 +196,7 @@ export class AuthService {
         expiresAt: refreshTokenExpiresAt,
       },
     });
-    
+
     return {
       access_token,
       refresh_token,
@@ -180,13 +218,13 @@ export class AuthService {
     try {
       // Verify refresh token
       const payload = this.jwtService.verify(refreshToken);
-      
+
       // Check if refresh token exists in database
       const storedToken = await this.prisma.refreshToken.findUnique({
         where: { token: refreshToken },
         include: { user: true },
       });
-      
+
       if (!storedToken || storedToken.expiresAt < new Date()) {
         // Delete expired token
         if (storedToken) {
@@ -196,26 +234,30 @@ export class AuthService {
         }
         throw new UnauthorizedException('Invalid or expired refresh token');
       }
-      
+
       // Generate new access token
-      const newPayload = { 
-        sub: storedToken.user.zaloId, 
-        zaloId: storedToken.user.zaloId, 
-        role: storedToken.user.role || 'user' 
+      const newPayload = {
+        sub: storedToken.user.zaloId,
+        zaloId: storedToken.user.zaloId,
+        role: storedToken.user.role || 'user',
       };
-      
-      const new_access_token = this.jwtService.sign(newPayload, { expiresIn: '15m' });
-      
+
+      const new_access_token = this.jwtService.sign(newPayload, {
+        expiresIn: '15m',
+      });
+
       // Optionally rotate refresh token
-      const new_refresh_token = this.jwtService.sign(newPayload, { expiresIn: '7d' });
+      const new_refresh_token = this.jwtService.sign(newPayload, {
+        expiresIn: '7d',
+      });
       const newExpiresAt = new Date();
       newExpiresAt.setDate(newExpiresAt.getDate() + 7);
-      
+
       // Delete old refresh token and create new one
       await this.prisma.refreshToken.delete({
         where: { id: storedToken.id },
       });
-      
+
       await this.prisma.refreshToken.create({
         data: {
           token: new_refresh_token,
@@ -223,7 +265,7 @@ export class AuthService {
           expiresAt: newExpiresAt,
         },
       });
-      
+
       return {
         access_token: new_access_token,
         refresh_token: new_refresh_token,
@@ -236,27 +278,31 @@ export class AuthService {
           where: { token: refreshToken },
           include: { user: true },
         });
-        
+
         if (storedToken && storedToken.expiresAt >= new Date()) {
           // Token exists in DB and is not expired, but JWT verification failed
           // This can happen after deployment with new JWT secret
           // Generate new tokens for the user
-          const newPayload = { 
-            sub: storedToken.user.zaloId, 
-            zaloId: storedToken.user.zaloId, 
-            role: storedToken.user.role || 'user' 
+          const newPayload = {
+            sub: storedToken.user.zaloId,
+            zaloId: storedToken.user.zaloId,
+            role: storedToken.user.role || 'user',
           };
-          
-          const new_access_token = this.jwtService.sign(newPayload, { expiresIn: '15m' });
-          const new_refresh_token = this.jwtService.sign(newPayload, { expiresIn: '7d' });
+
+          const new_access_token = this.jwtService.sign(newPayload, {
+            expiresIn: '15m',
+          });
+          const new_refresh_token = this.jwtService.sign(newPayload, {
+            expiresIn: '7d',
+          });
           const newExpiresAt = new Date();
           newExpiresAt.setDate(newExpiresAt.getDate() + 7);
-          
+
           // Replace old token with new one
           await this.prisma.refreshToken.delete({
             where: { id: storedToken.id },
           });
-          
+
           await this.prisma.refreshToken.create({
             data: {
               token: new_refresh_token,
@@ -264,9 +310,12 @@ export class AuthService {
               expiresAt: newExpiresAt,
             },
           });
-          
-          console.log('[AuthService] Recovered refresh token for user:', storedToken.user.zaloId);
-          
+
+          console.log(
+            '[AuthService] Recovered refresh token for user:',
+            storedToken.user.zaloId,
+          );
+
           return {
             access_token: new_access_token,
             refresh_token: new_refresh_token,
@@ -275,7 +324,7 @@ export class AuthService {
       } catch (recoveryError) {
         console.error('[AuthService] Recovery attempt failed:', recoveryError);
       }
-      
+
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
@@ -314,7 +363,10 @@ export class AuthService {
     // Real integration: call Zalo API with merchant keys to decrypt the token
     // For now: return failure so user must enter phone manually
     // Only allow if the token contains a pre-verified real phone (set by real Zalo webhook)
-    return { success: false, message: 'Phone decryption requires Zalo merchant keys configuration' };
+    return {
+      success: false,
+      message: 'Phone decryption requires Zalo merchant keys configuration',
+    };
   }
 
   async testZaloVerification(accessToken: string) {
@@ -331,10 +383,13 @@ export class AuthService {
     }
 
     try {
-      const response = await fetch('https://graph.zalo.me/v2.0/me?fields=id,name,picture', {
-        method: 'GET',
-        headers,
-      });
+      const response = await fetch(
+        'https://graph.zalo.me/v2.0/me?fields=id,name,picture',
+        {
+          method: 'GET',
+          headers,
+        },
+      );
 
       const data = await response.json();
       return {

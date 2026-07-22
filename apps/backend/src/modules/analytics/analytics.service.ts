@@ -3,7 +3,14 @@ import { PrismaService } from '../../prisma/prisma.service';
 
 export interface TrackEventDto {
   zaloUserId: string;
-  eventType: 'view' | 'click' | 'add_to_cart' | 'purchase' | 'search' | 'filter' | 'share';
+  eventType:
+    | 'view'
+    | 'click'
+    | 'add_to_cart'
+    | 'purchase'
+    | 'search'
+    | 'filter'
+    | 'share';
   productId?: number;
   categoryId?: number;
   metadata?: Record<string, any>;
@@ -48,9 +55,12 @@ export class AnalyticsService {
       }),
     ]);
 
-    const viewToCartRate = views > 0 ? ((addToCarts / views) * 100).toFixed(2) : 0;
-    const cartToPurchaseRate = addToCarts > 0 ? ((purchases / addToCarts) * 100).toFixed(2) : 0;
-    const viewToPurchaseRate = views > 0 ? ((purchases / views) * 100).toFixed(2) : 0;
+    const viewToCartRate =
+      views > 0 ? ((addToCarts / views) * 100).toFixed(2) : 0;
+    const cartToPurchaseRate =
+      addToCarts > 0 ? ((purchases / addToCarts) * 100).toFixed(2) : 0;
+    const viewToPurchaseRate =
+      views > 0 ? ((purchases / views) * 100).toFixed(2) : 0;
 
     return {
       views,
@@ -161,6 +171,8 @@ export class AnalyticsService {
       }
     });
 
-    return Object.values(dailyStats).sort((a, b) => a.date.localeCompare(b.date));
+    return Object.values(dailyStats).sort((a, b) =>
+      a.date.localeCompare(b.date),
+    );
   }
 }

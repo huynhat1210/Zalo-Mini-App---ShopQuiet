@@ -1,2 +1,2 @@
-export * from './lazy-image.component';
-export * from './lazy-image.type';
+export * from "./lazy-image.component";
+export * from "./lazy-image.type";

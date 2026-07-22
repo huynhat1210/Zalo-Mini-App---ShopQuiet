@@ -51,7 +51,7 @@ describe('UsersService', () => {
     }).compile();
 
     service = module.get<UsersService>(UsersService);
-    prismaService = module.get(PrismaService) as jest.Mocked<any>;
+    prismaService = module.get(PrismaService);
   });
 
   it('should be defined', () => {
@@ -67,25 +67,61 @@ describe('UsersService', () => {
     });
 
     it('should create new user when zaloId does not exist', async () => {
-      const result = await service.syncUser('123456', 'Test User', 'avatar.jpg');
+      const result = await service.syncUser(
+        '123456',
+        'Test User',
+        'avatar.jpg',
+      );
 
       expect(result).toEqual(mockUser);
       expect(prismaService.user.upsert).toHaveBeenCalledWith({
         where: { zaloId: '123456' },
-        update: { name: 'Test User', avatar: 'avatar.jpg', role: 'user', gender: undefined },
-        create: { zaloId: '123456', name: 'Test User', avatar: 'avatar.jpg', phone: undefined, birthday: undefined, email: undefined, gender: undefined, role: 'user' },
+        update: {
+          name: 'Test User',
+          avatar: 'avatar.jpg',
+          role: 'user',
+          gender: undefined,
+        },
+        create: {
+          zaloId: '123456',
+          name: 'Test User',
+          avatar: 'avatar.jpg',
+          phone: undefined,
+          birthday: undefined,
+          email: undefined,
+          gender: undefined,
+          role: 'user',
+        },
       });
     });
 
     it('should update existing user when zaloId exists', async () => {
       prismaService.user.findUnique.mockResolvedValue(mockUser);
-      const result = await service.syncUser('123456', 'Updated Name', 'new-avatar.jpg');
+      const result = await service.syncUser(
+        '123456',
+        'Updated Name',
+        'new-avatar.jpg',
+      );
 
       expect(result).toEqual(mockUser);
       expect(prismaService.user.upsert).toHaveBeenCalledWith({
         where: { zaloId: '123456' },
-        update: { name: 'Test User', avatar: 'new-avatar.jpg', role: 'user', gender: undefined },
-        create: { zaloId: '123456', name: 'Updated Name', avatar: 'new-avatar.jpg', phone: undefined, birthday: undefined, email: undefined, gender: undefined, role: 'user' },
+        update: {
+          name: 'Test User',
+          avatar: 'new-avatar.jpg',
+          role: 'user',
+          gender: undefined,
+        },
+        create: {
+          zaloId: '123456',
+          name: 'Updated Name',
+          avatar: 'new-avatar.jpg',
+          phone: undefined,
+          birthday: undefined,
+          email: undefined,
+          gender: undefined,
+          role: 'user',
+        },
       });
     });
 
@@ -95,8 +131,22 @@ describe('UsersService', () => {
       expect(result).toEqual(mockUser);
       expect(prismaService.user.upsert).toHaveBeenCalledWith({
         where: { zaloId: '123456' },
-        update: { name: 'Test User', avatar: '', role: 'user', gender: undefined },
-        create: { zaloId: '123456', name: 'Test User', avatar: '', phone: undefined, birthday: undefined, email: undefined, gender: undefined, role: 'user' },
+        update: {
+          name: 'Test User',
+          avatar: '',
+          role: 'user',
+          gender: undefined,
+        },
+        create: {
+          zaloId: '123456',
+          name: 'Test User',
+          avatar: '',
+          phone: undefined,
+          birthday: undefined,
+          email: undefined,
+          gender: undefined,
+          role: 'user',
+        },
       });
     });
   });

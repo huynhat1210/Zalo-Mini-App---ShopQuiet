@@ -40,7 +40,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('send_message')
   async handleMessage(
-    @MessageBody() data: { zaloUserId: string; sender: string; content: string },
+    @MessageBody()
+    data: {
+      zaloUserId: string;
+      sender: string;
+      content: string;
+    },
   ) {
     // Save to Database
     const savedMsg = await this.chatService.saveMessage(
@@ -62,7 +67,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: { zaloUserId: string; sender: string },
   ) {
     await this.chatService.markAsRead(data.zaloUserId, data.sender);
-    
+
     // Broadcast session update to update unread badge counts
     const updatedSessions = await this.chatService.getSessions();
     this.server.to('admin').emit('sessions_list', updatedSessions);

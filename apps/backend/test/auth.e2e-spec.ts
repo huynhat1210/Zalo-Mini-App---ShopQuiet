@@ -9,8 +9,7 @@ describe('AuthController (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [TestModule],
-    })
-      .compile();
+    }).compile();
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe());
@@ -61,9 +60,7 @@ describe('AuthController (e2e)', () => {
 
   describe('/auth/profile (GET)', () => {
     it('should fail without token', () => {
-      return request(app.getHttpServer())
-        .get('/auth/profile')
-        .expect(401);
+      return request(app.getHttpServer()).get('/auth/profile').expect(401);
     });
 
     it('should fail with invalid token', () => {
