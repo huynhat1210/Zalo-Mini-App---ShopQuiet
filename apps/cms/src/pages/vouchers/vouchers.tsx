@@ -243,21 +243,32 @@ export const Vouchers: React.FC<IVouchersProps> = (_props) => {
         </div>
       )}
 
-      {/* Add Voucher Modal */}
+      {/* Slide-Over Drawer: Add Voucher */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-xl border border-slate-200 animate-scaleUp">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
-              <h3 className="text-base font-bold text-slate-800">Tạo Mã Giảm Giá Mới</h3>
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop */}
+          <div
+            onClick={() => setIsModalOpen(false)}
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity animate-fadeIn"
+          />
+
+          <div className="fixed inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl z-50 flex flex-col justify-between border-l border-slate-200">
+            {/* Header */}
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-[#fbf9f7]">
+              <div>
+                <h3 className="text-base font-black text-slate-800">🎟️ Tạo Mã Giảm Giá Mới</h3>
+                <p className="text-[11px] text-slate-400 font-medium">Thiết lập điều kiện khuyến mãi cho khách hàng</p>
+              </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 flex items-center justify-center border-none cursor-pointer"
+                className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-700 flex items-center justify-center border-none cursor-pointer transition-colors"
               >
                 <X size={16} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-3">
+            {/* Scrollable Form Body */}
+            <form id="voucherForm" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-3 scrollbar-thin">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Mã Voucher (Code) *</label>
                 <input
@@ -314,23 +325,25 @@ export const Vouchers: React.FC<IVouchersProps> = (_props) => {
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none"
                 />
               </div>
-
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-slate-100 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-200 transition-colors border-none cursor-pointer"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-[#0e6877] text-white text-xs font-bold rounded-xl hover:bg-[#0b5460] transition-colors flex items-center gap-1.5 border-none cursor-pointer"
-                >
-                  <Save size={15} /> Tạo Voucher
-                </button>
-              </div>
             </form>
+
+            {/* Sticky Footer */}
+            <div className="p-4 border-t border-slate-100 bg-white flex justify-end gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2.5 bg-slate-100 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-200 border-none cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                form="voucherForm"
+                className="px-5 py-2.5 bg-[#0e6877] text-white text-xs font-bold rounded-xl hover:bg-[#0b5460] border-none cursor-pointer flex items-center gap-1.5 shadow-xs active:scale-95"
+              >
+                <Save size={15} /> Tạo Voucher
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -233,23 +233,34 @@ export const Categories: React.FC = () => {
         )}
       </div>
 
-      {/* Add / Edit Modal */}
+      {/* Slide-Over Drawer: Add / Edit Category */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-xl border border-slate-200 animate-scaleUp">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
-              <h3 className="text-base font-bold text-slate-800">
-                {editingCategory ? 'Chỉnh Sửa Danh Mục' : 'Thêm Danh Mục Mới'}
-              </h3>
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop */}
+          <div
+            onClick={() => setIsModalOpen(false)}
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity animate-fadeIn"
+          />
+
+          <div className="fixed inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl z-50 flex flex-col justify-between border-l border-slate-200">
+            {/* Header */}
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-[#fbf9f7]">
+              <div>
+                <h3 className="text-base font-black text-slate-800">
+                  {editingCategory ? '✏️ Chỉnh Sửa Danh Mục' : '✨ Thêm Danh Mục Mới'}
+                </h3>
+                <p className="text-[11px] text-slate-400 font-medium">Cấu hình nhóm phân loại mặt hàng hiển thị trên Mini App</p>
+              </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 flex items-center justify-center border-none cursor-pointer"
+                className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-700 flex items-center justify-center border-none cursor-pointer transition-colors"
               >
                 <X size={16} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Scrollable Form Body */}
+            <form id="categoryForm" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-thin">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Tên Danh Mục *</label>
                 <input
@@ -276,7 +287,7 @@ export const Categories: React.FC = () => {
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Mô Tả Danh Mục</label>
                 <textarea
-                  rows={2}
+                  rows={3}
                   placeholder="Mô tả ngắn cho danh mục..."
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -301,23 +312,25 @@ export const Categories: React.FC = () => {
                   </label>
                 </div>
               </div>
-
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-slate-100 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-200 transition-colors border-none cursor-pointer"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-[#0e6877] text-white text-xs font-bold rounded-xl hover:bg-[#0b5460] transition-colors flex items-center gap-1.5 border-none cursor-pointer"
-                >
-                  <Save size={15} /> Lưu Danh Mục
-                </button>
-              </div>
             </form>
+
+            {/* Sticky Footer */}
+            <div className="p-4 border-t border-slate-100 bg-white flex justify-end gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2.5 bg-slate-100 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-200 transition-colors border-none cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                form="categoryForm"
+                className="px-5 py-2.5 bg-[#0e6877] text-white text-xs font-bold rounded-xl hover:bg-[#0b5460] transition-colors flex items-center gap-1.5 border-none cursor-pointer shadow-xs active:scale-95"
+              >
+                <Save size={15} /> Lưu Danh Mục
+              </button>
+            </div>
           </div>
         </div>
       )}

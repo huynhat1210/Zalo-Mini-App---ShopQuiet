@@ -189,7 +189,7 @@ export const Support: React.FC = () => {
     s.userName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const renderMessageContent = (content: string) => {
+  const renderMessageContent = (content: string, isShop: boolean) => {
     if (content.startsWith('[PRODUCT_CONTEXT]')) {
       try {
         const payloadStr = content.substring('[PRODUCT_CONTEXT]'.length).trim();
@@ -203,17 +203,27 @@ export const Support: React.FC = () => {
         }
         const fullImg = imgUrl.startsWith('http') ? imgUrl : `${serverUrl}${imgUrl}`;
         return (
-          <div className="flex gap-3 items-start bg-white/20 backdrop-blur-sm rounded-2xl p-3 max-w-xs">
+          <div
+            className={`flex gap-3 items-start rounded-2xl p-3 max-w-xs ${
+              isShop ? 'bg-white/20 backdrop-blur-xs text-white' : 'bg-slate-50 border border-slate-200 text-slate-800'
+            }`}
+          >
             {fullImg && (
-              <img src={fullImg} alt={prod.name} className="w-14 h-14 object-cover rounded-xl shrink-0 border border-white/30" />
+              <img src={fullImg} alt={prod.name} className="w-14 h-14 object-cover rounded-xl shrink-0 border border-slate-200" />
             )}
             <div className="flex-1 min-w-0">
-              <span className="inline-block text-[8px] bg-white/30 text-white px-2 py-0.5 rounded-md font-black uppercase tracking-wider mb-1">
+              <span
+                className={`inline-block text-[8px] px-2 py-0.5 rounded-md font-black uppercase tracking-wider mb-1 ${
+                  isShop ? 'bg-white/30 text-white' : 'bg-teal-50 text-[#0e6877] border border-teal-200'
+                }`}
+              >
                 📦 Đang hỏi sản phẩm
               </span>
-              <h4 className="text-xs font-bold text-white truncate leading-snug">{prod.name}</h4>
-              <p className="text-[10px] text-white/80 font-extrabold mt-0.5">
-                {Number(prod.price)?.toLocaleString('vi-VN')}đ
+              <h4 className={`text-xs font-bold truncate leading-snug ${isShop ? 'text-white' : 'text-slate-800'}`}>
+                {prod.name}
+              </h4>
+              <p className={`text-[11px] font-black mt-0.5 ${isShop ? 'text-white/90' : 'text-[#0e6877]'}`}>
+                {Number(prod.price)?.toLocaleString('vi-VN')} đ
               </p>
             </div>
           </div>
@@ -436,7 +446,7 @@ export const Support: React.FC = () => {
                             ? 'bg-gradient-to-br from-[#0e6877] to-[#1a9eb5] text-white rounded-br-md'
                             : 'bg-white text-slate-800 border border-slate-200/80 rounded-bl-md'
                         }`}>
-                          {renderMessageContent(msg.content)}
+                          {renderMessageContent(msg.content, isShop)}
                         </div>
                         <span className={`text-[8px] font-bold uppercase tracking-wider px-1 ${isShop ? 'text-right text-slate-400' : 'text-slate-400'}`}>
                           {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
