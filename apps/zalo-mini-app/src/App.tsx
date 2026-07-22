@@ -265,6 +265,23 @@ export default function App() {
     fetchCart();
   }, [fetchCart, zaloUser?.id]);
 
+  // Deep Link handling: Open product detail if URL has query parameters
+  useEffect(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const productId = urlParams.get("productId") || urlParams.get("product");
+      if (productId) {
+        apiRequest<IProduct>(`/products/${productId}`)
+          .then((p) => {
+            if (p) setSelectedProductDetail(p);
+          })
+          .catch(() => {});
+      }
+    } catch (e) {
+      console.error("Failed to parse deep link params:", e);
+    }
+  }, [setSelectedProductDetail]);
+
   return (
     <ZaloAppCast>
       <ErrorBoundaryComponent>
