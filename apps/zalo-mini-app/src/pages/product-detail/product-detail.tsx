@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import { Page, Box, Swiper } from 'zmp-ui';
 import { IProduct, useCart } from '../../App';
 import api from 'zmp-sdk';
-import { apiRequest, API_BASE_URL } from '../../utils/api';
+import { apiRequest, API_BASE_URL, trackAnalyticsEvent } from '../../utils';
 import { ChevronLeftIcon, ShareIcon, ShoppingBagIcon, HeartIcon as HeartOutline, ChatBubbleOvalLeftEllipsisIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
 import { IProductDetailProps } from './product-detail.type';
 import { LazyImageComponent } from '../../components';
-import { trackAnalyticsEvent } from '../../utils/analytics';
 
 const PageCast = Page as any;
 const BoxCast = Box as any;

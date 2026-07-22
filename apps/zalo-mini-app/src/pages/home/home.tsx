@@ -1,15 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Page, Box, Text } from 'zmp-ui';
 import { useCart, IProduct } from '../../App';
-import { apiRequest } from '../../utils/api';
+import { apiRequest, trackAnalyticsEvent, useTranslation } from '../../utils';
 import { useInfiniteProducts, useCategories, useBanners } from '../../hooks';
 import { Bars3Icon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 // @ts-ignore
 import logoIcon from '../../assets/logo.png';
 import { MenuDrawerComponent, BannerSkeleton, CategorySkeleton, ProductGridSkeleton, LazyImageComponent, LuckyWheel, FlashSale } from '../../components';
 import { IHomeProps } from './home.type';
-import { trackAnalyticsEvent } from '../../utils/analytics';
-import { useTranslation } from '../../utils/i18n';
+
 
 const PageCast = Page as any;
 const BoxCast = Box as any;
@@ -71,9 +70,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
     loadSettings();
   }, []);
 
-  useEffect(() => {
-    fetchRecommendations();
-  }, [zaloUser?.id]);
+
 
   useEffect(() => {
     async function loadFlashSale() {

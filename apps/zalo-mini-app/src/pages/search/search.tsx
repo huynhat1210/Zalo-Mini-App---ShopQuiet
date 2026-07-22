@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Page } from 'zmp-ui';
 import { useCart } from '../../App';
-import { useDebounce } from '../../utils';
+import { useDebounce, trackAnalyticsEvent, useTranslation } from '../../utils';
 import { useAllProducts, useCategories } from '../../hooks';
 import { ISearchProps } from './search.type';
 import { LazyImageComponent, PriceSlider } from '../../components';
-import { trackAnalyticsEvent } from '../../utils/analytics';
+
 
 const PageCast = Page as any;
 
 export const Search: React.FC<ISearchProps> = (_props) => {
+  const { t, lang } = useTranslation();
   const { setSelectedProductDetail, addToCart, showToast, addToViewedProducts, viewedProducts, zaloUser } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);

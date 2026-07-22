@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
+import { Language } from './i18n.type';
 
-export type Language = 'vi' | 'en';
-
-const translations = {
+export const translations = {
   vi: {
     // General
     'lang.name': 'Tiếng Việt',
@@ -151,7 +150,6 @@ const translations = {
   }
 };
 
-// Global state listeners
 const listeners = new Set<(lang: Language) => void>();
 
 let currentLang: Language = (localStorage.getItem('app_lang') as Language) || 'vi';

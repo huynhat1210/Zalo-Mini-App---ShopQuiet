@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Page } from 'zmp-ui';
 import { useCart, IOrder } from '../../App';
-import { apiRequest } from '../../utils/api';
+import { apiRequest, useTranslation } from '../../utils';
 import { IProfileProps } from './profile.type';
-import { useTranslation } from '../../utils/i18n';
 
 // Import sub-components from global components folder
 import { 

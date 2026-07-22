@@ -1,8 +1,9 @@
-import { apiRequest } from './api';
+import { apiRequest } from '../api';
+import { ITrackEventDto } from './analytics.type';
 
 export const trackAnalyticsEvent = async (
   zaloUserId: string,
-  eventType: 'view' | 'click' | 'add_to_cart' | 'purchase' | 'search' | 'filter' | 'share',
+  eventType: ITrackEventDto['eventType'],
   productId?: number,
   categoryId?: number,
   metadata?: Record<string, any>
