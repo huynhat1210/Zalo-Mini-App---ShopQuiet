@@ -246,22 +246,22 @@ export const Vouchers: React.FC<IVouchersProps> = (_props) => {
       {/* Slide-Over Drawer: Add Voucher */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden">
-          {/* Backdrop */}
+          {/* Transparent Backdrop */}
           <div
             onClick={() => setIsModalOpen(false)}
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity animate-fadeIn"
+            className="fixed inset-0 bg-transparent transition-opacity"
           />
 
-          <div className="fixed inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl z-50 flex flex-col justify-between border-l border-slate-200">
+          <div className="fixed inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl z-50 flex flex-col justify-between border-l border-slate-200 animate-slideLeft">
             {/* Header */}
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-[#fbf9f7]">
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-[#0e6877] to-[#168a9e] text-white">
               <div>
-                <h3 className="text-base font-black text-slate-800">🎟️ Tạo Mã Giảm Giá Mới</h3>
-                <p className="text-[11px] text-slate-400 font-medium">Thiết lập điều kiện khuyến mãi cho khách hàng</p>
+                <h3 className="text-base font-black text-white">🎟️ Tạo Mã Giảm Giá Mới</h3>
+                <p className="text-[11px] text-white/80 font-medium mt-0.5">Thiết lập điều kiện khuyến mãi cho khách hàng</p>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-700 flex items-center justify-center border-none cursor-pointer transition-colors"
+                className="w-8 h-8 rounded-full bg-white/20 text-white hover:bg-white/30 flex items-center justify-center border-none cursor-pointer transition-colors"
               >
                 <X size={16} />
               </button>

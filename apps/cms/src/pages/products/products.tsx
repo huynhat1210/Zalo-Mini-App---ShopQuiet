@@ -165,13 +165,17 @@ export const Products: React.FC<IProductsProps> = (_props) => {
     return true;
   });
 
+  const previewImage = getFirstImage(formData.images);
+
   return (
     <div className="space-y-6 animate-fadeIn text-[#1b1c1b]">
       {/* Header Panel */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-800 tracking-tight">🏷️ Danh Sách Sản Phẩm</h1>
-          <p className="text-slate-500 text-xs mt-1">Quản lý các mặt hàng hiển thị và phân phối trên Zalo Mini App</p>
+          <p className="text-slate-500 text-xs mt-1">
+            Hiển thị tất cả {filteredProducts.length} mặt hàng kinh doanh trên Zalo Mini App
+          </p>
         </div>
 
         <button
@@ -200,7 +204,7 @@ export const Products: React.FC<IProductsProps> = (_props) => {
           onChange={(e) => setSelectedCategoryFilter(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
           className="bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold rounded-xl py-2.5 px-3 focus:outline-none focus:border-[#0e6877]"
         >
-          <option value="ALL">Tất cả danh mục</option>
+          <option value="ALL">Tất cả danh mục ({products.length})</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
@@ -209,36 +213,45 @@ export const Products: React.FC<IProductsProps> = (_props) => {
         </select>
       </div>
 
-      {/* Grid List */}
+      {/* Grid List - Full Responsive Stretched Layout */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-24 gap-3">
           <div className="w-10 h-10 border-4 border-[#0e6877] border-t-transparent rounded-full animate-spin"></div>
           <p className="text-slate-500 text-xs">Đang tải danh sách sản phẩm...</p>
         </div>
       ) : filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.map((product) => {
             const img = getFirstImage(product.images);
+            const hasDiscount = product.originalPrice && product.originalPrice > product.price;
+            const discountPct = hasDiscount
+              ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)
+              : 0;
 
             return (
               <div
                 key={product.id}
-                className="bg-white border border-slate-200 hover:border-[#0e6877]/30 rounded-3xl overflow-hidden flex flex-col justify-between shadow-xs hover:shadow-md transition-all duration-200 group"
+                className="bg-white border border-slate-200 hover:border-[#0e6877]/40 rounded-3xl overflow-hidden flex flex-col justify-between shadow-xs hover:shadow-lg transition-all duration-300 group"
               >
                 <div>
                   {/* Product Image */}
-                  <div className="h-44 overflow-hidden bg-slate-100 relative border-b border-slate-100">
+                  <div className="h-48 overflow-hidden bg-slate-50 relative border-b border-slate-100">
                     <img
                       src={img}
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                    <span className="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-xs px-2.5 py-0.5 text-[10px] font-black text-slate-700 rounded-full border border-slate-200">
-                      ID: #{product.id}
+                    <span className="absolute top-3 left-3 bg-white/90 backdrop-blur-xs px-2.5 py-0.5 text-[10px] font-black text-slate-700 rounded-full border border-slate-200 shadow-2xs">
+                      #{product.id}
                     </span>
                     {product.category && (
-                      <span className="absolute top-2.5 right-2.5 bg-[#0e6877]/90 text-white px-2 py-0.5 text-[9px] font-black rounded-full uppercase tracking-wider">
+                      <span className="absolute top-3 right-3 bg-[#0e6877] text-white px-2.5 py-0.5 text-[9px] font-black rounded-full uppercase tracking-wider shadow-2xs">
                         {product.category.name}
+                      </span>
+                    )}
+                    {hasDiscount && (
+                      <span className="absolute bottom-3 left-3 bg-rose-500 text-white px-2 py-0.5 text-[9px] font-black rounded-full uppercase tracking-wider">
+                        -{discountPct}%
                       </span>
                     )}
                   </div>
@@ -256,15 +269,15 @@ export const Products: React.FC<IProductsProps> = (_props) => {
                 <div className="p-4 pt-0 border-t border-slate-100/80 mt-2 flex items-center justify-between">
                   <div>
                     <p className="text-sm font-black text-[#0e6877]">{formatPrice(product.price)}</p>
-                    {product.originalPrice && product.originalPrice > product.price && (
-                      <p className="text-[10px] text-slate-400 line-through">{formatPrice(product.originalPrice)}</p>
+                    {hasDiscount && (
+                      <p className="text-[10px] text-slate-400 line-through">{formatPrice(product.originalPrice!)}</p>
                     )}
                   </div>
 
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => handleOpenEditModal(product)}
-                      className="p-2 text-slate-600 hover:text-[#0e6877] hover:bg-slate-100 rounded-xl transition-all border-none cursor-pointer"
+                      className="p-2 text-slate-600 hover:text-[#0e6877] hover:bg-teal-50 rounded-xl transition-all border-none cursor-pointer"
                       title="Chỉnh sửa"
                     >
                       <Edit3 size={15} />
@@ -288,27 +301,27 @@ export const Products: React.FC<IProductsProps> = (_props) => {
         </div>
       )}
 
-      {/* Slide-Over Drawer: Add / Edit Product */}
+      {/* Slide-Over Drawer: Fixed Viewport Panel (NO DARK BACKGROUND) */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden">
-          {/* Backdrop */}
+          {/* Transparent Backdrop - Keeps background page 100% untouched as original */}
           <div
             onClick={() => setIsModalOpen(false)}
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity animate-fadeIn"
+            className="fixed inset-0 bg-transparent transition-opacity"
           />
 
-          <div className="fixed inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl z-50 flex flex-col justify-between border-l border-slate-200">
+          <div className="fixed inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl z-50 flex flex-col justify-between border-l border-slate-200 animate-slideLeft">
             {/* Header */}
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-[#fbf9f7]">
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-[#0e6877] to-[#168a9e] text-white">
               <div>
-                <h3 className="text-base font-black text-slate-800">
+                <h3 className="text-base font-black text-white">
                   {editingProduct ? '✏️ Chỉnh Sửa Sản Phẩm' : '✨ Thêm Sản Phẩm Mới'}
                 </h3>
-                <p className="text-[11px] text-slate-400 font-medium">Nhập thông tin chi tiết mặt hàng hiển thị trên Mini App</p>
+                <p className="text-[11px] text-white/80 font-medium mt-0.5">Nhập thông tin mặt hàng hiển thị trên Mini App</p>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-700 flex items-center justify-center border-none cursor-pointer transition-colors"
+                className="w-8 h-8 rounded-full bg-white/20 text-white hover:bg-white/30 flex items-center justify-center border-none cursor-pointer transition-colors"
               >
                 <X size={16} />
               </button>
@@ -316,6 +329,20 @@ export const Products: React.FC<IProductsProps> = (_props) => {
 
             {/* Scrollable Form Body */}
             <form id="productForm" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-thin">
+              {/* Thumbnail Image Preview Header */}
+              {previewImage && (
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-3">
+                  <img src={previewImage} alt="Preview" className="w-14 h-14 object-cover rounded-xl border border-slate-200 shrink-0" />
+                  <div>
+                    <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                      Vừa cập nhật ảnh
+                    </span>
+                    <p className="text-xs font-bold text-slate-800 line-clamp-1 mt-1">{formData.name || 'Tên sản phẩm'}</p>
+                    <p className="text-[11px] font-black text-[#0e6877]">{formatPrice(formData.price)}</p>
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Tên Sản Phẩm *</label>
                 <input
