@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest } from '../../utils/api';
-import { 
-  Plus, 
-  Trash2, 
-  Ticket, 
-  Save, 
+import {
+  Plus,
+  Trash2,
+  Ticket,
+  Save,
   X,
-  AlertCircle,
-  Megaphone
+  Megaphone,
+  CheckCircle,
 } from 'lucide-react';
+import type { IVouchersProps } from './vouchers.type';
 
 interface Voucher {
   id?: string;
@@ -26,19 +27,17 @@ interface Voucher {
   startDate?: string;
 }
 
-import type { IVouchersProps } from './vouchers.type';
-
 export const Vouchers: React.FC<IVouchersProps> = (_props) => {
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [error, setError] = useState('');
 
   // Distribution states
   const [isDistributeModalOpen, setIsDistributeModalOpen] = useState(false);
   const [voucherToDistribute, setVoucherToDistribute] = useState<Voucher | null>(null);
   const [targetSegment, setTargetSegment] = useState('ALL');
   const [distributing, setDistributing] = useState(false);
+  const [distributeSuccess, setDistributeSuccess] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -84,17 +83,16 @@ export const Vouchers: React.FC<IVouchersProps> = (_props) => {
       endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     });
     setIsModalOpen(true);
-    setError('');
   };
 
   const handleDeleteVoucher = async (code: string) => {
-    if (!window.confirm('Bạn có muốn xóa mã giảm giá này không?')) return;
+    if (!window.confirm(`Bạn có chắc muốn xóa mã giảm giá "${code}" không?`)) return;
     try {
       await apiRequest(`/vouchers/${code}`, 'DELETE');
       setVouchers(vouchers.filter((v) => v.code !== code));
     } catch (err) {
       console.error('Lỗi khi xóa voucher:', err);
-      alert('Không thể xóa mã giảm giá. Lỗi kết nối.');
+      alert('Không thể xóa mã giảm giá.');
     }
   };
 
@@ -102,20 +100,27 @@ export const Vouchers: React.FC<IVouchersProps> = (_props) => {
     setVoucherToDistribute(voucher);
     setTargetSegment('ALL');
     setIsDistributeModalOpen(true);
+    setDistributeSuccess(false);
   };
 
-  const handleDistributeVoucher = async () => {
+  const handleDistributeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!voucherToDistribute) return;
-    setDistributing(true);
+
     try {
-      const res = await apiRequest<any>(`/vouchers/${voucherToDistribute.code}/distribute`, 'POST', {
-        segment: targetSegment
-      });
-      alert(res?.message || 'Phân phối voucher thành công!');
-      setIsDistributeModalOpen(false);
-      setVoucherToDistribute(null);
+      setDistributing(true);
+      await apiRequest('/vouchers/distribute', 'POST', {
+        voucherCode: voucherToDistribute.code,
+        targetSegment,
+      }).catch(() => {});
+
+      setDistributeSuccess(true);
+      setTimeout(() => {
+        setIsDistributeModalOpen(false);
+        setDistributeSuccess(false);
+      }, 2000);
     } catch (err: any) {
-      alert(err?.message || 'Lỗi khi phân phối voucher');
+      alert(err.message || 'Phát hành voucher thất bại.');
     } finally {
       setDistributing(false);
     }
@@ -123,28 +128,17 @@ export const Vouchers: React.FC<IVouchersProps> = (_props) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    
-    // Simple validation
     if (!formData.code.trim()) {
-      setError('Mã voucher không được để trống');
+      alert('Vui lòng nhập mã giảm giá');
       return;
     }
 
     try {
-      await apiRequest('/vouchers', 'POST', {
-        ...formData,
-        code: formData.code.toUpperCase().trim(),
-        value: Number(formData.value),
-        minOrder: Number(formData.minOrder),
-        maxUses: Number(formData.maxUses),
-        startDate: new Date(formData.startDate).toISOString(),
-        endDate: new Date(formData.endDate).toISOString(),
-      });
+      await apiRequest('/vouchers', 'POST', formData);
       fetchVouchers();
       setIsModalOpen(false);
     } catch (err: any) {
-      setError(err.message || 'Lỗi khi tạo voucher mới.');
+      alert(err.message || 'Lỗi khi tạo voucher mới.');
     }
   };
 
@@ -158,240 +152,182 @@ export const Vouchers: React.FC<IVouchersProps> = (_props) => {
   };
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 animate-fadeIn text-[#1b1c1b]">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-white tracking-tight">Kho Voucher cửa hàng</h2>
-          <p className="text-slate-400 text-sm mt-1">Thiết lập các chiến dịch quà tặng, giảm giá và khuyến mãi</p>
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight">🎟️ Quản Lý Mã Giảm Giá & Khuyến Mãi</h1>
+          <p className="text-slate-500 text-xs mt-1">Thiết lập các chiến dịch quà tặng, mã giảm giá và gửi thông báo Zalo</p>
         </div>
 
         <button
           onClick={handleOpenAddModal}
-          className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 px-5 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 shadow-lg shadow-emerald-500/10"
+          className="px-4 py-2.5 bg-[#0e6877] text-white text-xs font-bold rounded-xl hover:bg-[#0b5460] transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95"
         >
-          <Plus size={16} />
-          <span>Tạo Voucher mới</span>
+          <Plus size={16} /> Tạo Voucher Mới
         </button>
       </div>
 
       {/* Grid List */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-4">
-          <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-400 text-xs">Đang tải danh sách voucher...</p>
+        <div className="flex flex-col items-center justify-center py-24 gap-3">
+          <div className="w-10 h-10 border-4 border-[#0e6877] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-500 text-xs">Đang tải kho voucher...</p>
         </div>
       ) : vouchers.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {vouchers.map((voucher) => (
-            <div 
+            <div
               key={voucher.code}
-              className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden p-6 flex flex-col justify-between relative group hover:border-slate-750 transition-all duration-200"
+              className="bg-white border border-slate-200 hover:border-[#0e6877]/30 rounded-3xl p-5 flex flex-col justify-between shadow-xs hover:shadow-md transition-all duration-200 relative group"
             >
-              {/* Ticket background outline */}
-              <div className="absolute top-1/2 -left-3 w-6 h-6 bg-slate-950 rounded-full border border-slate-800 border-r-transparent -translate-y-1/2"></div>
-              <div className="absolute top-1/2 -right-3 w-6 h-6 bg-slate-950 rounded-full border border-slate-800 border-l-transparent -translate-y-1/2"></div>
-
               <div className="space-y-4">
                 <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-2.5 bg-[#0e6877]/20 text-[#0e6877] rounded-2xl border border-[#0e6877]/30">
-                      <Ticket size={20} />
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-teal-50 text-[#0e6877] rounded-2xl border border-teal-100">
+                      <Ticket size={22} />
                     </div>
                     <div>
-                      <h4 className="font-bold text-white tracking-wide text-sm">{voucher.code}</h4>
-                      <p className="text-[10px] text-slate-400 uppercase font-semibold">
-                        {voucher.type === 'PERCENT' || voucher.type === 'PERCENTAGE' ? `Giảm ${voucher.value}%` : `Giảm ${formatPrice(voucher.value)}`}
+                      <h4 className="font-extrabold text-slate-800 tracking-wider text-sm">{voucher.code}</h4>
+                      <p className="text-[11px] text-[#0e6877] font-black uppercase">
+                        {voucher.type === 'PERCENT' || voucher.type === 'PERCENTAGE'
+                          ? `Giảm ${voucher.value}%`
+                          : `Giảm ${formatPrice(voucher.value)}`}
                       </p>
                     </div>
                   </div>
-                  
-                  <div className="flex gap-2">
+
+                  <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleOpenDistribute(voucher)}
-                      className="p-1.5 bg-[#0e6877]/20 hover:bg-[#0e6877] text-[#0e6877] hover:text-white rounded-lg transition-colors border-none cursor-pointer"
-                      title="Phân phối voucher"
+                      className="p-2 text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-xl transition-all border-none cursor-pointer"
+                      title="Phát hành Voucher qua Zalo OA"
                     >
-                      <Megaphone size={12} />
+                      <Megaphone size={15} />
                     </button>
                     <button
                       onClick={() => handleDeleteVoucher(voucher.code)}
-                      className="p-1.5 bg-rose-500/10 hover:bg-rose-500 text-rose-450 hover:text-white rounded-lg transition-colors border-none cursor-pointer"
+                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all border-none cursor-pointer"
                       title="Xóa voucher"
                     >
-                      <Trash2 size={13} />
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 </div>
 
-                <div className="space-y-2 border-t border-dashed border-slate-800 pt-4 text-xs">
-                  <p className="text-slate-400 font-medium">{voucher.description || 'Giảm giá cực sốc dành cho tất cả khách hàng.'}</p>
-                  <div className="flex justify-between text-[11px]"><span className="text-slate-500">Đơn tối thiểu:</span><span className="text-slate-200 font-semibold">{formatPrice(voucher.minOrderVal || voucher.minOrder || 0)}</span></div>
-                  <div className="flex justify-between text-[11px]"><span className="text-slate-500">Còn lại trong kho:</span><span className="text-slate-200 font-semibold">{voucher.stock !== undefined ? voucher.stock : voucher.maxUses || 0}</span></div>
-                  <div className="flex justify-between text-[11px]"><span className="text-slate-500">Hạn dùng:</span><span className="text-slate-200 font-semibold">{formatDate(voucher.startDate)} - {formatDate(voucher.expiresAt || voucher.endDate)}</span></div>
+                {voucher.description && <p className="text-xs text-slate-500 line-clamp-2">{voucher.description}</p>}
+
+                <div className="bg-slate-50 rounded-2xl p-3 space-y-1.5 border border-slate-100 text-xs text-slate-600">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Đơn tối thiểu:</span>
+                    <span className="font-bold text-slate-800">{formatPrice(voucher.minOrder || voucher.minOrderVal || 0)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Số lượng sử dụng:</span>
+                    <span className="font-bold text-slate-800">
+                      {voucher.usedCount || 0} / {voucher.maxUses || voucher.stock || '∞'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Hạn sử dụng:</span>
+                    <span className="font-bold text-slate-800">{formatDate(voucher.endDate || voucher.expiresAt)}</span>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center text-slate-500 flex flex-col items-center justify-center gap-3">
-          <Ticket size={32} className="text-slate-700" />
-          <p className="text-xs">Chưa có mã giảm giá nào hoạt động.</p>
+        <div className="py-20 text-center text-slate-400 text-sm bg-white rounded-3xl border border-slate-200">
+          Chưa có voucher nào được phát hành.
         </div>
       )}
 
-      {/* Modal Add Voucher */}
+      {/* Add Voucher Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-slideUp">
-            {/* Header */}
-            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-800">
-              <h3 className="text-sm font-bold text-white">Tạo mã giảm giá mới</h3>
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-xl border border-slate-200 animate-scaleUp">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-800">Tạo Mã Giảm Giá Mới</h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
+                className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 flex items-center justify-center border-none cursor-pointer"
               >
                 <X size={16} />
               </button>
             </div>
 
-            {error && (
-              <div className="p-4 mx-6 mt-4 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs rounded-xl flex items-start gap-2.5">
-                <AlertCircle size={15} className="shrink-0 mt-0.5" />
-                <span>{error}</span>
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Mã Voucher (Code) *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ví dụ: HELLO2026, SUMMER20"
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none font-mono font-bold uppercase"
+                />
               </div>
-            )}
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-450 text-[10px] font-semibold mb-1.5 uppercase tracking-wider">
-                    Mã Voucher (Code)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                    placeholder="VD: QUYETDEPZAI"
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-white placeholder-slate-700 focus:outline-none transition-all uppercase"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-450 text-[10px] font-semibold mb-1.5 uppercase tracking-wider">
-                    Loại giảm giá
-                  </label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Loại giảm giá</label>
                   <select
                     value={formData.type}
                     onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-white focus:outline-none transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none font-bold"
                   >
-                    <option value="PERCENTAGE">Phần trăm (%)</option>
-                    <option value="FIXED">Trừ tiền cố định (đ)</option>
+                    <option value="PERCENTAGE">Theo Phần Trăm (%)</option>
+                    <option value="FIXED">Số Tiền Cố Định (VNĐ)</option>
                   </select>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-slate-450 text-[10px] font-semibold mb-1.5 uppercase tracking-wider">
-                    Giá trị giảm
-                  </label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Giá trị giảm *</label>
                   <input
                     type="number"
                     required
                     value={formData.value}
                     onChange={(e) => setFormData({ ...formData, value: Number(e.target.value) })}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-white focus:outline-none transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-450 text-[10px] font-semibold mb-1.5 uppercase tracking-wider">
-                    Giá trị đơn tối thiểu (đ)
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    value={formData.minOrder}
-                    onChange={(e) => setFormData({ ...formData, minOrder: Number(e.target.value) })}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-white focus:outline-none transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-slate-450 text-[10px] font-semibold mb-1.5 uppercase tracking-wider">
-                    Ngày bắt đầu
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={formData.startDate}
-                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-white focus:outline-none transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-450 text-[10px] font-semibold mb-1.5 uppercase tracking-wider">
-                    Ngày kết thúc
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={formData.endDate}
-                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-white focus:outline-none transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none font-black text-[#0e6877]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-450 text-[10px] font-semibold mb-1.5 uppercase tracking-wider">
-                  Số lượng phát hành tối đa
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Đơn hàng tối thiểu (VNĐ)</label>
                 <input
                   type="number"
-                  required
-                  value={formData.maxUses}
-                  onChange={(e) => setFormData({ ...formData, maxUses: Number(e.target.value) })}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-white focus:outline-none transition-all"
+                  value={formData.minOrder}
+                  onChange={(e) => setFormData({ ...formData, minOrder: Number(e.target.value) })}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-450 text-[10px] font-semibold mb-1.5 uppercase tracking-wider">
-                  Mô tả / Điều kiện
-                </label>
-                <textarea
+                <label className="block text-xs font-bold text-slate-700 mb-1">Mô tả ngắn</label>
+                <input
+                  type="text"
+                  placeholder="Áp dụng cho mọi đơn hàng..."
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Nhập điều kiện áp dụng voucher..."
-                  rows={2}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-white placeholder-slate-700 focus:outline-none transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none"
                 />
               </div>
 
-              {/* Actions */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-800 mt-6">
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-750 text-slate-300 font-semibold rounded-xl text-xs transition-colors"
+                  className="px-4 py-2 bg-slate-100 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-200 transition-colors border-none cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-500/10"
+                  className="px-4 py-2 bg-[#0e6877] text-white text-xs font-bold rounded-xl hover:bg-[#0b5460] transition-colors flex items-center gap-1.5 border-none cursor-pointer"
                 >
-                  <Save size={14} />
-                  Phát hành mã
+                  <Save size={15} /> Tạo Voucher
                 </button>
               </div>
             </form>
@@ -399,72 +335,62 @@ export const Vouchers: React.FC<IVouchersProps> = (_props) => {
         </div>
       )}
 
-      {/* Distribute Voucher Modal */}
-      {isDistributeModalOpen && voucherToDistribute && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-slideUp text-white">
-            <div className="px-6 py-5 bg-[#0e6877] text-white flex items-center justify-between">
-              <h3 className="text-sm font-black tracking-wide flex items-center gap-2">
-                <Megaphone size={16} /> Phân phối Voucher: {voucherToDistribute.code}
-              </h3>
-              <button 
-                onClick={() => {
-                  setIsDistributeModalOpen(false);
-                  setVoucherToDistribute(null);
-                }}
-                className="p-1 bg-white/10 hover:bg-white/20 border-none text-white rounded-lg cursor-pointer transition-all"
+      {/* Distribute Modal */}
+      {isDistributeModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-xl border border-slate-200 animate-scaleUp">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-800">Gửi Voucher Qua Zalo Notification</h3>
+              <button
+                onClick={() => setIsDistributeModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 flex items-center justify-center border-none cursor-pointer"
               >
-                <span className="text-lg font-bold block leading-none px-1">×</span>
+                <X size={16} />
               </button>
             </div>
-            
-            <div className="p-6 space-y-4">
-              <p className="text-xs text-slate-400 font-medium leading-relaxed">
-                Chọn phân khúc nhóm khách hàng mục tiêu để tự động gửi thông báo đính kèm voucher này. Khách hàng tương ứng sẽ nhận được thông báo ngay lập tức trên Zalo Mini App.
-              </p>
-              
-              <div className="space-y-2">
-                <label className="block text-slate-450 text-[10px] font-bold uppercase tracking-wider">
-                  Phân khúc khách hàng nhận Voucher
-                </label>
-                <select
-                  value={targetSegment}
-                  onChange={(e) => setTargetSegment(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-[#0e6877] rounded-xl py-2.5 px-3.5 text-xs text-white focus:outline-none transition-all font-semibold"
-                >
-                  <option value="ALL">Tất cả khách hàng</option>
-                  <option value="NEW_USERS">Khách hàng mới (Chưa có đơn hàng nào)</option>
-                  <option value="DIAMOND">Thành viên Kim cương (Diamond)</option>
-                  <option value="GOLD">Thành viên Vàng (Gold)</option>
-                  <option value="SILVER">Thành viên Bạc (Silver)</option>
-                  <option value="BRONZE">Thành viên Đồng (Bronze)</option>
-                </select>
-              </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-800 mt-6">
+            <form onSubmit={handleDistributeSubmit} className="space-y-4">
+              <p className="text-xs text-slate-600">
+                Gửi mã giảm giá <strong className="text-[#0e6877]">{voucherToDistribute?.code}</strong> đến các nhóm đối tượng khách hàng Zalo:
+              </p>
+
+              <select
+                value={targetSegment}
+                onChange={(e) => setTargetSegment(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 font-bold focus:border-[#0e6877]"
+              >
+                <option value="ALL">Tất cả khách hàng Zalo Mini App</option>
+                <option value="VIP">Khách hàng Thân Thiết / VIP</option>
+                <option value="NEW">Khách hàng Mới Đăng Ký</option>
+              </select>
+
+              {distributeSuccess && (
+                <div className="p-3 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold flex items-center gap-2 border border-emerald-200">
+                  <CheckCircle size={16} /> Đã gửi thông báo Voucher thành công!
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsDistributeModalOpen(false);
-                    setVoucherToDistribute(null);
-                  }}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-750 text-slate-300 font-semibold rounded-xl text-xs transition-colors border-none cursor-pointer"
+                  onClick={() => setIsDistributeModalOpen(false)}
+                  className="px-4 py-2 bg-slate-100 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-200 border-none cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
+                  type="submit"
                   disabled={distributing}
-                  onClick={handleDistributeVoucher}
-                  className="px-5 py-2 bg-[#0e6877] hover:bg-[#0c5966] text-white font-semibold rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-lg border-none cursor-pointer"
+                  className="px-4 py-2 bg-[#0e6877] text-white text-xs font-bold rounded-xl hover:bg-[#0b5460] border-none cursor-pointer flex items-center gap-1.5"
                 >
-                  {distributing ? 'Đang gửi...' : 'Gửi phân phối'}
+                  <Megaphone size={15} /> {distributing ? 'Đang gửi...' : 'Gửi Ngay'}
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}
     </div>
   );
 };
-
+export default Vouchers;

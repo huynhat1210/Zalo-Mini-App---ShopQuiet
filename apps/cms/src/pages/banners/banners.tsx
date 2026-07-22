@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { apiRequest } from '../../utils/api';
-import { 
-  Plus, 
-  Trash2, 
-  Image as ImageIcon, 
-  Save, 
+import { apiRequest, apiUploadRequest } from '../../utils/api';
+import {
+  Plus,
+  Trash2,
+  Image as ImageIcon,
+  Save,
   X,
-  AlertCircle
+  Link as LinkIcon,
 } from 'lucide-react';
+import type { IBannersProps } from './banners.type';
 
 interface Banner {
   id: number;
@@ -18,13 +19,11 @@ interface Banner {
   active: boolean;
 }
 
-import type { IBannersProps } from './banners.type';
-
 export const Banners: React.FC<IBannersProps> = (_props) => {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [error, setError] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -32,6 +31,7 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
     title: '',
     description: '',
     link: '',
+    active: true,
   });
 
   const fetchBanners = async () => {
@@ -56,9 +56,9 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
       title: '',
       description: '',
       link: '',
+      active: true,
     });
     setIsModalOpen(true);
-    setError('');
   };
 
   const handleDeleteBanner = async (id: number) => {
@@ -68,16 +68,28 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
       setBanners(banners.filter((b) => b.id !== id));
     } catch (err) {
       console.error('Lỗi khi xóa banner:', err);
-      alert('Không thể xóa banner. Lỗi kết nối.');
+      alert('Không thể xóa banner.');
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      const url = await apiUploadRequest(file);
+      setFormData((prev) => ({ ...prev, imageUrl: url }));
+    } catch (err: any) {
+      alert(err.message || 'Lỗi khi tải hình ảnh banner');
+    } finally {
+      setUploading(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-
     if (!formData.imageUrl.trim()) {
-      setError('Đường dẫn hình ảnh không được để trống');
+      alert('Vui lòng cung cấp URL hình ảnh hoặc chọn file tải lên');
       return;
     }
 
@@ -86,174 +98,156 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
       fetchBanners();
       setIsModalOpen(false);
     } catch (err: any) {
-      setError(err.message || 'Lỗi khi tạo banner mới.');
+      alert(err.message || 'Lỗi khi tạo banner mới.');
     }
   };
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 animate-fadeIn text-[#1b1c1b]">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-white tracking-tight">Cấu hình Banners</h2>
-          <p className="text-slate-400 text-sm mt-1">Quản lý các hình ảnh trình chiếu quảng cáo ở đầu trang chủ</p>
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight">🖼️ Quản Lý Banner Quảng Cáo</h1>
+          <p className="text-slate-500 text-xs mt-1">Cấu hình các hình ảnh trình chiếu Slider ở trang chủ Zalo Mini App</p>
         </div>
 
         <button
           onClick={handleOpenAddModal}
-          className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 px-5 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 shadow-lg shadow-emerald-500/10"
+          className="px-4 py-2.5 bg-[#0e6877] text-white text-xs font-bold rounded-xl hover:bg-[#0b5460] transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95"
         >
-          <Plus size={16} />
-          <span>Thêm Banner mới</span>
+          <Plus size={16} /> Thêm Banner Mới
         </button>
       </div>
 
-      {/* List */}
+      {/* Grid Banner Cards */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-4">
-          <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-400 text-xs">Đang tải danh sách banners...</p>
+        <div className="flex flex-col items-center justify-center py-24 gap-3">
+          <div className="w-10 h-10 border-4 border-[#0e6877] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-500 text-xs">Đang tải danh sách banner...</p>
         </div>
       ) : banners.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {banners.map((banner) => (
-            <div 
+            <div
               key={banner.id}
-              className="bg-slate-900 border border-slate-800 hover:border-slate-750 rounded-3xl overflow-hidden flex flex-col transition-all duration-200 group"
+              className="bg-white border border-slate-200 hover:border-[#0e6877]/30 rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group"
             >
-              {/* Banner Image Preview */}
-              <div className="h-44 bg-slate-950 relative overflow-hidden">
-                <img 
-                  src={banner.imageUrl} 
-                  alt={banner.title || 'Slide Banner'} 
-                  className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
-                />
-                <button
-                  onClick={() => handleDeleteBanner(banner.id)}
-                  className="absolute top-4 right-4 p-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl transition-colors shadow-lg"
-                  title="Xóa banner"
-                >
-                  <Trash2 size={14} />
-                </button>
+              <div>
+                <div className="h-44 bg-slate-100 relative overflow-hidden">
+                  <img src={banner.imageUrl} alt={banner.title || 'Banner'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <span className={`absolute top-3 right-3 text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${banner.active ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-200 text-slate-500 border-slate-300'}`}>
+                    {banner.active ? 'Đang hiển thị' : 'Đã khóa'}
+                  </span>
+                </div>
+
+                <div className="p-4 space-y-2">
+                  <h4 className="text-sm font-bold text-slate-800 line-clamp-1">{banner.title || 'Banner Khuyến Mãi'}</h4>
+                  {banner.description && <p className="text-xs text-slate-500 line-clamp-2">{banner.description}</p>}
+                  {banner.link && (
+                    <p className="text-[11px] text-[#0e6877] font-mono flex items-center gap-1 truncate">
+                      <LinkIcon size={12} /> {banner.link}
+                    </p>
+                  )}
+                </div>
               </div>
 
-              {/* Banner Details */}
-              <div className="p-5 space-y-2 flex-1">
-                <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">ID: {banner.id}</span>
-                <h4 className="font-bold text-white tracking-wide text-sm">
-                  {banner.title || 'Không có tiêu đề'}
-                </h4>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  {banner.description || 'Không có mô tả chi tiết cho slide này.'}
-                </p>
-                {banner.link && (
-                  <div className="pt-2 border-t border-slate-800 mt-2 text-[10px] text-emerald-400 font-medium">
-                    Liên kết: {banner.link}
-                  </div>
-                )}
+              <div className="p-4 pt-0 border-t border-slate-100/80 mt-2 flex justify-end">
+                <button
+                  onClick={() => handleDeleteBanner(banner.id)}
+                  className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all border-none cursor-pointer flex items-center gap-1 text-xs font-bold"
+                >
+                  <Trash2 size={15} /> Xóa banner
+                </button>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center text-slate-500 flex flex-col items-center justify-center gap-3">
-          <ImageIcon size={32} className="text-slate-750" />
-          <p className="text-xs">Chưa cài đặt bất kỳ banner quảng cáo nào.</p>
+        <div className="py-20 text-center text-slate-400 text-sm bg-white rounded-3xl border border-slate-200">
+          Chưa có banner quảng cáo nào.
         </div>
       )}
 
-      {/* Add Modal */}
+      {/* Add Banner Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-slideUp">
-            {/* Header */}
-            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-800">
-              <h3 className="text-sm font-bold text-white">Thêm Banner quảng cáo mới</h3>
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-xl border border-slate-200 animate-scaleUp">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-800">Thêm Banner Quảng Cáo Mới</h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
+                className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 flex items-center justify-center border-none cursor-pointer"
               >
                 <X size={16} />
               </button>
             </div>
 
-            {error && (
-              <div className="p-4 mx-6 mt-4 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs rounded-xl flex items-start gap-2.5">
-                <AlertCircle size={15} className="shrink-0 mt-0.5" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3">
               <div>
-                <label className="block text-slate-450 text-[10px] font-semibold mb-1.5 uppercase tracking-wider">
-                  Đường dẫn hình ảnh (URL)
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Tiêu Đề Banner</label>
                 <input
                   type="text"
-                  required
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  placeholder="Nhập link ảnh slide..."
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-white placeholder-slate-700 focus:outline-none transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-450 text-[10px] font-semibold mb-1.5 uppercase tracking-wider">
-                  Tiêu đề quảng cáo
-                </label>
-                <input
-                  type="text"
+                  placeholder="Ví dụ: Siêu Sale Mùa Hè 50%..."
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Nhập tiêu đề (nếu có)..."
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-white placeholder-slate-700 focus:outline-none transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-450 text-[10px] font-semibold mb-1.5 uppercase tracking-wider">
-                  Mô tả ngắn
-                </label>
-                <input
-                  type="text"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Nhập mô tả ngắn cho banner..."
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-white placeholder-slate-700 focus:outline-none transition-all"
-                />
+                <label className="block text-xs font-bold text-slate-700 mb-1">Hình Ảnh Banner (URL hoặc Chọn File) *</label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="text"
+                    required
+                    placeholder="https://..."
+                    value={formData.imageUrl}
+                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none"
+                  />
+                  <label className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold cursor-pointer transition-colors flex items-center gap-1 shrink-0">
+                    <ImageIcon size={14} />
+                    {uploading ? 'Tải...' : 'Chọn file'}
+                    <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+                  </label>
+                </div>
               </div>
 
               <div>
-                <label className="block text-slate-450 text-[10px] font-semibold mb-1.5 uppercase tracking-wider">
-                  Đường dẫn hành động (CTA Link)
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Liên Kết Khi Nhấp (Deep Link / URL)</label>
                 <input
                   type="text"
+                  placeholder="https://... hoặc /products/123"
                   value={formData.link}
                   onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                  placeholder="VD: /products/2"
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-white placeholder-slate-700 focus:outline-none transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none"
                 />
               </div>
 
-              {/* Actions */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-800 mt-6">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Mô Tả Banner</label>
+                <textarea
+                  rows={2}
+                  placeholder="Mô tả chiến dịch banner..."
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-750 text-slate-300 font-semibold rounded-xl text-xs transition-colors"
+                  className="px-4 py-2 bg-slate-100 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-200 border-none cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-500/10"
+                  className="px-4 py-2 bg-[#0e6877] text-white text-xs font-bold rounded-xl hover:bg-[#0b5460] border-none cursor-pointer flex items-center gap-1.5"
                 >
-                  <Save size={14} />
-                  Kích hoạt Slide
+                  <Save size={15} /> Lưu Banner
                 </button>
               </div>
             </form>
@@ -263,4 +257,4 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
     </div>
   );
 };
-
+export default Banners;

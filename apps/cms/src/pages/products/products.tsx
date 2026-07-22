@@ -1,14 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { apiRequest } from '../../utils/api';
-import { 
-  Plus, 
-  Edit3, 
-  Trash2, 
-  Search, 
-  X, 
-  Save, 
-  ShoppingBag
+import { apiRequest, apiUploadRequest } from '../../utils/api';
+import {
+  Plus,
+  Edit3,
+  Trash2,
+  Search,
+  X,
+  Save,
+  Image as ImageIcon,
 } from 'lucide-react';
+import type { IProductsProps } from './products.type';
+
+interface Category {
+  id: number;
+  name: string;
+}
 
 interface Product {
   id: number;
@@ -16,36 +22,43 @@ interface Product {
   price: number;
   originalPrice?: number;
   description?: string;
-  image: string;
+  images: string;
   categoryId?: number;
-  stock?: number;
+  category?: Category;
+  variants?: { id: number; color: string; size: string; stock: number }[];
 }
-
-import type { IProductsProps } from './products.type';
 
 export const Products: React.FC<IProductsProps> = (_props) => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<number | 'ALL'>('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   // Form states
   const [formData, setFormData] = useState({
     name: '',
-    price: 0,
-    originalPrice: 0,
+    price: 150000,
+    originalPrice: 200000,
     description: '',
-    image: '',
+    images: '["https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format&fit=crop&q=60"]',
     categoryId: 1,
-    stock: 50,
+    tags: 'NEW',
   });
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const res = await apiRequest('/products?page=1&limit=100');
-      setProducts(Array.isArray(res) ? res : (res?.data || []));
+      const [prodRes, catRes] = await Promise.all([
+        apiRequest<any>('/products?page=1&limit=100'),
+        apiRequest<Category[]>('/categories').catch(() => []),
+      ]);
+      const list = Array.isArray(prodRes) ? prodRes : prodRes?.data || [];
+      setProducts(list);
+      setCategories(Array.isArray(catRes) ? catRes : []);
     } catch (err) {
       console.error('Failed to load products:', err);
     } finally {
@@ -57,6 +70,17 @@ export const Products: React.FC<IProductsProps> = (_props) => {
     fetchProducts();
   }, []);
 
+  const getFirstImage = (imgStr: string) => {
+    if (!imgStr) return 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format&fit=crop&q=60';
+    try {
+      const parsed = JSON.parse(imgStr);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+    } catch (e) {
+      if (imgStr.startsWith('http')) return imgStr;
+    }
+    return 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format&fit=crop&q=60';
+  };
+
   const handleOpenAddModal = () => {
     setEditingProduct(null);
     setFormData({
@@ -64,9 +88,9 @@ export const Products: React.FC<IProductsProps> = (_props) => {
       price: 150000,
       originalPrice: 200000,
       description: '',
-      image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format&fit=crop&q=60',
-      categoryId: 1,
-      stock: 100,
+      images: '["https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format&fit=crop&q=60"]',
+      categoryId: categories[0]?.id || 1,
+      tags: 'HOT,NEW',
     });
     setIsModalOpen(true);
   };
@@ -78,9 +102,9 @@ export const Products: React.FC<IProductsProps> = (_props) => {
       price: product.price,
       originalPrice: product.originalPrice || product.price,
       description: product.description || '',
-      image: product.image,
-      categoryId: product.categoryId || 1,
-      stock: product.stock || 50,
+      images: product.images,
+      categoryId: product.categoryId || categories[0]?.id || 1,
+      tags: 'NORMAL',
     });
     setIsModalOpen(true);
   };
@@ -92,23 +116,39 @@ export const Products: React.FC<IProductsProps> = (_props) => {
       setProducts(products.filter((p) => p.id !== id));
     } catch (err) {
       console.error('Lỗi khi xóa sản phẩm:', err);
-      alert('Không thể xóa sản phẩm. Lỗi kết nối.');
+      alert('Không thể xóa sản phẩm.');
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      const url = await apiUploadRequest(file);
+      setFormData((prev) => ({ ...prev, images: JSON.stringify([url]) }));
+    } catch (err: any) {
+      alert(err.message || 'Lỗi khi tải hình ảnh sản phẩm');
+    } finally {
+      setUploading(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.name.trim()) {
+      alert('Vui lòng nhập tên sản phẩm');
+      return;
+    }
+
     try {
       if (editingProduct) {
-        // Edit Product
         await apiRequest(`/products/${editingProduct.id}`, 'PATCH', formData);
-        setProducts(products.map((p) => (p.id === editingProduct.id ? { ...p, ...formData } : p)));
       } else {
-        // Add Product
         await apiRequest('/products', 'POST', formData);
-        fetchProducts();
       }
       setIsModalOpen(false);
+      fetchProducts();
     } catch (err: any) {
       alert(err.message || 'Lỗi khi lưu sản phẩm.');
     }
@@ -118,222 +158,244 @@ export const Products: React.FC<IProductsProps> = (_props) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   };
 
-  const filteredProducts = products.filter((p) =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!matchesSearch) return false;
+    if (selectedCategoryFilter !== 'ALL' && p.categoryId !== selectedCategoryFilter) return false;
+    return true;
+  });
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-6 animate-fadeIn text-[#1b1c1b]">
       {/* Header Panel */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-white tracking-tight">Danh sách sản phẩm</h2>
-          <p className="text-slate-400 text-sm mt-1">Quản lý kho hàng, giá cả và danh mục</p>
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight">🏷️ Danh Sách Sản Phẩm</h1>
+          <p className="text-slate-500 text-xs mt-1">Quản lý các mặt hàng hiển thị và phân phối trên Zalo Mini App</p>
         </div>
 
         <button
           onClick={handleOpenAddModal}
-          className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 px-5 rounded-xl text-sm flex items-center gap-2 transition-all duration-200 shadow-lg shadow-emerald-500/10"
+          className="px-4 py-2.5 bg-[#0e6877] hover:bg-[#0b5460] text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95"
         >
-          <Plus size={16} />
-          <span>Thêm sản phẩm mới</span>
+          <Plus size={16} /> Thêm Sản Phẩm Mới
         </button>
       </div>
 
-      {/* Filter and Search */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 flex flex-col md:flex-row gap-4 items-center">
+      {/* Filter and Search Bar */}
+      <div className="bg-white border border-slate-200 rounded-3xl p-4 flex flex-col sm:flex-row gap-4 items-center shadow-sm">
         <div className="relative flex-1 w-full">
-          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
-            <Search size={16} />
-          </span>
+          <Search size={16} className="absolute left-3.5 top-3 text-slate-400" />
           <input
             type="text"
             placeholder="Tìm kiếm sản phẩm theo tên..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl py-2.5 pl-10 pr-4 text-xs text-white placeholder-slate-650 focus:outline-none transition-all"
+            className="w-full bg-slate-50 border border-slate-200 focus:border-[#0e6877] rounded-xl py-2.5 pl-10 pr-4 text-xs text-slate-800 focus:outline-none"
           />
         </div>
+
+        <select
+          value={selectedCategoryFilter}
+          onChange={(e) => setSelectedCategoryFilter(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
+          className="bg-slate-50 border border-slate-200 text-slate-800 text-xs font-bold rounded-xl py-2.5 px-3 focus:outline-none focus:border-[#0e6877]"
+        >
+          <option value="ALL">Tất cả danh mục</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Grid List */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-24 gap-4">
-          <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-400 text-xs">Đang tải danh sách sản phẩm...</p>
+        <div className="flex flex-col items-center justify-center py-24 gap-3">
+          <div className="w-10 h-10 border-4 border-[#0e6877] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-500 text-xs">Đang tải danh sách sản phẩm...</p>
         </div>
       ) : filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
-            <div
-              key={product.id}
-              className="bg-slate-900 border border-slate-800 hover:border-slate-750 rounded-3xl overflow-hidden flex flex-col transition-all duration-200 group"
-            >
-              {/* Product Image */}
-              <div className="h-48 overflow-hidden bg-slate-950 relative">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <span className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur px-2.5 py-1 text-[10px] font-semibold text-slate-300 rounded-full border border-slate-850">
-                  ID: {product.id}
-                </span>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredProducts.map((product) => {
+            const img = getFirstImage(product.images);
 
-              {/* Product Details */}
-              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                <div className="space-y-2">
-                  <h4 className="text-sm font-bold text-white tracking-tight line-clamp-1">
-                    {product.name}
-                  </h4>
-                  <p className="text-slate-400 text-xs line-clamp-2 leading-relaxed">
-                    {product.description || 'Không có mô tả sản phẩm.'}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between border-t border-slate-800 pt-4">
-                  <div>
-                    <p className="text-emerald-400 font-bold text-sm">
-                      {formatPrice(product.price)}
-                    </p>
-                    {product.originalPrice && product.originalPrice > product.price && (
-                      <p className="text-[10px] text-slate-500 line-through">
-                        {formatPrice(product.originalPrice)}
-                      </p>
+            return (
+              <div
+                key={product.id}
+                className="bg-white border border-slate-200 hover:border-[#0e6877]/30 rounded-3xl overflow-hidden flex flex-col justify-between shadow-xs hover:shadow-md transition-all duration-200 group"
+              >
+                <div>
+                  {/* Product Image */}
+                  <div className="h-44 overflow-hidden bg-slate-100 relative border-b border-slate-100">
+                    <img
+                      src={img}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <span className="absolute top-2.5 left-2.5 bg-white/90 backdrop-blur-xs px-2.5 py-0.5 text-[10px] font-black text-slate-700 rounded-full border border-slate-200">
+                      ID: #{product.id}
+                    </span>
+                    {product.category && (
+                      <span className="absolute top-2.5 right-2.5 bg-[#0e6877]/90 text-white px-2 py-0.5 text-[9px] font-black rounded-full uppercase tracking-wider">
+                        {product.category.name}
+                      </span>
                     )}
                   </div>
 
-                  <div className="flex gap-2">
+                  {/* Details */}
+                  <div className="p-4 space-y-2">
+                    <h4 className="text-xs font-bold text-slate-800 line-clamp-2 leading-snug group-hover:text-[#0e6877] transition-colors">
+                      {product.name}
+                    </h4>
+                    <p className="text-[11px] text-slate-400 line-clamp-2">{product.description || 'Không có mô tả.'}</p>
+                  </div>
+                </div>
+
+                {/* Footer Price & Actions */}
+                <div className="p-4 pt-0 border-t border-slate-100/80 mt-2 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-black text-[#0e6877]">{formatPrice(product.price)}</p>
+                    {product.originalPrice && product.originalPrice > product.price && (
+                      <p className="text-[10px] text-slate-400 line-through">{formatPrice(product.originalPrice)}</p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => handleOpenEditModal(product)}
-                      className="p-2 bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white rounded-xl transition-colors"
-                      title="Sửa"
+                      className="p-2 text-slate-600 hover:text-[#0e6877] hover:bg-slate-100 rounded-xl transition-all border-none cursor-pointer"
+                      title="Chỉnh sửa"
                     >
-                      <Edit3 size={14} />
+                      <Edit3 size={15} />
                     </button>
                     <button
                       onClick={() => handleDeleteProduct(product.id)}
-                      className="p-2 bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white rounded-xl transition-colors"
+                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all border-none cursor-pointer"
                       title="Xóa"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center text-slate-500 flex flex-col items-center justify-center gap-3">
-          <ShoppingBag size={32} className="text-slate-650" />
-          <p className="text-xs">Không tìm thấy sản phẩm nào phù hợp.</p>
+        <div className="py-20 text-center text-slate-400 text-sm bg-white rounded-3xl border border-slate-200">
+          Không tìm thấy sản phẩm nào phù hợp.
         </div>
       )}
 
-      {/* Modal Add/Edit */}
+      {/* Modal Add / Edit Product */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-slideUp">
-            {/* Header */}
-            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-800">
-              <h3 className="text-sm font-bold text-white">
-                {editingProduct ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-xl border border-slate-200 animate-scaleUp">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-800">
+                {editingProduct ? 'Chỉnh Sửa Sản Phẩm' : 'Thêm Sản Phẩm Mới'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
+                className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 flex items-center justify-center border-none cursor-pointer"
               >
                 <X size={16} />
               </button>
             </div>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-slate-450 text-[10px] font-semibold mb-1.5 uppercase tracking-wider">
-                  Tên sản phẩm
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Tên Sản Phẩm *</label>
                 <input
                   type="text"
                   required
+                  placeholder="Nhập tên sản phẩm..."
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Nhập tên sản phẩm..."
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-white placeholder-slate-700 focus:outline-none transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-455 text-[10px] font-semibold mb-1.5 uppercase tracking-wider">
-                    Giá bán (đ)
-                  </label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Giá Bán (VNĐ) *</label>
                   <input
                     type="number"
                     required
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-white focus:outline-none transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none font-bold text-[#0e6877]"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-slate-455 text-[10px] font-semibold mb-1.5 uppercase tracking-wider">
-                    Giá gốc (đ)
-                  </label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Giá Gốc (Gạch đi)</label>
                   <input
                     type="number"
                     value={formData.originalPrice}
                     onChange={(e) => setFormData({ ...formData, originalPrice: Number(e.target.value) })}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-white focus:outline-none transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-455 text-[10px] font-semibold mb-1.5 uppercase tracking-wider">
-                  Ảnh sản phẩm (URL)
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  placeholder="Nhập đường dẫn ảnh sản phẩm..."
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-white placeholder-slate-700 focus:outline-none transition-all"
+                <label className="block text-xs font-bold text-slate-700 mb-1">Danh Mục Sản Phẩm</label>
+                <select
+                  value={formData.categoryId}
+                  onChange={(e) => setFormData({ ...formData, categoryId: Number(e.target.value) })}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none font-bold"
+                >
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Mô Tả Sản Phẩm</label>
+                <textarea
+                  rows={3}
+                  placeholder="Mô tả chi tiết sản phẩm..."
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-455 text-[10px] font-semibold mb-1.5 uppercase tracking-wider">
-                  Mô tả sản phẩm
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Nhập chi tiết mô tả sản phẩm..."
-                  rows={3}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-white placeholder-slate-700 focus:outline-none transition-all"
-                />
+                <label className="block text-xs font-bold text-slate-700 mb-1">Hình Ảnh Sản Phẩm (URL hoặc File)</label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="text"
+                    placeholder='["https://..."]'
+                    value={formData.images}
+                    onChange={(e) => setFormData({ ...formData, images: e.target.value })}
+                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none"
+                  />
+                  <label className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold cursor-pointer transition-colors flex items-center gap-1 shrink-0">
+                    <ImageIcon size={14} />
+                    {uploading ? 'Tải...' : 'Chọn file'}
+                    <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+                  </label>
+                </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-800 mt-6">
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-750 text-slate-300 font-semibold rounded-xl text-xs transition-colors"
+                  className="px-4 py-2 bg-slate-100 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-200 transition-colors border-none cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-500/10"
+                  className="px-4 py-2 bg-[#0e6877] text-white text-xs font-bold rounded-xl hover:bg-[#0b5460] transition-colors flex items-center gap-1.5 border-none cursor-pointer"
                 >
-                  <Save size={14} />
-                  Lưu thay đổi
+                  <Save size={15} /> Lưu Sản Phẩm
                 </button>
               </div>
             </form>
@@ -343,4 +405,4 @@ export const Products: React.FC<IProductsProps> = (_props) => {
     </div>
   );
 };
-
+export default Products;
