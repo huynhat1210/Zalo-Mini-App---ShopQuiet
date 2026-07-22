@@ -94,31 +94,51 @@ export class UsersService {
     // Trigger System Notifications
     if (isNewUser) {
       try {
-        await this.prisma.notification.create({
-          data: {
+        const welcomeTitle = 'Chào mừng bạn đến với ShopQuiet! 🎉';
+        const existingWelcome = await this.prisma.notification.findFirst({
+          where: {
             zaloUserId: zaloId,
-            title: 'Chào mừng bạn đến với ShopQuiet! 🎉',
-            content: 'Cảm ơn bạn đã lựa chọn trải nghiệm mua sắm sản phẩm tối giản cùng chúng tôi. Nhận ngay các đặc quyền thành viên trong thẻ Membership nhé!',
-            type: 'SYSTEM',
-            date: new Date().toLocaleDateString('vi-VN'),
-            read: false
+            title: welcomeTitle
           }
         });
+
+        if (!existingWelcome) {
+          await this.prisma.notification.create({
+            data: {
+              zaloUserId: zaloId,
+              title: welcomeTitle,
+              content: 'Cảm ơn bạn đã lựa chọn trải nghiệm mua sắm sản phẩm tối giản cùng chúng tôi. Nhận ngay các đặc quyền thành viên trong thẻ Membership nhé!',
+              type: 'SYSTEM',
+              date: new Date().toLocaleDateString('vi-VN'),
+              read: false
+            }
+          });
+        }
       } catch (err) {
         console.error('Welcome notification create failed:', err);
       }
     } else if (existingUser && existingUser.membershipTier !== finalMembershipTier) {
       try {
-        await this.prisma.notification.create({
-          data: {
+        const upgradeTitle = `Chúc mừng bạn được thăng hạng ${finalMembershipTier.toUpperCase()}! 🌟`;
+        const existingUpgrade = await this.prisma.notification.findFirst({
+          where: {
             zaloUserId: zaloId,
-            title: `Chúc mừng bạn được thăng hạng ${finalMembershipTier.toUpperCase()}! 🌟`,
-            content: `Hạng thành viên của bạn đã được nâng cấp lên ${finalMembershipTier}. Nhiều ưu đãi đặc quyền mới đã được kích hoạt trong ví thành viên của bạn!`,
-            type: 'SYSTEM',
-            date: new Date().toLocaleDateString('vi-VN'),
-            read: false
+            title: upgradeTitle
           }
         });
+
+        if (!existingUpgrade) {
+          await this.prisma.notification.create({
+            data: {
+              zaloUserId: zaloId,
+              title: upgradeTitle,
+              content: `Hạng thành viên của bạn đã được nâng cấp lên ${finalMembershipTier}. Nhiều ưu đãi đặc quyền mới đã được kích hoạt trong ví thành viên của bạn!`,
+              type: 'SYSTEM',
+              date: new Date().toLocaleDateString('vi-VN'),
+              read: false
+            }
+          });
+        }
       } catch (err) {
         console.error('Tier upgrade notification create failed:', err);
       }
