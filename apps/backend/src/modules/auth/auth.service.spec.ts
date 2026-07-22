@@ -23,6 +23,7 @@ describe('AuthService', () => {
     email: '',
     totalSpent: 0,
     membershipTier: 'Đồng',
+    gamificationPoints: 0,
   };
 
   beforeEach(async () => {

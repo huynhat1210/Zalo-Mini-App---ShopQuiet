@@ -519,6 +519,52 @@ export class OrdersService {
     } else if (status === 'DELIVERED' || status === 'COMPLETED') {
       content = `Đơn hàng #${id} gồm [${itemsText}] đã giao thành công! Cảm ơn bạn đã tin dùng ShopQuiet.`;
       notifTitle = `Đơn hàng #${id} giao thành công`;
+
+      // Reward points calculation on order completion
+      if (order.zaloUserId) {
+        try {
+          const user = await this.prisma.user.findUnique({
+            where: { zaloId: order.zaloUserId }
+          });
+          if (user) {
+            const tier = user.membershipTier || 'Đồng';
+            const multiplier = tier === 'Bạc' ? 1.5 : (tier === 'Vàng' ? 2 : (tier === 'Kim cương' ? 3 : 1));
+            const pointsEarned = Math.round((order.totalAmount / 1000) * multiplier);
+
+            if (pointsEarned > 0) {
+              const newPoints = (user.gamificationPoints || 0) + pointsEarned;
+              await this.prisma.user.update({
+                where: { zaloId: order.zaloUserId },
+                data: { gamificationPoints: newPoints }
+              });
+
+              // Create points history log
+              await this.prisma.pointsHistory.create({
+                data: {
+                  zaloUserId: order.zaloUserId,
+                  points: pointsEarned,
+                  reason: `Tích lũy từ đơn hàng #${order.id}`,
+                  metadata: { orderId: order.id }
+                }
+              });
+
+              // Create notification
+              await this.prisma.notification.create({
+                data: {
+                  zaloUserId: order.zaloUserId,
+                  type: 'promotion',
+                  title: `🎉 Tích điểm thành công`,
+                  content: `Chúc mừng! Bạn được cộng +${pointsEarned} điểm tích lũy từ đơn hàng #${order.id} (Hạng ${tier} x${multiplier}).`,
+                  date: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('vi-VN'),
+                  read: false
+                }
+              });
+            }
+          }
+        } catch (e) {
+          console.error(`Failed to reward points for order ${order.id}:`, e);
+        }
+      }
     } else if (status === 'CANCELLED' || status === 'RETURNED') {
       const isReturn = status === 'RETURNED';
       content = isReturn
