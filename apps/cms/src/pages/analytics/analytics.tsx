@@ -26,6 +26,7 @@ import {
   Legend,
 } from 'recharts';
 import type { IAnalyticsProps } from './analytics.type';
+import { exportToExcel } from '../../utils/excel-export.util';
 
 // ─── Interfaces ──────────────────────────────────────────────────────────────
 interface IOrder {
@@ -225,18 +226,37 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
           <h1 className="text-2xl font-black text-gray-900">📊 Phân Tích & Báo Cáo</h1>
           <p className="text-gray-500 text-xs mt-1">Tổng quan hiệu suất kinh doanh theo thời gian thực</p>
         </div>
-        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-2xl p-1">
-          {([7, 30] as const).map((r) => (
-            <button
-              key={r}
-              onClick={() => setTimeRange(r)}
-              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer border-none ${
-                timeRange === r ? 'bg-[#0e6877] text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              {r} ngày
-            </button>
-          ))}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() =>
+              exportToExcel(
+                revenueChartData,
+                `Bao_Cao_Doanh_Thu_Analytics_${timeRange}Ngay`,
+                [
+                  { key: 'date', label: 'Ngày' },
+                  { key: 'revenue', label: 'Doanh Thu (VNĐ)', formatter: (val) => val?.toLocaleString('vi-VN') },
+                  { key: 'views', label: 'Lượt Xem Sản Phẩm' },
+                  { key: 'addToCarts', label: 'Lượt Thêm Giỏ Hàng' },
+                ],
+              )
+            }
+            className="px-4 py-2 bg-emerald-700 text-white text-xs font-bold rounded-2xl hover:bg-emerald-800 transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95"
+          >
+            📊 Xuất Excel Báo Cáo
+          </button>
+          <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-2xl p-1">
+            {([7, 30] as const).map((r) => (
+              <button
+                key={r}
+                onClick={() => setTimeRange(r)}
+                className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer border-none ${
+                  timeRange === r ? 'bg-[#0e6877] text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                {r} ngày
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

@@ -42,6 +42,8 @@ interface Order {
   returnImages?: string | null;
 }
 
+import { exportToExcel } from '../../utils/excel-export.util';
+
 export const Orders: React.FC<IOrdersProps> = (_props) => {
   const getBackendUrl = () => {
     return window.location.origin.includes('localhost') ? 'http://localhost:3000' : 'https://zalo-mini-app-shopquiet.onrender.com';
@@ -257,15 +259,38 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
           <h2 className="text-3xl font-bold tracking-tight">Quản lý đơn hàng</h2>
           <p className="text-[#526069] text-sm mt-1">Duyệt đơn, cập nhật trạng thái giao hàng, in hóa đơn bán lẻ và mã vận đơn</p>
         </div>
-        <button
-          onClick={() => {
-            setShowZnsModal(true);
-            fetchZnsLogs();
-          }}
-          className="px-4 py-2.5 bg-[#0e6877] text-white text-xs font-bold rounded-xl hover:bg-[#0b5460] transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95"
-        >
-          📱 Lịch sử ZNS Push (Zalo OA)
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() =>
+              exportToExcel(
+                filteredOrders,
+                'Bao_Cao_Don_Hang_ShopQuiet',
+                [
+                  { key: 'id', label: 'Mã Đơn Hàng' },
+                  { key: 'customerName', label: 'Tên Khách Hàng' },
+                  { key: 'phone', label: 'Số Điện Thoại' },
+                  { key: 'address', label: 'Địa Chỉ Giao Hàng' },
+                  { key: 'total', label: 'Tổng Tiền (VNĐ)', formatter: (val) => val?.toLocaleString('vi-VN') },
+                  { key: 'status', label: 'Trạng Thái' },
+                  { key: 'paymentMethod', label: 'Phương Thức Thanh Toán' },
+                  { key: 'createdAt', label: 'Ngày Tạo', formatter: (val) => new Date(val).toLocaleString('vi-VN') },
+                ],
+              )
+            }
+            className="px-4 py-2.5 bg-emerald-700 text-white text-xs font-bold rounded-xl hover:bg-emerald-800 transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95"
+          >
+            📊 Xuất Excel Đơn Hàng
+          </button>
+          <button
+            onClick={() => {
+              setShowZnsModal(true);
+              fetchZnsLogs();
+            }}
+            className="px-4 py-2.5 bg-[#0e6877] text-white text-xs font-bold rounded-xl hover:bg-[#0b5460] transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95"
+          >
+            📱 Lịch sử ZNS Push (Zalo OA)
+          </button>
+        </div>
       </div>
 
       {/* Grid Content Split */}

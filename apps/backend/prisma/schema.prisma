@@ -9,10 +9,12 @@ datasource db {
 }
 
 model Category {
-  id       Int       @id @default(autoincrement())
-  name     String
-  slug     String    @unique
-  products Product[]
+  id          Int       @id @default(autoincrement())
+  name        String
+  slug        String    @unique
+  description String?
+  imageUrl    String?
+  products    Product[]
 }
 
 model Product {
@@ -174,19 +176,21 @@ model OrderItem {
 }
 
 model Notification {
-  id         Int     @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   zaloUserId String?
   title      String
   content    String
   type       String
   date       String
-  read       Boolean @default(false)
-  user       User?   @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
 
   @@index([zaloUserId])
   @@index([read])
   @@index([type])
   @@index([date])
+  @@index([createdAt])
 }
 
 model Favorite {
@@ -223,6 +227,7 @@ model Voucher {
   minOrderVal Float     @default(0)
   maxDiscount Float?
   stock       Int       @default(999)
+  usedCount   Int       @default(0)
   expiresAt   DateTime?
   createdAt   DateTime  @default(now())
 

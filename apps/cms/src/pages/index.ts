@@ -10,3 +10,6 @@ export * from './analytics';
 export * from './media';
 export * from './notifications';
 export * from './support/support';
+export * from './categories';
+export * from './inventory';
+export * from './settings';

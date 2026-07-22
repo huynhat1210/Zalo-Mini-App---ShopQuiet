@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -132,11 +132,50 @@ export class ProductsService {
       return cachedData;
     }
 
-    const categories = await this.prisma.category.findMany();
+    const categories = await this.prisma.category.findMany({
+      include: {
+        _count: {
+          select: { products: true },
+        },
+      },
+    });
 
     // Cache for 30 minutes - categories rarely change
     await this.cacheManager.set(cacheKey, categories, 1800000);
     return categories;
+  }
+
+  async createCategory(data: { name: string; slug?: string; description?: string; imageUrl?: string }) {
+    const slug = data.slug || data.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    const category = await this.prisma.category.create({
+      data: {
+        name: data.name,
+        slug,
+        description: data.description || null,
+        imageUrl: data.imageUrl || null,
+      },
+    });
+    await this.invalidateCategoriesCache();
+    return category;
+  }
+
+  async updateCategory(id: number, data: { name?: string; slug?: string; description?: string; imageUrl?: string }) {
+    const category = await this.prisma.category.update({
+      where: { id },
+      data,
+    });
+    await this.invalidateCategoriesCache();
+    return category;
+  }
+
+  async deleteCategory(id: number) {
+    const productCount = await this.prisma.product.count({ where: { categoryId: id } });
+    if (productCount > 0) {
+      throw new BadRequestException(`Không thể xóa danh mục đang có ${productCount} sản phẩm.`);
+    }
+    const category = await this.prisma.category.delete({ where: { id } });
+    await this.invalidateCategoriesCache();
+    return category;
   }
 
   async invalidateProductCache(id: number) {

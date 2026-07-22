@@ -118,6 +118,36 @@ export class ProductsController {
     return this.productsService.findCategories();
   }
 
+  @Post('categories')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create category (Admin only)' })
+  async createCategory(@Body() body: { name: string; slug?: string; description?: string; imageUrl?: string }) {
+    return this.productsService.createCategory(body);
+  }
+
+  @Put('categories/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update category (Admin only)' })
+  async updateCategory(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { name?: string; slug?: string; description?: string; imageUrl?: string },
+  ) {
+    return this.productsService.updateCategory(id, body);
+  }
+
+  @Delete('categories/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete category (Admin only)' })
+  async deleteCategory(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.deleteCategory(id);
+  }
+
   @Post('products')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
