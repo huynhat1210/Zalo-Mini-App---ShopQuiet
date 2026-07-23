@@ -1,5 +1,6 @@
 import React from "react";
 import { IEmptyStateComponentProps } from "./empty-state.type";
+import { ShoppingBagIcon } from "@heroicons/react/24/outline";
 
 export const EmptyStateComponent: React.FC<IEmptyStateComponentProps> = (
   props,
@@ -8,27 +9,9 @@ export const EmptyStateComponent: React.FC<IEmptyStateComponentProps> = (
 
   return (
     <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-surface">
-      {icon ? (
-        <div className="w-16 h-16 rounded-full bg-[#f5f3f0] flex items-center justify-center mb-4">
-          {icon}
-        </div>
-      ) : (
-        <div className="w-16 h-16 rounded-full bg-[#f5f3f0] flex items-center justify-center mb-4">
-          <svg
-            className="w-7.5 h-7.5 text-[#526069]/50"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.8}
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-            />
-          </svg>
-        </div>
-      )}
+      <div className="w-16 h-16 rounded-full bg-[#f5f3f0] flex items-center justify-center mb-4 shadow-2xs">
+        {icon ? icon : <ShoppingBagIcon className="w-7.5 h-7.5 text-[#526069]/50" strokeWidth={1.8} />}
+      </div>
       <h3 className="text-xs font-bold text-textColor uppercase tracking-widest">
         {title}
       </h3>
@@ -38,7 +21,7 @@ export const EmptyStateComponent: React.FC<IEmptyStateComponentProps> = (
       {actionText && onAction && (
         <button
           onClick={onAction}
-          className="mt-4 px-4 py-2 bg-primary text-white rounded"
+          className="mt-4 px-4 py-2 bg-primary text-white text-xs font-bold rounded-full border-none cursor-pointer shadow-xs active:scale-95 transition-transform"
         >
           {actionText}
         </button>

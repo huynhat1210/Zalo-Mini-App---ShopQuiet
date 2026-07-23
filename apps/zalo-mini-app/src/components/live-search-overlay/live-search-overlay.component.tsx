@@ -3,6 +3,15 @@ import { apiRequest } from "../../utils/api";
 import { IProduct } from "../../App";
 import { ILiveSearchOverlayProps } from "./live-search-overlay.type";
 import { LazyImageComponent } from "../lazy-image";
+import {
+  MagnifyingGlassIcon,
+  XMarkIcon,
+  ClockIcon,
+  StarIcon as StarOutline,
+  ArrowRightIcon,
+  FireIcon,
+} from "@heroicons/react/24/outline";
+import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
 
 const HOT_TREND_TAGS = [
   "#Sale 50%",
@@ -22,7 +31,7 @@ const SEARCH_CATEGORIES = [
 ];
 
 export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
-  const { isOpen, onClose, onSelectProduct, showToast } = props;
+  const { isOpen, onClose, onSelectProduct } = props;
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCat, setSelectedCat] = useState("all");
   const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc">("newest");
@@ -109,19 +118,7 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
       {/* Header Search Bar */}
       <div className="bg-white px-5 py-3.5 flex items-center gap-3 border-b border-[#f0edeb] shadow-2xs shrink-0">
         <div className="flex-1 flex items-center gap-2 bg-[#f6f4f2] px-3.5 py-2.5 rounded-2xl border border-[#ece9e6] focus-within:border-[#0e6877] transition-all">
-          <svg
-            className="w-4 h-4 text-[#0e6877] shrink-0"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-            />
-          </svg>
+          <MagnifyingGlassIcon className="w-4 h-4 text-[#0e6877] shrink-0" strokeWidth={2.5} />
           <input
             ref={inputRef}
             type="text"
@@ -135,7 +132,7 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
               onClick={() => setSearchTerm("")}
               className="p-1 text-neutral-400 hover:text-neutral-600 bg-transparent border-none cursor-pointer"
             >
-              ✕
+              <XMarkIcon className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -184,8 +181,8 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
         {!searchTerm && searchHistory.length > 0 && (
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-extrabold text-[#526069]/80 uppercase tracking-widest">
-                🕒 Lịch sử tìm kiếm
+              <span className="text-[10px] font-extrabold text-[#526069]/80 uppercase tracking-widest flex items-center gap-1">
+                <ClockIcon className="w-3.5 h-3.5 text-[#0e6877]" /> Lịch sử tìm kiếm
               </span>
               <button
                 onClick={clearHistory}
@@ -213,7 +210,7 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-extrabold text-[#526069]/80 uppercase tracking-widest flex items-center gap-1">
-                🔥 Xu hướng tìm kiếm HOT
+                <FireIcon className="w-3.5 h-3.5 text-amber-500" /> Xu hướng tìm kiếm HOT
               </span>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -238,7 +235,7 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
           </div>
         ) : (searchTerm || selectedCat !== "all") && results.length === 0 ? (
           <div className="text-center py-12 space-y-2">
-            <span className="text-3xl">🔍</span>
+            <MagnifyingGlassIcon className="w-8 h-8 text-neutral-300 mx-auto" />
             <p className="text-xs font-bold text-textColor">
               Không tìm thấy sản phẩm cho từ khóa "{searchTerm}"
             </p>
@@ -285,7 +282,7 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
                             {product.category?.name || "Sản phẩm"}
                           </span>
                           <span className="text-[9px] font-bold text-amber-500 flex items-center gap-0.5">
-                            ⭐ 4.9
+                            <StarSolid className="w-3 h-3 text-amber-400 inline" /> 4.9
                           </span>
                         </div>
                         <h4 className="text-xs font-bold text-textColor truncate group-hover:text-[#0e6877] transition-colors mt-0.5">
@@ -295,8 +292,8 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
                           {product.price?.toLocaleString("vi-VN")} đ
                         </p>
                       </div>
-                      <span className="text-[11px] font-extrabold text-[#0e6877] bg-[#0e6877]/10 px-3 py-1 rounded-full shrink-0 group-hover:bg-[#0e6877] group-hover:text-white transition-all">
-                        Xem ➔
+                      <span className="text-[11px] font-extrabold text-[#0e6877] bg-[#0e6877]/10 px-3 py-1 rounded-full shrink-0 group-hover:bg-[#0e6877] group-hover:text-white transition-all flex items-center gap-1">
+                        Xem <ArrowRightIcon className="w-3 h-3" />
                       </span>
                     </div>
                   );

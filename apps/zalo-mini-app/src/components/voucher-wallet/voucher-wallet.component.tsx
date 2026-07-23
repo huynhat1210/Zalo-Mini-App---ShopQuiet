@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { apiRequest } from "../../utils/api";
 import { IVoucherWalletProps } from "./voucher-wallet.type";
+import {
+  XMarkIcon,
+  TicketIcon,
+  SparklesIcon,
+  ArrowRightIcon,
+} from "@heroicons/react/24/outline";
 
 export const VoucherWallet: React.FC<IVoucherWalletProps> = (props) => {
   const { isOpen, onClose, showToast, onApplyVoucher } = props;
@@ -41,10 +47,10 @@ export const VoucherWallet: React.FC<IVoucherWalletProps> = (props) => {
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-center justify-center p-6 animate-fade-in">
-      <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up max-h-[75vh] flex flex-col">
+      <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up max-h-[75vh] flex flex-col text-left">
         <div className="flex items-center justify-between shrink-0 pb-2 border-b border-[#f5f3f0]">
           <div className="flex items-center gap-2">
-            <span className="text-xl">🎟️</span>
+            <TicketIcon className="w-6 h-6 text-[#0e6877]" />
             <div>
               <h3 className="text-xs font-bold text-textColor tracking-wide">
                 Ví Voucher Của Tôi
@@ -56,19 +62,7 @@ export const VoucherWallet: React.FC<IVoucherWalletProps> = (props) => {
             onClick={onClose}
             className="p-1.5 bg-neutral-100 hover:bg-neutral-200 rounded-full transition-colors border-none cursor-pointer flex items-center justify-center"
           >
-            <svg
-              className="w-4 h-4 text-textColor"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <XMarkIcon className="w-4 h-4 text-textColor" />
           </button>
         </div>
 
@@ -79,7 +73,7 @@ export const VoucherWallet: React.FC<IVoucherWalletProps> = (props) => {
             </div>
           ) : userVouchers.length === 0 ? (
             <div className="text-center py-8 space-y-2">
-              <span className="text-4xl">🏷️</span>
+              <SparklesIcon className="w-10 h-10 text-neutral-300 mx-auto" />
               <p className="text-xs text-textColor-variant font-medium">
                 Chưa có voucher khả dụng
                 <br />
@@ -132,9 +126,9 @@ export const VoucherWallet: React.FC<IVoucherWalletProps> = (props) => {
                     </span>
                     <button
                       onClick={() => handleApply(v.code)}
-                      className="text-[9.5px] bg-[#0e6877] hover:bg-[#0b5460] text-white font-extrabold px-3 py-1 rounded-full border-none cursor-pointer shadow-2xs active:scale-95 transition-transform"
+                      className="text-[9.5px] bg-[#0e6877] hover:bg-[#0b5460] text-white font-extrabold px-3 py-1 rounded-full border-none cursor-pointer shadow-2xs active:scale-95 transition-transform flex items-center gap-1"
                     >
-                      Dùng Ngay ➔
+                      Dùng Ngay <ArrowRightIcon className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
