@@ -427,4 +427,51 @@ export class UsersService {
       pointsMultiplier,
     };
   }
+
+  async getSizeProfile(zaloId: string) {
+    if (!zaloId) return null;
+    const user = await this.prisma.user.findUnique({
+      where: { zaloId },
+      select: {
+        height: true,
+        weight: true,
+        footLength: true,
+        clothingSize: true,
+        shoeSize: true,
+      },
+    });
+    return user || { height: null, weight: null, footLength: null, clothingSize: null, shoeSize: null };
+  }
+
+  async updateSizeProfile(
+    zaloId: string,
+    data: {
+      height?: number;
+      weight?: number;
+      footLength?: number;
+      clothingSize?: string;
+      shoeSize?: string;
+    },
+  ) {
+    if (!zaloId) return null;
+    return this.prisma.user.update({
+      where: { zaloId },
+      data: {
+        ...(data.height !== undefined && { height: data.height }),
+        ...(data.weight !== undefined && { weight: data.weight }),
+        ...(data.footLength !== undefined && { footLength: data.footLength }),
+        ...(data.clothingSize !== undefined && { clothingSize: data.clothingSize }),
+        ...(data.shoeSize !== undefined && { shoeSize: data.shoeSize }),
+      },
+      select: {
+        zaloId: true,
+        height: true,
+        weight: true,
+        footLength: true,
+        clothingSize: true,
+        shoeSize: true,
+      },
+    });
+  }
 }
+

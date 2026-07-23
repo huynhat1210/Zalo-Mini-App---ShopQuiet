@@ -61,6 +61,11 @@ model User {
   totalSpent     Float          @default(0)
   membershipTier String         @default("Đồng")
   gamificationPoints Float      @default(0)
+  height            Float?
+  weight            Float?
+  footLength        Float?
+  clothingSize      String?
+  shoeSize          String?
   cartItems     CartItem[]
   comments      Comment[]
   favorites     Favorite[]

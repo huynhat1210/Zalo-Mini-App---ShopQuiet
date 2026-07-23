@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 
 import type { IUserManagementProps } from './user-management.type';
+import { exportToExcel } from '../../utils/excel-export.util';
+import { Download } from 'lucide-react';
 
 export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
   const { success, error: toastError } = useToast();
@@ -184,12 +186,38 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
             </span>
             <input
               type="text"
-              placeholder="Tìm kiếm người dùng..."
+              placeholder="Tìm kiếm người dùng (tên, email, SĐT, Zalo ID)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-[#0e6877] focus:ring-1 focus:ring-[#0e6877] rounded-xl py-2.5 pl-10 pr-4 text-xs text-[#1b1c1b] placeholder-slate-400 focus:outline-none transition-all"
             />
           </div>
+          <button
+            onClick={() => {
+              exportToExcel(
+                users,
+                'danh_sach_khach_hang',
+                [
+                  { key: 'name', label: 'Họ tên' },
+                  { key: 'email', label: 'Email' },
+                  { key: 'phone', label: 'SĐT' },
+                  { key: 'zaloId', label: 'Zalo ID' },
+                  { key: 'membershipTier', label: 'Hạng TV' },
+                  { key: 'totalSpent', label: 'Tổng chi tiêu', formatter: (val) => val ? `${val.toLocaleString()}đ` : '0đ' },
+                  { key: 'height', label: 'Chiều cao (cm)' },
+                  { key: 'weight', label: 'Cân nặng (kg)' },
+                  { key: 'footLength', label: 'Dài chân (cm)' },
+                  { key: 'clothingSize', label: 'Size quần áo' },
+                  { key: 'shoeSize', label: 'Size giày' },
+                  { key: 'role', label: 'Vai trò' },
+                ]
+              );
+            }}
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-[#0e6877]/10 hover:bg-[#0e6877]/20 text-[#0e6877] font-bold text-xs rounded-xl border-none cursor-pointer transition-all shrink-0"
+          >
+            <Download size={14} />
+            <span>Xuất Excel</span>
+          </button>
         </div>
 
         {/* Bulk Actions */}
@@ -370,6 +398,36 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] text-slate-500 font-extrabold uppercase">Email</span>
                         <span className="text-xs font-semibold text-slate-800">{selectedUserDetails.email || '-'}</span>
+                      </div>
+                    </div>
+
+                    {/* Customer Size Profile Section */}
+                    <div className="bg-[#f0f7f8] border border-[#d2eaed] rounded-2xl p-4 space-y-2.5">
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-xs font-extrabold text-[#0e6877] uppercase tracking-wider">📏 Hồ Sơ Size Khách Hàng</h4>
+                        <span className="text-[9px] font-bold text-[#0e6877] bg-white px-2 py-0.5 rounded-full border border-[#0e6877]/20">Tự động lưu từ Mini App</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                        <div className="bg-white p-2.5 rounded-xl border border-[#d2eaed]/60">
+                          <p className="text-[9.5px] text-slate-400 font-bold uppercase">Chiều cao</p>
+                          <p className="font-black text-slate-800 mt-0.5">{selectedUserDetails.height ? `${selectedUserDetails.height} cm` : 'Chưa có'}</p>
+                        </div>
+                        <div className="bg-white p-2.5 rounded-xl border border-[#d2eaed]/60">
+                          <p className="text-[9.5px] text-slate-400 font-bold uppercase">Cân nặng</p>
+                          <p className="font-black text-slate-800 mt-0.5">{selectedUserDetails.weight ? `${selectedUserDetails.weight} kg` : 'Chưa có'}</p>
+                        </div>
+                        <div className="bg-white p-2.5 rounded-xl border border-[#d2eaed]/60">
+                          <p className="text-[9.5px] text-slate-400 font-bold uppercase">Dài bàn chân</p>
+                          <p className="font-black text-slate-800 mt-0.5">{selectedUserDetails.footLength ? `${selectedUserDetails.footLength} cm` : 'Chưa có'}</p>
+                        </div>
+                        <div className="bg-white p-2.5 rounded-xl border border-[#d2eaed]/60">
+                          <p className="text-[9.5px] text-slate-400 font-bold uppercase">Size Quần Áo / Giày</p>
+                          <p className="font-black text-[#0e6877] mt-0.5">
+                            {selectedUserDetails.clothingSize || selectedUserDetails.shoeSize
+                              ? `${selectedUserDetails.clothingSize || ''} ${selectedUserDetails.shoeSize ? `(Giày: ${selectedUserDetails.shoeSize})` : ''}`
+                              : 'Chưa tính'}
+                          </p>
+                        </div>
                       </div>
                     </div>
 

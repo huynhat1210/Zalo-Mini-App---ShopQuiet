@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { apiRequest, apiUploadRequest } from '../../utils/api';
+import { exportToExcel } from '../../utils/excel-export.util';
 import {
   Plus,
   Edit3,
@@ -324,6 +325,28 @@ export const Products: React.FC<IProductsProps> = (_props) => {
                 {Object.keys(editedPrices).length + Object.keys(editedStocks).length}
               </span>
             )}
+          </button>
+
+          <button
+            onClick={() => {
+              exportToExcel(
+                products,
+                'danh_sach_san_pham',
+                [
+                  { key: 'id', label: 'ID' },
+                  { key: 'name', label: 'Tên sản phẩm' },
+                  { key: 'price', label: 'Giá bán (VNĐ)', formatter: (v) => v ? v.toLocaleString('vi-VN') : '0' },
+                  { key: 'category', label: 'Danh mục', formatter: (v) => v?.name || '-' },
+                  { key: 'soldCount', label: 'Đã bán' },
+                  { key: 'likeCount', label: 'Lượt thích' },
+                  { key: 'sizeChart', label: 'Có bảng size', formatter: (v) => v ? 'Có' : 'Chưa cài' },
+                ]
+              );
+            }}
+            className="px-3.5 py-2.5 bg-[#0e6877]/10 hover:bg-[#0e6877]/20 text-[#0e6877] text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 border-none cursor-pointer active:scale-95"
+          >
+            <FileText size={15} />
+            Xuất Excel
           </button>
 
           <button

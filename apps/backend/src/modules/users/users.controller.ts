@@ -12,6 +12,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { SyncUserDto, DecryptPhoneDto } from './dto/sync-user.dto';
+import { UpdateSizeProfileDto } from './dto/update-size-profile.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Controller('users')
@@ -20,6 +21,22 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly prisma: PrismaService,
   ) {}
+
+  @Get('size-profile')
+  async getSizeProfile(@Headers('x-zalo-user-id') zaloUserId?: string) {
+    if (!zaloUserId) return { height: null, weight: null, footLength: null, clothingSize: null, shoeSize: null };
+    return this.usersService.getSizeProfile(zaloUserId);
+  }
+
+  @Post('size-profile')
+  async updateSizeProfile(
+    @Headers('x-zalo-user-id') zaloUserId: string,
+    @Body() body: UpdateSizeProfileDto,
+  ) {
+    const targetUserId = zaloUserId || (body as any).zaloUserId;
+    if (!targetUserId) return null;
+    return this.usersService.updateSizeProfile(targetUserId, body);
+  }
 
   @Post('sync')
   async syncUser(@Body() body: SyncUserDto) {

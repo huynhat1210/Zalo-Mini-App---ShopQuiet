@@ -97,6 +97,35 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
     }
   })();
 
+  // Fetch user size profile from DB to prefill inputs
+  useEffect(() => {
+    if (!isSizeGuideOpen || !zaloUser?.id) return;
+    async function loadSizeProfile() {
+      try {
+        const profile = await apiRequest<any>('/users/size-profile');
+        if (profile) {
+          if (profile.height && !heightCm) setHeightCm(String(profile.height));
+          if (profile.weight && !weightKg) setWeightKg(String(profile.weight));
+          if (profile.footLength && !footLengthCm) setFootLengthCm(String(profile.footLength));
+        }
+      } catch (e) {
+        console.error('Failed to load size profile:', e);
+      }
+    }
+    loadSizeProfile();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSizeGuideOpen, zaloUser?.id]);
+
+  // Helper to save size profile to DB
+  const saveSizeProfileToDB = async (payload: { height?: number; weight?: number; footLength?: number; clothingSize?: string; shoeSize?: string }) => {
+    if (!zaloUser?.id) return;
+    try {
+      await apiRequest('/users/size-profile', 'POST', payload);
+    } catch (e) {
+      console.error('Failed to save size profile to DB:', e);
+    }
+  };
+
   // === CALC RECOMMENDED SIZE ===
   const calcRecommendedSize = () => {
     if (sizeGuideType === "shoes") {
@@ -110,7 +139,9 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
         { max: 28.5, size: "44" }, { max: 99,   size: "45" },
       ];
       const match = shoeMap.find(s => foot <= s.max);
-      setRecommendedSize(match?.size || "44");
+      const rec = match?.size || "44";
+      setRecommendedSize(rec);
+      saveSizeProfileToDB({ footLength: foot, shoeSize: rec });
     } else {
       const h = parseFloat(heightCm);
       const w = parseFloat(weightKg);
@@ -124,6 +155,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
       else if (h <= 180 && bmi < 27) size = "XL";
       else size = "XXL";
       setRecommendedSize(size);
+      saveSizeProfileToDB({ height: h, weight: w, clothingSize: size });
     }
   };
 
