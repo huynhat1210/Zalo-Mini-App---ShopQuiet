@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SidebarComponent } from '../sidebar';
-import { AiOpsChatbox } from '../ai-ops-chatbox.component';
+import { AiOpsChatbox } from '../ai-ops-chatbox';
 import { User, Bell, Menu, Check, Clock } from 'lucide-react';
 import { apiRequest } from '../../utils/api';
 import { useLocation } from 'react-router-dom';

@@ -8,27 +8,9 @@ import {
   Save,
   CheckCircle,
 } from 'lucide-react';
+import type { ShippingMethod, PaymentMethod, ISettingsProps } from './settings.type';
 
-interface ShippingMethod {
-  id: number;
-  code: string;
-  name: string;
-  description?: string;
-  price: number;
-  estimatedDays?: string;
-  active: boolean;
-}
-
-interface PaymentMethod {
-  id: number;
-  code: string;
-  name: string;
-  description?: string;
-  badge?: string;
-  active: boolean;
-}
-
-export const Settings: React.FC = () => {
+export const Settings: React.FC<ISettingsProps> = () => {
   const { success: toastSuccess, error: toastError } = useToast();
   const [activeTab, setActiveTab] = useState<'BRAND' | 'SHIPPING' | 'PAYMENT'>('BRAND');
   const [settings, setSettings] = useState<Record<string, string>>({
@@ -39,35 +21,50 @@ export const Settings: React.FC = () => {
     'store.currency': 'VNĐ',
   });
 
-  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([
-    { id: 1, code: 'STANDARD', name: 'Giao Hàng Tiêu Chuẩn', description: 'Nhận hàng sau 2-4 ngày làm việc', price: 25000, estimatedDays: '2-4 ngày', active: true },
-    { id: 2, code: 'EXPRESS', name: 'Giao Hàng Hỏa Tốc', description: 'Giao nhanh nội thành trong 2 giờ', price: 45000, estimatedDays: '2 giờ', active: true },
-    { id: 3, code: 'FREESHIP', name: 'Miễn Phí Giao Hàng', description: 'Áp dụng cho đơn hàng từ 500.000 đ', price: 0, estimatedDays: '3-5 ngày', active: true },
-  ]);
-
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([
-    { id: 1, code: 'COD', name: 'Thanh toán khi nhận hàng (COD)', description: 'Khách hàng thanh toán tiền mặt trực tiếp cho nhân viên giao hàng', badge: 'Phổ biến', active: true },
-    { id: 2, code: 'ZALOPAY', name: 'Ví ZaloPay / Thẻ ngân hàng', description: 'Thanh toán tức thì qua cổng ZaloPay Sandbox/Production', badge: 'Khuyên dùng', active: true },
-  ]);
+  const [shippingMethods, setShippingMethods] = useState<ShippingMethod[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  useEffect(() => {
-    async function loadSettings() {
-      try {
-        setLoading(true);
-        const res = await apiRequest<Record<string, string>>('/cms/settings').catch(() => null);
-        if (res && typeof res === 'object') {
-          setSettings((prev) => ({ ...prev, ...res }));
-        }
-      } catch (e) {
-        console.error('Failed to load settings:', e);
-      } finally {
-        setLoading(false);
+  const fetchAllSettings = async () => {
+    try {
+      setLoading(true);
+      const [settingsRes, shipRes, payRes] = await Promise.all([
+        apiRequest<Record<string, string>>('/cms/settings').catch(() => null),
+        apiRequest<ShippingMethod[]>('/cms/shipping-methods').catch(() => []),
+        apiRequest<PaymentMethod[]>('/cms/payment-methods').catch(() => []),
+      ]);
+
+      if (settingsRes && typeof settingsRes === 'object') {
+        setSettings((prev) => ({ ...prev, ...settingsRes }));
       }
+      if (Array.isArray(shipRes) && shipRes.length > 0) {
+        setShippingMethods(shipRes);
+      } else {
+        setShippingMethods([
+          { id: 1, code: 'STANDARD', name: 'Giao Hàng Tiêu Chuẩn', description: 'Nhận hàng sau 2-4 ngày làm việc', price: 25000, estimatedDays: '2-4 ngày', active: true },
+          { id: 2, code: 'EXPRESS', name: 'Giao Hàng Hỏa Tốc', description: 'Giao nhanh nội thành trong 2 giờ', price: 45000, estimatedDays: '2 giờ', active: true },
+          { id: 3, code: 'FREESHIP', name: 'Miễn Phí Giao Hàng', description: 'Áp dụng cho đơn hàng từ 500.000 đ', price: 0, estimatedDays: '3-5 ngày', active: true },
+        ]);
+      }
+      if (Array.isArray(payRes) && payRes.length > 0) {
+        setPaymentMethods(payRes);
+      } else {
+        setPaymentMethods([
+          { id: 1, code: 'COD', name: 'Thanh toán khi nhận hàng (COD)', description: 'Khách hàng thanh toán tiền mặt trực tiếp cho nhân viên giao hàng', badge: 'Phổ biến', active: true },
+          { id: 2, code: 'ZALOPAY', name: 'Ví ZaloPay / Thẻ ngân hàng', description: 'Thanh toán tức thì qua cổng ZaloPay Sandbox/Production', badge: 'Khuyên dùng', active: true },
+        ]);
+      }
+    } catch (e) {
+      console.error('Failed to load settings:', e);
+    } finally {
+      setLoading(false);
     }
-    loadSettings();
+  };
+
+  useEffect(() => {
+    fetchAllSettings();
   }, []);
 
   const handleSettingChange = (key: string, val: string) => {
@@ -89,16 +86,32 @@ export const Settings: React.FC = () => {
     }
   };
 
-  const toggleShippingActive = (id: number) => {
-    setShippingMethods((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, active: !s.active } : s)),
-    );
+  const toggleShippingActive = async (id: number) => {
+    const updated = shippingMethods.map((s) => (s.id === id ? { ...s, active: !s.active } : s));
+    setShippingMethods(updated);
+    try {
+      const target = updated.find((s) => s.id === id);
+      if (target) {
+        await apiRequest(`/cms/shipping-methods/${id}`, 'PATCH', { active: target.active }).catch(() => {});
+        toastSuccess('Cập nhật thành công', `Đã ${target.active ? 'bật' : 'tắt'} ${target.name}`);
+      }
+    } catch (e: any) {
+      toastError('Lỗi cập nhật', e?.message || 'Không thể cập nhật trạng thái');
+    }
   };
 
-  const togglePaymentActive = (id: number) => {
-    setPaymentMethods((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, active: !p.active } : p)),
-    );
+  const togglePaymentActive = async (id: number) => {
+    const updated = paymentMethods.map((p) => (p.id === id ? { ...p, active: !p.active } : p));
+    setPaymentMethods(updated);
+    try {
+      const target = updated.find((p) => p.id === id);
+      if (target) {
+        await apiRequest(`/cms/payment-methods/${id}`, 'PATCH', { active: target.active }).catch(() => {});
+        toastSuccess('Cập nhật thành công', `Đã ${target.active ? 'bật' : 'tắt'} ${target.name}`);
+      }
+    } catch (e: any) {
+      toastError('Lỗi cập nhật', e?.message || 'Không thể cập nhật trạng thái');
+    }
   };
 
   return (
@@ -168,7 +181,7 @@ export const Settings: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Địa Chỉ Cửa Hàng Chín</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Địa Chỉ Cửa Hàng Chính</label>
               <input
                 type="text"
                 value={settings['brand.address'] || ''}

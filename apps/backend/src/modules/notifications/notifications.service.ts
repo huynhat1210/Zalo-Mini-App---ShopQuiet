@@ -6,14 +6,11 @@ export class NotificationsService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(zaloUserId?: string) {
-    const filterUserId = zaloUserId || 'cust-zalo-id-1';
+    const whereCondition = zaloUserId
+      ? { OR: [{ zaloUserId }, { zaloUserId: null }] }
+      : {};
     return this.prisma.notification.findMany({
-      where: {
-        OR: [
-          { zaloUserId: filterUserId },
-          { zaloUserId: null }, // Global/Promotion notifications
-        ],
-      },
+      where: whereCondition,
       orderBy: {
         id: 'desc',
       },
@@ -29,12 +26,11 @@ export class NotificationsService {
   }
 
   async markAllRead(zaloUserId?: string) {
-    const filterUserId = zaloUserId || 'cust-zalo-id-1';
+    const whereCondition = zaloUserId
+      ? { OR: [{ zaloUserId }, { zaloUserId: null }], read: false }
+      : { read: false };
     return this.prisma.notification.updateMany({
-      where: {
-        OR: [{ zaloUserId: filterUserId }, { zaloUserId: null }],
-        read: false,
-      },
+      where: whereCondition,
       data: {
         read: true,
       },
