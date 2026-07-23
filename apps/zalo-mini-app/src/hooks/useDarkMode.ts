@@ -1,33 +1,17 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 
-type Theme = "light" | "dark";
+type Theme = "light";
 
 const THEME_KEY = "shopquiet_theme";
 
 export function useDarkMode(): [Theme, () => void] {
-  const [theme, setTheme] = useState<Theme>(() => {
-    try {
-      const stored = localStorage.getItem(THEME_KEY) as Theme | null;
-      if (stored === "dark" || stored === "light") return stored;
-    } catch (e) {}
-    return "light";
-  });
-
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
+    root.classList.remove("dark");
     try {
-      localStorage.setItem(THEME_KEY, theme);
+      localStorage.removeItem(THEME_KEY);
     } catch (e) {}
-  }, [theme]);
+  }, []);
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-  };
-
-  return [theme, toggleTheme];
+  return ["light", () => {}];
 }

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Page } from "zmp-ui";
 import { useCart, IOrder } from "../../App";
 import { apiRequest, useTranslation } from "../../utils";
-import { useDarkMode } from "../../hooks";
 import { IProfileProps } from "./profile.type";
 
 // Import sub-components from global components folder
@@ -35,7 +34,6 @@ type CmsBootstrap = {
 export const Profile: React.FC<IProfileProps> = (props) => {
   const { initialSubPage = "profile" } = props;
   const { t, lang, setLanguage } = useTranslation();
-  const [theme, toggleTheme] = useDarkMode();
   const {
     setActiveTab,
     setSelectedProductDetail,
@@ -825,41 +823,6 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                   {lang === "vi" ? "English" : "Tiếng Việt"}
                 </button>
               </div>
-            </div>
-
-            {/* Dark / Light Mode Toggle */}
-            <div className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent">
-              <div className="flex items-center gap-3">
-                <span className="text-lg leading-none">
-                  {theme === "dark" ? "🌙" : "☀️"}
-                </span>
-                <div className="flex flex-col">
-                  <span className="font-semibold text-textColor">
-                    {theme === "dark" ? "Giao diện Tối" : "Giao diện Sáng"}
-                  </span>
-                  <span className="text-[9.5px] text-[#526069]/70 font-medium mt-0.5">
-                    {theme === "dark" ? "Đang dùng Dark Mode" : "Đang dùng Light Mode"}
-                  </span>
-                </div>
-              </div>
-              {/* Sleek Toggle Switch */}
-              <button
-                onClick={toggleTheme}
-                className={`relative w-12 h-6 rounded-full transition-colors duration-300 border-none cursor-pointer flex-shrink-0 ${
-                  theme === "dark"
-                    ? "bg-[#0e6877]"
-                    : "bg-neutral-200"
-                }`}
-                aria-label="Toggle dark mode"
-              >
-                <span
-                  className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 flex items-center justify-center text-[10px] ${
-                    theme === "dark" ? "translate-x-6" : "translate-x-0.5"
-                  }`}
-                >
-                  {theme === "dark" ? "🌙" : "☀️"}
-                </span>
-              </button>
             </div>
           </div>
         </div>
