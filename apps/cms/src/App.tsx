@@ -17,6 +17,7 @@ import {
   Support,
   Categories,
   Inventory,
+  FlashSaleManagement,
   Settings,
 } from './pages';
 import { ToastProviderComponent, useToast, PermissionProviderComponent } from './contexts';
@@ -69,6 +70,7 @@ export const App: React.FC = () => {
               <Route path="/products" element={<Products />} />
               <Route path="/orders" element={<Orders />} />
               <Route path="/vouchers" element={<Vouchers />} />
+              <Route path="/flash-sale" element={<FlashSaleManagement />} />
               <Route path="/banners" element={<Banners />} />
               <Route path="/database/:modelName" element={<DatabaseManager />} />
               <Route path="/users" element={<UserManagement />} />

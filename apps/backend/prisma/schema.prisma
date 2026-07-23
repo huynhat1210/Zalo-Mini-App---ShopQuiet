@@ -28,6 +28,9 @@ model Product {
   materialCare   String?
   shippingReturn String?
   sizeChart      String?          // JSON: [{size, height, weight, bust, waist}]
+  isFlashSale    Boolean          @default(false)
+  flashSalePrice Float?
+  flashSaleDiscount Int?
   soldCount      Int              @default(0)
   likeCount      Int              @default(0)
   createdAt      DateTime         @default(now())

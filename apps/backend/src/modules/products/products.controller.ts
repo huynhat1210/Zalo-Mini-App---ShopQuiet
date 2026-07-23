@@ -105,6 +105,20 @@ export class ProductsController {
     return this.productsService.findFlashSaleProducts();
   }
 
+  @Get('products/flash-sale/config')
+  @ApiOperation({ summary: 'Get flash sale config' })
+  async getFlashSaleConfig() {
+    return this.productsService.getFlashSaleConfig();
+  }
+
+  @Post('products/flash-sale/admin')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiOperation({ summary: 'Save flash sale campaign config' })
+  async saveFlashSaleCampaign(@Body() body: any) {
+    return this.productsService.saveFlashSaleCampaign(body);
+  }
+
   @Get('products/:id')
   @ApiOperation({ summary: 'Get product by ID' })
   @ApiResponse({ status: 200, description: 'Product retrieved' })

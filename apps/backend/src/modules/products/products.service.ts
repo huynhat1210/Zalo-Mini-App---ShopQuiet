@@ -41,6 +41,12 @@ export class ProductsService {
       where.categoryId = parseInt(categoryId, 10);
     }
 
+    // Exclude Flash Sale products from main grid when campaign is active
+    const isCampaignActive = await this.isFlashSaleCampaignActive();
+    if (isCampaignActive) {
+      where.isFlashSale = false;
+    }
+
     const skip = (page - 1) * limit;
 
     let orderBy: any = undefined;
@@ -291,8 +297,98 @@ export class ProductsService {
     });
   }
 
+  async getFlashSaleConfig(): Promise<any> {
+    const setting = await this.prisma.siteSetting.findUnique({
+      where: { key: 'flash_sale_campaign' },
+    });
+    if (!setting || !setting.value) {
+      return {
+        active: false,
+        startTime: null,
+        endTime: null,
+      };
+    }
+    try {
+      return JSON.parse(setting.value);
+    } catch (e) {
+      return { active: false, startTime: null, endTime: null };
+    }
+  }
+
+  async isFlashSaleCampaignActive(): Promise<boolean> {
+    const config = await this.getFlashSaleConfig();
+    if (!config || !config.active) return false;
+
+    const now = new Date().getTime();
+    if (config.startTime && new Date(config.startTime).getTime() > now) return false;
+    if (config.endTime && new Date(config.endTime).getTime() < now) return false;
+
+    return true;
+  }
+
+  async saveFlashSaleCampaign(body: {
+    active: boolean;
+    startTime?: string;
+    endTime?: string;
+    productSales?: {
+      productId: number;
+      isFlashSale: boolean;
+      flashSalePrice?: number;
+      flashSaleDiscount?: number;
+    }[];
+  }) {
+    const config = {
+      active: body.active,
+      startTime: body.startTime || null,
+      endTime: body.endTime || null,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await this.prisma.siteSetting.upsert({
+      where: { key: 'flash_sale_campaign' },
+      update: {
+        value: JSON.stringify(config),
+        active: body.active,
+      },
+      create: {
+        key: 'flash_sale_campaign',
+        label: 'Cấu hình Flash Sale Campaign',
+        value: JSON.stringify(config),
+        active: body.active,
+        group: 'marketing',
+      },
+    });
+
+    if (body.productSales && Array.isArray(body.productSales)) {
+      for (const item of body.productSales) {
+        await this.prisma.product.update({
+          where: { id: item.productId },
+          data: {
+            isFlashSale: item.isFlashSale,
+            flashSalePrice: item.flashSalePrice || null,
+            flashSaleDiscount: item.flashSaleDiscount || null,
+          },
+        });
+      }
+    }
+
+    return { success: true, config };
+  }
+
   async findFlashSaleProducts(): Promise<any> {
-    const allProducts = await this.prisma.product.findMany({
+    const config = await this.getFlashSaleConfig();
+    const isActive = await this.isFlashSaleCampaignActive();
+
+    if (!isActive) {
+      return {
+        active: false,
+        endTime: null,
+        products: [],
+      };
+    }
+
+    const flashSaleProducts = await this.prisma.product.findMany({
+      where: { isFlashSale: true },
       include: {
         category: true,
         variants: true,
@@ -304,75 +400,29 @@ export class ProductsService {
       },
     });
 
-    const flashSaleProducts = allProducts.filter((product) => {
-      if (!product.tags) return false;
-      const normalizedTag = product.tags.toLowerCase();
-      return (
-        normalizedTag.includes('flash sale') ||
-        normalizedTag.includes('giảm') ||
-        normalizedTag.includes('giam')
-      );
-    });
-
-    // If flash sale count is less than 4, enrich it with standard products as fallback
-    if (flashSaleProducts.length < 4 && allProducts.length > 0) {
-      const existingIds = new Set(flashSaleProducts.map((p) => p.id));
-      const remainingProducts = allProducts.filter(
-        (p) => !existingIds.has(p.id),
-      );
-
-      const neededCount = Math.min(
-        4 - flashSaleProducts.length,
-        remainingProducts.length,
-      );
-      const fallbacksToAdd = remainingProducts.slice(0, neededCount);
-
-      const discountOptions = [
-        'Giảm 15%',
-        'Giảm 23%',
-        'Giảm 30%',
-        'Flash Sale (Giảm 10%)',
-      ];
-      for (let i = 0; i < fallbacksToAdd.length; i++) {
-        const randomTag =
-          discountOptions[Math.floor(Math.random() * discountOptions.length)];
-        await this.prisma.product.update({
-          where: { id: fallbacksToAdd[i].id },
-          data: { tags: randomTag },
-        });
-      }
-      return this.findFlashSaleProducts();
-    }
-
     const mappedProducts = flashSaleProducts.map((product) => {
-      const tag = product.tags || '';
-      let discountPercent = 20;
+      const originalPrice = product.price;
+      let discountPercent = product.flashSaleDiscount || 20;
+      let salePrice = product.flashSalePrice || Math.round(originalPrice * (1 - discountPercent / 100));
 
-      const percentMatch =
-        tag.match(/giảm\s*(\d+)%/i) ||
-        tag.match(/giam\s*(\d+)%/i) ||
-        tag.match(/(\d+)%/);
-      if (percentMatch && percentMatch[1]) {
-        discountPercent = parseInt(percentMatch[1], 10);
+      if (product.flashSalePrice && product.price > product.flashSalePrice) {
+        discountPercent = Math.round(((product.price - product.flashSalePrice) / product.price) * 100);
       }
-
-      const originalPrice = Math.round(
-        product.price / (1 - discountPercent / 100),
-      );
 
       return {
         ...product,
+        price: salePrice,
         originalPrice,
         discountPercent,
       };
     });
 
-    const endTime = new Date();
-    endTime.setHours(23, 59, 59, 999);
-
     return {
+      active: true,
+      startTime: config.startTime,
+      endTime: config.endTime,
       products: mappedProducts,
-      endTime: endTime.toISOString(),
     };
   }
+
 }

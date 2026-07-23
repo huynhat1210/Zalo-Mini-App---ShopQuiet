@@ -113,15 +113,20 @@ export const Home: React.FC<IHomeProps> = (_props) => {
   useEffect(() => {
     async function loadFlashSale() {
       try {
-        const res = await apiRequest<{ products: any[]; endTime: string }>(
+        const res = await apiRequest<{ active?: boolean; products: any[]; endTime: string }>(
           "/products/flash-sale",
         );
-        if (res) {
-          setFlashSaleProducts(res.products || []);
+        if (res && res.active !== false && Array.isArray(res.products) && res.products.length > 0) {
+          setFlashSaleProducts(res.products);
           setFlashSaleEndTime(res.endTime || "");
+        } else {
+          setFlashSaleProducts([]);
+          setFlashSaleEndTime("");
         }
       } catch (e) {
         console.error("Failed to load flash sale products:", e);
+        setFlashSaleProducts([]);
+        setFlashSaleEndTime("");
       }
     }
     loadFlashSale();
