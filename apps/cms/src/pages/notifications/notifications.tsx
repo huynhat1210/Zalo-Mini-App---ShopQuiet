@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest } from '../../utils/api';
 import { useToast } from '../../contexts';
+import { PaginationComponent } from '../../components';
 import { 
   Send, 
   Bell, 
@@ -32,6 +33,11 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
   const [history, setHistory] = useState<NotificationHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  // Pagination State for History List
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+
 
   // Form states
   const [title, setTitle] = useState('');
@@ -282,8 +288,9 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
               Chưa gửi thông báo nào.
             </div>
           ) : (
-            <div className="flex-1 overflow-y-auto pr-1 space-y-4 scrollbar-thin max-h-[460px] pt-2">
-              {history.map((item) => (
+            <div className="flex-1 space-y-4 pt-2">
+              <div className="space-y-4 max-h-[460px] overflow-y-auto pr-1">
+                {history.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((item) => (
                 <div 
                   key={item.id} 
                   className="bg-white border border-slate-150 rounded-2xl p-4 hover:shadow-xs hover:border-[#0e6877]/20 transition-all duration-300 flex items-start gap-4 relative group"
@@ -322,6 +329,19 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
                   <ChevronRight size={14} className="text-slate-300 absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-300" />
                 </div>
               ))}
+              </div>
+
+              <PaginationComponent
+                currentPage={currentPage}
+                totalPages={Math.ceil(history.length / itemsPerPage)}
+                totalItems={history.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+                onItemsPerPageChange={(newSize) => {
+                  setItemsPerPage(newSize);
+                  setCurrentPage(1);
+                }}
+              />
             </div>
           )}
         </div>

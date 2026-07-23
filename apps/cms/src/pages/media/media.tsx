@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest } from '../../utils/api';
 import { useToast } from '../../contexts';
+import { PaginationComponent } from '../../components';
 import { 
   Upload, 
   Trash2, 
@@ -26,6 +27,11 @@ export const Media: React.FC<IMediaProps> = (_props) => {
   const [uploading, setUploading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedFilename, setCopiedFilename] = useState<string | null>(null);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
 
   const fetchFiles = async () => {
     try {
@@ -187,8 +193,9 @@ export const Media: React.FC<IMediaProps> = (_props) => {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-          {filteredFiles.map((file) => {
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            {filteredFiles.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((file) => {
             const absoluteUrl = file.url.includes('http')
               ? file.url
               : window.location.origin.includes('localhost')
@@ -252,6 +259,19 @@ export const Media: React.FC<IMediaProps> = (_props) => {
               </div>
             );
           })}
+          </div>
+
+          <PaginationComponent
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredFiles.length / itemsPerPage)}
+            totalItems={filteredFiles.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={(newSize) => {
+              setItemsPerPage(newSize);
+              setCurrentPage(1);
+            }}
+          />
         </div>
       )}
     </div>

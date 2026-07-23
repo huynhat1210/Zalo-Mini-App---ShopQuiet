@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { apiRequest } from '../../utils/api';
 import { useToast } from '../../contexts';
+import { PaginationComponent } from '../../components';
 import {
   Zap,
   Save,
@@ -23,6 +24,11 @@ export const FlashSaleManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [categories, setCategories] = useState<any[]>([]);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
 
   // Selected products for flash sale: Record<productId, { isFlashSale: boolean, flashSalePrice: number | null, flashSaleDiscount: number }>
   const [flashSaleMap, setFlashSaleMap] = useState<
@@ -288,7 +294,7 @@ export const FlashSaleManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredProducts.map((p) => {
+              {filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((p) => {
                 const itemConfig = flashSaleMap[p.id] || { isFlashSale: false, flashSalePrice: null, flashSaleDiscount: 20 };
                 const calcSalePrice = itemConfig.flashSalePrice || Math.round(p.price * (1 - itemConfig.flashSaleDiscount / 100));
 
@@ -364,6 +370,18 @@ export const FlashSaleManagement: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        <PaginationComponent
+          currentPage={currentPage}
+          totalPages={Math.ceil(filteredProducts.length / itemsPerPage)}
+          totalItems={filteredProducts.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={(newSize) => {
+            setItemsPerPage(newSize);
+            setCurrentPage(1);
+          }}
+        />
       </div>
     </div>
   );

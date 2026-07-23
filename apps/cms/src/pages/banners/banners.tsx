@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest, apiUploadRequest } from '../../utils/api';
+import { PaginationComponent } from '../../components';
 import {
   Plus,
   Trash2,
@@ -24,6 +25,11 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
   const { success: toastSuccess, error: toastError, warning: toastWarning } = useToast();
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(6);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -131,8 +137,9 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
           <p className="text-slate-500 text-xs">Đang tải danh sách banner...</p>
         </div>
       ) : banners.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {banners.map((banner) => (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {banners.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((banner) => (
             <div
               key={banner.id}
               className="bg-white border border-slate-200 hover:border-[#0e6877]/30 rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group"
@@ -166,6 +173,19 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
               </div>
             </div>
           ))}
+          </div>
+
+          <PaginationComponent
+            currentPage={currentPage}
+            totalPages={Math.ceil(banners.length / itemsPerPage)}
+            totalItems={banners.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={(newSize) => {
+              setItemsPerPage(newSize);
+              setCurrentPage(1);
+            }}
+          />
         </div>
       ) : (
         <div className="py-20 text-center text-slate-400 text-sm bg-white rounded-3xl border border-slate-200">

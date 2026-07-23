@@ -10,6 +10,7 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import { useToast } from '../../contexts';
+import { PaginationComponent } from '../../components';
 
 interface Voucher {
   id?: string;
@@ -31,6 +32,11 @@ export const Vouchers: React.FC = () => {
   const { success: toastSuccess, error: toastError, warning: toastWarning } = useToast();
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(6);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Distribution states
@@ -179,8 +185,9 @@ export const Vouchers: React.FC = () => {
           <p className="text-slate-500 text-xs">Đang tải kho voucher...</p>
         </div>
       ) : vouchers.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {vouchers.map((voucher) => (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {vouchers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((voucher) => (
             <div
               key={voucher.code}
               className="bg-white border border-slate-200 hover:border-[#0e6877]/30 rounded-3xl p-5 flex flex-col justify-between shadow-xs hover:shadow-md transition-all duration-200 relative group"
@@ -240,6 +247,19 @@ export const Vouchers: React.FC = () => {
               </div>
             </div>
           ))}
+          </div>
+
+          <PaginationComponent
+            currentPage={currentPage}
+            totalPages={Math.ceil(vouchers.length / itemsPerPage)}
+            totalItems={vouchers.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={(newSize) => {
+              setItemsPerPage(newSize);
+              setCurrentPage(1);
+            }}
+          />
         </div>
       ) : (
         <div className="py-20 text-center text-slate-400 text-sm bg-white rounded-3xl border border-slate-200">

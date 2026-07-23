@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiRequest, apiUploadRequest } from '../../utils/api';
 import { useToast } from '../../contexts';
+import { PaginationComponent } from '../../components';
 import { validateField, validateRecord } from '../../utils/validation';
 import {
   Plus,
@@ -63,6 +64,11 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
   const [editingRecord, setEditingRecord] = useState<any | null>(null);
   const [error, setError] = useState('');
   const [selectedRecords, setSelectedRecords] = useState<Set<string | number>>(new Set());
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
@@ -310,13 +316,11 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
     setColumnFilters({});
   };
 
-
-
   // ── Specialized Custom Renderers ──
 
-  const renderProductView = () => (
+  const renderProductView = (recordsList = filteredRecords) => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredRecords.map((product) => {
+      {recordsList.map((product) => {
         let imgUrl = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400';
         if (product.images) {
           try {
@@ -417,16 +421,17 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
     }
   };
 
-  const renderOrderView = () => (
+  const renderOrderView = (recordsList = filteredRecords) => (
     <div className="space-y-4">
-      {filteredRecords.map((order) => (
-        <div key={order.id} className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4 hover:border-slate-350 transition-all duration-200">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 pb-3 border-b border-slate-100">
+      {recordsList.map((order) => (
+        <div key={order.id} className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4 hover:border-slate-300 transition-all">
+          <div className="flex justify-between items-start border-b border-slate-100 pb-3">
             <div>
-              <span className="font-mono text-xs text-[#0e6877] font-bold">
-                #{typeof order.id === 'string' ? order.id.slice(-6).toUpperCase() : String(order.id)}
-              </span>
-              <span className="text-[10px] text-slate-400 font-medium ml-3">Ngày đặt: {new Date(order.createdAt).toLocaleDateString('vi-VN')}</span>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-[#1b1c1b] text-sm">{order.id}</span>
+                <span className="text-[10px] text-slate-400 font-medium">{new Date(order.createdAt).toLocaleDateString('vi-VN')}</span>
+              </div>
+              <p className="text-[10px] text-slate-400 mt-0.5">Zalo ID: {order.zaloUserId}</p>
             </div>
             <div className="flex items-center gap-3">
               {getOrderStatusBadge(order.status)}
@@ -490,9 +495,7 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
                           </p>
                         </div>
                       </div>
-                      <span className="font-bold text-[#0e6877] bg-[#ecf6f7] border border-[#0e6877]/10 px-2.5 py-0.5 rounded-full">
-                        x{item.quantity || 1}
-                      </span>
+                      <span className="font-bold text-[#1b1c1b]">x{item.quantity}</span>
                     </div>
                   );
                 })}
@@ -504,17 +507,15 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
     </div>
   );
 
-  const renderVoucherView = () => (
+  const renderVoucherView = (recordsList = filteredRecords) => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredRecords.map((v) => (
-        <div key={v.id} className="bg-white border border-slate-200 rounded-3xl p-6 flex flex-col justify-between relative shadow-sm group hover:border-[#0e6877]/30 transition-all duration-200">
-          <div className="absolute top-1/2 -left-3 w-6 h-6 bg-[#fbf9f7] rounded-full border border-slate-200 border-r-transparent -translate-y-1/2"></div>
-          <div className="absolute top-1/2 -right-3 w-6 h-6 bg-[#fbf9f7] rounded-full border border-slate-200 border-l-transparent -translate-y-1/2"></div>
+      {recordsList.map((v) => (
+        <div key={v.code} className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4 hover:border-slate-350 transition-all duration-200">
           <div className="space-y-4">
             <div className="flex justify-between items-start">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2.5 bg-[#ecf6f7] text-[#0e6877] rounded-2xl border border-[#0e6877]/10">
-                  <Ticket size={20} />
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-[#ecf6f7] text-[#0e6877] rounded-2xl border border-[#0e6877]/10">
+                  <Ticket size={22} />
                 </div>
                 <div>
                   <h4 className="font-bold text-[#1b1c1b] tracking-wide text-sm">{v.code}</h4>
@@ -539,9 +540,9 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
     </div>
   );
 
-  const renderBannerView = () => (
+  const renderBannerView = (recordsList = filteredRecords) => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-      {filteredRecords.map((banner) => (
+      {recordsList.map((banner) => (
         <div key={banner.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col hover:shadow-md transition-all duration-200 group">
           <div className="h-44 bg-[#fbf9f7] relative overflow-hidden">
             <img src={banner.imageUrl} alt={banner.title || 'Slide Banner'} className="w-full h-full object-cover" />
@@ -560,9 +561,9 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
     </div>
   );
 
-  const renderUserView = () => (
+  const renderUserView = (recordsList = filteredRecords) => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredRecords.map((user) => (
+      {recordsList.map((user) => (
         <div key={user.zaloId} className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4 hover:border-slate-300 transition-all">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-[#ecf6f7] text-[#0e6877] rounded-full shrink-0 border border-[#0e6877]/10">
@@ -586,9 +587,9 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
     </div>
   );
 
-  const renderProductVariantView = () => {
+  const renderProductVariantView = (recordsList = filteredRecords) => {
     // Group variants by productId
-    const groupedVariants = filteredRecords.reduce((acc, variant) => {
+    const groupedVariants = recordsList.reduce((acc, variant) => {
       const productId = variant.productId;
       if (!acc[productId]) {
         acc[productId] = [];
@@ -614,14 +615,6 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
                     <p className="text-[10px] text-[#526069] font-medium">{variantArray.length} biến thể</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${variantArray.every((v: any) => (v.stock || 0) > 10) ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                      variantArray.some((v: any) => (v.stock || 0) > 0) ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                        'bg-rose-50 text-rose-700 border border-rose-200'
-                    }`}>
-                    Tổng tồn: {variantArray.reduce((sum: number, v: any) => sum + (v.stock || 0), 0)}
-                  </span>
-                </div>
               </div>
 
               {/* Variants Grid */}
@@ -640,27 +633,16 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
                           <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
                             ID: {variant.id}
                           </span>
-                          {(variant.stock || 0) === 0 && (
-                            <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">
-                              Hết hàng
-                            </span>
-                          )}
                         </div>
                         <div className="flex gap-1.5">
                           <button
                             onClick={() => openDrawerForEdit(variant)}
-                            className="p-1.5 bg-slate-50 hover:bg-[#ecf6f7] text-slate-500 hover:text-[#0e6877] rounded-lg transition-colors"
-                            title="Sửa"
-                          >
-                            <Edit3 size={11} />
-                          </button>
+                            className="p-1.5 bg-slate-50 hover:bg-[#ecf6f7] text-[#526069] hover:text-[#0e6877] border border-slate-200 rounded-lg transition-colors"
+                          ><Edit3 size={11} /></button>
                           <button
                             onClick={() => handleDeleteRecord(variant.id)}
-                            className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-lg transition-colors"
-                            title="Xóa"
-                          >
-                            <Trash2 size={11} />
-                          </button>
+                            className="p-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg transition-colors"
+                          ><Trash2 size={11} /></button>
                         </div>
                       </div>
 
@@ -670,18 +652,6 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] text-slate-500 font-medium uppercase">Size:</span>
                             <span className="text-[11px] font-semibold text-[#1b1c1b] bg-slate-100 px-2 py-0.5 rounded">{variant.size}</span>
-                          </div>
-                        )}
-                        {variant.color && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] text-slate-500 font-medium uppercase">Màu:</span>
-                            <div className="flex items-center gap-1.5">
-                              <div
-                                className="w-4 h-4 rounded-full border border-slate-300"
-                                style={{ backgroundColor: variant.color }}
-                              />
-                              <span className="text-[11px] font-semibold text-[#1b1c1b]">{variant.color}</span>
-                            </div>
                           </div>
                         )}
                         <div className="flex items-center justify-between pt-2 border-t border-slate-200">
@@ -711,9 +681,9 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
     );
   };
 
-  const renderCommentView = () => (
+  const renderCommentView = (recordsList = filteredRecords) => (
     <div className="space-y-4">
-      {filteredRecords.map((c) => (
+      {recordsList.map((c) => (
         <div key={c.id} className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-3 hover:border-slate-350 transition-all duration-200">
           <div className="flex justify-between items-start border-b border-slate-100 pb-3">
             <div>
@@ -733,7 +703,7 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
   );
 
   // Generic table for ProductVariant, Category, etc. - WITH edit button opening drawer
-  const renderDefaultTableView = () => {
+  const renderDefaultTableView = (recordsList = filteredRecords) => {
     const excludedColumns = ['description', 'images', 'link', 'createdAt', 'updatedAt', 'materialCare', 'shippingReturn', 'avatar'];
     const simpleColumns = columns.filter(col => !excludedColumns.includes(col));
 
@@ -758,13 +728,14 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
                 {simpleColumns.map((col) => (
                   <th key={col} className="py-3.5 px-4 bg-[#fbf9f7] border-b border-slate-200">{col}</th>
                 ))}
-                <th className="py-3.5 px-4 bg-[#fbf9f7] border-b border-slate-200 text-right">Hành động</th>
+                <th className="py-3.5 px-4 bg-[#fbf9f7] border-b border-slate-200 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-mono text-xs">
-              {filteredRecords.map((record) => {
-                const recordId = record.id || record.zaloId || record.code;
+              {recordsList.map((record) => {
+                const recordId = record.id ?? record.zaloId ?? record.code;
                 const isSelected = selectedRecords.has(recordId);
+
                 return (
                   <tr
                     key={recordId}
@@ -830,16 +801,37 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
       );
     }
 
-    switch (modelName) {
-      case 'Product': return renderProductView();
-      case 'ProductVariant': return renderProductVariantView();
-      case 'Order': return renderOrderView();
-      case 'Voucher': return renderVoucherView();
-      case 'Banner': return renderBannerView();
-      case 'User': return renderUserView();
-      case 'Comment': return renderCommentView();
-      default: return renderDefaultTableView();
-    }
+    const pagedRecords = filteredRecords.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    const renderContent = () => {
+      switch (modelName) {
+        case 'Product': return renderProductView(pagedRecords);
+        case 'ProductVariant': return renderProductVariantView(pagedRecords);
+        case 'Order': return renderOrderView(pagedRecords);
+        case 'Voucher': return renderVoucherView(pagedRecords);
+        case 'Banner': return renderBannerView(pagedRecords);
+        case 'User': return renderUserView(pagedRecords);
+        case 'Comment': return renderCommentView(pagedRecords);
+        default: return renderDefaultTableView(pagedRecords);
+      }
+    };
+
+    return (
+      <div className="space-y-6">
+        {renderContent()}
+        <PaginationComponent
+          currentPage={currentPage}
+          totalPages={Math.ceil(filteredRecords.length / itemsPerPage)}
+          totalItems={filteredRecords.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={(newSize) => {
+            setItemsPerPage(newSize);
+            setCurrentPage(1);
+          }}
+        />
+      </div>
+    );
   };
 
   return (
