@@ -169,7 +169,15 @@ export class OrdersService {
         where: { id: item.productId },
       });
       if (product) {
-        subtotal += product.price * item.quantity;
+        let effectivePrice = item.price;
+        if (!effectivePrice || effectivePrice <= 0) {
+          if (product.isFlashSale && product.flashSalePrice) {
+            effectivePrice = product.flashSalePrice;
+          } else {
+            effectivePrice = product.price;
+          }
+        }
+        subtotal += effectivePrice * item.quantity;
       }
     }
 

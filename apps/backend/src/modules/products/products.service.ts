@@ -103,13 +103,6 @@ export class ProductsService {
   }
 
   async findOne(id: number) {
-    const cacheKey = `product_${id}`;
-    const cachedData = await this.cacheManager.get(cacheKey);
-
-    if (cachedData) {
-      return cachedData;
-    }
-
     const product = await this.prisma.product.findUnique({
       where: { id },
       include: {
@@ -126,9 +119,24 @@ export class ProductsService {
       },
     });
 
-    // Cache for 5 minutes - product details change infrequently
     if (product) {
-      await this.cacheManager.set(cacheKey, product, 300000);
+      const isCampaignActive = await this.isFlashSaleCampaignActive();
+      if (isCampaignActive && product.isFlashSale) {
+        const originalPrice = product.price;
+        let discountPercent = product.flashSaleDiscount || 20;
+        let salePrice = product.flashSalePrice || Math.round(originalPrice * (1 - discountPercent / 100));
+
+        if (product.flashSalePrice && product.price > product.flashSalePrice) {
+          discountPercent = Math.round(((product.price - product.flashSalePrice) / product.price) * 100);
+        }
+
+        return {
+          ...product,
+          price: salePrice,
+          originalPrice,
+          discountPercent,
+        };
+      }
     }
 
     return product;
