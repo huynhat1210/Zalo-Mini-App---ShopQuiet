@@ -41,6 +41,15 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
     setActiveImageIndex(0);
   }, [product.id, product.likeCount]);
 
+  // Auto-slide image carousel every 3.5 seconds
+  useEffect(() => {
+    if (images.length <= 1) return;
+    const timer = setInterval(() => {
+      setActiveImageIndex((prev) => (prev + 1) % images.length);
+    }, 3500);
+    return () => clearInterval(timer);
+  }, [images.length]);
+
   // Scroll to top when product ID changes
   useEffect(() => {
     const overlays = document.querySelectorAll(
@@ -453,14 +462,14 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
             loading="eager"
           />
 
-          {/* Photo Counter Badge (e.g. 1 / 4) */}
-          <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-[10.5px] font-black px-3 py-1 rounded-full shadow-sm tracking-wider z-10">
+          {/* Photo Counter Badge (Bottom Right as requested) */}
+          <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-sm tracking-wider z-10">
             {activeImageIndex + 1} / {images.length}
           </div>
 
           {/* Pagination Dots Indicator */}
           {images.length > 1 && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 bg-white/70 backdrop-blur-xs px-3 py-1.5 rounded-full border border-slate-200/60 shadow-2xs">
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 bg-white/80 backdrop-blur-xs px-3 py-1.5 rounded-full border border-slate-200/60 shadow-2xs">
               {images.map((_, idx) => (
                 <button
                   key={idx}
