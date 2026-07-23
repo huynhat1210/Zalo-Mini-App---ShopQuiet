@@ -1051,6 +1051,11 @@ export const Profile: React.FC<IProfileProps> = (props) => {
         isOpen={isVoucherModalOpen}
         onClose={() => setIsVoucherModalOpen(false)}
         showToast={showToast}
+        onApplyVoucher={(code) => {
+          setIsVoucherModalOpen(false);
+          setIsCartOpen(true);
+          showToast(`Đã chọn mã ${code}! Giỏ hàng đã được mở.`, "success");
+        }}
       />
 
       {/* Static Info Page Modal */}

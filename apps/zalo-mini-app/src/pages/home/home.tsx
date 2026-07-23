@@ -14,6 +14,7 @@ import {
   LazyImageComponent,
   LuckyWheel,
   FlashSale,
+  LiveSearchOverlay,
 } from "../../components";
 import { IHomeProps } from "./home.type";
 
@@ -36,6 +37,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
     fetchRecommendations,
   } = useCart();
   const [isLuckyWheelOpen, setIsLuckyWheelOpen] = useState(false);
+  const [isLiveSearchOpen, setIsLiveSearchOpen] = useState(false);
 
   const {
     data: productsData,
@@ -243,6 +245,20 @@ export const Home: React.FC<IHomeProps> = (_props) => {
             </span>
           )}
         </button>
+      </div>
+
+      {/* Search Input Bar Trigger */}
+      <div className="px-6 pt-3 pb-1 bg-white">
+        <div
+          onClick={() => setIsLiveSearchOpen(true)}
+          className="bg-[#f6f4f2] hover:bg-[#eeebe8] transition-colors rounded-2xl px-4 py-2.5 flex items-center gap-2.5 text-xs text-[#526069]/70 cursor-pointer border border-[#ece9e6] shadow-2xs"
+        >
+          <svg className="w-4 h-4 text-[#0e6877] shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+          </svg>
+          <span className="font-medium truncate flex-1">Tìm áo khoác, quần jean, sale 50%...</span>
+          <span className="text-[9px] font-black uppercase tracking-wider bg-[#0e6877] text-white px-2 py-0.5 rounded-md shrink-0">HOT 🔥</span>
+        </div>
       </div>
 
       {/* Main Content scroll window */}
@@ -609,6 +625,14 @@ export const Home: React.FC<IHomeProps> = (_props) => {
         isOpen={isLuckyWheelOpen}
         onClose={() => setIsLuckyWheelOpen(false)}
         zaloUser={zaloUser}
+        showToast={showToast}
+      />
+
+      {/* Live Search Overlay */}
+      <LiveSearchOverlay
+        isOpen={isLiveSearchOpen}
+        onClose={() => setIsLiveSearchOpen(false)}
+        onSelectProduct={(product) => setSelectedProductDetail(product)}
         showToast={showToast}
       />
     </PageCast>

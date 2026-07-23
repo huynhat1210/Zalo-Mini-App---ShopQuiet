@@ -17,3 +17,4 @@ export * from "./order-history";
 export * from "./lucky-wheel";
 export * from "./price-slider";
 export * from "./flash-sale";
+export * from "./live-search-overlay";
