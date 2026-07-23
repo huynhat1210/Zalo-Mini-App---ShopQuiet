@@ -363,13 +363,13 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                 )}
               </div>
 
-              {/* Horizontal Step Icons Bar */}
+              {/* Horizontal Step Progress Bar */}
               <div className="grid grid-cols-4 gap-1 py-3 px-2 bg-[#fbf9f7] rounded-2xl border border-[#f0edeb]">
                 {[
-                  { key: "PROCESSING", label: "1. Đã nhận", icon: "📝" },
-                  { key: "CONFIRMED", label: "2. Đóng gói", icon: "📦" },
-                  { key: "SHIPPED", label: "3. Đang giao", icon: "🚚" },
-                  { key: "DELIVERED", label: "4. Hoàn thành", icon: "🎉" },
+                  { key: "PROCESSING", label: "Đã nhận", stepNum: 1 },
+                  { key: "CONFIRMED", label: "Đóng gói", stepNum: 2 },
+                  { key: "SHIPPED", label: "Đang giao", stepNum: 3 },
+                  { key: "DELIVERED", label: "Hoàn thành", stepNum: 4 },
                 ].map((st, idx) => {
                   const statusOrder = ["PROCESSING", "CONFIRMED", "SHIPPED", "DELIVERED", "COMPLETED"];
                   const currentIdx = Math.max(0, statusOrder.indexOf(selectedOrder.status));
@@ -379,15 +379,15 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                   return (
                     <div key={idx} className="flex flex-col items-center text-center space-y-1 relative">
                       <div
-                        className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all ${
                           isCurrent
-                            ? "bg-[#0e6877] text-white ring-4 ring-[#0e6877]/20 scale-105 shadow-xs animate-pulse"
+                            ? "bg-[#0e6877] text-white ring-4 ring-[#0e6877]/20 scale-105 shadow-xs"
                             : isPassed
                             ? "bg-emerald-500 text-white shadow-2xs"
                             : "bg-neutral-200 text-neutral-400"
                         }`}
                       >
-                        {isPassed && !isCurrent ? "✓" : st.icon}
+                        {isPassed && !isCurrent ? "✓" : st.stepNum}
                       </div>
                       <span
                         className={`text-[9.5px] font-extrabold tracking-tight ${
