@@ -70,6 +70,28 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
   const [weightKg, setWeightKg] = useState("");
   const [recommendedSize, setRecommendedSize] = useState<string | null>(null);
 
+  // Default size chart - overridden by productDetails.sizeChart if available
+  const DEFAULT_SIZE_CHART = [
+    { size: "XS", height: "< 155", weight: "< 45", bust: "80-84", waist: "62-66" },
+    { size: "S",  height: "155-160", weight: "45-53", bust: "84-88", waist: "66-70" },
+    { size: "M",  height: "160-168", weight: "53-62", bust: "88-92", waist: "70-74" },
+    { size: "L",  height: "168-175", weight: "62-72", bust: "92-96", waist: "74-80" },
+    { size: "XL", height: "175-180", weight: "72-82", bust: "96-100", waist: "80-86" },
+    { size: "XXL",height: "> 180",  weight: "> 82",  bust: "100-108", waist: "86-94" },
+  ];
+
+  // Parse sizeChart from productDetails
+  const activeSizeChart: { size: string; height: string; weight: string; bust: string; waist: string }[] = (() => {
+    try {
+      const raw = productDetails?.sizeChart;
+      if (!raw) return DEFAULT_SIZE_CHART;
+      const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_SIZE_CHART;
+    } catch (e) {
+      return DEFAULT_SIZE_CHART;
+    }
+  })();
+
   const calcRecommendedSize = () => {
     const h = parseFloat(heightCm);
     const w = parseFloat(weightKg);
@@ -77,7 +99,6 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
       setRecommendedSize(null);
       return;
     }
-    // BMI-based + height heuristic for Vietnamese clothing
     const bmi = w / ((h / 100) * (h / 100));
     let size = "M";
     if (h < 155 && w < 50) size = "XS";
@@ -869,8 +890,17 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
               </button>
             </div>
 
-            {/* Size Reference Table */}
+            {/* Size Reference Table - DYNAMIC from product sizeChart or default */}
             <div className="mb-5 overflow-x-auto">
+              {productDetails?.sizeChart ? (
+                <p className="text-[9px] text-[#0e6877] font-extrabold mb-2 uppercase tracking-wider">
+                  ✅ Bảng size riêng của sản phẩm này
+                </p>
+              ) : (
+                <p className="text-[9px] text-[#526069]/60 font-bold mb-2">
+                  ⚠️ Sử dụng bảng size chuẩn (Shop chưa cài đặt size riêng)
+                </p>
+              )}
               <table className="w-full text-[10px] border-collapse">
                 <thead>
                   <tr className="bg-[#0e6877] text-white">
@@ -882,14 +912,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    { size: "XS", height: "< 155", weight: "< 45", bust: "80-84", waist: "62-66" },
-                    { size: "S",  height: "155-160", weight: "45-53", bust: "84-88", waist: "66-70" },
-                    { size: "M",  height: "160-168", weight: "53-62", bust: "88-92", waist: "70-74" },
-                    { size: "L",  height: "168-175", weight: "62-72", bust: "92-96", waist: "74-80" },
-                    { size: "XL", height: "175-180", weight: "72-82", bust: "96-100", waist: "80-86" },
-                    { size: "XXL",height: "> 180", weight: "> 82", bust: "100-108", waist: "86-94" },
-                  ].map((row) => (
+                  {activeSizeChart.map((row) => (
                     <tr
                       key={row.size}
                       className={`border-b border-[#f0edeb] text-center transition-colors ${

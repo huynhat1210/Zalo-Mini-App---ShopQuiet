@@ -57,7 +57,16 @@ export const Products: React.FC<IProductsProps> = (_props) => {
   const itemsPerPage = 7; // Restrict vertical scrolling per page!
 
   // Form states for Add/Edit Drawer
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    price: number;
+    originalPrice: number;
+    description: string;
+    images: string;
+    categoryId: number;
+    tags: string;
+    sizeChart: { size: string; height: string; weight: string; bust: string; waist: string }[];
+  }>({
     name: '',
     price: 150000,
     originalPrice: 200000,
@@ -65,6 +74,14 @@ export const Products: React.FC<IProductsProps> = (_props) => {
     images: '["https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format&fit=crop&q=60"]',
     categoryId: 1,
     tags: 'NEW',
+    sizeChart: [
+      { size: 'XS', height: '< 155', weight: '< 45', bust: '80-84', waist: '62-66' },
+      { size: 'S',  height: '155-160', weight: '45-53', bust: '84-88', waist: '66-70' },
+      { size: 'M',  height: '160-168', weight: '53-62', bust: '88-92', waist: '70-74' },
+      { size: 'L',  height: '168-175', weight: '62-72', bust: '92-96', waist: '74-80' },
+      { size: 'XL', height: '175-180', weight: '72-82', bust: '96-100', waist: '80-86' },
+      { size: 'XXL',height: '> 180',  weight: '> 82',  bust: '100-108', waist: '86-94' },
+    ],
   });
 
   const fetchProducts = async () => {
@@ -159,12 +176,32 @@ export const Products: React.FC<IProductsProps> = (_props) => {
       images: '["https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format&fit=crop&q=60"]',
       categoryId: categories[0]?.id || 1,
       tags: 'NEW',
+      sizeChart: [
+        { size: 'XS', height: '< 155', weight: '< 45', bust: '80-84', waist: '62-66' },
+        { size: 'S',  height: '155-160', weight: '45-53', bust: '84-88', waist: '66-70' },
+        { size: 'M',  height: '160-168', weight: '53-62', bust: '88-92', waist: '70-74' },
+        { size: 'L',  height: '168-175', weight: '62-72', bust: '92-96', waist: '74-80' },
+        { size: 'XL', height: '175-180', weight: '72-82', bust: '96-100', waist: '80-86' },
+        { size: 'XXL',height: '> 180',  weight: '> 82',  bust: '100-108', waist: '86-94' },
+      ],
     });
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (product: Product) => {
     setEditingProduct(product);
+    let parsedSizeChart: { size: string; height: string; weight: string; bust: string; waist: string }[] = [
+      { size: 'XS', height: '< 155', weight: '< 45', bust: '80-84', waist: '62-66' },
+      { size: 'S',  height: '155-160', weight: '45-53', bust: '84-88', waist: '66-70' },
+      { size: 'M',  height: '160-168', weight: '53-62', bust: '88-92', waist: '70-74' },
+      { size: 'L',  height: '168-175', weight: '62-72', bust: '92-96', waist: '74-80' },
+      { size: 'XL', height: '175-180', weight: '72-82', bust: '96-100', waist: '80-86' },
+      { size: 'XXL',height: '> 180',  weight: '> 82',  bust: '100-108', waist: '86-94' },
+    ];
+    try {
+      const sc = (product as any).sizeChart;
+      if (sc) parsedSizeChart = typeof sc === 'string' ? JSON.parse(sc) : sc;
+    } catch (e) {}
     setFormData({
       name: product.name,
       price: editedPrices[product.id] !== undefined ? editedPrices[product.id] : product.price,
@@ -173,6 +210,7 @@ export const Products: React.FC<IProductsProps> = (_props) => {
       images: product.images || '[]',
       categoryId: product.categoryId || categories[0]?.id || 1,
       tags: 'HOT',
+      sizeChart: parsedSizeChart,
     });
     setIsModalOpen(true);
   };
@@ -216,11 +254,15 @@ export const Products: React.FC<IProductsProps> = (_props) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const payload = {
+        ...formData,
+        sizeChart: JSON.stringify(formData.sizeChart),
+      };
       if (editingProduct) {
-        await apiRequest(`/products/${editingProduct.id}`, 'PUT', formData);
+        await apiRequest(`/products/${editingProduct.id}`, 'PUT', payload);
         toastSuccess('Cập nhật thành công', `Đã lưu thông tin sản phẩm #${editingProduct.id}.`);
       } else {
-        await apiRequest('/products', 'POST', formData);
+        await apiRequest('/products', 'POST', payload);
         toastSuccess('Thêm mới thành công', 'Sản phẩm mới đã xuất hiện trên Zalo Mini App.');
       }
       setIsModalOpen(false);
@@ -667,6 +709,86 @@ export const Products: React.FC<IProductsProps> = (_props) => {
                       ));
                     })()}
                   </div>
+                </div>
+
+                {/* ─── Size Chart Editor ─── */}
+                <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3">
+                  <div className="flex items-center gap-2 text-xs font-black text-[#0e6877] uppercase tracking-wider pb-2 border-b border-slate-100">
+                    <span>📏</span>
+                    <span>Bảng Size Riêng Của Sản Phẩm</span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-medium">
+                    Nhập thông số kích thước riêng của sản phẩm này. Khách hàng sẽ thấy bảng này khi bấm "Tư vấn chọn Size".
+                  </p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-[10px]">
+                      <thead>
+                        <tr className="bg-[#0e6877]/10 text-[#0e6877]">
+                          <th className="py-1.5 px-2 text-left font-black w-12">Size</th>
+                          <th className="py-1.5 px-1 font-black">Cao (cm)</th>
+                          <th className="py-1.5 px-1 font-black">Nặng (kg)</th>
+                          <th className="py-1.5 px-1 font-black">Ngực (cm)</th>
+                          <th className="py-1.5 px-1 font-black">Eo (cm)</th>
+                          <th className="py-1.5 px-1 w-8"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {formData.sizeChart.map((row, idx) => (
+                          <tr key={idx}>
+                            <td className="py-1 px-1">
+                              <input
+                                type="text"
+                                value={row.size}
+                                onChange={(e) => {
+                                  const updated = [...formData.sizeChart];
+                                  updated[idx] = { ...updated[idx], size: e.target.value };
+                                  setFormData({ ...formData, sizeChart: updated });
+                                }}
+                                className="w-full bg-slate-50 border border-slate-200 rounded-lg py-1 px-1.5 text-[10px] font-black text-center focus:border-[#0e6877] focus:outline-none"
+                              />
+                            </td>
+                            {(['height','weight','bust','waist'] as const).map((field) => (
+                              <td key={field} className="py-1 px-1">
+                                <input
+                                  type="text"
+                                  value={row[field]}
+                                  onChange={(e) => {
+                                    const updated = [...formData.sizeChart];
+                                    updated[idx] = { ...updated[idx], [field]: e.target.value };
+                                    setFormData({ ...formData, sizeChart: updated });
+                                  }}
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg py-1 px-1.5 text-[10px] text-center focus:border-[#0e6877] focus:outline-none"
+                                />
+                              </td>
+                            ))}
+                            <td className="py-1 px-1 text-center">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setFormData({ ...formData, sizeChart: formData.sizeChart.filter((_, i) => i !== idx) });
+                                }}
+                                className="w-5 h-5 rounded-full bg-red-100 text-red-500 hover:bg-red-200 border-none cursor-pointer text-[10px] font-black transition-colors"
+                              >
+                                ✕
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        sizeChart: [...formData.sizeChart, { size: '', height: '', weight: '', bust: '', waist: '' }],
+                      })
+                    }
+                    className="w-full py-2 border-2 border-dashed border-[#0e6877]/30 text-[#0e6877] text-[10px] font-extrabold rounded-xl bg-transparent hover:bg-[#0e6877]/5 cursor-pointer transition-colors"
+                  >
+                    + Thêm dòng size
+                  </button>
                 </div>
               </form>
 

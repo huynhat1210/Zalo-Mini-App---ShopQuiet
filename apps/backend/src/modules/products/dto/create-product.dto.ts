@@ -20,6 +20,10 @@ export class CreateProductDto {
   @IsOptional()
   @IsString()
   images?: string;
+
+  @IsOptional()
+  @IsString()
+  sizeChart?: string; // JSON string: [{size, height, weight, bust, waist}]
 }
 
 export class UpdateProductDto {
@@ -46,6 +50,10 @@ export class UpdateProductDto {
   @IsOptional()
   @IsString()
   images?: string;
+
+  @IsOptional()
+  @IsString()
+  sizeChart?: string; // JSON string: [{size, height, weight, bust, waist}]
 }
 
 export class CreateVariantDto {

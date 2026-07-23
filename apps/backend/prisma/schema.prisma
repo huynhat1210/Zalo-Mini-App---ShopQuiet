@@ -27,6 +27,7 @@ model Product {
   categoryId     Int
   materialCare   String?
   shippingReturn String?
+  sizeChart      String?          // JSON: [{size, height, weight, bust, waist}]
   soldCount      Int              @default(0)
   likeCount      Int              @default(0)
   createdAt      DateTime         @default(now())
@@ -44,6 +45,7 @@ model Product {
   @@index([createdAt])
   @@index([price])
 }
+
 
 model User {
   zaloId        String         @id
