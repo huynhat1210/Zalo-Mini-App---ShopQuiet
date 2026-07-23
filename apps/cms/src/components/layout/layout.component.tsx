@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SidebarComponent } from '../sidebar';
+import { AiOpsChatbox } from '../ai-ops-chatbox.component';
 import { User, Bell, Menu, Check, Clock } from 'lucide-react';
 import { apiRequest } from '../../utils/api';
 import { useLocation } from 'react-router-dom';
+
 
 
 
@@ -205,7 +207,11 @@ export const LayoutComponent: React.FC<ILayoutComponentProps> = (props) => {
           )}
         </main>
       </div>
+
+      {/* ── AI Operations Chatbox (Gemini AI Alert Launcher) ── */}
+      <AiOpsChatbox />
     </div>
   );
 };
+
 
