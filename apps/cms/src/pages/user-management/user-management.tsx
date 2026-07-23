@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { apiRequest } from '../../utils/api';
 import { useToast, usePermissions } from '../../contexts';
 import type { Role } from '../../utils/permissions';
@@ -12,7 +12,9 @@ import {
 
 import type { IUserManagementProps } from './user-management.type';
 import { exportToExcel } from '../../utils/excel-export.util';
+import { PaginationComponent } from '../../components';
 import { Download } from 'lucide-react';
+
 
 export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
   const { success, error: toastError } = useToast();
@@ -21,6 +23,11 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<Set<string | number>>(new Set());
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
 
   // Customer Details Drawer states
   const [selectedUserDetails, setSelectedUserDetails] = useState<any | null>(null);
@@ -123,12 +130,24 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    return user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           user.phone?.includes(searchTerm) ||
-           user.zaloId?.includes(searchTerm);
-  });
+  const filteredUsers = useMemo(() => {
+    return users.filter(user => 
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.phone?.includes(searchTerm) ||
+      user.zaloId?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [users, searchTerm]);
+
+  // Paginated Slice
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredUsers.slice(start, start + itemsPerPage);
+  }, [filteredUsers, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const toggleUserSelection = (zaloId: string) => {
     setSelectedUsers(prev => {
@@ -146,7 +165,7 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
     if (selectedUsers.size === filteredUsers.length) {
       setSelectedUsers(new Set());
     } else {
-      setSelectedUsers(new Set(filteredUsers.map(u => u.zaloId)));
+      setSelectedUsers(new Set(filteredUsers.map((u: any) => u.zaloId)));
     }
   };
 
@@ -265,7 +284,7 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredUsers.map((user) => {
+              {paginatedUsers.map((user: any) => {
                 const isSelected = selectedUsers.has(user.zaloId);
                 return (
                   <tr
@@ -337,6 +356,17 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
             </tbody>
           </table>
         </div>
+        <PaginationComponent
+          currentPage={currentPage}
+          totalPages={Math.ceil(filteredUsers.length / itemsPerPage)}
+          totalItems={filteredUsers.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={(newSize) => {
+            setItemsPerPage(newSize);
+            setCurrentPage(1);
+          }}
+        />
       </div>
 
       {/* Customer Details Drawer */}

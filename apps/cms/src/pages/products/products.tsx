@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { apiRequest, apiUploadRequest } from '../../utils/api';
 import { exportToExcel } from '../../utils/excel-export.util';
+import { PaginationComponent } from '../../components';
 import {
   Plus,
   Edit3,
@@ -13,9 +14,7 @@ import {
   Tag,
   Layers,
   DollarSign,
-  FileText,
-  ChevronLeft,
-  ChevronRight
+  FileText
 } from 'lucide-react';
 import { useToast } from '../../contexts';
 import type { IProductsProps } from './products.type';
@@ -55,7 +54,7 @@ export const Products: React.FC<IProductsProps> = (_props) => {
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 7; // Restrict vertical scrolling per page!
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Form states for Add/Edit Drawer
   const [formData, setFormData] = useState<{
@@ -525,37 +524,19 @@ export const Products: React.FC<IProductsProps> = (_props) => {
           </div>
         )}
 
-        {/* ── Table Pagination Bar (Restricts scrolling!) ── */}
+        {/* ── Table Pagination Bar ── */}
         {!loading && filteredProducts.length > 0 && (
-          <div className="p-4 bg-slate-50/80 border-t border-slate-200/80 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs">
-            <span className="text-slate-500 font-medium">
-              Hiển thị <strong className="text-slate-800">{(currentPage - 1) * itemsPerPage + 1}</strong> -{' '}
-              <strong className="text-slate-800">{Math.min(currentPage * itemsPerPage, filteredProducts.length)}</strong> trên tổng số{' '}
-              <strong className="text-[#0e6877]">{filteredProducts.length}</strong> sản phẩm
-            </span>
-
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl font-bold transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
-              >
-                <ChevronLeft size={14} /> Trước
-              </button>
-
-              <span className="px-3 py-1.5 bg-[#0e6877] text-white font-extrabold rounded-xl shadow-2xs">
-                Trang {currentPage} / {totalPages}
-              </span>
-
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl font-bold transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
-              >
-                Sau <ChevronRight size={14} />
-              </button>
-            </div>
-          </div>
+          <PaginationComponent
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredProducts.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={(newSize) => {
+              setItemsPerPage(newSize);
+              setCurrentPage(1);
+            }}
+          />
         )}
       </div>
 

@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { apiRequest, apiUploadRequest } from '../../utils/api';
 import { useToast } from '../../contexts';
+import { PaginationComponent } from '../../components';
 import {
   FolderPlus,
   Edit3,
@@ -29,6 +30,11 @@ export const Categories: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -134,11 +140,22 @@ export const Categories: React.FC = () => {
     }
   };
 
-  const filteredCategories = categories.filter(
-    (c) =>
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.slug.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filteredCategories = useMemo(() => {
+    return categories.filter(
+      (c) =>
+        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.slug.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+  }, [categories, searchTerm]);
+
+  const paginatedCategories = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredCategories.slice(start, start + itemsPerPage);
+  }, [filteredCategories, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   return (
     <div className="space-y-6 animate-fadeIn text-[#1b1c1b]">
@@ -176,67 +193,81 @@ export const Categories: React.FC = () => {
             <p className="text-slate-500 text-xs">Đang tải danh sách danh mục...</p>
           </div>
         ) : filteredCategories.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-700">
-              <thead className="bg-[#fbf9f7] text-[#526069] text-xs font-bold uppercase tracking-wider">
-                <tr>
-                  <th className="py-3.5 px-4 rounded-l-xl">ID</th>
-                  <th className="py-3.5 px-4">Ảnh / Tên danh mục</th>
-                  <th className="py-3.5 px-4">Slug (Đường dẫn)</th>
-                  <th className="py-3.5 px-4 text-center">Số sản phẩm</th>
-                  <th className="py-3.5 px-4 text-right rounded-r-xl">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredCategories.map((cat) => (
-                  <tr key={cat.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="py-4 px-4 font-bold text-slate-500 text-xs">#{cat.id}</td>
-                    <td className="py-4 px-4 font-bold text-slate-800">
-                      <div className="flex items-center gap-3">
-                        {cat.imageUrl ? (
-                          <img src={cat.imageUrl} alt={cat.name} className="w-10 h-10 object-cover rounded-xl border border-slate-200" />
-                        ) : (
-                          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400">
-                            <Package size={18} />
-                          </div>
-                        )}
-                        <div>
-                          <p className="text-sm font-bold text-slate-800">{cat.name}</p>
-                          {cat.description && <p className="text-[11px] text-slate-400 font-normal line-clamp-1">{cat.description}</p>}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4 text-xs font-mono text-teal-700 bg-teal-50/50 rounded-lg w-fit">{cat.slug}</td>
-                    <td className="py-4 px-4 text-center">
-                      <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-50 text-blue-600">
-                        {cat._count?.products || 0} sản phẩm
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleOpenEditModal(cat)}
-                          className="p-2 text-slate-600 hover:text-[#0e6877] hover:bg-slate-100 rounded-xl transition-all border-none cursor-pointer"
-                          title="Chỉnh sửa"
-                        >
-                          <Edit3 size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteCategory(cat)}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all border-none cursor-pointer"
-                          title="Xóa danh mục"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-slate-700">
+                <thead className="bg-[#fbf9f7] text-[#526069] text-xs font-bold uppercase tracking-wider">
+                  <tr>
+                    <th className="py-3.5 px-4 rounded-l-xl">ID</th>
+                    <th className="py-3.5 px-4">Ảnh / Tên danh mục</th>
+                    <th className="py-3.5 px-4">Slug (Đường dẫn)</th>
+                    <th className="py-3.5 px-4 text-center">Số sản phẩm</th>
+                    <th className="py-3.5 px-4 text-right rounded-r-xl">Thao tác</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {paginatedCategories.map((cat) => (
+                    <tr key={cat.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-4 px-4 font-bold text-slate-500 text-xs">#{cat.id}</td>
+                      <td className="py-4 px-4 font-bold text-slate-800">
+                        <div className="flex items-center gap-3">
+                          {cat.imageUrl ? (
+                            <img src={cat.imageUrl} alt={cat.name} className="w-10 h-10 object-cover rounded-xl border border-slate-200" />
+                          ) : (
+                            <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400">
+                              <Package size={18} />
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-sm font-bold text-slate-800">{cat.name}</p>
+                            {cat.description && <p className="text-[11px] text-slate-400 font-normal line-clamp-1">{cat.description}</p>}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-xs font-mono text-teal-700 bg-teal-50/50 rounded-lg w-fit">{cat.slug}</td>
+                      <td className="py-4 px-4 text-center">
+                        <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-50 text-blue-600">
+                          {cat._count?.products || 0} sản phẩm
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleOpenEditModal(cat)}
+                            className="p-2 text-slate-600 hover:text-[#0e6877] hover:bg-slate-100 rounded-xl transition-all border-none cursor-pointer"
+                            title="Chỉnh sửa"
+                          >
+                            <Edit3 size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCategory(cat)}
+                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all border-none cursor-pointer"
+                            title="Xóa danh mục"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <PaginationComponent
+              currentPage={currentPage}
+              totalPages={Math.ceil(filteredCategories.length / itemsPerPage)}
+              totalItems={filteredCategories.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={(newSize) => {
+                setItemsPerPage(newSize);
+                setCurrentPage(1);
+              }}
+            />
+          </>
         ) : (
-          <div className="py-16 text-center text-slate-400 text-sm">Chưa có danh mục nào được tìm thấy.</div>
+          <div className="py-16 text-center text-slate-400 text-sm">Không tìm thấy danh mục nào.</div>
         )}
       </div>
 
