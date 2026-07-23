@@ -76,6 +76,7 @@ export class ProductsService {
 
     const result = {
       data: products,
+      products,
       meta: {
         total,
         page,

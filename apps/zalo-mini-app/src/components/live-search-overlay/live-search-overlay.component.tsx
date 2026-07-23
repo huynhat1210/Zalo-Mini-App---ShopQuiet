@@ -7,9 +7,10 @@ import {
   MagnifyingGlassIcon,
   XMarkIcon,
   ClockIcon,
-  StarIcon as StarOutline,
   ArrowRightIcon,
   FireIcon,
+  SparklesIcon,
+  StarIcon as StarOutline,
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
 
@@ -36,6 +37,7 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
   const [selectedCat, setSelectedCat] = useState("all");
   const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc">("newest");
   const [results, setResults] = useState<IProduct[]>([]);
+  const [suggestedProducts, setSuggestedProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,8 +50,27 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
     } catch (e) {}
   }, []);
 
+  // Fetch initial suggested products on mount / open
+  useEffect(() => {
+    async function loadSuggested() {
+      try {
+        const res = await apiRequest<any>("/products?limit=6");
+        const list = Array.isArray(res)
+          ? res
+          : res?.data || res?.products || [];
+        setSuggestedProducts(list);
+      } catch (e) {
+        console.error("Failed to load search suggested products:", e);
+      }
+    }
+    if (isOpen) {
+      loadSuggested();
+    }
+  }, [isOpen]);
+
+  // Save to history ONLY when user presses ENTER or submits
   const saveToHistory = (term: string) => {
-    const clean = term.trim();
+    const clean = term.trim().replace(/^#/, "");
     if (!clean) return;
     setSearchHistory((prev) => {
       const updated = [clean, ...prev.filter((item) => item !== clean)].slice(0, 8);
@@ -72,7 +93,7 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
     }
   }, [isOpen]);
 
-  // Debounced search API fetch
+  // Live Search API fetch
   useEffect(() => {
     const term = searchTerm.trim();
     if (!term && selectedCat === "all") {
@@ -86,12 +107,19 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
         const queryParams = new URLSearchParams();
         if (term) queryParams.append("search", term);
         if (selectedCat !== "all") queryParams.append("categoryId", selectedCat);
-        queryParams.append("limit", "15");
+        queryParams.append("limit", "20");
 
         const res = await apiRequest<any>(`/products?${queryParams.toString()}`);
-        let productList: IProduct[] = Array.isArray(res) ? res : res?.products || [];
+        let productList: IProduct[] = [];
+        if (Array.isArray(res)) {
+          productList = res;
+        } else if (res && Array.isArray(res.data)) {
+          productList = res.data;
+        } else if (res && Array.isArray(res.products)) {
+          productList = res.products;
+        }
 
-        // Apply client sorting
+        // Client sorting
         if (sortBy === "price-asc") {
           productList.sort((a, b) => a.price - b.price);
         } else if (sortBy === "price-desc") {
@@ -99,36 +127,54 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
         }
 
         setResults(productList);
-        if (term) saveToHistory(term);
       } catch (e) {
         console.error("Live search failed:", e);
         setResults([]);
       } finally {
         setLoading(false);
       }
-    }, 250);
+    }, 200);
 
     return () => clearTimeout(timer);
   }, [searchTerm, selectedCat, sortBy]);
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      saveToHistory(searchTerm);
+    }
+  };
+
+  const handleTagClick = (tag: string) => {
+    const cleanTag = tag.replace("#", "");
+    setSearchTerm(cleanTag);
+    saveToHistory(cleanTag);
+  };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[110] bg-white flex flex-col h-full overflow-hidden animate-fade-in text-left">
-      {/* Header Search Bar */}
-      <div className="bg-white px-5 py-3.5 flex items-center gap-3 border-b border-[#f0edeb] shadow-2xs shrink-0">
+      {/* Header Search Form */}
+      <form
+        onSubmit={handleFormSubmit}
+        className="bg-white px-5 py-3.5 flex items-center gap-3 border-b border-[#f0edeb] shadow-2xs shrink-0"
+      >
         <div className="flex-1 flex items-center gap-2 bg-[#f6f4f2] px-3.5 py-2.5 rounded-2xl border border-[#ece9e6] focus-within:border-[#0e6877] transition-all">
-          <MagnifyingGlassIcon className="w-4 h-4 text-[#0e6877] shrink-0" strokeWidth={2.5} />
+          <button type="submit" className="bg-transparent border-none p-0 cursor-pointer flex items-center">
+            <MagnifyingGlassIcon className="w-4 h-4 text-[#0e6877] shrink-0" strokeWidth={2.5} />
+          </button>
           <input
             ref={inputRef}
             type="text"
-            placeholder="Tìm áo khoác, quần jean, sale 50%..."
+            placeholder="Nhập từ khóa và ấn Enter..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-transparent border-none text-xs text-textColor focus:outline-none font-medium placeholder:text-[#526069]/50"
           />
           {searchTerm && (
             <button
+              type="button"
               onClick={() => setSearchTerm("")}
               className="p-1 text-neutral-400 hover:text-neutral-600 bg-transparent border-none cursor-pointer"
             >
@@ -137,12 +183,13 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
           )}
         </div>
         <button
+          type="button"
           onClick={onClose}
           className="text-xs font-extrabold text-[#0e6877] hover:underline bg-transparent border-none cursor-pointer shrink-0"
         >
           Đóng
         </button>
-      </div>
+      </form>
 
       {/* Filter Bar */}
       <div className="bg-[#faf9f8] px-5 py-2 flex items-center justify-between gap-2 overflow-x-auto border-b border-[#f0edeb] scrollbar-none shrink-0">
@@ -151,6 +198,7 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
           {SEARCH_CATEGORIES.map((cat) => (
             <button
               key={cat.id}
+              type="button"
               onClick={() => setSelectedCat(cat.id)}
               className={`px-3 py-1 rounded-full text-[10px] font-extrabold transition-all border-none cursor-pointer ${
                 selectedCat === cat.id
@@ -176,15 +224,16 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-5">
-        {/* Search History */}
+      <div className="flex-1 overflow-y-auto p-5 space-y-6">
+        {/* Search History (Saved ONLY when Enter pressed or tag clicked) */}
         {!searchTerm && searchHistory.length > 0 && (
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-extrabold text-[#526069]/80 uppercase tracking-widest flex items-center gap-1">
-                <ClockIcon className="w-3.5 h-3.5 text-[#0e6877]" /> Lịch sử tìm kiếm
+                <ClockIcon className="w-3.5 h-3.5 text-[#0e6877]" /> Lịch sử tìm kiếm (Ấn Enter để lưu)
               </span>
               <button
+                type="button"
                 onClick={clearHistory}
                 className="text-[9.5px] font-bold text-red-500 hover:underline bg-transparent border-none cursor-pointer"
               >
@@ -195,7 +244,8 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
               {searchHistory.map((item) => (
                 <button
                   key={item}
-                  onClick={() => setSearchTerm(item)}
+                  type="button"
+                  onClick={() => handleTagClick(item)}
                   className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-textColor text-xs font-semibold rounded-xl border-none cursor-pointer transition-colors"
                 >
                   {item}
@@ -217,7 +267,8 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
               {HOT_TREND_TAGS.map((tag) => (
                 <button
                   key={tag}
-                  onClick={() => setSearchTerm(tag.replace("#", ""))}
+                  type="button"
+                  onClick={() => handleTagClick(tag)}
                   className="px-3.5 py-2 bg-[#f8f6f4] hover:bg-[#0e6877]/10 text-textColor hover:text-[#0e6877] text-xs font-bold rounded-2xl border border-[#eeebe8] transition-all cursor-pointer active:scale-95 shadow-2xs"
                 >
                   {tag}
@@ -227,7 +278,56 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
           </div>
         )}
 
-        {/* Live Search Product Results */}
+        {/* Suggested Products Section - Always visible under search bar */}
+        {!searchTerm && suggestedProducts.length > 0 && (
+          <div className="space-y-3 pt-2 border-t border-[#f5f3f0]">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-extrabold text-[#0e6877] uppercase tracking-widest flex items-center gap-1">
+                <SparklesIcon className="w-3.5 h-3.5 text-[#0e6877]" /> Gợi ý sản phẩm dành cho bạn
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {suggestedProducts.map((prod) => {
+                let img =
+                  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80";
+                try {
+                  const parsed = JSON.parse(prod.images);
+                  if (parsed && parsed.length > 0) img = parsed[0];
+                } catch (e) {}
+
+                return (
+                  <div
+                    key={prod.id}
+                    onClick={() => {
+                      onSelectProduct(prod);
+                      onClose();
+                    }}
+                    className="bg-[#fcfbfa] border border-[#f0edeb] rounded-2xl p-2.5 flex flex-col cursor-pointer group hover:border-[#0e6877]/40 transition-all shadow-2xs"
+                  >
+                    <div className="w-full aspect-square rounded-xl overflow-hidden bg-neutral-100 mb-2">
+                      <LazyImageComponent
+                        src={img}
+                        alt={prod.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    </div>
+                    <span className="text-[8.5px] font-extrabold text-[#0e6877] uppercase tracking-wider">
+                      {prod.category?.name || "Nổi bật"}
+                    </span>
+                    <h4 className="text-[11px] font-bold text-textColor truncate mt-0.5 group-hover:text-[#0e6877] transition-colors">
+                      {prod.name}
+                    </h4>
+                    <p className="text-[11px] font-black text-[#0e6877] mt-1">
+                      {prod.price?.toLocaleString("vi-VN")} đ
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Live Search Results */}
         {loading ? (
           <div className="flex items-center justify-center py-12 text-xs text-[#526069]/60 font-medium">
             <div className="w-5 h-5 border-2 border-[#0e6877] border-t-transparent rounded-full animate-spin mr-2" />
@@ -237,10 +337,10 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
           <div className="text-center py-12 space-y-2">
             <MagnifyingGlassIcon className="w-8 h-8 text-neutral-300 mx-auto" />
             <p className="text-xs font-bold text-textColor">
-              Không tìm thấy sản phẩm cho từ khóa "{searchTerm}"
+              Không tìm thấy sản phẩm phù hợp cho "{searchTerm}"
             </p>
             <p className="text-[10px] text-[#526069]/70">
-              Hãy thử lại với từ khóa khác như "Áo", "Quần", "Voucher"
+              Thử tìm với từ khóa khác như "Áo", "Quần", "Vải"
             </p>
           </div>
         ) : (
@@ -248,7 +348,7 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-extrabold text-[#526069]/80 uppercase tracking-widest">
-                  Kết quả phù hợp ({results.length})
+                  Kết quả tìm kiếm ({results.length})
                 </span>
               </div>
               <div className="divide-y divide-[#f5f3f0]">
