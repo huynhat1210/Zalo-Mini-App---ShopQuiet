@@ -4,7 +4,7 @@ import { LazyImageComponent } from "../lazy-image";
 import { useCart } from "../../App";
 
 export const FlashSale: React.FC<IFlashSaleProps> = ({ endTime, products }) => {
-  const { setActiveTab } = useCart();
+  const { setActiveTab, setSelectedProductDetail } = useCart();
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -92,7 +92,8 @@ export const FlashSale: React.FC<IFlashSaleProps> = ({ endTime, products }) => {
           return (
             <div
               key={product.id}
-              className="flex-shrink-0 w-32 bg-white rounded-xl overflow-hidden shadow-sm"
+              onClick={() => setSelectedProductDetail(product)}
+              className="flex-shrink-0 w-32 bg-white rounded-xl overflow-hidden shadow-sm cursor-pointer active:scale-95 transition-all"
             >
               <div className="relative h-28 bg-neutral-50">
                 <LazyImageComponent

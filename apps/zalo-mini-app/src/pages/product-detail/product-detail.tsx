@@ -928,96 +928,45 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
             className="bg-white w-full rounded-t-[32px] px-5 pt-3 pb-8 animate-slide-up max-h-[92vh] overflow-y-auto shadow-2xl border-t border-white/40"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Top Drag Indicator Pill */}
-            <div className="w-12 h-1.5 bg-neutral-200 rounded-full mx-auto mb-4 shrink-0" />
+            {/* Modal Drag handle */}
+            <div className="w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-3 shrink-0" />
 
             {/* Modal Header */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#0e6877] to-teal-500 text-white flex items-center justify-center shadow-md shadow-teal-700/20 text-lg">
-                  {sizeGuideType === "shoes" ? "👟" : "📐"}
-                </div>
-                <div>
-                  <h3 className="text-base font-black text-slate-900 tracking-tight">
-                    {sizeGuideType === "shoes" ? "Tư Vấn Chọn Size Giày" : "Bảng Tư Vấn Chọn Size"}
-                  </h3>
-                  <p className="text-[11px] text-slate-500 font-medium">
-                    {sizeGuideType === "shoes"
-                      ? "Nhập độ dài bàn chân để gợi ý size giày vừa vặn nhất"
-                      : "Nhập chiều cao và cân nặng để chuẩn đoán size chuẩn xác"}
-                  </p>
-                </div>
-              </div>
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                {sizeGuideType === "shoes" ? "👟 Size Giày & Tư Vấn" : "👗 Bảng Size & Tư Vấn"}
+              </h3>
               <button
                 onClick={() => setIsSizeGuideOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center border-none cursor-pointer text-slate-500 font-bold text-base transition-all shrink-0"
+                className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-sm flex items-center justify-center border-none cursor-pointer hover:bg-slate-200 transition-all"
               >
                 ✕
               </button>
-            </div>
-
-            {/* Source Badge */}
-            <div className={`inline-flex items-center gap-2 mb-4 px-3.5 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
-              activeSizeChart.length > 0
-                ? "bg-teal-50 text-[#0e6877] border border-teal-200/80 shadow-xs"
-                : "bg-amber-50 text-amber-700 border border-amber-200/80"
-            }`}>
-              <span className="w-2 h-2 rounded-full bg-[#0e6877] animate-pulse" />
-              <span>
-                {activeSizeChart.length > 0
-                  ? "Bảng size chính hãng — Cài đặt bởi Shop"
-                  : "Shop chưa cài đặt bảng size — Liên hệ shop để được hỗ trợ"}
-              </span>
             </div>
 
             {/* ── SHOES MODE ── */}
             {sizeGuideType === "shoes" ? (
               <>
                 {/* Shoes Reference Table */}
-                {activeSizeChart.length === 0 ? (
-                  <div className="mb-5 flex flex-col items-center justify-center py-8 bg-amber-50/60 rounded-3xl border border-amber-200/80">
-                    <span className="text-3xl mb-2">👟</span>
-                    <p className="text-xs font-black text-amber-800 text-center">Shop chưa cài đặt bảng size giày riêng</p>
-                    <p className="text-[10.5px] text-amber-700/80 text-center mt-1">
-                      Admin có thể chỉnh sửa và cập nhật bảng size trong trang Quản Trị (CMS)
-                    </p>
-                  </div>
-                ) : (
-                  <div className="mb-5 rounded-2xl overflow-hidden border border-slate-200/80 shadow-xs bg-white">
-                    <table className="w-full text-xs border-collapse">
-                      <thead>
-                        <tr className="bg-[#0e6877] text-white">
-                          <th className="py-2.5 px-3 text-center font-extrabold text-[11px] uppercase tracking-wider">Size EU</th>
-                          <th className="py-2.5 px-3 text-center font-extrabold text-[11px] uppercase tracking-wider">Dài bàn chân (cm)</th>
-                          <th className="py-2.5 px-3 text-center font-extrabold text-[11px] uppercase tracking-wider">Size US (tham khảo)</th>
+                {activeSizeChart.length > 0 && (
+                  <div className="mb-4 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                    <table className="w-full text-xs">
+                      <thead className="bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold">
+                        <tr>
+                          <th className="py-2 px-3 text-center">Size EU</th>
+                          <th className="py-2 px-3 text-center">Dài bàn chân (cm)</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                         {activeSizeChart.map((row: any) => {
                           const isMatched = recommendedSize === (row.size || row.euSize);
                           return (
-                            <tr
-                              key={row.size || row.euSize}
-                              className={`text-center transition-all ${
-                                isMatched
-                                  ? "bg-teal-50/90 font-black text-[#0e6877]"
-                                  : "hover:bg-slate-50 text-slate-700 font-medium"
-                              }`}
-                            >
-                              <td className="py-2.5 px-3 whitespace-nowrap">
-                                <div className="inline-flex items-center justify-center gap-1.5">
-                                  <span className="font-extrabold text-xs">{row.size || row.euSize}</span>
-                                  {isMatched && (
-                                    <span className="shrink-0 px-2 py-0.5 text-[8.5px] font-black uppercase tracking-wider bg-[#0e6877] text-white rounded-full shadow-2xs whitespace-nowrap">
-                                      ✨ Gợi ý
-                                    </span>
-                                  )}
-                                </div>
+                            <tr key={row.size || row.euSize} className={isMatched ? "bg-teal-50 dark:bg-teal-950/60 font-bold text-[#0e6877] dark:text-teal-400" : ""}>
+                              <td className="py-2 px-3 text-center">
+                                {row.size || row.euSize}
+                                {isMatched && <span className="ml-1.5 px-1.5 py-0.5 text-[9px] bg-[#0e6877] text-white rounded font-bold">Gợi ý</span>}
                               </td>
-                              <td className="py-2.5 px-3 font-semibold">{row.footLength}</td>
-                              <td className="py-2.5 px-3 text-slate-400 font-medium">
-                                {row.size ? `US ${parseInt(row.size) - 31}` : "-"}
-                              </td>
+                              <td className="py-2 px-3 text-center">{row.footLength} cm</td>
                             </tr>
                           );
                         })}
@@ -1027,45 +976,37 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                 )}
 
                 {/* Shoes Calculator */}
-                <div className="bg-gradient-to-b from-slate-50 to-[#f3f8f9] rounded-3xl p-5 border border-teal-100 shadow-xs space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">🧮 Gợi Ý Size Giày Chuẩn Xác</h4>
-                    <span className="text-[9.5px] font-bold text-teal-700 bg-white px-2.5 py-0.5 rounded-full border border-teal-200">Bàn chân</span>
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-600 block mb-1.5">
-                      Chiều dài bàn chân từ gót đến ngón dài nhất (cm)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.5"
-                      placeholder="Ví dụ: 24.5"
-                      value={footLengthCm}
-                      onChange={(e) => { setFootLengthCm(e.target.value); setRecommendedSize(null); }}
-                      className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-sm text-slate-900 font-bold focus:outline-none focus:border-[#0e6877] focus:ring-2 focus:ring-[#0e6877]/20 transition-all shadow-2xs"
-                    />
-                    <p className="text-[10px] text-slate-500 mt-1.5 flex items-center gap-1 font-medium">
-                      💡 Mẹo: Đặt chân vuông góc lên giấy, dùng bút vạch gót và ngón chân dài nhất để đo chính xác.
-                    </p>
-                  </div>
+                <div className="bg-slate-50 dark:bg-slate-850 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-3">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    Độ dài bàn chân (cm)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    placeholder="Ví dụ: 24.5"
+                    value={footLengthCm}
+                    onChange={(e) => { setFootLengthCm(e.target.value); setRecommendedSize(null); }}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0e6877]"
+                  />
                   <button
                     type="button"
                     onClick={calcRecommendedSize}
-                    className="w-full py-3 bg-[#0e6877] hover:bg-[#0c5966] text-white text-xs font-black rounded-2xl border-none cursor-pointer active:scale-98 transition-all shadow-md shadow-teal-900/20"
+                    className="w-full py-2.5 bg-[#0e6877] text-white text-xs font-bold rounded-xl border-none cursor-pointer active:scale-98 transition-all"
                   >
-                    👟 Tìm Size Giày Phù Hợp Cho Tôi
+                    Tính Size Giày
                   </button>
+
                   {recommendedSize && (
-                    <div className="bg-white rounded-2xl border-2 border-[#0e6877] p-5 text-center shadow-lg animate-slide-up space-y-3">
-                      <p className="text-[10.5px] text-slate-500 font-bold uppercase tracking-wider">Đề xuất dựa trên độ dài bàn chân {footLengthCm}cm</p>
-                      <p className="text-4xl font-black text-[#0e6877]">EU {recommendedSize}</p>
+                    <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-[#0e6877] text-center space-y-2">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Size gợi ý cho bạn</p>
+                      <p className="text-3xl font-black text-[#0e6877] dark:text-teal-400">EU {recommendedSize}</p>
                       {uniqueSizes.includes(recommendedSize) && (
                         <button
                           type="button"
                           onClick={() => { setSelectedSize(recommendedSize); setIsSizeGuideOpen(false); }}
-                          className="px-6 py-2.5 bg-[#0e6877] text-white text-xs font-black rounded-full border-none cursor-pointer active:scale-95 transition-all shadow-md"
+                          className="px-5 py-2 bg-[#0e6877] text-white text-xs font-bold rounded-lg border-none cursor-pointer active:scale-95"
                         >
-                          Chọn Size EU {recommendedSize} Ngay
+                          Chọn Size EU {recommendedSize}
                         </button>
                       )}
                     </div>
@@ -1076,52 +1017,27 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
               <>
                 {/* ── CLOTHING MODE ── */}
                 {/* Clothing Reference Table */}
-                {activeSizeChart.length === 0 ? (
-                  <div className="mb-5 flex flex-col items-center justify-center py-8 bg-amber-50/60 rounded-3xl border border-amber-200/80">
-                    <span className="text-3xl mb-2">👗</span>
-                    <p className="text-xs font-black text-amber-800 text-center">Shop chưa cài đặt bảng size quần áo riêng</p>
-                    <p className="text-[10.5px] text-amber-700/80 text-center mt-1">
-                      Admin có thể chỉnh sửa và cập nhật bảng size trong trang Quản Trị (CMS)
-                    </p>
-                  </div>
-                ) : (
-                  <div className="mb-5 rounded-2xl overflow-hidden border border-slate-200/80 shadow-xs bg-white">
-                    <table className="w-full text-xs border-collapse">
-                      <thead>
-                        <tr className="bg-[#0e6877] text-white">
-                          <th className="py-2.5 px-3 text-center font-extrabold text-[11px] uppercase tracking-wider">Size</th>
-                          <th className="py-2.5 px-2 text-center font-extrabold text-[11px] uppercase tracking-wider">Chiều cao (cm)</th>
-                          <th className="py-2.5 px-2 text-center font-extrabold text-[11px] uppercase tracking-wider">Cân nặng (kg)</th>
-                          <th className="py-2.5 px-2 text-center font-extrabold text-[11px] uppercase tracking-wider">Vòng ngực (cm)</th>
-                          <th className="py-2.5 px-2 text-center font-extrabold text-[11px] uppercase tracking-wider">Vòng eo (cm)</th>
+                {activeSizeChart.length > 0 && (
+                  <div className="mb-4 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                    <table className="w-full text-xs">
+                      <thead className="bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold">
+                        <tr>
+                          <th className="py-2 px-2 text-center">Size</th>
+                          <th className="py-2 px-2 text-center">Chiều cao</th>
+                          <th className="py-2 px-2 text-center">Cân nặng</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                         {activeSizeChart.map((row: any) => {
                           const isMatched = recommendedSize === row.size;
                           return (
-                            <tr
-                              key={row.size}
-                              className={`text-center transition-all ${
-                                isMatched
-                                  ? "bg-teal-50/90 font-black text-[#0e6877]"
-                                  : "hover:bg-slate-50 text-slate-700 font-medium"
-                              }`}
-                            >
-                              <td className="py-2.5 px-3 whitespace-nowrap">
-                                <div className="inline-flex items-center justify-center gap-1.5">
-                                  <span className="font-black text-xs text-slate-900">{row.size}</span>
-                                  {isMatched && (
-                                    <span className="shrink-0 px-2 py-0.5 text-[8.5px] font-black uppercase tracking-wider bg-[#0e6877] text-white rounded-full shadow-2xs whitespace-nowrap">
-                                      ✨ Gợi ý
-                                    </span>
-                                  )}
-                                </div>
+                            <tr key={row.size} className={isMatched ? "bg-teal-50 dark:bg-teal-950/60 font-bold text-[#0e6877] dark:text-teal-400" : ""}>
+                              <td className="py-2 px-2 text-center font-bold">
+                                {row.size}
+                                {isMatched && <span className="ml-1 px-1.5 py-0.5 text-[9px] bg-[#0e6877] text-white rounded">Gợi ý</span>}
                               </td>
-                              <td className="py-2.5 px-2 font-semibold">{row.height}</td>
-                              <td className="py-2.5 px-2 font-semibold">{row.weight}</td>
-                              <td className="py-2.5 px-2 text-slate-500 font-medium">{row.bust}</td>
-                              <td className="py-2.5 px-2 text-slate-500 font-medium">{row.waist}</td>
+                              <td className="py-2 px-2 text-center">{row.height} cm</td>
+                              <td className="py-2 px-2 text-center">{row.weight} kg</td>
                             </tr>
                           );
                         })}
@@ -1131,54 +1047,49 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                 )}
 
                 {/* Clothing Calculator */}
-                <div className="bg-gradient-to-b from-slate-50 to-[#f3f8f9] rounded-3xl p-5 border border-teal-100 shadow-xs space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider">🧮 Gợi Ý Size Quần Áo Chuẩn Xác</h4>
-                    <span className="text-[9.5px] font-bold text-teal-700 bg-white px-2.5 py-0.5 rounded-full border border-teal-200">BMI & Chiều cao</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
+                <div className="bg-slate-50 dark:bg-slate-850 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-3">
+                  <div className="grid grid-cols-2 gap-2.5">
                     <div>
-                      <label className="text-[11px] font-bold text-slate-600 block mb-1.5">Chiều cao (cm)</label>
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Chiều cao (cm)</label>
                       <input
                         type="number"
-                        placeholder="Ví dụ: 165"
+                        placeholder="165"
                         value={heightCm}
                         onChange={(e) => { setHeightCm(e.target.value); setRecommendedSize(null); }}
-                        className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-sm text-slate-900 font-bold focus:outline-none focus:border-[#0e6877] focus:ring-2 focus:ring-[#0e6877]/20 transition-all shadow-2xs"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0e6877]"
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] font-bold text-slate-600 block mb-1.5">Cân nặng (kg)</label>
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Cân nặng (kg)</label>
                       <input
                         type="number"
-                        placeholder="Ví dụ: 58"
+                        placeholder="58"
                         value={weightKg}
                         onChange={(e) => { setWeightKg(e.target.value); setRecommendedSize(null); }}
-                        className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white text-sm text-slate-900 font-bold focus:outline-none focus:border-[#0e6877] focus:ring-2 focus:ring-[#0e6877]/20 transition-all shadow-2xs"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0e6877]"
                       />
                     </div>
                   </div>
+
                   <button
                     type="button"
                     onClick={calcRecommendedSize}
-                    className="w-full py-3 bg-[#0e6877] hover:bg-[#0c5966] text-white text-xs font-black rounded-2xl border-none cursor-pointer active:scale-98 transition-all shadow-md shadow-teal-900/20"
+                    className="w-full py-2.5 bg-[#0e6877] text-white text-xs font-bold rounded-xl border-none cursor-pointer active:scale-98 transition-all"
                   >
-                    ✨ Tính Size Chuẩn Cho Tôi
+                    Gợi Ý Size Phù Hợp
                   </button>
+
                   {recommendedSize && (
-                    <div className="bg-white rounded-2xl border-2 border-[#0e6877] p-5 text-center shadow-lg animate-slide-up space-y-3">
-                      <p className="text-[10.5px] text-slate-500 font-bold uppercase tracking-wider">Đề xuất dựa trên số đo của bạn</p>
-                      <p className="text-4xl font-black text-[#0e6877]">{recommendedSize}</p>
-                      <p className="text-[11px] text-slate-500 font-medium">
-                        Chiều cao {heightCm}cm &bull; Cân nặng {weightKg}kg
-                      </p>
+                    <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-[#0e6877] text-center space-y-2">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Size gợi ý cho bạn</p>
+                      <p className="text-3xl font-black text-[#0e6877] dark:text-teal-400">{recommendedSize}</p>
                       {uniqueSizes.includes(recommendedSize) && (
                         <button
                           type="button"
                           onClick={() => { setSelectedSize(recommendedSize); setIsSizeGuideOpen(false); }}
-                          className="px-6 py-2.5 bg-[#0e6877] hover:bg-[#0c5966] text-white text-xs font-black rounded-full border-none cursor-pointer active:scale-95 transition-all shadow-md"
+                          className="px-5 py-2 bg-[#0e6877] text-white text-xs font-bold rounded-lg border-none cursor-pointer active:scale-95"
                         >
-                          Chọn Size {recommendedSize} Ngay
+                          Chọn Size {recommendedSize}
                         </button>
                       )}
                     </div>

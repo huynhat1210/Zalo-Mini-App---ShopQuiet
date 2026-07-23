@@ -261,8 +261,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
           <svg className="w-4 h-4 text-[#0e6877] shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
-          <span className="font-medium truncate flex-1">Tìm áo khoác, quần jean, sale 50%...</span>
-          <span className="text-[9px] font-black uppercase tracking-wider bg-[#0e6877] text-white px-2 py-0.5 rounded-md shrink-0">HOT 🔥</span>
+          <span className="font-medium truncate flex-1">Tìm áo khoác, quần jean, giày thể thao...</span>
         </div>
       </div>
 
@@ -346,16 +345,20 @@ export const Home: React.FC<IHomeProps> = (_props) => {
 
         {/* Recommendations Section */}
         {recommendations && recommendations.length > 0 && (
-          <BoxCast className="my-4">
-            <div className="flex justify-between items-center px-6 mb-3">
-              <TextCast className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/80">
-                ✨ Có thể bạn thích
-              </TextCast>
-              <span className="text-[9px] font-bold text-primary uppercase tracking-wider">
-                Cá nhân hóa
+          <BoxCast className="my-5 px-6">
+            <div className="flex justify-between items-center mb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#0e6877] animate-pulse"></span>
+                <TextCast className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                  Có thể bạn thích
+                </TextCast>
+              </div>
+              <span className="text-[10px] font-bold text-[#0e6877] dark:text-teal-400 bg-teal-50 dark:bg-teal-950/60 px-2.5 py-0.5 rounded-full border border-teal-100 dark:border-teal-900">
+                Gợi ý riêng cho bạn
               </span>
             </div>
-            <div className="flex gap-3 overflow-x-auto pl-6 pr-2 pb-2 scrollbar-none">
+
+            <div className="flex gap-3.5 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-none">
               {recommendations.map((prod: any) => {
                 let img =
                   "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80";
@@ -368,23 +371,23 @@ export const Home: React.FC<IHomeProps> = (_props) => {
                   <div
                     key={prod.id}
                     onClick={() => setSelectedProductDetail(prod)}
-                    className="shrink-0 w-[130px] flex flex-col cursor-pointer group animate-slide-up"
+                    className="shrink-0 w-[140px] bg-white dark:bg-slate-900 rounded-2xl p-2 border border-slate-100 dark:border-slate-800 shadow-2xs cursor-pointer group hover:border-[#0e6877]/30 transition-all active:scale-95"
                   >
-                    <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-neutral-100 border border-[#f0edeb] shadow-xs">
+                    <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
                       <LazyImageComponent
                         src={img}
                         alt={prod.name}
-                        className="w-full h-full object-cover card-hover-zoom"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleSavedItem(prod);
                         }}
-                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 flex items-center justify-center shadow-xs border-none cursor-pointer active:scale-90 transition-all"
+                        className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs flex items-center justify-center border-none cursor-pointer active:scale-90 transition-all shadow-2xs"
                       >
                         <svg
-                          className={`w-3.5 h-3.5 transition-colors ${isLiked ? "fill-red-500 text-red-500" : "text-[#526069]"}`}
+                          className={`w-3.5 h-3.5 ${isLiked ? "fill-red-500 text-red-500" : "text-slate-400"}`}
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2.2"
@@ -397,32 +400,15 @@ export const Home: React.FC<IHomeProps> = (_props) => {
                           />
                         </svg>
                       </button>
-                      {/* Personalized badge */}
-                      <span className="absolute bottom-2 left-2 text-[7px] font-black uppercase tracking-wider bg-primary/90 text-white px-1.5 py-0.5 rounded-full">
-                        Gợi ý
-                      </span>
                     </div>
-                    <div className="mt-2 px-0.5">
-                      <p className="text-[9px] text-[#526069]/60 font-bold uppercase tracking-wider truncate">
-                        {prod.category?.name || ""}
-                      </p>
-                      <h4 className="text-[11px] font-semibold text-textColor line-clamp-2 leading-tight mt-0.5 group-hover:text-primary transition-colors">
+
+                    <div className="mt-2 px-1">
+                      <h4 className="text-[11px] font-bold text-slate-800 dark:text-slate-100 line-clamp-1 leading-tight group-hover:text-[#0e6877] transition-colors">
                         {prod.name}
                       </h4>
-                      <div className="flex items-center justify-between mt-1.5">
-                        <span className="text-[11px] font-extrabold text-textColor">
-                          {prod.price?.toLocaleString("vi-VN")} đ
-                        </span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAddToCart(prod);
-                          }}
-                          className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold active:scale-90 transition-all border-none cursor-pointer shadow-sm"
-                        >
-                          +
-                        </button>
-                      </div>
+                      <p className="text-[11px] font-extrabold text-[#0e6877] dark:text-teal-400 mt-1">
+                        {prod.price?.toLocaleString("vi-VN")} đ
+                      </p>
                     </div>
                   </div>
                 );

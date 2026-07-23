@@ -280,7 +280,7 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-extrabold text-[#526069]/80 uppercase tracking-widest flex items-center gap-1">
-                <FireIcon className="w-3.5 h-3.5 text-amber-500" /> Xu hướng tìm kiếm HOT
+                <FireIcon className="w-3.5 h-3.5 text-amber-500" /> Xu hướng tìm kiếm phổ biến
               </span>
             </div>
             <div className="flex flex-wrap gap-2">
