@@ -14,7 +14,66 @@
   --color-neutral-muted: #526069;
   --color-neutral-light: #f7f6f5;
   --color-bg-canvas: #fbf9f7;
+
+  /* Themeable Surface Variables */
+  --surface-bg: #ffffff;
+  --surface-canvas: #fbf9f7;
+  --surface-text: #1b1c1b;
+  --surface-text-muted: #526069;
+  --surface-border: #f0edeb;
 }
+
+/* === DARK MODE === */
+html.dark {
+  --zmp-background-color: #0f1214;
+  --color-bg-canvas: #0f1214;
+  --color-neutral-dark: #f0f0f0;
+  --color-neutral-muted: #9aa5ac;
+  --color-neutral-light: #1e2428;
+
+  --surface-bg: #1a2024;
+  --surface-canvas: #0f1214;
+  --surface-text: #f0f0f0;
+  --surface-text-muted: #9aa5ac;
+  --surface-border: #2c3539;
+}
+
+html.dark body {
+  background-color: var(--color-bg-canvas);
+  color: var(--color-neutral-dark);
+}
+
+html.dark .bg-white {
+  background-color: #1a2024 !important;
+}
+
+html.dark .bg-\[#f7f7f7\],
+html.dark .bg-\[#faf9f8\],
+html.dark .bg-\[#fcfbfa\],
+html.dark .bg-\[#f8f6f4\],
+html.dark .bg-\[#f6f4f2\] {
+  background-color: #1a2024 !important;
+}
+
+html.dark .text-textColor {
+  color: #f0f0f0 !important;
+}
+
+html.dark .border-\[#f0edeb\],
+html.dark .border-neutral-100,
+html.dark .border-neutral-200 {
+  border-color: #2c3539 !important;
+}
+
+html.dark .bg-neutral-50,
+html.dark .bg-neutral-100 {
+  background-color: #1e2428 !important;
+}
+
+html.dark .divide-\[#f5f3f0\] > * + * {
+  border-color: #2c3539 !important;
+}
+
 
 html,
 body,
