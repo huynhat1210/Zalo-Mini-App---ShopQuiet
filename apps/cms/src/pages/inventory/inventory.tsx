@@ -210,7 +210,7 @@ export const Inventory: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">📊 Quản Lý Tồn Kho & Sản Phẩm</h1>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Quản Lý Tồn Kho & Sản Phẩm</h1>
           <p className="text-slate-500 text-xs mt-1">Cập nhật số lượng tồn kho từng màu sắc/size và lưu tất cả trong 1 click</p>
         </div>
         <div className="flex items-center gap-2">
@@ -220,11 +220,11 @@ export const Inventory: React.FC = () => {
             className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95 ${
               modifiedVariantIds.length > 0
                 ? 'bg-emerald-600 hover:bg-emerald-700 text-white animate-pulse'
-                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                : 'bg-[#f0edeb] text-[#8695a0] cursor-not-allowed'
             }`}
           >
             <Save size={15} className={savingAll ? 'animate-spin' : ''} />
-            {savingAll ? 'Đang lưu...' : '💾 Lưu Tất Cả Tồn Kho'}
+            {savingAll ? 'Đang lưu...' : 'Lưu Tất Cả Tồn Kho'}
             {modifiedVariantIds.length > 0 && (
               <span className="bg-white text-emerald-700 px-1.5 py-0.5 rounded-full text-[10px] font-black">
                 {modifiedVariantIds.length}
@@ -298,7 +298,7 @@ export const Inventory: React.FC = () => {
                   filterStatus === st ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                {st === 'ALL' ? 'Tất cả' : st === 'LOW' ? '⚠️ Sắp hết (< 5)' : '❌ Đã hết (0)'}
+                {st === 'ALL' ? 'Tất cả' : st === 'LOW' ? 'Sắp hết (< 5)' : 'Đã hết (0)'}
               </button>
             ))}
           </div>

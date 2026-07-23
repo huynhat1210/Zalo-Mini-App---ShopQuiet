@@ -334,7 +334,7 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
       {/* ── Header ── */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">🛒 Quản Lý Đơn Hàng Doanh Nghiệp</h1>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Quản Lý Đơn Hàng Doanh Nghiệp</h1>
           <p className="text-slate-500 text-xs mt-1">Duyệt đơn, bàn giao shipper, theo dõi thông tin nhận hàng và in hóa đơn trực tiếp</p>
         </div>
 
@@ -365,7 +365,7 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
             }
             className="px-4 py-2.5 bg-emerald-700 text-white text-xs font-bold rounded-xl hover:bg-emerald-800 transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95"
           >
-            📊 Xuất Excel Đơn Hàng
+            Xuất Excel Đơn Hàng
           </button>
           <button
             onClick={() => {
@@ -374,7 +374,7 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
             }}
             className="px-4 py-2.5 bg-[#0e6877] text-white text-xs font-bold rounded-xl hover:bg-[#0b5460] transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95"
           >
-            📱 Nhật Ký ZNS Push (Zalo OA)
+            Nhật Ký ZNS Push (Zalo OA)
           </button>
         </div>
       </div>

@@ -203,7 +203,7 @@ export const AiOpsChatbox: React.FC = () => {
             className="mt-2 px-3 py-1.5 bg-[#0e6877] hover:bg-[#0b5460] text-white text-[11px] font-bold rounded-xl transition-all flex items-center gap-1.5 border-none cursor-pointer active:scale-95 shadow-2xs"
           >
             {isExec ? <RefreshCw size={12} className="animate-spin" /> : <Package size={12} />}
-            ➕ Nhập Thêm 25 Hàng Ngay
+            Nhập Thêm 25 Hàng Ngay
           </button>
         );
       case 'VIEW_ORDERS':
@@ -213,7 +213,7 @@ export const AiOpsChatbox: React.FC = () => {
             className="mt-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded-xl transition-all flex items-center gap-1.5 border-none cursor-pointer active:scale-95 shadow-2xs"
           >
             <ShoppingBag size={12} />
-            🛒 Đến Trang Đơn Hàng
+            Đến Trang Đơn Hàng
           </button>
         );
       case 'VIEW_RETURNS':
@@ -223,7 +223,7 @@ export const AiOpsChatbox: React.FC = () => {
             className="mt-2 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-bold rounded-xl transition-all flex items-center gap-1.5 border-none cursor-pointer active:scale-95 shadow-2xs"
           >
             <AlertTriangle size={12} />
-            👁️ Xem Yêu Cầu Đổi Trả
+            Xem Yêu Cầu Đổi Trả
           </button>
         );
       case 'GIFT_VIP_VOUCHER':
@@ -234,7 +234,7 @@ export const AiOpsChatbox: React.FC = () => {
             className="mt-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-xl transition-all flex items-center gap-1.5 border-none cursor-pointer active:scale-95 shadow-2xs"
           >
             {isExec ? <RefreshCw size={12} className="animate-spin" /> : <Crown size={12} />}
-            🎁 Tặng Voucher Đích Danh Cho Khách VIP
+            Tặng Voucher Đích Danh Cho Khách VIP
           </button>
         );
       default:

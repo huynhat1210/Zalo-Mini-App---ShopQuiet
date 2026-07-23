@@ -105,16 +105,16 @@ export const Settings: React.FC = () => {
     <div className="space-y-6 animate-fadeIn text-[#1b1c1b] max-w-5xl mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-black text-slate-800 tracking-tight">⚙️ Cấu Hình Hệ Thống & Cửa Hàng</h1>
+        <h1 className="text-2xl font-black text-slate-800 tracking-tight">Cấu Hình Hệ Thống & Cửa Hàng</h1>
         <p className="text-slate-500 text-xs mt-1">Quản lý thương hiệu, phương thức vận chuyển và cổng thanh toán</p>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-2 border-b border-slate-200 pb-3">
         {[
-          { key: 'BRAND', label: '🏢 Thông Tin Thương Hiệu', icon: <Building size={16} /> },
-          { key: 'SHIPPING', label: '🚚 Phí & Vận Chuyển', icon: <Truck size={16} /> },
-          { key: 'PAYMENT', label: '💳 Cổng Thanh Toán', icon: <CreditCard size={16} /> },
+          { key: 'BRAND', label: 'Thông Tin Thương Hiệu', icon: <Building size={16} /> },
+          { key: 'SHIPPING', label: 'Phí & Vận Chuyển', icon: <Truck size={16} /> },
+          { key: 'PAYMENT', label: 'Cổng Thanh Toán', icon: <CreditCard size={16} /> },
         ].map((tab) => (
           <button
             key={tab.key}

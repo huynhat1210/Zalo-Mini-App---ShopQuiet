@@ -273,11 +273,11 @@ export const Products: React.FC<IProductsProps> = (_props) => {
             className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95 ${
               hasUnsavedChanges
                 ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200 animate-pulse'
-                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                : 'bg-[#f0edeb] text-[#8695a0] cursor-not-allowed'
             }`}
           >
             <Save size={15} className={savingAll ? 'animate-spin' : ''} />
-            {savingAll ? 'Đang Lưu...' : '💾 Lưu Tất Cả Thay Đổi'}
+            {savingAll ? 'Đang Lưu...' : 'Lưu Tất Cả Thay Đổi'}
             {hasUnsavedChanges && (
               <span className="bg-white text-emerald-700 px-1.5 py-0.5 rounded-full text-[10px] font-black">
                 {Object.keys(editedPrices).length + Object.keys(editedStocks).length}
@@ -290,7 +290,7 @@ export const Products: React.FC<IProductsProps> = (_props) => {
             className="px-4 py-2.5 bg-[#0e6877] hover:bg-[#0c5966] text-white text-xs font-bold rounded-xl transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95"
           >
             <Plus size={16} />
-            ✨ Thêm Sản Phẩm Mới
+            Thêm Sản Phẩm Mới
           </button>
         </div>
       </div>
@@ -513,7 +513,7 @@ export const Products: React.FC<IProductsProps> = (_props) => {
               <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-[#0e6877] to-[#168a9e] text-white shrink-0 shadow-sm">
                 <div>
                   <h3 className="text-base font-black text-white flex items-center gap-2">
-                    {editingProduct ? '✏️ Chỉnh Sửa Sản Phẩm' : '✨ Thêm Sản Phẩm Mới'}
+                    {editingProduct ? 'Chỉnh Sửa Sản Phẩm' : 'Thêm Sản Phẩm Mới'}
                   </h3>
                   <p className="text-[11px] text-white/80 font-medium mt-0.5">
                     Điền thông tin chi tiết để cập nhật lên Zalo Mini App
@@ -644,7 +644,7 @@ export const Products: React.FC<IProductsProps> = (_props) => {
                       <span>Hình Ảnh Sản Phẩm</span>
                     </span>
                     <label className="text-[10px] bg-[#0e6877]/10 text-[#0e6877] px-2 py-1 rounded-lg cursor-pointer hover:bg-[#0e6877]/20 transition-colors">
-                      {uploading ? 'Đang tải...' : '➕ Tải Ảnh Từ Máy'}
+                      {uploading ? 'Đang tải...' : 'Tải Ảnh Từ Máy'}
                       <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
                     </label>
                   </div>
@@ -683,7 +683,7 @@ export const Products: React.FC<IProductsProps> = (_props) => {
                   form="productForm"
                   className="flex-1 py-3 bg-[#0e6877] hover:bg-[#0c5966] text-white text-xs font-extrabold rounded-xl transition-all shadow-xs border-none cursor-pointer active:scale-95"
                 >
-                  {editingProduct ? '💾 Cập Nhật Sản Phẩm' : '✨ Xuất Bản Sản Phẩm'}
+                  {editingProduct ? 'Cập Nhật Sản Phẩm' : 'Xuất Bản Sản Phẩm'}
                 </button>
                 <button
                   type="button"
