@@ -349,11 +349,11 @@ export const Home: React.FC<IHomeProps> = (_props) => {
             <div className="flex justify-between items-center mb-3">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#0e6877] animate-pulse"></span>
-                <TextCast className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                <TextCast className="text-xs font-black text-slate-800 uppercase tracking-wider">
                   Có thể bạn thích
                 </TextCast>
               </div>
-              <span className="text-[10px] font-bold text-[#0e6877] dark:text-teal-400 bg-teal-50 dark:bg-teal-950/60 px-2.5 py-0.5 rounded-full border border-teal-100 dark:border-teal-900">
+              <span className="text-[10px] font-bold text-[#0e6877] bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-100">
                 Gợi ý riêng cho bạn
               </span>
             </div>
@@ -371,9 +371,9 @@ export const Home: React.FC<IHomeProps> = (_props) => {
                   <div
                     key={prod.id}
                     onClick={() => setSelectedProductDetail(prod)}
-                    className="shrink-0 w-[140px] bg-white dark:bg-slate-900 rounded-2xl p-2 border border-slate-100 dark:border-slate-800 shadow-2xs cursor-pointer group hover:border-[#0e6877]/30 transition-all active:scale-95"
+                    className="shrink-0 w-[140px] bg-white rounded-2xl p-2 border border-slate-200/80 shadow-xs cursor-pointer group hover:border-[#0e6877]/30 transition-all active:scale-95"
                   >
-                    <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
+                    <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-slate-100">
                       <LazyImageComponent
                         src={img}
                         alt={prod.name}
@@ -384,7 +384,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
                           e.stopPropagation();
                           toggleSavedItem(prod);
                         }}
-                        className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs flex items-center justify-center border-none cursor-pointer active:scale-90 transition-all shadow-2xs"
+                        className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center border-none cursor-pointer active:scale-90 transition-all shadow-2xs"
                       >
                         <svg
                           className={`w-3.5 h-3.5 ${isLiked ? "fill-red-500 text-red-500" : "text-slate-400"}`}
@@ -403,10 +403,10 @@ export const Home: React.FC<IHomeProps> = (_props) => {
                     </div>
 
                     <div className="mt-2 px-1">
-                      <h4 className="text-[11px] font-bold text-slate-800 dark:text-slate-100 line-clamp-1 leading-tight group-hover:text-[#0e6877] transition-colors">
+                      <h4 className="text-[11px] font-bold text-slate-800 line-clamp-1 leading-tight group-hover:text-[#0e6877] transition-colors">
                         {prod.name}
                       </h4>
-                      <p className="text-[11px] font-extrabold text-[#0e6877] dark:text-teal-400 mt-1">
+                      <p className="text-[11px] font-extrabold text-[#0e6877] mt-1">
                         {prod.price?.toLocaleString("vi-VN")} đ
                       </p>
                     </div>
