@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { useCart } from "../../App";
 import { apiRequest, API_BASE_URL } from "../../utils/api";
-import { IProduct } from "../../App.type";
 
 interface Message {
   id: number | string;
@@ -17,7 +16,7 @@ interface ChatOverlayProps {
   onClose: () => void;
 }
 
-export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }) => {
+export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlayProps) => {
   const {
     zaloUser,
     chatContextProduct,

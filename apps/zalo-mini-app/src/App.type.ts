@@ -28,6 +28,7 @@ export interface IOrder {
   zaloUserId?: string;
   estimatedDeliveryDate?: string;
   shippingMethodCode?: string;
+  trackingNumber?: string;
 }
 
 export interface INotification {

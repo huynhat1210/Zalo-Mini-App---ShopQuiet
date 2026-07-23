@@ -17,8 +17,9 @@ import {
   OfflineStateComponent,
   ChatOverlay,
 } from "./components";
-import type { ICartContextType } from "./App.type";
+import type { ICartContextType, IProduct } from "./App.type";
 import { useAppStore } from "./store";
+import { apiRequest } from "./utils";
 
 // Code splitting with React.lazy
 const Home = lazy(() =>
@@ -272,7 +273,7 @@ export default function App() {
       const productId = urlParams.get("productId") || urlParams.get("product");
       if (productId) {
         apiRequest<IProduct>(`/products/${productId}`)
-          .then((p) => {
+          .then((p: IProduct) => {
             if (p) setSelectedProductDetail(p);
           })
           .catch(() => {});
