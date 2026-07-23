@@ -150,26 +150,33 @@ export const LayoutComponent: React.FC<ILayoutComponentProps> = (props) => {
                     )}
                   </div>
 
-                  <div className="max-h-64 overflow-y-auto divide-y divide-slate-100">
+                  <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
                     {notifications.length > 0 ? (
-                      notifications.map((notif) => (
+                      notifications.map((notif: any) => (
                         <div 
                           key={notif.id} 
-                          className={`p-3 text-left transition-colors hover:bg-slate-50 ${
-                            !notif.read ? 'bg-[#ecf6f7]/20 font-medium' : ''
+                          onClick={() => {
+                            if (notif.link) window.location.href = notif.link;
+                            setIsNotifDropdownOpen(false);
+                          }}
+                          className={`p-3 text-left transition-colors hover:bg-slate-50 cursor-pointer ${
+                            !notif.read ? 'bg-teal-50/40' : ''
                           }`}
                         >
-                          <h4 className="text-xs text-[#1b1c1b] font-bold line-clamp-1">{notif.title}</h4>
-                          <p className="text-[10px] text-[#526069] mt-0.5 line-clamp-2 leading-relaxed">{notif.content}</p>
-                          <div className="flex items-center gap-1 text-[9px] text-slate-400 mt-1.5 font-semibold">
-                            <Clock size={8} />
-                            <span>{notif.date}</span>
+                          <h4 className="text-xs text-slate-800 font-bold line-clamp-1">{notif.title}</h4>
+                          <p className="text-[10px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">{notif.content}</p>
+                          <div className="flex items-center justify-between text-[9px] text-slate-400 mt-2 font-semibold">
+                            <span className="flex items-center gap-1">
+                              <Clock size={9} />
+                              <span>{notif.date}</span>
+                            </span>
+                            <span className="text-[#0e6877] font-extrabold hover:underline">Xử lý ngay ➔</span>
                           </div>
                         </div>
                       ))
                     ) : (
                       <div className="p-8 text-center text-slate-400 text-xs">
-                        Không có thông báo mới
+                        Hệ thống vận hành trơn tru, không có sự cố mới.
                       </div>
                     )}
                   </div>

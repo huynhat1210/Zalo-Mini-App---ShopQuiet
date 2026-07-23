@@ -589,10 +589,103 @@ export class CmsService implements OnModuleInit {
   }
 
   async getAdminNotifications() {
-    return this.prisma.notification.findMany({
-      orderBy: { id: 'desc' },
-      take: 10,
-    });
+    const adminNotifs: Array<{
+      id: number | string;
+      title: string;
+      content: string;
+      type: string;
+      date: string;
+      read: boolean;
+      link?: string;
+    }> = [];
+
+    try {
+      // 1. Fetch Return Request Orders (High Priority Admin Alert)
+      const returnOrders = await this.prisma.order.findMany({
+        where: { status: 'RETURN_REQUESTED' },
+        take: 3,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      returnOrders.forEach((o) => {
+        adminNotifs.push({
+          id: `admin-return-${o.id}`,
+          title: `🚨 Yêu cầu đổi trả đơn #${o.id.slice(-6).toUpperCase()}`,
+          content: `Khách hàng '${o.shippingName || 'Khách Zalo'}' xin hoàn tiền với lý do: "${o.returnReason || 'Hàng không đúng'}"`,
+          type: 'admin_return',
+          date: new Date(o.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date(o.createdAt).toLocaleDateString('vi-VN'),
+          read: false,
+          link: '/orders',
+        });
+      });
+
+      // 2. Fetch Processing New Orders (Admin Order Alert)
+      const processingOrders = await this.prisma.order.findMany({
+        where: { status: 'PROCESSING' },
+        take: 4,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      processingOrders.forEach((o) => {
+        adminNotifs.push({
+          id: `admin-order-${o.id}`,
+          title: `🛒 Đơn hàng mới #${o.id.slice(-6).toUpperCase()}`,
+          content: `Khách hàng '${o.shippingName || 'Khách Zalo'}' vừa đặt đơn trị giá ${o.totalAmount.toLocaleString('vi-VN')} VNĐ qua ${o.paymentMethod || 'COD'}.`,
+          type: 'admin_order',
+          date: new Date(o.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date(o.createdAt).toLocaleDateString('vi-VN'),
+          read: false,
+          link: '/orders',
+        });
+      });
+
+      // 3. Fetch Low Stock Items (< 5)
+      const lowStockVariants = await this.prisma.productVariant.findMany({
+        where: { stock: { lt: 5 } },
+        include: { product: true },
+        take: 3,
+      });
+
+      lowStockVariants.forEach((v) => {
+        adminNotifs.push({
+          id: `admin-stock-${v.id}`,
+          title: `⚠️ Cảnh báo tồn kho nguy cấp`,
+          content: `Sản phẩm '${v.product.name}' (Màu: ${v.color}, Size: ${v.size}) chỉ còn ${v.stock} sản phẩm trong kho.`,
+          type: 'admin_stock',
+          date: 'Hôm nay',
+          read: false,
+          link: '/inventory',
+        });
+      });
+
+      // 4. Fetch DB admin system notifications (excluding customer vouchers & badges)
+      const dbAdminNotifs = await this.prisma.notification.findMany({
+        where: {
+          zaloUserId: null,
+          NOT: [
+            { type: { in: ['voucher', 'badge', 'user'] } },
+          ],
+        },
+        orderBy: { id: 'desc' },
+        take: 5,
+      });
+
+      dbAdminNotifs.forEach((n) => {
+        if (!adminNotifs.some((existing) => existing.title === n.title)) {
+          adminNotifs.push({
+            id: n.id,
+            title: n.title,
+            content: n.content,
+            type: n.type || 'admin_system',
+            date: n.date,
+            read: n.read,
+          });
+        }
+      });
+    } catch (e) {
+      console.error('Error fetching admin notifications:', e);
+    }
+
+    return adminNotifs;
   }
 
   async getDashboardAnalytics() {
