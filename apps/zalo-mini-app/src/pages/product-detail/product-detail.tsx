@@ -85,40 +85,17 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
   const [footLengthCm, setFootLengthCm] = useState("");
   const [recommendedSize, setRecommendedSize] = useState<string | null>(null);
 
-  // Default CLOTHING size chart
-  const DEFAULT_CLOTHING_CHART = [
-    { size: "XS", height: "< 155", weight: "< 45", bust: "80-84", waist: "62-66" },
-    { size: "S",  height: "155-160", weight: "45-53", bust: "84-88", waist: "66-70" },
-    { size: "M",  height: "160-168", weight: "53-62", bust: "88-92", waist: "70-74" },
-    { size: "L",  height: "168-175", weight: "62-72", bust: "92-96", waist: "74-80" },
-    { size: "XL", height: "175-180", weight: "72-82", bust: "96-100", waist: "80-86" },
-    { size: "XXL",height: "> 180",  weight: "> 82",  bust: "100-108", waist: "86-94" },
-  ];
-
-  // Default SHOES size chart (EU standard)
-  const DEFAULT_SHOES_CHART = [
-    { size: "35", footLength: "21.5-22.0", euSize: "35" },
-    { size: "36", footLength: "22.0-22.5", euSize: "36" },
-    { size: "37", footLength: "22.5-23.0", euSize: "37" },
-    { size: "38", footLength: "23.5-24.0", euSize: "38" },
-    { size: "39", footLength: "24.0-24.5", euSize: "39" },
-    { size: "40", footLength: "25.0-25.5", euSize: "40" },
-    { size: "41", footLength: "25.5-26.0", euSize: "41" },
-    { size: "42", footLength: "26.5-27.0", euSize: "42" },
-    { size: "43", footLength: "27.0-27.5", euSize: "43" },
-    { size: "44", footLength: "28.0-28.5", euSize: "44" },
-  ];
-
-  // Active chart: use product's sizeChart from DB if available, else use default
-  const activeSizeChart = (() => {
+  // Active chart: ONLY from DB (productDetails.sizeChart). No hardcoded fallback.
+  const activeSizeChart: any[] = (() => {
     try {
       const raw = productDetails?.sizeChart;
-      if (!raw) return sizeGuideType === "shoes" ? DEFAULT_SHOES_CHART : DEFAULT_CLOTHING_CHART;
+      if (!raw) return []; // Admin chưa cài đặt → bảng rỗng
       const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    } catch (e) {}
-    return sizeGuideType === "shoes" ? DEFAULT_SHOES_CHART : DEFAULT_CLOTHING_CHART;
-  })() as any[];
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  })();
 
   // === CALC RECOMMENDED SIZE ===
   const calcRecommendedSize = () => {
@@ -940,16 +917,32 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
             </div>
 
             {/* Source Badge */}
-            <p className={`text-[9px] font-extrabold mb-3 uppercase tracking-wider ${
-              productDetails?.sizeChart ? "text-[#0e6877]" : "text-[#526069]/50"
+            <div className={`flex items-center gap-1.5 mb-4 px-3 py-2 rounded-xl text-[9px] font-extrabold uppercase tracking-wider ${
+              activeSizeChart.length > 0
+                ? "bg-[#0e6877]/10 text-[#0e6877]"
+                : "bg-amber-50 text-amber-600"
             }`}>
-              {productDetails?.sizeChart ? "✅ Bảng size riêng của sản phẩm" : "⚠️ Bảng size chuẩn (shop chưa cài size riêng)"}
-            </p>
+              <span>{activeSizeChart.length > 0 ? "✅" : "⚠️"}</span>
+              <span>
+                {activeSizeChart.length > 0
+                  ? "Bảng size riêng — được cài đặt bởi shop"
+                  : "Shop chưa cài đặt bảng size — liên hệ shop để biết thêm"}
+              </span>
+            </div>
 
             {/* ── SHOES MODE ── */}
             {sizeGuideType === "shoes" ? (
               <>
                 {/* Shoes Reference Table */}
+                {activeSizeChart.length === 0 ? (
+                  <div className="mb-4 flex flex-col items-center justify-center py-8 bg-amber-50 rounded-2xl border border-amber-200">
+                    <span className="text-2xl mb-2">👟</span>
+                    <p className="text-xs font-extrabold text-amber-700 text-center">Shop chưa cài bảng size giày</p>
+                    <p className="text-[10px] text-amber-600/80 text-center mt-1">
+                      Admin có thể thêm bảng size riêng tại trang quản trị (CMS)
+                    </p>
+                  </div>
+                ) : (
                 <div className="mb-4 overflow-x-auto">
                   <table className="w-full text-[10px] border-collapse">
                     <thead>
@@ -977,7 +970,6 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                           </td>
                           <td className="py-2 px-3">{row.footLength}</td>
                           <td className="py-2 px-3 text-[#526069]/60">
-                            {/* EU to US approx */}
                             {row.size ? `US ${parseInt(row.size) - 31}` : ""}
                           </td>
                         </tr>
@@ -985,6 +977,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                     </tbody>
                   </table>
                 </div>
+                )}
 
                 {/* Shoes Calculator */}
                 <div className="bg-[#f8f6f4] rounded-2xl p-4 space-y-3">
@@ -1031,8 +1024,16 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
               </>
             ) : (
               <>
-                {/* ── CLOTHING MODE ── */}
                 {/* Clothing Reference Table */}
+                {activeSizeChart.length === 0 ? (
+                  <div className="mb-4 flex flex-col items-center justify-center py-8 bg-amber-50 rounded-2xl border border-amber-200">
+                    <span className="text-2xl mb-2">👗</span>
+                    <p className="text-xs font-extrabold text-amber-700 text-center">Shop chưa cài bảng size quần áo</p>
+                    <p className="text-[10px] text-amber-600/80 text-center mt-1">
+                      Admin có thể thêm bảng size riêng tại trang quản trị (CMS)
+                    </p>
+                  </div>
+                ) : (
                 <div className="mb-4 overflow-x-auto">
                   <table className="w-full text-[10px] border-collapse">
                     <thead>
@@ -1069,6 +1070,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                     </tbody>
                   </table>
                 </div>
+                )}
 
                 {/* Clothing Calculator */}
                 <div className="bg-[#f8f6f4] rounded-2xl p-4 space-y-4">
