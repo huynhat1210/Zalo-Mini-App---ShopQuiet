@@ -141,7 +141,7 @@ export class OrdersService {
       }
     }
 
-    const filterUserId = zaloUserId || 'cust-zalo-id-1';
+    const filterUserId = zaloUserId || (dto as any).zaloUserId || 'guest_user';
 
     // Ensure the user exists in database to avoid foreign key constraint errors
     await this.ensureUserExists(filterUserId, dto.shippingName || undefined);
@@ -429,7 +429,8 @@ export class OrdersService {
   }
 
   async findAll(zaloUserId?: string) {
-    const filterUserId = zaloUserId || 'cust-zalo-id-1';
+    if (!zaloUserId) return [];
+    const filterUserId = zaloUserId;
     const [orders, reviews] = await Promise.all([
       this.prisma.order.findMany({
         where: {
@@ -478,13 +479,11 @@ export class OrdersService {
   }
 
   async findOne(id: string, zaloUserId?: string) {
-    const filterUserId = zaloUserId || 'cust-zalo-id-1';
+    const whereCondition: any = { id };
+    if (zaloUserId) whereCondition.zaloUserId = zaloUserId;
     const [order, reviews] = await Promise.all([
       this.prisma.order.findFirst({
-        where: {
-          id,
-          zaloUserId: filterUserId,
-        },
+        where: whereCondition,
         include: {
           items: {
             include: {
@@ -494,7 +493,7 @@ export class OrdersService {
         },
       }),
       this.prisma.comment.findMany({
-        where: { zaloUserId: filterUserId },
+        where: zaloUserId ? { zaloUserId } : {},
       }),
     ]);
 

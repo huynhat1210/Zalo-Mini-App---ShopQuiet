@@ -45,9 +45,9 @@ export class UsersController {
   @Get('me/reviews')
   @UseGuards(JwtAuthGuard)
   async getMyReviews(@Headers('x-zalo-user-id') zaloUserId?: string) {
-    const userId = zaloUserId || 'cust-zalo-id-1';
+    if (!zaloUserId) return [];
     return (this.prisma.comment as any).findMany({
-      where: { zaloUserId: userId },
+      where: { zaloUserId },
       include: {
         product: {
           include: {
@@ -118,7 +118,7 @@ export class UsersController {
   @Get('tier-benefits')
   @UseGuards(JwtAuthGuard)
   async getUserTierBenefits(@Headers('x-zalo-user-id') zaloUserId?: string) {
-    const userId = zaloUserId || 'cust-zalo-id-1';
-    return this.usersService.getUserTierBenefits(userId);
+    if (!zaloUserId) return null;
+    return this.usersService.getUserTierBenefits(zaloUserId);
   }
 }

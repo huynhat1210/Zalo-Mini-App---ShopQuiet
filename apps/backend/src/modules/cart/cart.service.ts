@@ -10,11 +10,13 @@ export class CartService {
   constructor(private prisma: PrismaService) {}
 
   async getCart(zaloUserId?: string) {
-    const userId = zaloUserId || 'cust-zalo-id-1';
-    await this.ensureUserExists(userId);
+    if (!zaloUserId) {
+      return [];
+    }
+    await this.ensureUserExists(zaloUserId);
 
     return this.prisma.cartItem.findMany({
-      where: { zaloUserId: userId },
+      where: { zaloUserId },
       include: {
         product: {
           include: {
@@ -33,15 +35,17 @@ export class CartService {
     color?: string,
     zaloUserId?: string,
   ) {
-    const userId = zaloUserId || 'cust-zalo-id-1';
-    await this.ensureUserExists(userId);
+    if (!zaloUserId) {
+      throw new BadRequestException('Vui lòng đăng nhập tài khoản Zalo!');
+    }
+    await this.ensureUserExists(zaloUserId);
     const itemSize = size || 'DEFAULT';
     const itemColor = color || 'DEFAULT';
 
     const existing = await this.prisma.cartItem.findUnique({
       where: {
         zaloUserId_productId_color_size: {
-          zaloUserId: userId,
+          zaloUserId,
           productId,
           color: itemColor,
           size: itemSize,
@@ -65,11 +69,11 @@ export class CartService {
 
     return this.prisma.cartItem.create({
       data: {
-        zaloUserId: userId,
+        zaloUserId,
         productId,
-        color: itemColor,
-        size: itemSize,
         quantity,
+        size: itemSize,
+        color: itemColor,
       },
       include: {
         product: {
@@ -88,33 +92,33 @@ export class CartService {
     color?: string,
     zaloUserId?: string,
   ) {
-    const userId = zaloUserId || 'cust-zalo-id-1';
-    await this.ensureUserExists(userId);
+    if (!zaloUserId) return { count: 0 };
     const itemSize = size || 'DEFAULT';
     const itemColor = color || 'DEFAULT';
 
-    if (quantity <= 0) {
-      await this.removeFromCart(productId, itemSize, itemColor, userId);
-      return null;
-    }
-
-    return this.prisma.cartItem.upsert({
+    const item = await this.prisma.cartItem.findUnique({
       where: {
         zaloUserId_productId_color_size: {
-          zaloUserId: userId,
+          zaloUserId,
           productId,
           color: itemColor,
           size: itemSize,
         },
       },
-      update: { quantity },
-      create: {
-        zaloUserId: userId,
-        productId,
-        color: itemColor,
-        size: itemSize,
-        quantity,
-      },
+    });
+
+    if (!item) {
+      throw new NotFoundException('Sản phẩm không có trong giỏ hàng');
+    }
+
+    if (quantity <= 0) {
+      await this.prisma.cartItem.delete({ where: { id: item.id } });
+      return { id: item.id, quantity: 0 };
+    }
+
+    return this.prisma.cartItem.update({
+      where: { id: item.id },
+      data: { quantity },
       include: {
         product: {
           include: {
@@ -133,79 +137,56 @@ export class CartService {
     newColor?: string,
     zaloUserId?: string,
   ) {
-    const userId = zaloUserId || 'cust-zalo-id-1';
-    await this.ensureUserExists(userId);
+    if (!zaloUserId) return null;
+    const oSize = oldSize || 'DEFAULT';
+    const nSize = newSize || 'DEFAULT';
+    const oColor = oldColor || 'DEFAULT';
+    const nColor = newColor || 'DEFAULT';
 
-    const fromSize = oldSize || 'DEFAULT';
-    const toSize = newSize || 'DEFAULT';
-    const fromColor = oldColor || 'DEFAULT';
-    const toColor = newColor || 'DEFAULT';
-
-    if (fromSize === toSize && fromColor === toColor) {
-      return this.getCart(userId);
-    }
-
-    const targetVariant = await this.prisma.productVariant.findUnique({
+    const existingOld = await this.prisma.cartItem.findUnique({
       where: {
-        productId_color_size: {
+        zaloUserId_productId_color_size: {
+          zaloUserId,
           productId,
-          color: toColor,
-          size: toSize,
+          color: oColor,
+          size: oSize,
         },
       },
     });
 
-    if (!targetVariant) {
-      throw new BadRequestException('Size mới không tồn tại cho sản phẩm này.');
+    if (!existingOld) {
+      throw new NotFoundException('Không tìm thấy sản phẩm trong giỏ hàng');
     }
 
-    if (targetVariant.stock <= 0) {
-      throw new BadRequestException('Size mới đã hết hàng.');
-    }
-
-    await this.prisma.$transaction(async (tx) => {
-      const oldItem = await tx.cartItem.findUnique({
-        where: {
-          zaloUserId_productId_color_size: {
-            zaloUserId: userId,
-            productId,
-            color: fromColor,
-            size: fromSize,
-          },
+    const existingNew = await this.prisma.cartItem.findUnique({
+      where: {
+        zaloUserId_productId_color_size: {
+          zaloUserId,
+          productId,
+          color: nColor,
+          size: nSize,
         },
-      });
-
-      if (!oldItem) {
-        throw new NotFoundException('Không tìm thấy sản phẩm trong giỏ hàng.');
-      }
-
-      const existingNewVariant = await tx.cartItem.findUnique({
-        where: {
-          zaloUserId_productId_color_size: {
-            zaloUserId: userId,
-            productId,
-            color: toColor,
-            size: toSize,
-          },
-        },
-      });
-
-      if (existingNewVariant) {
-        await tx.cartItem.update({
-          where: { id: existingNewVariant.id },
-          data: { quantity: existingNewVariant.quantity + oldItem.quantity },
-        });
-        await tx.cartItem.delete({ where: { id: oldItem.id } });
-        return;
-      }
-
-      await tx.cartItem.update({
-        where: { id: oldItem.id },
-        data: { size: toSize, color: toColor },
-      });
+      },
     });
 
-    return this.getCart(userId);
+    if (existingNew && existingNew.id !== existingOld.id) {
+      await this.prisma.cartItem.update({
+        where: { id: existingNew.id },
+        data: { quantity: existingNew.quantity + existingOld.quantity },
+      });
+      await this.prisma.cartItem.delete({ where: { id: existingOld.id } });
+      return existingNew;
+    }
+
+    return this.prisma.cartItem.update({
+      where: { id: existingOld.id },
+      data: { size: nSize, color: nColor },
+      include: {
+        product: {
+          include: { variants: true },
+        },
+      },
+    });
   }
 
   async removeFromCart(
@@ -214,39 +195,37 @@ export class CartService {
     color?: string,
     zaloUserId?: string,
   ) {
-    const userId = zaloUserId || 'cust-zalo-id-1';
-    await this.ensureUserExists(userId);
+    if (!zaloUserId) return { count: 0 };
     const itemSize = size || 'DEFAULT';
     const itemColor = color || 'DEFAULT';
 
-    return this.prisma.cartItem.delete({
+    return this.prisma.cartItem.deleteMany({
       where: {
-        zaloUserId_productId_color_size: {
-          zaloUserId: userId,
-          productId,
-          color: itemColor,
-          size: itemSize,
-        },
+        zaloUserId,
+        productId,
+        color: itemColor,
+        size: itemSize,
       },
     });
   }
 
   async clearCart(zaloUserId?: string) {
-    const userId = zaloUserId || 'cust-zalo-id-1';
-    await this.ensureUserExists(userId);
+    if (!zaloUserId) return { count: 0 };
+    await this.ensureUserExists(zaloUserId);
 
     return this.prisma.cartItem.deleteMany({
-      where: { zaloUserId: userId },
+      where: { zaloUserId },
     });
   }
 
   private async ensureUserExists(zaloId: string) {
+    if (!zaloId) return;
     const user = await this.prisma.user.findUnique({ where: { zaloId } });
     if (!user) {
       await this.prisma.user.create({
         data: {
           zaloId,
-          name: zaloId === 'cust-zalo-id-1' ? 'Alex Johnson' : `Zalo User`,
+          name: 'Khách hàng Zalo',
         },
       });
     }
