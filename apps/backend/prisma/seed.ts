@@ -353,13 +353,41 @@ async function main() {
     { name: 'Váy đầm mùa hè', categoryId: 1, basePrice: 1125000 },
   ];
 
-  const IMAGES = [
-    '["https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=600&q=80", "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=600&q=80"]',
-    '["https://images.unsplash.com/photo-1582552938357-32b906df40cb?auto=format&fit=crop&w=600&q=80", "https://images.unsplash.com/photo-1582552938357-32b906df40cb?auto=format&fit=crop&w=600&q=80"]',
-    '["https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=600&q=80", "https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=600&q=80"]',
-    '["https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80", "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80"]',
-    '["https://images.unsplash.com/photo-1610824352934-c10d87b700cc?auto=format&fit=crop&w=600&q=80", "https://images.unsplash.com/photo-1610824352934-c10d87b700cc?auto=format&fit=crop&w=600&q=80"]',
-  ];
+  const IMAGES_BY_CATEGORY: Record<number, string[][]> = {
+    1: [ // Clothing
+      [
+        'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1562157873-818bc0726f68?auto=format&fit=crop&w=800&q=80',
+      ],
+      [
+        'https://images.unsplash.com/photo-1582552938357-32b906df40cb?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=800&q=80',
+      ],
+    ],
+    2: [ // Accessories
+      [
+        'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1624222247344-550fb60583dc?auto=format&fit=crop&w=800&q=80',
+      ],
+    ],
+    3: [ // Shoes
+      [
+        'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=800&q=80',
+      ],
+    ],
+    4: [ // Home
+      [
+        'https://images.unsplash.com/photo-1610824352934-c10d87b700cc?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=800&q=80',
+      ],
+    ],
+  };
 
   const additionalProductsData = [];
   for (let i = 1; i <= 30; i++) {
@@ -367,7 +395,8 @@ async function main() {
     const categoryId = template.categoryId;
     const name = `${template.name} - Bản ${i}`;
     const price = template.basePrice + Math.floor(Math.random() * 20) * 20000;
-    const image = IMAGES[i % IMAGES.length];
+    const catGalleries = IMAGES_BY_CATEGORY[categoryId] || IMAGES_BY_CATEGORY[1];
+    const imageList = catGalleries[i % catGalleries.length];
 
     additionalProductsData.push({
       id: 26 + i,
@@ -376,7 +405,7 @@ async function main() {
       price,
       categoryId,
       tags: i % 3 === 0 ? 'Mới' : 'Phổ biến',
-      images: image,
+      images: JSON.stringify(imageList),
       soldCount: Math.floor(Math.random() * 500),
       likeCount: Math.floor(Math.random() * 200),
       materialCare: 'Giặt máy bằng nước lạnh, sấy ở nhiệt độ thấp.',

@@ -34,9 +34,11 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
   } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [likeCount, setLikeCount] = useState(product.likeCount || 0);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   useEffect(() => {
     setLikeCount(product.likeCount || 0);
+    setActiveImageIndex(0);
   }, [product.id, product.likeCount]);
 
   // Scroll to top when product ID changes
@@ -440,20 +442,66 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
         </div>
       </div>
 
-      {/* Product Image Carousel */}
-      <div className="relative w-full aspect-[4/3] bg-white overflow-hidden">
-        <Swiper autoplay duration={4000} dots={true} loop={true}>
-          {images.map((img, idx) => (
-            <Swiper.Slide key={idx} className="bg-white">
-              <img
-                src={img}
-                alt={`${product.name} ${idx + 1}`}
-                className="w-full h-full object-contain pointer-events-none select-none"
-                loading="eager"
-              />
-            </Swiper.Slide>
-          ))}
-        </Swiper>
+      {/* Product Image Gallery & Carousel */}
+      <div className="relative w-full bg-[#f8fafc] border-b border-slate-100">
+        {/* Main Photo Display */}
+        <div className="relative w-full aspect-[4/3] sm:aspect-square flex items-center justify-center p-2 bg-white">
+          <img
+            src={images[activeImageIndex] || images[0]}
+            alt={`${product.name} ${activeImageIndex + 1}`}
+            className="w-full h-full object-contain select-none transition-all duration-300 animate-fade-in"
+            loading="eager"
+          />
+
+          {/* Photo Counter Badge (e.g. 1 / 4) */}
+          <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white text-[10.5px] font-black px-3 py-1 rounded-full shadow-sm tracking-wider z-10">
+            {activeImageIndex + 1} / {images.length}
+          </div>
+
+          {/* Pagination Dots Indicator */}
+          {images.length > 1 && (
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 bg-white/70 backdrop-blur-xs px-3 py-1.5 rounded-full border border-slate-200/60 shadow-2xs">
+              {images.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveImageIndex(idx)}
+                  className={`h-2 rounded-full transition-all duration-300 border-none cursor-pointer p-0 ${
+                    activeImageIndex === idx
+                      ? "w-6 bg-[#0e6877] shadow-xs"
+                      : "w-2 bg-slate-300 hover:bg-slate-400"
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Thumbnail Selector Bar (Show when > 1 image) */}
+        {images.length > 1 && (
+          <div className="flex gap-2.5 px-4 py-2.5 bg-white border-t border-slate-100 overflow-x-auto scrollbar-none">
+            {images.map((img, idx) => (
+              <button
+                key={idx}
+                onClick={() => setActiveImageIndex(idx)}
+                className={`relative shrink-0 w-14 h-14 rounded-xl overflow-hidden border-2 transition-all cursor-pointer p-0 bg-slate-50 ${
+                  activeImageIndex === idx
+                    ? "border-[#0e6877] shadow-md scale-105"
+                    : "border-slate-200/80 opacity-60 hover:opacity-100"
+                }`}
+              >
+                <img
+                  src={img}
+                  alt={`Thumbnail ${idx + 1}`}
+                  className="w-full h-full object-cover"
+                />
+                {activeImageIndex === idx && (
+                  <div className="absolute inset-0 bg-[#0e6877]/10 pointer-events-none" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Details Content */}
