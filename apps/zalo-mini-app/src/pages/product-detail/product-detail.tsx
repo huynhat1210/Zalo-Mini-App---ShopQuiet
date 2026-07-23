@@ -41,15 +41,6 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
     setActiveImageIndex(0);
   }, [product.id, product.likeCount]);
 
-  // Auto-slide image carousel every 3.5 seconds
-  useEffect(() => {
-    if (images.length <= 1) return;
-    const timer = setInterval(() => {
-      setActiveImageIndex((prev) => (prev + 1) % images.length);
-    }, 3500);
-    return () => clearInterval(timer);
-  }, [images.length]);
-
   // Scroll to top when product ID changes
   useEffect(() => {
     const overlays = document.querySelectorAll(
@@ -234,6 +225,16 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
       images = [product.images];
     }
   }
+
+  // Auto-slide image carousel every 3.5 seconds
+  const totalImages = images.length;
+  useEffect(() => {
+    if (totalImages <= 1) return;
+    const timer = setInterval(() => {
+      setActiveImageIndex((prev) => (prev + 1) % totalImages);
+    }, 3500);
+    return () => clearInterval(timer);
+  }, [totalImages]);
 
   // Get unique colors and sizes
   const uniqueColors = Array.from(
