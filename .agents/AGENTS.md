@@ -1,8 +1,8 @@
 # PROJECT CONTEXT & ARCHITECTURE GUIDANCE
 
 > **Project Name:** Zalo Mini App E-Commerce Monorepo (`zalo-ecommerce-monorepo`)  
-> **Type:** Graduation Thesis / Monorepo Architecture (pnpm workspaces)  
-> **Last Updated:** 2026-07-22  
+> **Type:** Enterprise Monorepo Architecture (pnpm workspaces)  
+> **Last Updated:** 2026-07-23  
 
 ---
 

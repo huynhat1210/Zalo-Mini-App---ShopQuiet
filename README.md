@@ -1,237 +1,77 @@
-# Zalo Mini App E-Commerce - ShopQuiet
+# Zalo Mini App E-Commerce - ShopQuiet Monorepo
 
-Dự án Đồ án tốt nghiệp: **Hệ thống E-Commerce tích hợp Zalo Mini App**.
+Hệ thống Thương Mại Điện Tử Doanh Nghiệp Tích Hợp Zalo Mini App & Admin CMS Multi-Platform.
 
 ## 📋 Tổng quan dự án
 
-ShopQuiet là một hệ thống thương mại điện tử hoàn chỉnh được tích hợp với nền tảng Zalo Mini App, cho phép người dùng mua sắm trực tiếp trong ứng dụng Zalo một cách thuận tiện và nhanh chóng.
+**ShopQuiet** là một hệ sinh thái thương mại điện tử hoàn chỉnh triển khai dưới dạng **Monorepo Architecture (pnpm workspaces)**. Hệ thống tích hợp trực tiếp với nền tảng Zalo Mini App SDK, cho phép người dùng mua sắm trực tiếp trên ứng dụng Zalo với trải nghiệm mobile-first hiện đại, mượt mà và bảo mật.
 
-### 🎯 Tính năng chính
+### 🎯 Các phân hệ chính
 
-#### Zalo Mini App Client (apps/zalo-mini-app)
-- **Trang chủ**: Hiển thị banner carousel, danh mục sản phẩm, và sản phẩm nổi bật
-- **Tìm kiếm thông minh**: Sử dụng debounce để tối ưu hóa tìm kiếm sản phẩm
-- **Pull-to-Refresh**: Kéo xuống để làm mới dữ liệu (sản phẩm, banner, danh mục)
-- **Giỏ hàng**: Quản lý giỏ hàng, cập nhật số lượng, kích thước sản phẩm
-- **Yêu thích**: Lưu sản phẩm yêu thích để xem sau
-- **Thông báo**: Hiển thị thông báo đơn hàng và hệ thống
-- **Lịch sử đơn hàng**: Xem các đơn hàng đang xử lý, đã hoàn thành, hủy, v.v.
-- **Hồ sơ cá nhân**: Quản lý thông tin người dùng, địa chỉ giao hàng, phương thức thanh toán
-- **Empty States**: Component hiển thị trạng thái trống khi không có dữ liệu
+#### 📱 Zalo Mini App Client (`apps/zalo-mini-app`)
+- **Trang chủ**: Banner carousel động, danh mục sản phẩm capsule, đồng hồ Flash Sale real-time, gợi ý cá nhân hóa AI Recommendations ("✨ Có thể bạn thích").
+- **Chi tiết sản phẩm**: Gallery ảnh, bộ chọn màu/size với tồn kho real-time, đánh giá rating thực tế từ người mua.
+- **Giỏ hàng & Thanh toán**: Cập nhật số lượng, áp mã Voucher giảm giá, chọn địa chỉ giao hàng, thanh toán qua **Cổng ZaloPay Sandbox/Production** & COD.
+- **Tiến trình giao hàng (Timeline Widget)**: Theo dõi lịch trình đơn hàng 4 bước trực quan (`1. Đã nhận` ➔ `2. Đóng gói` ➔ `3. Đang giao` ➔ `4. Hoàn thành`) đính kèm mã vận đơn GHN.
+- **Vòng quay may mắn (Gamification)**: Tích điểm thưởng thành viên Zalo & đổi mã Voucher VIP.
+- **Hỗ trợ CSKH Live Chat**: Chát 1-on-1 trực tiếp với nhân viên qua WebSockets (Socket.IO).
 
-#### Backend API (apps/backend)
-- **Authentication**: Xác thực người dùng qua Zalo OAuth
-- **Product Management**: Quản lý sản phẩm, danh mục, banner
-- **Order Management**: Xử lý đơn hàng, trạng thái đơn hàng
-- **Cart Management**: Quản lý giỏ hàng người dùng
-- **Notification System**: Gửi thông báo cho người dùng
-- **CMS Settings**: Quản lý cấu hình hệ thống
+#### 🛠️ Backend API (`apps/backend`)
+- **Framework & ORM**: NestJS, TypeScript, Prisma ORM, PostgreSQL.
+- **Authentication**: Zalo OAuth & JWT Token Auth.
+- **Gemini AI Operations Engine**: Tự động phát hiện cảnh báo tồn kho thấp, đơn hàng tồn đọng, yêu cầu đổi trả và gợi ý lệnh xử lý 1-click cho Admin.
+- **WebSocket Gateway**: Kết nối CSKH real-time.
 
-#### Frontend Admin (apps/frontend)
-- **Dashboard**: Tổng quan hệ thống
-- **Product Management**: Thêm, sửa, xóa sản phẩm
-- **Order Management**: Quản lý đơn hàng
-- **User Management**: Quản lý người dùng
-- **Analytics**: Thống kê doanh thu, người dùng
+#### 📊 Admin CMS Dashboard (`apps/cms`)
+- **Quản lý sản phẩm**: Giao diện Bảng full-width responsive, chỉnh sửa trực tiếp giá/kho, nút "Lưu Tất Cả Thay Đổi" & phân trang.
+- **Quản lý đơn hàng & Đổi trả**: Xử lý trạng thái đơn hàng, duyệt yêu cầu hoàn tiền/đổi trả của khách hàng.
+- **Quản lý kho hàng Matrix**: Ma trận biến thể màu/size, cảnh báo tồn kho nguy cấp.
+- **Trung tâm thông báo Admin Bell**: Chỉ hiển thị các cảnh báo vận hành doanh nghiệp quan trọng.
 
-## 🏗️ Cấu trúc thư mục (Monorepo)
+## 🏗️ Cấu trúc dự án (Monorepo)
 
 ```
 Zalo-Mini-App---ShopQuiet/
 ├── apps/
-│   ├── backend/              # NestJS Backend API
-│   ├── frontend/             # Next.js Admin Dashboard
-│   └── zalo-mini-app/        # Zalo Mini App Client (React + Vite)
-├── .agents/
-│   └── skills/
-│       └── figma-reader/     # AI Agent skill for Figma to React
-├── .gitignore
-├── package.json
-├── pnpm-workspace.yaml
-└── README.md
+│   ├── backend/              # NestJS Backend API Server
+│   ├── cms/                  # React Admin CMS Dashboard
+│   └── zalo-mini-app/        # Zalo Mini App Client (React + Vite + ZMP SDK)
+├── .agents/                  # Context & Agent rules
+├── package.json              # Root package configuration
+├── pnpm-workspace.yaml       # PNPM Workspaces config
+└── README.md                 # System Documentation
 ```
-
-### Chi tiết thư mục
-
-- **`apps/backend`**: NestJS backend API sử dụng TypeScript, Node.js
-  - Xử lý logic business, database, authentication
-  - RESTful API endpoints cho frontend và Zalo Mini App
-
-- **`apps/frontend`**: Ứng dụng Next.js (Admin Dashboard / Web Portal)
-  - Quản trị viên quản lý sản phẩm, đơn hàng, người dùng
-  - Dashboard thống kê và analytics
-
-- **`apps/zalo-mini-app`**: Zalo Mini App Client chạy trực tiếp trên ứng dụng Zalo
-  - React + Vite + ZMP SDK
-  - Trải nghiệm mua sắm mobile-first
-  - Tích hợp thanh toán Zalo Pay
-
-- **`.agents/skills/figma-reader`**: Skill AI Agent giúp đọc và chuyển đổi Figma UI sang React Components
 
 ## 🚀 Công nghệ sử dụng
 
-### Zalo Mini App Client
-- **React 18**: UI Framework
-- **Vite**: Build tool
-- **ZMP SDK**: Zalo Mini App Platform SDK
-- **zmp-ui**: UI Component Library cho Zalo Mini App
-- **TailwindCSS**: CSS Framework
-- **Zustand**: State Management
-- **React Hook Form**: Form Handling
-- **Zod**: Schema Validation
-- **react-pull-to-refresh**: Pull-to-refresh functionality
+- **Monorepo Manager:** `pnpm` workspaces
+- **Frontend Client:** React 18, Vite, Zalo Mini App SDK (`zmp-sdk`, `zmp-ui`), TailwindCSS
+- **Admin CMS:** React 18, Vite, Lucide Icons, Recharts, TailwindCSS
+- **Backend API:** NestJS, TypeScript, Prisma ORM, PostgreSQL, Socket.IO, Google Gemini 1.5 Flash API
 
-### Backend
-- **NestJS**: Backend Framework
-- **TypeScript**: Type-safe JavaScript
-- **Prisma**: ORM cho Database
-- **PostgreSQL**: Database
-- **Zalo OAuth**: Authentication
+## 📦 Hướng dẫn cài đặt & Khởi chạy
 
-### Frontend Admin
-- **Next.js 14**: React Framework
-- **TypeScript**: Type-safe JavaScript
-- **TailwindCSS**: CSS Framework
-- **shadcn/ui**: UI Components
-
-## 📦 Cài đặt & Chạy ứng dụng
-
-### Yêu cầu hệ thống
-- **Node.js** (Phiên bản khuyến nghị: >= 18.x)
-- **PNPM** (Cài đặt bằng cách chạy `npm install -g pnpm`)
-- **PostgreSQL** (cho backend database)
-
-### Cài đặt dependencies
-Chạy lệnh sau tại thư mục gốc để tự động cài đặt dependencies cho toàn bộ các dự án con:
+### 1. Cài đặt Dependencies
 ```bash
 pnpm install
 ```
 
-### Cấu hình Environment Variables
-
-Tạo file `.env` trong thư mục `apps/backend`:
-```env
-DATABASE_URL="postgresql://user:password@localhost:5432/shopquiet"
-ZALO_APP_ID="your_zalo_app_id"
-ZALO_SECRET_KEY="your_zalo_secret_key"
-JWT_SECRET="your_jwt_secret"
-```
-
-Tạo file `.env` trong thư mục `apps/zalo-mini-app`:
-```env
-VITE_API_BASE_URL="http://localhost:3000/api"
-VITE_ZALO_APP_ID="your_zalo_app_id"
-```
-
-### Chạy chế độ Development
-Để khởi chạy đồng thời tất cả các ứng dụng:
+### 2. Khởi chạy chế độ Development
+Chạy đồng toàn bộ hệ thống (Backend, CMS, Zalo Mini App):
 ```bash
 pnpm dev
 ```
 
-Hoặc chạy lẻ từng phần:
-- Chỉ chạy Backend: `pnpm dev:backend`
-- Chỉ chạy Frontend Admin: `pnpm dev:frontend`
-- Chỉ chạy Zalo Mini App: `pnpm dev:zalo`
+Hoặc chạy riêng từng phân hệ:
+- **Backend API:** `pnpm dev:backend`
+- **Admin CMS:** `pnpm dev:cms`
+- **Zalo Mini App:** `pnpm dev:zalo`
 
-### Build cho Production
+### 3. Build Production
 ```bash
-# Build tất cả
 pnpm build
-
-# Build từng phần
-pnpm build:backend
-pnpm build:frontend
-pnpm build:zalo
 ```
-
-## 🔧 Cách hoạt động của dự án
-
-### Architecture Flow
-
-```
-User (Zalo App)
-    ↓
-Zalo Mini App Client (React + Vite)
-    ↓ (API Calls)
-Backend API (NestJS)
-    ↓
-Database (PostgreSQL)
-```
-
-### Chi tiết luồng hoạt động
-
-1. **User Authentication**:
-   - Người dùng mở Zalo Mini App từ Zalo
-   - Zalo SDK lấy thông tin user từ Zalo
-   - User được sync với backend qua API `/api/users/sync`
-
-2. **Product Browsing**:
-   - Mini App fetch products từ `/api/products`
-   - Products được cache trong localStorage
-   - Pagination để load thêm products khi scroll
-   - Search với debounce để tối ưu performance
-
-3. **Cart Management**:
-   - Cart được lưu trong Zustand state
-   - Sync với backend qua `/api/cart`
-   - Cập nhật số lượng, kích thước sản phẩm
-
-4. **Order Processing**:
-   - User checkout từ cart
-   - Tạo đơn hàng qua `/api/orders`
-   - Thanh toán qua Zalo Pay
-   - Cập nhật trạng thái đơn hàng
-
-5. **Notifications**:
-   - Backend push notifications về đơn hàng
-   - Mini App poll notifications mỗi 30s
-   - Hiển thị trong tab thông báo
-
-6. **Pull-to-Refresh**:
-   - User kéo xuống trên trang home
-   - React-pull-to-refresh trigger refresh
-   - Fetch lại products, banners, categories
-   - Update UI với dữ liệu mới
-
-### API Endpoints chính
-
-- `POST /api/users/sync` - Sync user từ Zalo
-- `GET /api/products` - Lấy danh sách sản phẩm
-- `GET /api/categories` - Lấy danh mục
-- `GET /api/banners` - Lấy banner
-- `GET /api/cart` - Lấy giỏ hàng
-- `POST /api/cart` - Thêm vào giỏ hàng
-- `PUT /api/cart/:id` - Cập nhật giỏ hàng
-- `DELETE /api/cart/:id` - Xóa khỏi giỏ hàng
-- `GET /api/favorites` - Lấy sản phẩm yêu thích
-- `POST /api/favorites` - Thêm vào yêu thích
-- `DELETE /api/favorites/:id` - Xóa khỏi yêu thích
-- `GET /api/orders` - Lấy đơn hàng
-- `POST /api/orders` - Tạo đơn hàng
-- `GET /api/notifications` - Lấy thông báo
-- `GET /api/cms/settings` - Lấy cấu hình CMS
-- `GET /api/cms/bootstrap` - Lấy dữ liệu bootstrap
-
-## 🔒 Bảo mật
-
-- `.env` files được exclude bằng `.gitignore`
-- Không commit sensitive data (API keys, secrets)
-- Sử dụng environment variables cho configuration
-- JWT token cho authentication
-- CORS configuration cho API
-
-## 📝 Ghi chú
-
-- Project sử dụng PNPM workspace cho monorepo management
-- Zalo Mini App cần được đăng ký trên [Zalo Mini App Platform](https://mini.zalo.me/)
-- Backend cần PostgreSQL database đang chạy
-- Admin dashboard chỉ dành cho quản trị viên
-
-## 👥 Contributors
-
-- [huynhat1210](https://github.com/huynhat1210)
 
 ## 📄 License
 
-MIT License
+MIT License - **ShopQuiet E-Commerce Team**

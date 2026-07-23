@@ -1,7 +1,7 @@
 {
   "name": "zalo-ecommerce-monorepo",
   "version": "1.0.0",
-  "description": "Graduation thesis: Zalo Mini App E-Commerce Monorepo",
+  "description": "Zalo Mini App E-Commerce Monorepo Architecture",
   "private": true,
   "scripts": {
     "dev:backend": "pnpm --filter backend dev",
