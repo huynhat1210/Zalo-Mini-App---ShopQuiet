@@ -9,6 +9,8 @@ import {
   Search,
   RefreshCw,
   Save,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 interface ProductVariant {
@@ -41,7 +43,12 @@ export const Inventory: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'LOW' | 'OUT'>('ALL');
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [savingAll, setSavingAll] = useState(false);
   const [stockInputs, setStockInputs] = useState<Record<number, number>>({});
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8; // Limit rows per page
 
   const fetchInventory = async () => {
     try {
@@ -69,6 +76,85 @@ export const Inventory: React.FC = () => {
     fetchInventory();
   }, []);
 
+  const allVariants = useMemo(() => {
+    const list: (ProductVariant & { productName: string; categoryName: string; image: string })[] = [];
+    products.forEach((p) => {
+      let image = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200';
+      try {
+        const parsed = JSON.parse(p.images);
+        if (Array.isArray(parsed) && parsed[0]) image = parsed[0];
+      } catch (e) {
+        if (typeof p.images === 'string' && p.images.startsWith('http')) image = p.images;
+      }
+
+      if (p.variants && p.variants.length > 0) {
+        p.variants.forEach((v) => {
+          list.push({
+            ...v,
+            productName: p.name,
+            categoryName: p.category?.name || 'Mặc định',
+            image,
+          });
+        });
+      } else {
+        list.push({
+          id: p.id * 1000,
+          productId: p.id,
+          color: 'DEFAULT',
+          size: 'DEFAULT',
+          stock: 10,
+          productName: p.name,
+          categoryName: p.category?.name || 'Mặc định',
+          image,
+        });
+      }
+    });
+    return list;
+  }, [products]);
+
+  const filteredVariants = useMemo(() => {
+    return allVariants.filter((v) => {
+      const matchSearch =
+        v.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        v.color.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        v.size.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const currentStock = stockInputs[v.id] ?? v.stock;
+
+      let matchStatus = true;
+      if (filterStatus === 'LOW') matchStatus = currentStock > 0 && currentStock < 5;
+      if (filterStatus === 'OUT') matchStatus = currentStock === 0;
+
+      return matchSearch && matchStatus;
+    });
+  }, [allVariants, searchTerm, filterStatus, stockInputs]);
+
+  // Pagination Calculation
+  const totalPages = Math.max(1, Math.ceil(filteredVariants.length / itemsPerPage));
+  const paginatedVariants = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredVariants.slice(start, start + itemsPerPage);
+  }, [filteredVariants, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus]);
+
+  const stats = useMemo(() => {
+    let totalStock = 0;
+    let lowStock = 0;
+    let outOfStock = 0;
+
+    allVariants.forEach((v) => {
+      const current = stockInputs[v.id] ?? v.stock;
+      totalStock += current;
+      if (current === 0) outOfStock++;
+      else if (current < 5) lowStock++;
+    });
+
+    return { totalStock, lowStock, outOfStock, totalVariants: allVariants.length };
+  }, [allVariants, stockInputs]);
+
   const handleStockChange = (variantId: number, val: number) => {
     setStockInputs((prev) => ({ ...prev, [variantId]: Math.max(0, val) }));
   };
@@ -76,104 +162,100 @@ export const Inventory: React.FC = () => {
   const handleSaveStock = async (variantId: number) => {
     const newStock = stockInputs[variantId];
     if (newStock === undefined) return;
+
     try {
       setUpdatingId(variantId);
-      await apiRequest(`/variants/${variantId}`, 'PATCH', { stock: newStock });
-      
-      // Update local products state
-      setProducts((prev) =>
-        prev.map((p) => ({
-          ...p,
-          variants: p.variants.map((v) => (v.id === variantId ? { ...v, stock: newStock } : v)),
-        })),
-      );
-      toastSuccess('Đã lưu tồn kho', `Số lượng kho mới: ${newStock} sản phẩm.`);
+      await apiRequest(`/products/variants/${variantId}`, 'PATCH', { stock: newStock });
+      toastSuccess('Cập nhật thành công', `Tồn kho mới: ${newStock} sản phẩm.`);
+      fetchInventory();
     } catch (err: any) {
-      toastError('Không thể cập nhật kho', err.message || 'Lỗi khi cập nhật kho hàng.');
+      toastError('Cập nhật thất bại', err.message || 'Lỗi khi lưu kho.');
     } finally {
       setUpdatingId(null);
     }
   };
 
-  // Extract all variants flat
-  const allVariants = useMemo(() => {
-    const list: (ProductVariant & { productName: string; categoryName: string; image: string })[] = [];
-    products.forEach((p) => {
-      let firstImg = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&auto=format&fit=crop&q=60';
-      try {
-        const parsed = JSON.parse(p.images);
-        if (parsed && parsed.length > 0) firstImg = parsed[0];
-      } catch (e) {}
+  // Save All Changes Button
+  const modifiedVariantIds = useMemo(() => {
+    return allVariants
+      .filter((v) => stockInputs[v.id] !== undefined && stockInputs[v.id] !== v.stock)
+      .map((v) => v.id);
+  }, [allVariants, stockInputs]);
 
-      if (p.variants && p.variants.length > 0) {
-        p.variants.forEach((v) => {
-          list.push({
-            ...v,
-            productName: p.name,
-            categoryName: p.category?.name || 'Chưa phân loại',
-            image: firstImg,
-          });
-        });
-      }
-    });
-    return list;
-  }, [products]);
+  const handleSaveAllInventory = async () => {
+    if (modifiedVariantIds.length === 0) {
+      toastSuccess('Thông báo', 'Không có thay đổi tồn kho nào cần lưu.');
+      return;
+    }
 
-  // Compute Stats
-  const stats = useMemo(() => {
-    const totalVariants = allVariants.length;
-    const lowStock = allVariants.filter((v) => v.stock > 0 && v.stock < 5).length;
-    const outOfStock = allVariants.filter((v) => v.stock === 0).length;
-    const healthy = allVariants.filter((v) => v.stock >= 5).length;
-    return { totalVariants, lowStock, outOfStock, healthy };
-  }, [allVariants]);
-
-  // Filtered variants
-  const filteredVariants = useMemo(() => {
-    return allVariants.filter((v) => {
-      const matchesSearch =
-        v.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        v.color.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        v.size.toLowerCase().includes(searchTerm.toLowerCase());
-
-      if (!matchesSearch) return false;
-
-      if (filterStatus === 'LOW') return v.stock > 0 && v.stock < 5;
-      if (filterStatus === 'OUT') return v.stock === 0;
-      return true;
-    });
-  }, [allVariants, searchTerm, filterStatus]);
+    try {
+      setSavingAll(true);
+      const updatePromises = modifiedVariantIds.map((vId) =>
+        apiRequest(`/products/variants/${vId}`, 'PATCH', { stock: stockInputs[vId] }).catch((e) =>
+          console.error(`Failed variant #${vId}:`, e),
+        ),
+      );
+      await Promise.all(updatePromises);
+      await fetchInventory();
+      toastSuccess('Lưu thành công', `Đã cập nhật tồn kho cho tất cả ${modifiedVariantIds.length} phân loại!`);
+    } catch (err: any) {
+      toastError('Lỗi cập nhật', err.message || 'Không thể lưu tồn kho.');
+    } finally {
+      setSavingAll(false);
+    }
+  };
 
   return (
-    <div className="space-y-6 animate-fadeIn text-[#1b1c1b]">
+    <div className="space-y-6 animate-fadeIn text-[#1b1c1b] pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
         <div>
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight">📦 Quản Lý Tồn Kho (Inventory Matrix)</h1>
-          <p className="text-slate-500 text-xs mt-1">Theo dõi và cập nhật số lượng tồn kho theo Màu sắc & Kích thước</p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">📊 Quản Lý Tồn Kho & Sản Phẩm</h1>
+          <p className="text-slate-500 text-xs mt-1">Cập nhật số lượng tồn kho từng màu sắc/size và lưu tất cả trong 1 click</p>
         </div>
-        <button
-          onClick={fetchInventory}
-          className="px-4 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-bold rounded-xl transition-all flex items-center gap-2 border-none cursor-pointer active:scale-95"
-        >
-          <RefreshCw size={15} /> Làm Mới
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSaveAllInventory}
+            disabled={savingAll || modifiedVariantIds.length === 0}
+            className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95 ${
+              modifiedVariantIds.length > 0
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white animate-pulse'
+                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+            }`}
+          >
+            <Save size={15} className={savingAll ? 'animate-spin' : ''} />
+            {savingAll ? 'Đang lưu...' : '💾 Lưu Tất Cả Tồn Kho'}
+            {modifiedVariantIds.length > 0 && (
+              <span className="bg-white text-emerald-700 px-1.5 py-0.5 rounded-full text-[10px] font-black">
+                {modifiedVariantIds.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={fetchInventory}
+            className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all border-none cursor-pointer"
+            title="Làm mới ma trận"
+          >
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+          </button>
+        </div>
       </div>
 
-      {/* KPI Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* KPI Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex items-center gap-3">
-          <div className="bg-blue-50 text-blue-600 p-2.5 rounded-xl"><Package size={20} /></div>
+          <div className="bg-teal-50 text-[#0e6877] p-2.5 rounded-xl"><Package size={20} /></div>
           <div>
-            <p className="text-slate-400 text-[10px] font-bold uppercase">Tổng Biến Thể</p>
+            <p className="text-slate-400 text-[10px] font-bold uppercase">Tổng Số Phân Loại</p>
             <p className="text-lg font-black text-slate-800">{stats.totalVariants}</p>
           </div>
         </div>
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex items-center gap-3">
           <div className="bg-emerald-50 text-emerald-600 p-2.5 rounded-xl"><CheckCircle size={20} /></div>
           <div>
-            <p className="text-slate-400 text-[10px] font-bold uppercase">Tồn Kho An Toàn</p>
-            <p className="text-lg font-black text-slate-800">{stats.healthy}</p>
+            <p className="text-slate-400 text-[10px] font-bold uppercase">Tổng Tồn Kho</p>
+            <p className="text-lg font-black text-emerald-600">{stats.totalStock}</p>
           </div>
         </div>
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex items-center gap-3">
@@ -227,9 +309,9 @@ export const Inventory: React.FC = () => {
             <div className="w-10 h-10 border-4 border-[#0e6877] border-t-transparent rounded-full animate-spin"></div>
             <p className="text-slate-500 text-xs">Đang tải ma trận kho hàng...</p>
           </div>
-        ) : filteredVariants.length > 0 ? (
+        ) : paginatedVariants.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-700">
+            <table className="w-full text-left text-sm text-slate-700 min-w-[650px]">
               <thead className="bg-[#fbf9f7] text-[#526069] text-xs font-bold uppercase tracking-wider">
                 <tr>
                   <th className="py-3.5 px-4 rounded-l-xl">Sản phẩm</th>
@@ -241,11 +323,11 @@ export const Inventory: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredVariants.map((v) => {
+                {paginatedVariants.map((v) => {
                   const currentStock = stockInputs[v.id] ?? v.stock;
                   const isModified = currentStock !== v.stock;
-                  const isLow = v.stock > 0 && v.stock < 5;
-                  const isOut = v.stock === 0;
+                  const isLow = currentStock > 0 && currentStock < 5;
+                  const isOut = currentStock === 0;
 
                   return (
                     <tr key={v.id} className="hover:bg-slate-50 transition-colors">
@@ -271,7 +353,7 @@ export const Inventory: React.FC = () => {
                           </span>
                         ) : isLow ? (
                           <span className="px-2.5 py-1 text-[10px] font-extrabold text-amber-600 bg-amber-50 rounded-full border border-amber-200">
-                            Sắp hết ({v.stock})
+                            Sắp hết ({currentStock})
                           </span>
                         ) : (
                           <span className="px-2.5 py-1 text-[10px] font-extrabold text-emerald-600 bg-emerald-50 rounded-full border border-emerald-200">
@@ -314,6 +396,39 @@ export const Inventory: React.FC = () => {
           </div>
         ) : (
           <div className="py-16 text-center text-slate-400 text-sm">Không có biến thể tồn kho phù hợp với bộ lọc.</div>
+        )}
+
+        {/* Pagination Bar */}
+        {!loading && filteredVariants.length > 0 && (
+          <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs">
+            <span className="text-slate-500 font-medium">
+              Hiển thị <strong className="text-slate-800">{(currentPage - 1) * itemsPerPage + 1}</strong> -{' '}
+              <strong className="text-slate-800">{Math.min(currentPage * itemsPerPage, filteredVariants.length)}</strong> trên tổng số{' '}
+              <strong className="text-[#0e6877]">{filteredVariants.length}</strong> phân loại
+            </span>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl font-bold transition-all flex items-center gap-1 cursor-pointer"
+              >
+                <ChevronLeft size={14} /> Trước
+              </button>
+
+              <span className="px-3 py-1.5 bg-[#0e6877] text-white font-extrabold rounded-xl shadow-2xs">
+                Trang {currentPage} / {totalPages}
+              </span>
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl font-bold transition-all flex items-center gap-1 cursor-pointer"
+              >
+                Sau <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
