@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
 import { GeminiAiOpsService } from './gemini-ai-ops.service';
 
 @Controller('cms/ai-ops')
@@ -17,8 +17,8 @@ export class GeminiAiOpsController {
   }
 
   @Post('execute-action')
-  async executeAction(@Body() body: { actionType: string; payload: any }) {
-    return this.geminiAiOpsService.executeAction(body.actionType, body.payload);
+  async executeAction(@Body() body: { actionType: string; payload: any; alertId?: string }) {
+    return this.geminiAiOpsService.executeAction(body.actionType, body.payload, body.alertId);
   }
 
   @Post('ask-gemini')

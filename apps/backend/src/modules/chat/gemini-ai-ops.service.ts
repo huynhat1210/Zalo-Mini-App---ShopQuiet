@@ -11,12 +11,14 @@ export interface AiOpsAlert {
   actionType: 'RESTOCK_ITEM' | 'VIEW_ORDERS' | 'VIEW_RETURNS' | 'FLASH_SALE' | 'GIFT_VIP_VOUCHER';
   actionPayload: any;
   isRead: boolean;
+  isResolved?: boolean;
 }
 
 @Injectable()
 export class GeminiAiOpsService {
   private readonly logger = new Logger(GeminiAiOpsService.name);
   private readAlertIds: Set<string> = new Set();
+  private resolvedAlertIds: Set<string> = new Set();
 
   constructor(private prisma: PrismaService) {}
 
@@ -78,7 +80,6 @@ export class GeminiAiOpsService {
   // Scan Prisma Database for live operational alerts
   async getLiveOperationalAlerts(): Promise<{ alerts: AiOpsAlert[]; unreadCount: number }> {
     const alerts: AiOpsAlert[] = [];
-    const now = new Date();
 
     try {
       // 1. Scan Low Stock Variants (< 5)
@@ -90,7 +91,9 @@ export class GeminiAiOpsService {
 
       for (const variant of lowStockVariants) {
         const alertId = `stock-alert-${variant.id}`;
-        const isRead = this.readAlertIds.has(alertId);
+        const isResolved = this.resolvedAlertIds.has(alertId);
+        const isRead = this.readAlertIds.has(alertId) || isResolved;
+
         alerts.push({
           id: alertId,
           type: 'LOW_STOCK',
@@ -101,6 +104,7 @@ export class GeminiAiOpsService {
           actionType: 'RESTOCK_ITEM',
           actionPayload: { variantId: variant.id, productName: variant.product.name, restockAmount: 25 },
           isRead,
+          isResolved,
         });
       }
 
@@ -112,7 +116,9 @@ export class GeminiAiOpsService {
 
       for (const order of returnOrders) {
         const alertId = `return-alert-${order.id}`;
-        const isRead = this.readAlertIds.has(alertId);
+        const isResolved = this.resolvedAlertIds.has(alertId);
+        const isRead = this.readAlertIds.has(alertId) || isResolved;
+
         alerts.push({
           id: alertId,
           type: 'RETURN_REQUEST',
@@ -123,10 +129,11 @@ export class GeminiAiOpsService {
           actionType: 'VIEW_RETURNS',
           actionPayload: { orderId: order.id },
           isRead,
+          isResolved,
         });
       }
 
-      // 3. Scan Stale Processing Orders (> 12h or pending processing)
+      // 3. Scan Stale Processing Orders
       const processingOrders = await this.prisma.order.findMany({
         where: { status: 'PROCESSING' },
         take: 2,
@@ -134,7 +141,9 @@ export class GeminiAiOpsService {
 
       if (processingOrders.length > 0) {
         const alertId = `stale-orders-alert`;
-        const isRead = this.readAlertIds.has(alertId);
+        const isResolved = this.resolvedAlertIds.has(alertId);
+        const isRead = this.readAlertIds.has(alertId) || isResolved;
+
         alerts.push({
           id: alertId,
           type: 'STALE_ORDER',
@@ -145,6 +154,7 @@ export class GeminiAiOpsService {
           actionType: 'VIEW_ORDERS',
           actionPayload: {},
           isRead,
+          isResolved,
         });
       }
 
@@ -157,24 +167,28 @@ export class GeminiAiOpsService {
       if (vipUsers.length > 0 && vipUsers[0]) {
         const u = vipUsers[0];
         const alertId = `vip-alert-${u.zaloId}`;
-        const isRead = this.readAlertIds.has(alertId);
+        const isResolved = this.resolvedAlertIds.has(alertId);
+        const isRead = this.readAlertIds.has(alertId) || isResolved;
+
         alerts.push({
           id: alertId,
           type: 'VIP_MILESTONE',
           title: '💎 Khách hàng VIP Thân thiết',
-          message: `Tài khoản '${u.name || 'Khách Zalo'}' có ${u.gamificationPoints || 100} điểm thưởng tích lũy. Gemini AI đề xuất tặng Voucher tri ân GIAM30K!`,
+          message: `Tài khoản '${u.name || 'Khách Zalo'}' (SĐT: ${u.phone || '0336433234'}) có ${u.gamificationPoints || 100} điểm thưởng tích lũy. Gemini AI đề xuất tặng Voucher tri ân VIP!`,
           time: '1 giờ trước',
           severity: 'info',
           actionType: 'GIFT_VIP_VOUCHER',
-          actionPayload: { zaloUserId: u.zaloId, userName: u.name },
+          actionPayload: { zaloUserId: u.zaloId, userName: u.name || 'Khách hàng VIP' },
           isRead,
+          isResolved,
         });
       }
     } catch (e) {
       this.logger.error('Error fetching AI ops alerts:', e);
     }
 
-    const unreadCount = alerts.filter((a) => !a.isRead).length;
+    // Exclude resolved alerts from unread count
+    const unreadCount = alerts.filter((a) => !a.isRead && !a.isResolved).length;
     return { alerts, unreadCount };
   }
 
@@ -185,9 +199,14 @@ export class GeminiAiOpsService {
     }
   }
 
-  // Execute 1-Click Action from AI Chatbox
-  async executeAction(actionType: string, payload: any): Promise<{ success: boolean; message: string }> {
+  // Execute 1-Click Action from AI Chatbox & Mark Alert as Resolved
+  async executeAction(actionType: string, payload: any, alertId?: string): Promise<{ success: boolean; message: string }> {
     try {
+      if (alertId) {
+        this.resolvedAlertIds.add(alertId);
+        this.readAlertIds.add(alertId);
+      }
+
       if (actionType === 'RESTOCK_ITEM') {
         const { variantId, restockAmount = 25 } = payload;
         if (variantId) {
@@ -199,27 +218,49 @@ export class GeminiAiOpsService {
             });
             return {
               success: true,
-              message: `Đã cộng thêm +${restockAmount} sản phẩm vào tồn kho thành công!`,
+              message: `Đã cộng thêm +${restockAmount} sản phẩm vào tồn kho thành công! Cảnh báo đã được giải quyết.`,
             };
           }
         }
       }
 
       if (actionType === 'GIFT_VIP_VOUCHER') {
-        const code = `VIP${Math.random().toString(36).substring(7).toUpperCase()}`;
+        const { zaloUserId, userName } = payload;
+        const code = `VIP-${zaloUserId ? zaloUserId.slice(-4) : 'GIFT'}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+
+        // 1. Create global voucher in DB
         await this.prisma.voucher.create({
           data: {
             code,
             type: 'FIXED',
             value: 30000,
             minOrderVal: 200000,
-            stock: 10,
+            stock: 1, // Exclusively 1 stock for this targeted customer!
             expiresAt: new Date('2026-12-31'),
           },
         });
+
+        // 2. Dispatch targeted personal Notification to the specific Zalo User
+        if (zaloUserId) {
+          try {
+            await this.prisma.notification.create({
+              data: {
+                zaloUserId: zaloUserId,
+                type: 'voucher',
+                title: '🎁 Bạn nhận được Voucher Tri Ân VIP!',
+                content: `ShopQuiet dành riêng cho bạn ${userName || 'Khách hàng VIP'} Mã Voucher '${code}' giảm ngay 30.000đ cho đơn từ 200.000đ. Nhập mã khi thanh toán nhé!`,
+                date: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('vi-VN'),
+                read: false,
+              },
+            });
+          } catch (e) {
+            this.logger.error('Failed to create targeted notification:', e);
+          }
+        }
+
         return {
           success: true,
-          message: `Đã tạo thành công Voucher tri ân VIP mã '${code}' (Giảm 30.000đ cho đơn từ 200.000đ)!`,
+          message: `Đã tạo & gửi đích danh Voucher mã '${code}' tới khách hàng ${userName || 'VIP'}! Cảnh báo đã được giải quyết.`,
         };
       }
 

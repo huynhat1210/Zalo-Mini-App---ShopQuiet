@@ -10,7 +10,8 @@ import {
   ShoppingBag, 
   Crown, 
   Sparkles, 
-  RefreshCw
+  RefreshCw,
+  CheckCircle2
 } from 'lucide-react';
 
 interface AiOpsAlert {
@@ -23,6 +24,7 @@ interface AiOpsAlert {
   actionType: 'RESTOCK_ITEM' | 'VIEW_ORDERS' | 'VIEW_RETURNS' | 'FLASH_SALE' | 'GIFT_VIP_VOUCHER';
   actionPayload: any;
   isRead: boolean;
+  isResolved?: boolean;
 }
 
 interface ChatMessage {
@@ -101,11 +103,22 @@ export const AiOpsChatbox: React.FC = () => {
       const res = await apiRequest<{ success: boolean; message: string }>('/cms/ai-ops/execute-action', 'POST', {
         actionType: alert.actionType,
         payload: alert.actionPayload,
+        alertId: alert.id,
       });
 
       if (res.success) {
         toastSuccess('Gemini AI Thực Thi Thành Công', res.message);
         
+        // Mark alert as resolved in local chat state
+        setChatHistory((prev) =>
+          prev.map((msg) => {
+            if (msg.alertData && msg.alertData.id === alert.id) {
+              return { ...msg, alertData: { ...msg.alertData, isResolved: true } };
+            }
+            return msg;
+          }),
+        );
+
         // Append confirmation message in chat
         setChatHistory((prev) => [
           ...prev,
@@ -117,7 +130,7 @@ export const AiOpsChatbox: React.FC = () => {
           },
         ]);
 
-        // Re-fetch alerts
+        // Re-fetch alerts to update unread badge count
         fetchAlerts(true);
       } else {
         toastError('Lỗi thực thi', res.message);
@@ -172,6 +185,15 @@ export const AiOpsChatbox: React.FC = () => {
 
   const renderActionButton = (alert: AiOpsAlert) => {
     const isExec = executingId === alert.id;
+    if (alert.isResolved) {
+      return (
+        <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 font-bold rounded-xl text-[11px] border border-emerald-200">
+          <CheckCircle2 size={13} className="text-emerald-600" />
+          Đã xử lý xong
+        </div>
+      );
+    }
+
     switch (alert.actionType) {
       case 'RESTOCK_ITEM':
         return (
@@ -212,7 +234,7 @@ export const AiOpsChatbox: React.FC = () => {
             className="mt-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-xl transition-all flex items-center gap-1.5 border-none cursor-pointer active:scale-95 shadow-2xs"
           >
             {isExec ? <RefreshCw size={12} className="animate-spin" /> : <Crown size={12} />}
-            🎁 Tặng Voucher Tri Ân VIP
+            🎁 Tặng Voucher Đích Danh Cho Khách VIP
           </button>
         );
       default:
@@ -299,10 +321,15 @@ export const AiOpsChatbox: React.FC = () => {
                         }`}
                       >
                         {alert && (
-                          <div className="flex items-center gap-1.5 mb-1.5">
+                          <div className="flex items-center justify-between gap-1.5 mb-1.5">
                             <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
                               {alert.title}
                             </span>
+                            {alert.isResolved && (
+                              <span className="text-[9.5px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                ✓ Đã giải quyết
+                              </span>
+                            )}
                           </div>
                         )}
 
