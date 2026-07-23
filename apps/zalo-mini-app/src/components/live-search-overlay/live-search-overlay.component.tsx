@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { apiRequest } from "../../utils/api";
-import { IProduct } from "../../App";
+import { trackAnalyticsEvent } from "../../utils/analytics/analytics.util";
+import { IProduct, useCart } from "../../App";
+
 import { ILiveSearchOverlayProps } from "./live-search-overlay.type";
 import { LazyImageComponent } from "../lazy-image";
 import {
@@ -32,6 +34,7 @@ const SEARCH_CATEGORIES = [
 
 export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
   const { isOpen, onClose, onSelectProduct } = props;
+  const { zaloUser } = useCart();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCat, setSelectedCat] = useState("all");
   const [sortBy, setSortBy] = useState<"newest" | "price-asc" | "price-desc">("newest");
@@ -128,6 +131,12 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
       setResults(productList);
       if (term) {
         saveToHistory(term);
+        // Track search analytics event to backend API
+        trackAnalyticsEvent(zaloUser?.id || "guest", "search", undefined, undefined, {
+          keyword: term,
+          category,
+          resultsCount: productList.length,
+        });
       }
     } catch (e) {
       console.error("Search failed:", e);

@@ -69,6 +69,7 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
   const [allOrders, setAllOrders] = useState<IOrder[]>([]);
   const [dailyStats, setDailyStats] = useState<IDailyStatPoint[]>([]);
   const [topProducts, setTopProducts] = useState<ITopProduct[]>([]);
+  const [topSearchKeywords, setTopSearchKeywords] = useState<{ keyword: string; count: number }[]>([]);
   const [funnelData, setFunnelData] = useState<IFunnelData | null>(null);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<7 | 30>(7);
@@ -79,17 +80,19 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
       try {
         if (!isSilent) setLoading(true);
 
-        const [orders, daily, topProds, funnel] = await Promise.allSettled([
+        const [orders, daily, topProds, funnel, topSearches] = await Promise.allSettled([
           apiRequest<IOrder[]>('/orders/admin/all').catch(() => []),
           apiRequest<IDailyStatPoint[]>(`/analytics/daily-stats?days=${timeRange}`).catch(() => []),
           apiRequest<ITopProduct[]>('/analytics/top-products?limit=8').catch(() => []),
           apiRequest<IFunnelData>('/analytics/funnel').catch(() => null),
+          apiRequest<{ keyword: string; count: number }[]>('/analytics/top-searches?limit=8').catch(() => []),
         ]);
 
         if (orders.status === 'fulfilled') setAllOrders(Array.isArray(orders.value) ? orders.value : []);
         if (daily.status === 'fulfilled') setDailyStats(Array.isArray(daily.value) ? daily.value : []);
         if (topProds.status === 'fulfilled') setTopProducts(Array.isArray(topProds.value) ? topProds.value : []);
         if (funnel.status === 'fulfilled' && funnel.value) setFunnelData(funnel.value);
+        if (topSearches.status === 'fulfilled' && Array.isArray(topSearches.value)) setTopSearchKeywords(topSearches.value);
       } catch (err) {
         console.error('Analytics fetch error:', err);
       } finally {
@@ -442,6 +445,43 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* ── Top Searched Keywords Section ── */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-sm font-bold text-gray-800">🔍 Top Từ Khóa Được Tìm Kiếm Nhiều Nhất</h3>
+            <p className="text-gray-400 text-xs mt-0.5">Dữ liệu thực tế từ lượt tìm kiếm của khách hàng trên Zalo Mini App</p>
+          </div>
+          <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-3 py-1 rounded-full border border-purple-200">
+            Realtime Analytics
+          </span>
+        </div>
+
+        {topSearchKeywords.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {topSearchKeywords.map((item, idx) => (
+              <div key={idx} className="flex items-center justify-between p-3 bg-purple-50/50 hover:bg-purple-50 border border-purple-100 rounded-xl transition-all">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[9px] font-black shrink-0">
+                    {idx + 1}
+                  </span>
+                  <span className="text-xs font-bold text-gray-800 truncate">
+                    #{item.keyword}
+                  </span>
+                </div>
+                <span className="text-[10px] font-black text-purple-700 bg-white px-2 py-0.5 rounded-md border border-purple-200 shrink-0">
+                  {item.count} lượt
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-24 text-gray-400 text-sm bg-gray-50 rounded-xl border border-dashed border-gray-200">
+            Chưa có từ khóa tìm kiếm nào được ghi nhận. Hãy thử tìm kiếm trên Zalo Mini App.
+          </div>
+        )}
       </div>
 
       {/* ── Top Selling Products Table (from Orders) ── */}

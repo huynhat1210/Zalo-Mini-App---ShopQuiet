@@ -50,4 +50,10 @@ export class AnalyticsController {
   async getDailyStats(@Query('days') days?: string) {
     return this.analyticsService.getDailyStats(days ? parseInt(days, 10) : 30);
   }
+
+  @Get('top-searches')
+  async getTopSearches(@Query('limit') limit?: string) {
+    return this.analyticsService.getTopSearchKeywords(limit ? parseInt(limit, 10) : 10);
+  }
 }
+

@@ -175,4 +175,29 @@ export class AnalyticsService {
       a.date.localeCompare(b.date),
     );
   }
+
+  async getTopSearchKeywords(limit = 10) {
+    const searchEvents = await this.prisma.analyticsEvent.findMany({
+      where: { eventType: 'search' },
+      select: { metadata: true },
+      orderBy: { createdAt: 'desc' },
+      take: 500,
+    });
+
+    const keywordCounts: Record<string, number> = {};
+    searchEvents.forEach((ev) => {
+      const meta = ev.metadata as any;
+      const kw = meta?.keyword || meta?.query || meta?.term;
+      if (kw && typeof kw === 'string' && kw.trim()) {
+        const cleanKw = kw.trim().toLowerCase();
+        keywordCounts[cleanKw] = (keywordCounts[cleanKw] || 0) + 1;
+      }
+    });
+
+    return Object.entries(keywordCounts)
+      .map(([keyword, count]) => ({ keyword, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit);
+  }
 }
+
