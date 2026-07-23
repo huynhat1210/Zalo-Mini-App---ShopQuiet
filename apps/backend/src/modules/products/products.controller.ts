@@ -75,12 +75,14 @@ export class ProductsController {
   @ApiResponse({ status: 200, description: 'Products retrieved' })
   async getProducts(
     @Query('search') search?: string,
+    @Query('query') query?: string,
     @Query('categoryId') categoryId?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('page_size') pageSize?: string,
     @Query('sort') sort?: string,
   ) {
+    const searchKey = search || query;
     const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = pageSize
       ? parseInt(pageSize, 10)
@@ -88,7 +90,7 @@ export class ProductsController {
         ? parseInt(limit, 10)
         : 10;
     return this.productsService.findAll(
-      search,
+      searchKey,
       categoryId,
       pageNum,
       limitNum,

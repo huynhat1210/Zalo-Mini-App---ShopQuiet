@@ -40,10 +40,11 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
     setLoading(true);
     const timer = setTimeout(async () => {
       try {
-        const res = await apiRequest<{ products: IProduct[] }>(
-          `/products?query=${encodeURIComponent(term)}&limit=10`,
+        const res = await apiRequest<any>(
+          `/products?search=${encodeURIComponent(term)}&limit=10`,
         );
-        setResults(res?.products || []);
+        const productList = Array.isArray(res) ? res : res?.products || [];
+        setResults(productList);
       } catch (e) {
         console.error("Live search failed:", e);
         setResults([]);

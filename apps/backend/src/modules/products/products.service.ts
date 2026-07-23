@@ -28,9 +28,12 @@ export class ProductsService {
     const where: Prisma.ProductWhereInput = {};
 
     if (search) {
+      const cleanSearch = search.trim().replace(/^#/, '');
       where.OR = [
-        { name: { contains: search } },
-        { description: { contains: search } },
+        { name: { contains: cleanSearch, mode: 'insensitive' } },
+        { description: { contains: cleanSearch, mode: 'insensitive' } },
+        { tags: { contains: cleanSearch, mode: 'insensitive' } },
+        { category: { name: { contains: cleanSearch, mode: 'insensitive' } } },
       ];
     }
 

@@ -29,11 +29,12 @@ export const VoucherWallet: React.FC<IVoucherWalletProps> = (props) => {
   if (!isOpen) return null;
 
   const handleApply = (code: string) => {
+    localStorage.setItem("selected_voucher_code", code);
     if (onApplyVoucher) {
       onApplyVoucher(code);
     } else {
       navigator.clipboard?.writeText(code).catch(() => {});
-      showToast(`Đã sao chép mã ${code}! Mở giỏ hàng để sử dụng.`, "success");
+      showToast(`Đã áp dụng mã ${code} vào giỏ hàng!`, "success");
     }
     onClose();
   };

@@ -15,22 +15,47 @@ export const Cart: React.FC<ICartProps> = (_props) => {
   } = useCart();
   const [estimatedShipping, setEstimatedShipping] = useState(5);
   const [checkedKeys, setCheckedKeys] = useState<string[]>([]);
+  const [selectedVoucher, setSelectedVoucher] = useState<any>(null);
+  const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
+  const [vouchersList, setVouchersList] = useState<any[]>([]);
 
   useEffect(() => {
-    async function loadShippingEstimate() {
+    async function loadVouchersAndShipping() {
       try {
-        const methods = await apiRequest<Array<{ price: number }>>(
-          "/cms/shipping-methods",
-        );
+        const [methods, list] = await Promise.all([
+          apiRequest<Array<{ price: number }>>("/cms/shipping-methods").catch(() => []),
+          apiRequest<any[]>("/vouchers").catch(() => []),
+        ]);
         const paidMethod = methods.find((method) => method.price > 0);
         setEstimatedShipping(paidMethod?.price ?? methods[0]?.price ?? 0);
+
+        if (Array.isArray(list)) {
+          setVouchersList(list);
+          const storedCode = localStorage.getItem("selected_voucher_code");
+          if (storedCode) {
+            const found = list.find((v: any) => v.code === storedCode);
+            if (found) setSelectedVoucher(found);
+          }
+        }
       } catch (e) {
-        console.error("Failed to load cart shipping estimate:", e);
+        console.error("Failed to load cart initialization data:", e);
       }
     }
 
-    loadShippingEstimate();
+    loadVouchersAndShipping();
   }, []);
+
+  const handleSelectVoucher = (voucher: any) => {
+    setSelectedVoucher(voucher);
+    if (voucher) {
+      localStorage.setItem("selected_voucher_code", voucher.code);
+      showToast(`Đã áp dụng mã ${voucher.code}!`, "success");
+    } else {
+      localStorage.removeItem("selected_voucher_code");
+      showToast("Đã bỏ chọn voucher", "info");
+    }
+    setIsVoucherModalOpen(false);
+  };
 
   const getItemKey = (item: any) =>
     `${item.product.id}-${item.color || "DEFAULT"}-${item.size || "DEFAULT"}`;
@@ -85,9 +110,21 @@ export const Cart: React.FC<ICartProps> = (_props) => {
     (subtotal / freeshipThreshold) * 100,
   );
 
+  let voucherDiscount = 0;
+  if (selectedVoucher && subtotal > 0) {
+    if (selectedVoucher.type === "PERCENT") {
+      voucherDiscount = Math.round((subtotal * selectedVoucher.value) / 100);
+      if (selectedVoucher.maxDiscount > 0) {
+        voucherDiscount = Math.min(voucherDiscount, selectedVoucher.maxDiscount);
+      }
+    } else if (selectedVoucher.type === "FIXED") {
+      voucherDiscount = Math.min(subtotal, selectedVoucher.value);
+    }
+  }
+
   const shipping =
     subtotal > 0 ? (isFreeshipEligible ? 0 : estimatedShipping) : 0;
-  const total = subtotal + shipping;
+  const total = Math.max(0, subtotal + shipping - voucherDiscount);
 
   const handleProceedCheckout = () => {
     if (selectedItems.length === 0) {
@@ -383,9 +420,34 @@ export const Cart: React.FC<ICartProps> = (_props) => {
           </div>
         )}
 
+        {/* Shopee-style Voucher Section */}
+        {selectedItems.length > 0 && (
+          <div className="bg-white rounded-2xl border border-dashed border-[#0e6877]/30 p-3.5 mt-3 flex items-center justify-between shadow-2xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="text-lg shrink-0">🎟️</span>
+              <div className="text-left min-w-0">
+                <p className="text-[10px] font-extrabold text-[#526069]/80 uppercase tracking-wider">Voucher Của Shop</p>
+                {selectedVoucher ? (
+                  <p className="text-xs font-black text-[#0e6877] truncate mt-0.5">
+                    ✅ {selectedVoucher.code} ({selectedVoucher.type === 'PERCENT' ? `Giảm ${selectedVoucher.value}%` : `Giảm ${selectedVoucher.value.toLocaleString('vi-VN')}đ`})
+                  </p>
+                ) : (
+                  <p className="text-xs font-bold text-textColor-variant truncate mt-0.5">Chưa áp dụng mã giảm giá</p>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={() => setIsVoucherModalOpen(true)}
+              className="text-[10px] font-extrabold bg-[#0e6877]/10 text-[#0e6877] hover:bg-[#0e6877] hover:text-white px-3 py-1.5 rounded-full border-none cursor-pointer transition-all shrink-0 active:scale-95"
+            >
+              {selectedVoucher ? "Đổi mã" : "Chọn mã ➔"}
+            </button>
+          </div>
+        )}
+
         {/* Order Summary Section */}
         {selectedItems.length > 0 && (
-          <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 space-y-3.5 shadow-xs mt-4">
+          <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 space-y-3.5 shadow-xs mt-3">
             <h3 className="text-[10px] font-bold uppercase text-[#526069]/70 tracking-widest text-left">
               Tóm tắt đơn hàng
             </h3>
@@ -407,6 +469,12 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                   )}
                 </span>
               </div>
+              {voucherDiscount > 0 && (
+                <div className="flex justify-between text-[#0e6877] font-bold">
+                  <span>Giảm giá Voucher ({selectedVoucher?.code})</span>
+                  <span>−{voucherDiscount.toLocaleString("vi-VN")} đ</span>
+                </div>
+              )}
               <hr className="border-[#f0edeb] my-1" />
               <div className="flex justify-between font-bold text-textColor text-sm">
                 <span>Tổng cộng</span>
@@ -428,6 +496,56 @@ export const Cart: React.FC<ICartProps> = (_props) => {
           >
             Tiến hành đặt hàng ({selectedItems.length})
           </button>
+        </div>
+      )}
+
+      {/* Cart Voucher Modal */}
+      {isVoucherModalOpen && (
+        <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-center justify-center p-6 animate-fade-in">
+          <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up max-h-[70vh] flex flex-col">
+            <div className="flex items-center justify-between shrink-0 pb-2 border-b border-[#f5f3f0]">
+              <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">
+                🎟️ Chọn Mã Giảm Giá
+              </h3>
+              <button
+                onClick={() => setIsVoucherModalOpen(false)}
+                className="p-1 bg-neutral-100 rounded-full border-none cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1 space-y-2.5 pr-1">
+              {vouchersList.length === 0 ? (
+                <div className="text-center py-6 text-xs text-textColor-variant">Chưa có mã giảm giá khả dụng</div>
+              ) : (
+                vouchersList.map((v: any) => {
+                  const isSelected = selectedVoucher?.code === v.code;
+                  return (
+                    <div
+                      key={v.code}
+                      onClick={() => handleSelectVoucher(isSelected ? null : v)}
+                      className={`p-3 rounded-2xl border text-left cursor-pointer transition-all flex items-center justify-between ${
+                        isSelected
+                          ? "bg-[#0e6877]/10 border-[#0e6877]"
+                          : "bg-white border-[#eeebe8] hover:border-[#0e6877]/50"
+                      }`}
+                    >
+                      <div>
+                        <span className="font-black text-xs text-[#0e6877] tracking-wider font-mono">{v.code}</span>
+                        <p className="text-[10.5px] font-bold text-textColor mt-0.5">
+                          {v.type === 'PERCENT' ? `Giảm ${v.value}%` : `Giảm ${v.value.toLocaleString('vi-VN')}đ`}
+                        </p>
+                      </div>
+                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${isSelected ? "bg-[#0e6877] text-white" : "bg-neutral-100 text-[#526069]"}`}>
+                        {isSelected ? "Đã chọn ✓" : "Áp dụng"}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
