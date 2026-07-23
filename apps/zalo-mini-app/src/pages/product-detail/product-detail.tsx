@@ -933,12 +933,12 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
 
             {/* Modal Header */}
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                {sizeGuideType === "shoes" ? "👟 Size Giày & Tư Vấn" : "👗 Bảng Size & Tư Vấn"}
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
+                {sizeGuideType === "shoes" ? "Bảng Size Giày & Tư Vấn" : "Bảng Size Quần Áo & Tư Vấn"}
               </h3>
               <button
                 onClick={() => setIsSizeGuideOpen(false)}
-                className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-sm flex items-center justify-center border-none cursor-pointer hover:bg-slate-200 transition-all"
+                className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-xs flex items-center justify-center border-none cursor-pointer hover:bg-slate-200 transition-all"
               >
                 ✕
               </button>
@@ -949,24 +949,24 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
               <>
                 {/* Shoes Reference Table */}
                 {activeSizeChart.length > 0 && (
-                  <div className="mb-4 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                  <div className="mb-4 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xs">
                     <table className="w-full text-xs">
-                      <thead className="bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold">
+                      <thead className="bg-[#0e6877] text-white font-extrabold uppercase text-[10px] tracking-wider">
                         <tr>
-                          <th className="py-2 px-3 text-center">Size EU</th>
-                          <th className="py-2 px-3 text-center">Dài bàn chân (cm)</th>
+                          <th className="py-2.5 px-3 text-center">Size EU</th>
+                          <th className="py-2.5 px-3 text-center">Dài bàn chân (cm)</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
                         {activeSizeChart.map((row: any) => {
                           const isMatched = recommendedSize === (row.size || row.euSize);
                           return (
-                            <tr key={row.size || row.euSize} className={isMatched ? "bg-teal-50 dark:bg-teal-950/60 font-bold text-[#0e6877] dark:text-teal-400" : ""}>
-                              <td className="py-2 px-3 text-center">
+                            <tr key={row.size || row.euSize} className={isMatched ? "bg-teal-50 dark:bg-teal-950/60 font-bold text-[#0e6877] dark:text-teal-300" : ""}>
+                              <td className="py-2.5 px-3 text-center font-bold">
                                 {row.size || row.euSize}
-                                {isMatched && <span className="ml-1.5 px-1.5 py-0.5 text-[9px] bg-[#0e6877] text-white rounded font-bold">Gợi ý</span>}
+                                {isMatched && <span className="ml-2 px-2 py-0.5 text-[9px] bg-[#0e6877] text-white rounded-full font-bold">Gợi ý</span>}
                               </td>
-                              <td className="py-2 px-3 text-center">{row.footLength} cm</td>
+                              <td className="py-2.5 px-3 text-center font-medium">{row.footLength} cm</td>
                             </tr>
                           );
                         })}
@@ -986,31 +986,15 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                     placeholder="Ví dụ: 24.5"
                     value={footLengthCm}
                     onChange={(e) => { setFootLengthCm(e.target.value); setRecommendedSize(null); }}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0e6877]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0e6877]"
                   />
                   <button
                     type="button"
                     onClick={calcRecommendedSize}
-                    className="w-full py-2.5 bg-[#0e6877] text-white text-xs font-bold rounded-xl border-none cursor-pointer active:scale-98 transition-all"
+                    className="w-full py-2.5 bg-[#0e6877] hover:bg-[#0b5460] text-white text-xs font-bold rounded-xl border-none cursor-pointer active:scale-98 transition-all shadow-xs"
                   >
-                    Tính Size Giày
+                    Gợi Ý Size Phù Hợp
                   </button>
-
-                  {recommendedSize && (
-                    <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-[#0e6877] text-center space-y-2">
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Size gợi ý cho bạn</p>
-                      <p className="text-3xl font-black text-[#0e6877] dark:text-teal-400">EU {recommendedSize}</p>
-                      {uniqueSizes.includes(recommendedSize) && (
-                        <button
-                          type="button"
-                          onClick={() => { setSelectedSize(recommendedSize); setIsSizeGuideOpen(false); }}
-                          className="px-5 py-2 bg-[#0e6877] text-white text-xs font-bold rounded-lg border-none cursor-pointer active:scale-95"
-                        >
-                          Chọn Size EU {recommendedSize}
-                        </button>
-                      )}
-                    </div>
-                  )}
                 </div>
               </>
             ) : (
@@ -1018,26 +1002,26 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                 {/* ── CLOTHING MODE ── */}
                 {/* Clothing Reference Table */}
                 {activeSizeChart.length > 0 && (
-                  <div className="mb-4 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                  <div className="mb-4 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xs">
                     <table className="w-full text-xs">
-                      <thead className="bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold">
+                      <thead className="bg-[#0e6877] text-white font-extrabold uppercase text-[10px] tracking-wider">
                         <tr>
-                          <th className="py-2 px-2 text-center">Size</th>
-                          <th className="py-2 px-2 text-center">Chiều cao</th>
-                          <th className="py-2 px-2 text-center">Cân nặng</th>
+                          <th className="py-2.5 px-2 text-center">Size</th>
+                          <th className="py-2.5 px-2 text-center">Chiều cao</th>
+                          <th className="py-2.5 px-2 text-center">Cân nặng</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
                         {activeSizeChart.map((row: any) => {
                           const isMatched = recommendedSize === row.size;
                           return (
-                            <tr key={row.size} className={isMatched ? "bg-teal-50 dark:bg-teal-950/60 font-bold text-[#0e6877] dark:text-teal-400" : ""}>
-                              <td className="py-2 px-2 text-center font-bold">
+                            <tr key={row.size} className={isMatched ? "bg-teal-50 dark:bg-teal-950/60 font-bold text-[#0e6877] dark:text-teal-300" : ""}>
+                              <td className="py-2.5 px-2 text-center font-bold">
                                 {row.size}
-                                {isMatched && <span className="ml-1 px-1.5 py-0.5 text-[9px] bg-[#0e6877] text-white rounded">Gợi ý</span>}
+                                {isMatched && <span className="ml-1.5 px-2 py-0.5 text-[9px] bg-[#0e6877] text-white rounded-full font-bold">Gợi ý</span>}
                               </td>
-                              <td className="py-2 px-2 text-center">{row.height} cm</td>
-                              <td className="py-2 px-2 text-center">{row.weight} kg</td>
+                              <td className="py-2.5 px-2 text-center font-medium">{row.height} cm</td>
+                              <td className="py-2.5 px-2 text-center font-medium">{row.weight} kg</td>
                             </tr>
                           );
                         })}
@@ -1056,7 +1040,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                         placeholder="165"
                         value={heightCm}
                         onChange={(e) => { setHeightCm(e.target.value); setRecommendedSize(null); }}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0e6877]"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0e6877]"
                       />
                     </div>
                     <div>
@@ -1066,7 +1050,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                         placeholder="58"
                         value={weightKg}
                         onChange={(e) => { setWeightKg(e.target.value); setRecommendedSize(null); }}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0e6877]"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-[#0e6877]"
                       />
                     </div>
                   </div>
@@ -1074,26 +1058,10 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                   <button
                     type="button"
                     onClick={calcRecommendedSize}
-                    className="w-full py-2.5 bg-[#0e6877] text-white text-xs font-bold rounded-xl border-none cursor-pointer active:scale-98 transition-all"
+                    className="w-full py-2.5 bg-[#0e6877] hover:bg-[#0b5460] text-white text-xs font-bold rounded-xl border-none cursor-pointer active:scale-98 transition-all shadow-xs"
                   >
                     Gợi Ý Size Phù Hợp
                   </button>
-
-                  {recommendedSize && (
-                    <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-[#0e6877] text-center space-y-2">
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Size gợi ý cho bạn</p>
-                      <p className="text-3xl font-black text-[#0e6877] dark:text-teal-400">{recommendedSize}</p>
-                      {uniqueSizes.includes(recommendedSize) && (
-                        <button
-                          type="button"
-                          onClick={() => { setSelectedSize(recommendedSize); setIsSizeGuideOpen(false); }}
-                          className="px-5 py-2 bg-[#0e6877] text-white text-xs font-bold rounded-lg border-none cursor-pointer active:scale-95"
-                        >
-                          Chọn Size {recommendedSize}
-                        </button>
-                      )}
-                    </div>
-                  )}
                 </div>
               </>
             )}

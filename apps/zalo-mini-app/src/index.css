@@ -40,61 +40,8 @@ html.dark {
 }
 
 html.dark body {
-  background-color: #0b0f17 !important;
-  color: #f8fafc !important;
-}
-
-html.dark .bg-white {
-  background-color: #161e2e !important;
-}
-
-html.dark .bg-\[#f7f7f7\],
-html.dark .bg-\[#faf9f8\],
-html.dark .bg-\[#fcfbfa\],
-html.dark .bg-\[#f8f6f4\],
-html.dark .bg-\[#f6f4f2\] {
-  background-color: #0b0f17 !important;
-}
-
-html.dark .text-textColor,
-html.dark .text-slate-900,
-html.dark .text-slate-800,
-html.dark .text-slate-700 {
-  color: #f8fafc !important;
-}
-
-html.dark .text-slate-500,
-html.dark .text-slate-600,
-html.dark .text-\[\#526069\] {
-  color: #94a3b8 !important;
-}
-
-html.dark .border-\[\#f0edeb\],
-html.dark .border-\[\#ece9e6\],
-html.dark .border-neutral-100,
-html.dark .border-neutral-200,
-html.dark .border-slate-100,
-html.dark .border-slate-200 {
-  border-color: #27354a !important;
-}
-
-html.dark .bg-neutral-50,
-html.dark .bg-neutral-100,
-html.dark .bg-slate-50,
-html.dark .bg-slate-100 {
-  background-color: #1e293b !important;
-}
-
-html.dark input,
-html.dark select,
-html.dark textarea {
-  background-color: #0b0f17 !important;
-  color: #f8fafc !important;
-  border-color: #27354a !important;
-}
-
-html.dark .divide-\[\#f5f3f0\] > * + * {
-  border-color: #27354a !important;
+  background-color: #0b0f17;
+  color: #f8fafc;
 }
 
 

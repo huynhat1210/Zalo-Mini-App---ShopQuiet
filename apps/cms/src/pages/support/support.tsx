@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { apiRequest } from '../../utils/api';
-import { PaginationComponent } from '../../components';
 import {
   Search, Send, HelpCircle, Package, Zap,
   ShoppingBag, Star, Phone, Crown, MessageSquare,
@@ -66,10 +65,6 @@ export const Support: React.FC = () => {
   const [shopStatus, setShopStatus] = useState<'ONLINE' | 'OFFLINE'>('ONLINE');
   const [showCanned, setShowCanned] = useState(false);
   const [togglingStatus, setTogglingStatus] = useState(false);
-
-  // Pagination State for Chat Sessions
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(6);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
@@ -311,8 +306,7 @@ export const Support: React.FC = () => {
               <p className="text-xs text-slate-400 font-semibold">Không có hội thoại nào</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {filteredSessions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((session) => {
+            filteredSessions.map((session) => {
               const isActive = activeSession?.zaloUserId === session.zaloUserId;
               const hasUnread = session.unreadCount > 0;
               return (
@@ -364,22 +358,9 @@ export const Support: React.FC = () => {
                   {isActive && <ChevronRight size={12} className="text-white/60 shrink-0 self-center" />}
                 </button>
               );
-            })}
-            
-            <PaginationComponent
-              currentPage={currentPage}
-              totalPages={Math.ceil(filteredSessions.length / itemsPerPage)}
-              totalItems={filteredSessions.length}
-              itemsPerPage={itemsPerPage}
-              onPageChange={setCurrentPage}
-              onItemsPerPageChange={(newSize) => {
-                setItemsPerPage(newSize);
-                setCurrentPage(1);
-              }}
-            />
-          </div>
-        )}
-      </div>
+            })
+          )}
+        </div>
       </div>
 
       {/* ═══ MIDDLE: Chat Thread ═══ */}
