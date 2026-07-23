@@ -45,7 +45,7 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
   const fetchBanners = async () => {
     try {
       setLoading(true);
-      const res = await apiRequest('/banners');
+      const res = await apiRequest('/banners/admin/all').catch(() => apiRequest('/banners'));
       setBanners(Array.isArray(res) ? res : []);
     } catch (err) {
       console.error('Failed to load banners:', err);
@@ -57,6 +57,20 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
   useEffect(() => {
     fetchBanners();
   }, []);
+
+  const handleToggleBanner = async (id: number, currentActive: boolean) => {
+    try {
+      const nextActive = !currentActive;
+      await apiRequest(`/banners/${id}/toggle`, 'PATCH', { active: nextActive });
+      setBanners(banners.map((b) => (b.id === id ? { ...b, active: nextActive } : b)));
+      toastSuccess(
+        nextActive ? 'Đã bật Banner' : 'Đã khóa Banner',
+        nextActive ? 'Banner đã được hiển thị trên Zalo Mini App.' : 'Banner đã ẩn khỏi Zalo Mini App.',
+      );
+    } catch (err: any) {
+      toastError('Không thể cập nhật', err.message || 'Lỗi khi bật/tắt banner');
+    }
+  };
 
   const handleOpenAddModal = () => {
     setFormData({
@@ -163,12 +177,33 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
                 </div>
               </div>
 
-              <div className="p-4 pt-0 border-t border-slate-100/80 mt-2 flex justify-end">
+              <div className="p-4 pt-3 border-t border-slate-100/80 mt-2 flex justify-between items-center bg-slate-50/50">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleBanner(banner.id, banner.active)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      banner.active ? 'bg-[#0e6877]' : 'bg-slate-300'
+                    }`}
+                    title={banner.active ? 'Bấm để tắt banner' : 'Bấm để bật banner'}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                        banner.active ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                  <span className={`text-[11px] font-bold ${banner.active ? 'text-[#0e6877]' : 'text-slate-500'}`}>
+                    {banner.active ? 'Đang Bật' : 'Đang Tắt'}
+                  </span>
+                </div>
+
                 <button
+                  type="button"
                   onClick={() => handleDeleteBanner(banner.id)}
                   className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all border-none cursor-pointer flex items-center gap-1 text-xs font-bold"
                 >
-                  <Trash2 size={15} /> Xóa banner
+                  <Trash2 size={14} /> Xóa
                 </button>
               </div>
             </div>

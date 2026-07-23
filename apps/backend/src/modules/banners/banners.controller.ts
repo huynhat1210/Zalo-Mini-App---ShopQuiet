@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Body,
   Param,
@@ -20,6 +21,12 @@ export class BannersController {
     return this.bannersService.findAll();
   }
 
+  @Get('admin/all')
+  @UseGuards(JwtAuthGuard)
+  async getAllBannersAdmin() {
+    return this.bannersService.findAllAdmin();
+  }
+
   @Post()
   @UseGuards(JwtAuthGuard)
   async createBanner(
@@ -32,6 +39,15 @@ export class BannersController {
     },
   ) {
     return this.bannersService.create(body);
+  }
+
+  @Patch(':id/toggle')
+  @UseGuards(JwtAuthGuard)
+  async toggleBanner(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: { active?: boolean },
+  ) {
+    return this.bannersService.toggleActive(id, body.active);
   }
 
   @Delete(':id')

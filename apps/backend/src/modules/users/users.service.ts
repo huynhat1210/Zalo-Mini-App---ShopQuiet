@@ -79,10 +79,15 @@ export class UsersService {
     });
 
     // Sum totalAmount of all COMPLETED and DELIVERED orders
+    // Annual Tier Rule: Calculate completed orders within the last 365 days (annual rolling window)
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
     const completedOrders = await this.prisma.order.findMany({
       where: {
         zaloUserId: zaloId,
         status: { in: ['COMPLETED', 'DELIVERED'] },
+        createdAt: { gte: oneYearAgo },
       },
       select: { totalAmount: true },
     });

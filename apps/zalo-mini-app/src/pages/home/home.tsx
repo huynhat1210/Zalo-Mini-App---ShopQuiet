@@ -62,7 +62,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
     ? productsData.pages.flatMap((page: any) => page.data || page)
     : [];
   const categories = categoriesData || [];
-  const banners = bannersData || [];
+  const banners = (bannersData || []).filter((b: any) => b.active !== false);
   const isFetchingProducts = isLoadingProducts;
   const isFetchingCategories = isLoadingCategories;
   const isFetchingBanners = isLoadingBanners;

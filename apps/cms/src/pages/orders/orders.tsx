@@ -522,6 +522,54 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
                     </div>
                   </div>
 
+                  {/* Inline Waybill Input Form (Anchored directly to the clicked order row) */}
+                  {trackingModalOrderId === order.id && (
+                    <div className="mt-3 p-4 bg-teal-50/95 border border-teal-200 rounded-2xl animate-fade-in text-left space-y-2 shadow-xs">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-black text-[#0e6877] uppercase tracking-wider flex items-center gap-1.5">
+                          <Truck size={15} /> Nhập Mã Vận Đơn (GHN / GHTK / ViettelPost) - Đơn #{typeof order.id === 'string' ? order.id.slice(-6).toUpperCase() : String(order.id)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setTrackingModalOrderId(null)}
+                          className="w-6 h-6 rounded-full bg-white text-slate-400 hover:text-slate-700 flex items-center justify-center border border-slate-200 cursor-pointer text-xs"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleUpdateStatus(order.id, 'SHIPPED', trackingNumberInput);
+                        }}
+                        className="flex gap-2 pt-1"
+                      >
+                        <input
+                          type="text"
+                          placeholder="VD: GHN123456789VN"
+                          value={trackingNumberInput}
+                          onChange={(e) => setTrackingNumberInput(e.target.value)}
+                          className="flex-1 px-3.5 py-2 text-xs bg-white border border-slate-300 focus:border-[#0e6877] rounded-xl focus:outline-none font-mono font-bold"
+                          autoFocus
+                          required
+                        />
+                        <button
+                          type="submit"
+                          className="px-4 py-2 bg-[#0e6877] hover:bg-[#0b5460] text-white font-bold rounded-xl text-xs border-none cursor-pointer shadow-xs transition-all"
+                        >
+                          Xác nhận Bàn giao
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setTrackingModalOrderId(null)}
+                          className="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs border-none cursor-pointer"
+                        >
+                          Hủy
+                        </button>
+                      </form>
+                    </div>
+                  )}
+
                 </div>
 
                 {/* ── Expanded Full Details Section (Rich Grid!) ── */}
@@ -724,61 +772,7 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
         </div>
       )}
 
-      {/* ── Tracking Number Modal Form ── */}
-      {trackingModalOrderId && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-xl border border-slate-200 animate-scaleUp">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
-              <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                <Truck size={16} className="text-[#0e6877]" /> Bàn Giao Vận Chuyển Shipper
-              </h3>
-              <button
-                onClick={() => setTrackingModalOrderId(null)}
-                className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center border-none cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleUpdateStatus(trackingModalOrderId, 'SHIPPED', trackingNumberInput);
-              }}
-              className="space-y-3 text-left"
-            >
-              <p className="text-xs text-slate-600">
-                Nhập mã vận đơn bưu gửi (GHN / GHTK / ViettelPost) cho đơn hàng <strong className="text-[#0e6877]">#{trackingModalOrderId.slice(-6).toUpperCase()}</strong>:
-              </p>
-
-              <input
-                type="text"
-                placeholder="VD: GHN123456789VN"
-                value={trackingNumberInput}
-                onChange={(e) => setTrackingNumberInput(e.target.value)}
-                className="w-full px-4 py-2.5 text-xs bg-slate-50 border border-slate-200 focus:border-[#0e6877] rounded-xl focus:outline-none font-mono font-bold"
-                required
-              />
-
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 bg-[#0e6877] hover:bg-[#0b5460] text-white font-bold rounded-xl text-xs border-none cursor-pointer transition-all shadow-xs"
-                >
-                  Xác nhận Bàn giao
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTrackingModalOrderId(null)}
-                  className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl text-xs border-none cursor-pointer"
-                >
-                  Hủy
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* ── ZNS Push Logs Modal ── */}
       {showZnsModal && (

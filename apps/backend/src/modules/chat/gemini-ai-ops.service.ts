@@ -158,14 +158,31 @@ export class GeminiAiOpsService {
         });
       }
 
-      // 4. VIP Milestone Customers
+      // 4. VIP Milestone Customers (Gold & Diamond Tiers Only, Max 1 per week)
       const vipUsers = await this.prisma.user.findMany({
-        take: 1,
+        where: {
+          membershipTier: { in: ['Vàng', 'Kim Cương'] },
+        },
         orderBy: { gamificationPoints: 'desc' },
+        take: 3,
       });
 
-      if (vipUsers.length > 0 && vipUsers[0]) {
-        const u = vipUsers[0];
+      // Filter users who haven't received a VIP voucher in the last 7 days (1 week cooldown)
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+      for (const u of vipUsers) {
+        const recentVipNotif = await this.prisma.notification.findFirst({
+          where: {
+            zaloUserId: u.zaloId,
+            title: { contains: 'Voucher Tri Ân VIP' },
+            createdAt: { gte: oneWeekAgo },
+          },
+        });
+
+        // Skip if gifted within the last week
+        if (recentVipNotif) continue;
+
         const alertId = `vip-alert-${u.zaloId}`;
         const isResolved = this.resolvedAlertIds.has(alertId);
         const isRead = this.readAlertIds.has(alertId) || isResolved;
@@ -173,15 +190,18 @@ export class GeminiAiOpsService {
         alerts.push({
           id: alertId,
           type: 'VIP_MILESTONE',
-          title: '💎 Khách hàng VIP Thân thiết',
-          message: `Tài khoản '${u.name || 'Khách Zalo'}' (SĐT: ${u.phone || '0336433234'}) có ${u.gamificationPoints || 100} điểm thưởng tích lũy. Gemini AI đề xuất tặng Voucher tri ân VIP!`,
-          time: '1 giờ trước',
+          title: `💎 Khách hàng VIP (${u.membershipTier}) Thân thiết`,
+          message: `Tài khoản '${u.name || 'Khách Zalo'}' (SĐT: ${u.phone || '0336433234'}) đạt hạng Hạng ${u.membershipTier} với ${u.gamificationPoints || 100} điểm tích lũy. Gemini AI đề xuất tặng Voucher tri ân VIP (Tặng 1 lần/tuần)!`,
+          time: 'Vừa xong',
           severity: 'info',
           actionType: 'GIFT_VIP_VOUCHER',
           actionPayload: { zaloUserId: u.zaloId, userName: u.name || 'Khách hàng VIP' },
           isRead,
           isResolved,
         });
+
+        // Show max 1 active VIP recommendation alert
+        break;
       }
     } catch (e) {
       this.logger.error('Error fetching AI ops alerts:', e);

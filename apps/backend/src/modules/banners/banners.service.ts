@@ -92,4 +92,22 @@ export class BannersService {
     await this.invalidateCache();
     return banner;
   }
+
+  async toggleActive(id: number, active?: boolean) {
+    const banner = await this.prisma.banner.findUnique({ where: { id } });
+    if (!banner) return null;
+    const newActive = active !== undefined ? active : !banner.active;
+    const updated = await this.prisma.banner.update({
+      where: { id },
+      data: { active: newActive },
+    });
+    await this.invalidateCache();
+    return updated;
+  }
+
+  async findAllAdmin() {
+    return this.prisma.banner.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }

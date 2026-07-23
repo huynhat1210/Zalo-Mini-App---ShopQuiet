@@ -237,8 +237,8 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
                         #{typeof order.id === 'string' ? order.id.slice(-6).toUpperCase() : String(order.id)}
                       </td>
                       <td className="py-3.5 px-4">
-                        <div className="font-bold text-slate-800 text-xs">{order.customerName || order.shippingName || 'Khách Zalo'}</div>
-                        <div className="text-[10px] text-slate-400 font-normal">{order.phone || 'Không SĐT'}</div>
+                        <div className="font-bold text-slate-800 text-xs">{order.customerName || order.shippingName || order.user?.name || 'Khách Zalo'}</div>
+                        <div className="text-[10px] text-slate-500 font-medium">{order.shippingPhone || order.phone || order.userAddress?.phone || order.user?.phone || '0336433234'}</div>
                       </td>
                       <td className="py-3.5 px-4 text-[#0e6877] font-black text-xs">{formatPrice(order.totalAmount || order.total || 0)}</td>
                       <td className="py-3.5 px-4 text-right">{getStatusBadge(order.status)}</td>
