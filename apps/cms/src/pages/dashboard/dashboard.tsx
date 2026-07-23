@@ -164,7 +164,7 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
     <div className="space-y-6 animate-fadeIn text-[#1b1c1b]">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-black text-slate-800 tracking-tight">🔲 Tổng Quan Hệ Thống</h1>
+        <h1 className="text-2xl font-black text-slate-800 tracking-tight">Tổng Quan Hệ Thống</h1>
         <p className="text-slate-500 text-xs mt-1">Theo dõi các chỉ số hoạt động chính của cửa hàng ShopQuiet</p>
       </div>
 

@@ -55,6 +55,24 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
   const { onLogout, isOpen, onClose } = props;
   const [models, setModels] = useState<ModelSummary[]>([]);
   const [showDevTools, setShowDevTools] = useState(false);
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
+
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const orders = await apiRequest<any[]>('/orders/admin/all').catch(() => []);
+        if (Array.isArray(orders)) {
+          const pending = orders.filter((o) => o.status === 'PROCESSING' || o.status === 'PENDING' || o.status === 'RETURN_REQUESTED').length;
+          setPendingOrdersCount(pending);
+        }
+      } catch (e) {
+        console.error('Failed to load pending orders count in sidebar:', e);
+      }
+    };
+    fetchPendingCount();
+    const interval = setInterval(fetchPendingCount, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const fetchModelsSummary = async () => {
@@ -158,7 +176,12 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
                   }
                 >
                   <span className="shrink-0">{item.icon}</span>
-                  <span className="truncate">{item.label}</span>
+                  <span className="flex-1 truncate">{item.label}</span>
+                  {item.to === '/orders' && pendingOrdersCount > 0 && (
+                    <span className="px-2 py-0.5 text-[9.5px] font-black bg-red-500 text-white rounded-full animate-pulse shadow-2xs">
+                      +{pendingOrdersCount}
+                    </span>
+                  )}
                 </NavLink>
               ))}
             </div>

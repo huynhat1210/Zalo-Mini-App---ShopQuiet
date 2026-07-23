@@ -223,7 +223,7 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-gray-900">📊 Phân Tích & Báo Cáo</h1>
+          <h1 className="text-2xl font-black text-gray-900">Phân Tích & Báo Cáo</h1>
           <p className="text-gray-500 text-xs mt-1">Tổng quan hiệu suất kinh doanh theo thời gian thực</p>
         </div>
         <div className="flex items-center gap-3">
@@ -249,9 +249,8 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
               <button
                 key={r}
                 onClick={() => setTimeRange(r)}
-                className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer border-none ${
-                  timeRange === r ? 'bg-[#0e6877] text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer border-none ${timeRange === r ? 'bg-[#0e6877] text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
               >
                 {r} ngày
               </button>
@@ -296,9 +295,8 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
             <div className="flex items-center justify-between mb-3">
               <div className={`${card.bg} ${card.text} p-2.5 rounded-xl`}>{card.icon}</div>
               {card.growth !== null && (
-                <span className={`flex items-center gap-0.5 text-xs font-bold ${
-                  card.growth >= 0 ? 'text-emerald-600' : 'text-red-500'
-                }`}>
+                <span className={`flex items-center gap-0.5 text-xs font-bold ${card.growth >= 0 ? 'text-emerald-600' : 'text-red-500'
+                  }`}>
                   {card.growth >= 0 ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
                   {Math.abs(card.growth).toFixed(1)}%
                 </span>

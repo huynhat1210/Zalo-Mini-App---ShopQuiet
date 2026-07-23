@@ -112,7 +112,7 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-800 tracking-tight">🖼️ Quản Lý Banner Quảng Cáo</h1>
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight">Quản Lý Banner Quảng Cáo</h1>
           <p className="text-slate-500 text-xs mt-1">Cấu hình các hình ảnh trình chiếu Slider ở trang chủ Zalo Mini App</p>
         </div>
 

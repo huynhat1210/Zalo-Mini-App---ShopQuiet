@@ -261,7 +261,7 @@ export const Products: React.FC<IProductsProps> = (_props) => {
       {/* ── Header ── */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">📦 Bảng Quản Lý Sản Phẩm</h1>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Bảng Quản Lý Sản Phẩm</h1>
           <p className="text-slate-500 text-xs mt-1">Chỉnh sửa trực tiếp giá bán, tồn kho, phân loại và lưu tất cả thay đổi trong 1 click</p>
         </div>
 
@@ -270,11 +270,10 @@ export const Products: React.FC<IProductsProps> = (_props) => {
           <button
             onClick={handleSaveAllChanges}
             disabled={savingAll || !hasUnsavedChanges}
-            className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95 ${
-              hasUnsavedChanges
+            className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95 ${hasUnsavedChanges
                 ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200 animate-pulse'
                 : 'bg-[#f0edeb] text-[#8695a0] cursor-not-allowed'
-            }`}
+              }`}
           >
             <Save size={15} className={savingAll ? 'animate-spin' : ''} />
             {savingAll ? 'Đang Lưu...' : 'Lưu Tất Cả Thay Đổi'}
@@ -314,11 +313,10 @@ export const Products: React.FC<IProductsProps> = (_props) => {
         <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto scrollbar-none pb-1 md:pb-0">
           <button
             onClick={() => setSelectedCategoryFilter('ALL')}
-            className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all border-none cursor-pointer whitespace-nowrap ${
-              selectedCategoryFilter === 'ALL'
+            className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all border-none cursor-pointer whitespace-nowrap ${selectedCategoryFilter === 'ALL'
                 ? 'bg-[#0e6877] text-white shadow-2xs'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
+              }`}
           >
             Tất cả danh mục
           </button>
@@ -326,11 +324,10 @@ export const Products: React.FC<IProductsProps> = (_props) => {
             <button
               key={cat.id}
               onClick={() => setSelectedCategoryFilter(cat.id)}
-              className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all border-none cursor-pointer whitespace-nowrap ${
-                selectedCategoryFilter === cat.id
+              className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all border-none cursor-pointer whitespace-nowrap ${selectedCategoryFilter === cat.id
                   ? 'bg-[#0e6877] text-white shadow-2xs'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
+                }`}
             >
               {cat.name}
             </button>
@@ -368,9 +365,8 @@ export const Products: React.FC<IProductsProps> = (_props) => {
                   return (
                     <tr
                       key={product.id}
-                      className={`transition-all hover:bg-slate-50/80 ${
-                        isModified ? 'bg-amber-50/40 border-l-4 border-amber-400' : ''
-                      }`}
+                      className={`transition-all hover:bg-slate-50/80 ${isModified ? 'bg-amber-50/40 border-l-4 border-amber-400' : ''
+                        }`}
                     >
                       {/* ID */}
                       <td className="py-3.5 px-4 text-center font-mono text-xs text-slate-400 font-bold">
@@ -408,11 +404,10 @@ export const Products: React.FC<IProductsProps> = (_props) => {
                             type="number"
                             value={currentPrice}
                             onChange={(e) => handlePriceChange(product.id, Number(e.target.value))}
-                            className={`w-full py-1.5 px-2.5 text-xs font-black rounded-xl border focus:outline-none transition-all ${
-                              editedPrices[product.id] !== undefined
+                            className={`w-full py-1.5 px-2.5 text-xs font-black rounded-xl border focus:outline-none transition-all ${editedPrices[product.id] !== undefined
                                 ? 'bg-amber-100/60 border-amber-400 text-amber-900'
                                 : 'bg-slate-50 border-slate-200 focus:border-[#0e6877] text-teal-800'
-                            }`}
+                              }`}
                           />
                         </div>
                       </td>
@@ -424,13 +419,12 @@ export const Products: React.FC<IProductsProps> = (_props) => {
                             type="number"
                             value={currentStock}
                             onChange={(e) => handleStockChange(product.id, Number(e.target.value))}
-                            className={`w-full py-1.5 px-2.5 text-xs font-bold rounded-xl border focus:outline-none transition-all ${
-                              editedStocks[product.id] !== undefined
+                            className={`w-full py-1.5 px-2.5 text-xs font-bold rounded-xl border focus:outline-none transition-all ${editedStocks[product.id] !== undefined
                                 ? 'bg-amber-100/60 border-amber-400 text-amber-900'
                                 : currentStock < 5
-                                ? 'bg-red-50 border-red-200 text-red-700'
-                                : 'bg-slate-50 border-slate-200 focus:border-[#0e6877] text-slate-800'
-                            }`}
+                                  ? 'bg-red-50 border-red-200 text-red-700'
+                                  : 'bg-slate-50 border-slate-200 focus:border-[#0e6877] text-slate-800'
+                              }`}
                           />
                         </div>
                       </td>
@@ -612,11 +606,10 @@ export const Products: React.FC<IProductsProps> = (_props) => {
                               }
                               setFormData({ ...formData, tags: newTags.join(',') });
                             }}
-                            className={`px-3 py-1 text-[10px] font-black rounded-full border border-none cursor-pointer transition-all ${
-                              isActive
+                            className={`px-3 py-1 text-[10px] font-black rounded-full border border-none cursor-pointer transition-all ${isActive
                                 ? 'bg-[#0e6877] text-white shadow-2xs'
                                 : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                            }`}
+                              }`}
                           >
                             #{tag}
                           </button>

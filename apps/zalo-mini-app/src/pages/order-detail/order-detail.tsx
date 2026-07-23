@@ -352,11 +352,57 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
           {/* Delivery tracking status timeline — only for non-draft orders */}
           {!isPendingPayment && (
             <div className="pt-1.5 space-y-3">
-              <div className="text-[9px] font-extrabold text-[#526069]/65 uppercase tracking-widest">
-                Lịch trình đơn hàng
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-extrabold text-[#526069]/80 uppercase tracking-widest">
+                  Lịch trình giao hàng (Timeline)
+                </span>
+                {selectedOrder.trackingNumber && (
+                  <span className="text-[9.5px] font-mono font-bold bg-[#0e6877]/10 text-[#0e6877] px-2.5 py-0.5 rounded-full">
+                    GHN: {selectedOrder.trackingNumber}
+                  </span>
+                )}
               </div>
 
-              <div className="flex flex-col gap-3 pl-2.5 relative border-l-2 border-neutral-100 mt-1.5">
+              {/* Horizontal Step Icons Bar */}
+              <div className="grid grid-cols-4 gap-1 py-3 px-2 bg-[#fbf9f7] rounded-2xl border border-[#f0edeb]">
+                {[
+                  { key: "PROCESSING", label: "1. Đã nhận", icon: "📝" },
+                  { key: "CONFIRMED", label: "2. Đóng gói", icon: "📦" },
+                  { key: "SHIPPED", label: "3. Đang giao", icon: "🚚" },
+                  { key: "DELIVERED", label: "4. Hoàn thành", icon: "🎉" },
+                ].map((st, idx) => {
+                  const statusOrder = ["PROCESSING", "CONFIRMED", "SHIPPED", "DELIVERED", "COMPLETED"];
+                  const currentIdx = Math.max(0, statusOrder.indexOf(selectedOrder.status));
+                  const isPassed = currentIdx >= idx || selectedOrder.status === "COMPLETED";
+                  const isCurrent = currentIdx === idx && selectedOrder.status !== "COMPLETED";
+
+                  return (
+                    <div key={idx} className="flex flex-col items-center text-center space-y-1 relative">
+                      <div
+                        className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                          isCurrent
+                            ? "bg-[#0e6877] text-white ring-4 ring-[#0e6877]/20 scale-105 shadow-xs animate-pulse"
+                            : isPassed
+                            ? "bg-emerald-500 text-white shadow-2xs"
+                            : "bg-neutral-200 text-neutral-400"
+                        }`}
+                      >
+                        {isPassed && !isCurrent ? "✓" : st.icon}
+                      </div>
+                      <span
+                        className={`text-[9.5px] font-extrabold tracking-tight ${
+                          isCurrent ? "text-[#0e6877]" : isPassed ? "text-emerald-700" : "text-neutral-400"
+                        }`}
+                      >
+                        {st.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Vertical Detailed Log Timeline */}
+              <div className="flex flex-col gap-3 pl-2.5 relative border-l-2 border-neutral-100 mt-2">
                 {(selectedOrder.status === "CANCELLED"
                   ? [
                       {
@@ -380,8 +426,8 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                         isCancelled: false,
                       },
                       {
-                        label: "Đang chuẩn bị",
-                        desc: "Kho hàng đang đóng gói sản phẩm của bạn",
+                        label: "Đang chuẩn bị hàng",
+                        desc: "Kho hàng đang kiểm kê và đóng gói sản phẩm",
                         active: [
                           "PROCESSING",
                           "SHIPPED",
@@ -391,16 +437,18 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                         isCancelled: false,
                       },
                       {
-                        label: "Đang giao hàng",
-                        desc: "Đơn hàng đã bàn giao cho đơn vị vận chuyển",
+                        label: "Đang giao hàng (Shipper)",
+                        desc: selectedOrder.trackingNumber
+                          ? `Bàn giao GHN. Mã vận đơn: ${selectedOrder.trackingNumber}`
+                          : "Đang được đơn vị vận chuyển giao tới địa chỉ của bạn",
                         active: ["SHIPPED", "DELIVERED", "COMPLETED"].includes(
                           selectedOrder.status,
                         ),
                         isCancelled: false,
                       },
                       {
-                        label: "Đã hoàn thành",
-                        desc: "Đơn hàng đã được giao nhận thành công",
+                        label: "Giao nhận hoàn thành",
+                        desc: "Đơn hàng đã được giao nhận thành công. Cảm ơn bạn!",
                         active: ["DELIVERED", "COMPLETED"].includes(
                           selectedOrder.status,
                         ),
@@ -414,7 +462,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                         step.active
                           ? step.isCancelled
                             ? "bg-red-500 border-red-500 shadow-xs scale-105"
-                            : "bg-primary border-primary shadow-xs scale-105"
+                            : "bg-[#0e6877] border-[#0e6877] shadow-xs scale-105"
                           : "bg-white border-neutral-300"
                       }`}
                     />
