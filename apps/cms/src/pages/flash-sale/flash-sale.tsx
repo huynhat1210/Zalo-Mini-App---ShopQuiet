@@ -151,17 +151,36 @@ export const FlashSaleManagement: React.FC = () => {
     }
   };
 
+  // Tab filter: 'all' | 'active'
+  const [activeTab, setActiveTab] = useState<'all' | 'active'>('all');
+
   const selectedCount = useMemo(() => {
     return Object.values(flashSaleMap).filter((v) => v.isFlashSale).length;
   }, [flashSaleMap]);
 
+  const activeFlashSaleProducts = useMemo(() => {
+    return products.filter((p) => flashSaleMap[p.id]?.isFlashSale);
+  }, [products, flashSaleMap]);
+
   const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
-      const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.id.toString().includes(searchTerm);
-      const matchCat = selectedCategory === 'all' || p.categoryId.toString() === selectedCategory;
-      return matchSearch && matchCat;
-    });
-  }, [products, searchTerm, selectedCategory]);
+    return products
+      .filter((p) => {
+        const matchSearch =
+          p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.id.toString().includes(searchTerm);
+        const matchCat =
+          selectedCategory === 'all' || p.categoryId.toString() === selectedCategory;
+        const itemConfig = flashSaleMap[p.id];
+        const matchSaleTab =
+          activeTab === 'all' || (activeTab === 'active' && itemConfig?.isFlashSale);
+        return matchSearch && matchCat && matchSaleTab;
+      })
+      .sort((a, b) => {
+        const aSale = flashSaleMap[a.id]?.isFlashSale ? 1 : 0;
+        const bSale = flashSaleMap[b.id]?.isFlashSale ? 1 : 0;
+        return bSale - aSale; // Put active flash sale products at the top!
+      });
+  }, [products, searchTerm, selectedCategory, flashSaleMap, activeTab]);
 
   if (loading) {
     return (
@@ -243,35 +262,123 @@ export const FlashSaleManagement: React.FC = () => {
         </div>
       </div>
 
+      {/* Active Flash Sale Summary Grid */}
+      {activeFlashSaleProducts.length > 0 && (
+        <div className="bg-amber-50/60 p-6 rounded-3xl border border-amber-200/80 shadow-xs space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-sm font-black text-amber-900 uppercase tracking-wider flex items-center gap-2">
+                <Zap size={16} className="text-amber-500 fill-amber-500" />
+                <span>Đang Chọn Tham Gia Flash Sale ({activeFlashSaleProducts.length} sản phẩm)</span>
+              </h3>
+              <p className="text-amber-700/80 text-xs mt-0.5">
+                Các sản phẩm dưới đây sẽ có biểu tượng giảm giá Flash Sale trên Zalo Mini App khi bạn nhấn "Lưu Cấu Hình".
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {activeFlashSaleProducts.map((p) => {
+              const cfg = flashSaleMap[p.id];
+              const salePrice = cfg?.flashSalePrice || Math.round(p.price * (1 - (cfg?.flashSaleDiscount || 20) / 100));
+              let imgUrl = '';
+              try {
+                const parsed = JSON.parse(p.images);
+                if (Array.isArray(parsed) && parsed.length > 0) imgUrl = parsed[0];
+              } catch {
+                if (typeof p.images === 'string') imgUrl = p.images;
+              }
+              return (
+                <div
+                  key={p.id}
+                  className="bg-white border border-amber-200 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-2xs"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <img
+                      src={imgUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30'}
+                      alt={p.name}
+                      className="w-11 h-11 object-cover rounded-xl border border-slate-200 shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-900 truncate">{p.name}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[11px] font-black text-amber-600">
+                          {salePrice.toLocaleString('vi-VN')} đ
+                        </span>
+                        <span className="text-[10px] text-slate-400 line-through">
+                          {p.price.toLocaleString('vi-VN')} đ
+                        </span>
+                        <span className="bg-amber-100 text-amber-800 text-[9px] font-black px-1.5 py-0.2 rounded-md">
+                          -{cfg?.flashSaleDiscount || 20}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleToggleProduct(p.id)}
+                    title="Bỏ khỏi Flash Sale"
+                    className="text-xs text-rose-500 font-bold hover:bg-rose-50 px-2 py-1 rounded-lg border-none cursor-pointer shrink-0"
+                  >
+                    Bỏ chọn
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Product Selection Table */}
       <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
               <Package size={16} className="text-[#0e6877]" />
-              <span>Danh Sách Sản Phẩm Tham Gia Flash Sale</span>
+              <span>Danh Sách Tất Cả Sản Phẩm Kho</span>
             </h3>
             <p className="text-slate-500 text-xs mt-0.5">
-              Đã chọn <strong className="text-amber-600 font-black">{selectedCount}</strong> sản phẩm tham gia sale
+              Tích chọn sản phẩm bên dưới để đưa vào danh sách Flash Sale
             </p>
           </div>
 
-          {/* Filters */}
-          <div className="flex gap-3 w-full sm:w-auto">
-            <div className="relative flex-1 sm:w-64">
-              <Search size={15} className="absolute left-3.5 top-3 text-slate-400" />
+          {/* Filter Tabs & Search */}
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto items-center">
+            {/* Filter Tabs */}
+            <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200">
+              <button
+                onClick={() => { setActiveTab('all'); setCurrentPage(1); }}
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl border-none cursor-pointer transition-all ${
+                  activeTab === 'all' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                Tất cả ({products.length})
+              </button>
+              <button
+                onClick={() => { setActiveTab('active'); setCurrentPage(1); }}
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl border-none cursor-pointer transition-all ${
+                  activeTab === 'active' ? 'bg-amber-500 text-white shadow-2xs' : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                🔥 Đang Sale ({selectedCount})
+              </button>
+            </div>
+
+            <div className="relative flex-1 sm:w-56">
+              <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
               <input
                 type="text"
                 placeholder="Tìm sản phẩm..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#0e6877]"
+                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#0e6877]"
               />
             </div>
+
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none"
+              onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
+              className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none cursor-pointer"
             >
               <option value="all">Tất cả danh mục</option>
               {categories.map((c) => (
@@ -286,7 +393,7 @@ export const FlashSaleManagement: React.FC = () => {
           <table className="w-full text-left text-xs text-slate-700 whitespace-nowrap">
             <thead className="bg-slate-50 text-[10px] font-extrabold uppercase text-slate-500 border-b border-slate-200">
               <tr>
-                <th className="py-3.5 px-4 w-12 text-center">Bật Sale</th>
+                <th className="py-3.5 px-4 w-14 text-center">Bật Sale</th>
                 <th className="py-3.5 px-4">Sản phẩm</th>
                 <th className="py-3.5 px-4 text-right">Giá gốc</th>
                 <th className="py-3.5 px-4 text-center">% Giảm Giá</th>
@@ -294,86 +401,106 @@ export const FlashSaleManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((p) => {
-                const itemConfig = flashSaleMap[p.id] || { isFlashSale: false, flashSalePrice: null, flashSaleDiscount: 20 };
-                const calcSalePrice = itemConfig.flashSalePrice || Math.round(p.price * (1 - itemConfig.flashSaleDiscount / 100));
+              {filteredProducts.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-slate-400 text-xs font-semibold">
+                    Không tìm thấy sản phẩm nào phù hợp.
+                  </td>
+                </tr>
+              ) : (
+                filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((p) => {
+                  const itemConfig = flashSaleMap[p.id] || { isFlashSale: false, flashSalePrice: null, flashSaleDiscount: 20 };
+                  const calcSalePrice = itemConfig.flashSalePrice || Math.round(p.price * (1 - itemConfig.flashSaleDiscount / 100));
 
-                return (
-                  <tr
-                    key={p.id}
-                    className={`transition-colors ${
-                      itemConfig.isFlashSale ? 'bg-amber-50/40 hover:bg-amber-50/70' : 'hover:bg-slate-50'
-                    }`}
-                  >
-                    <td className="py-3.5 px-4 text-center">
-                      <input
-                        type="checkbox"
-                        checked={itemConfig.isFlashSale}
-                        onChange={() => handleToggleProduct(p.id)}
-                        className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
-                      />
-                    </td>
-                    <td className="py-3.5 px-4 font-bold text-slate-900 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
-                        {p.images && (
-                          <img
-                            src={typeof p.images === 'string' && p.images.startsWith('[') ? JSON.parse(p.images)[0] : p.images}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
+                  return (
+                    <tr
+                      key={p.id}
+                      className={`transition-colors ${
+                        itemConfig.isFlashSale ? 'bg-amber-50/50 hover:bg-amber-50/80 font-semibold' : 'hover:bg-slate-50'
+                      }`}
+                    >
+                      <td className="py-3.5 px-4 text-center">
+                        <input
+                          type="checkbox"
+                          checked={itemConfig.isFlashSale}
+                          onChange={() => handleToggleProduct(p.id)}
+                          className="w-4.5 h-4.5 accent-amber-500 rounded cursor-pointer"
+                        />
+                      </td>
+                      <td className="py-3.5 px-4 font-bold text-slate-900 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200 relative">
+                          {p.images && (
+                            <img
+                              src={typeof p.images === 'string' && p.images.startsWith('[') ? JSON.parse(p.images)[0] : p.images}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                          {itemConfig.isFlashSale && (
+                            <span className="absolute top-0 right-0 bg-amber-500 text-white text-[8px] font-black px-1 rounded-bl">
+                              SALE
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold text-xs text-slate-900">{p.name}</p>
+                            {itemConfig.isFlashSale && (
+                              <span className="bg-amber-100 text-amber-800 text-[9px] font-black px-1.5 py-0.2 rounded-md">
+                                Đang Sale
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-semibold">{p.category?.name || 'Khác'}</span>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 text-right font-extrabold text-slate-600">
+                        {p.price.toLocaleString('vi-VN')} đ
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        {itemConfig.isFlashSale ? (
+                          <div className="inline-flex items-center gap-1 border border-amber-300 rounded-xl px-2 py-1 bg-white shadow-2xs">
+                            <input
+                              type="number"
+                              min="1"
+                              max="99"
+                              value={itemConfig.flashSaleDiscount}
+                              onChange={(e) => handleUpdateDiscount(p.id, parseInt(e.target.value, 10) || 0)}
+                              className="w-12 text-center text-xs font-black text-amber-600 focus:outline-none"
+                            />
+                            <span className="text-xs font-bold text-slate-400">%</span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 font-medium">-</span>
                         )}
-                      </div>
-                      <div>
-                        <p className="font-bold text-xs text-slate-900">{p.name}</p>
-                        <span className="text-[10px] text-slate-400 font-semibold">{p.category?.name || 'Khác'}</span>
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4 text-right font-extrabold text-slate-600">
-                      {p.price.toLocaleString('vi-VN')} đ
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
-                      {itemConfig.isFlashSale ? (
-                        <div className="inline-flex items-center gap-1 border border-slate-200 rounded-xl px-2 py-1 bg-white">
-                          <input
-                            type="number"
-                            min="1"
-                            max="99"
-                            value={itemConfig.flashSaleDiscount}
-                            onChange={(e) => handleUpdateDiscount(p.id, parseInt(e.target.value, 10) || 0)}
-                            className="w-12 text-center text-xs font-black text-amber-600 focus:outline-none"
-                          />
-                          <span className="text-xs font-bold text-slate-400">%</span>
-                        </div>
-                      ) : (
-                        <span className="text-slate-400 font-medium">-</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      {itemConfig.isFlashSale ? (
-                        <div className="inline-flex items-center gap-1 border border-amber-300 rounded-xl px-2.5 py-1 bg-white shadow-2xs">
-                          <input
-                            type="number"
-                            step="1000"
-                            value={itemConfig.flashSalePrice || calcSalePrice}
-                            onChange={(e) => handleUpdatePrice(p.id, parseInt(e.target.value, 10) || 0)}
-                            className="w-24 text-right text-xs font-black text-emerald-600 focus:outline-none"
-                          />
-                          <span className="text-xs font-extrabold text-slate-500">đ</span>
-                        </div>
-                      ) : (
-                        <span className="text-slate-400 font-medium">-</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        {itemConfig.isFlashSale ? (
+                          <div className="inline-flex items-center gap-1 border border-amber-300 rounded-xl px-2.5 py-1 bg-white shadow-2xs">
+                            <input
+                              type="number"
+                              step="1000"
+                              value={itemConfig.flashSalePrice || calcSalePrice}
+                              onChange={(e) => handleUpdatePrice(p.id, parseInt(e.target.value, 10) || 0)}
+                              className="w-24 text-right text-xs font-black text-emerald-600 focus:outline-none"
+                            />
+                            <span className="text-xs font-extrabold text-slate-500">đ</span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 font-medium">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
 
         <PaginationComponent
           currentPage={currentPage}
-          totalPages={Math.ceil(filteredProducts.length / itemsPerPage)}
+          totalPages={Math.max(1, Math.ceil(filteredProducts.length / itemsPerPage))}
           totalItems={filteredProducts.length}
           itemsPerPage={itemsPerPage}
           onPageChange={setCurrentPage}

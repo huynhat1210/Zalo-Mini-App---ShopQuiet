@@ -142,6 +142,16 @@ export const Support: React.FC = () => {
     const fetchThread = async () => {
       setLoadingMessages(true);
       try {
+        // Instantly mark as read in DB and local state
+        apiRequest('/chat/messages/read', 'POST', {
+          zaloUserId: activeSession.zaloUserId,
+          sender: 'USER',
+        }).catch(() => {});
+
+        setSessions((prev) =>
+          prev.map((s) => (s.zaloUserId === activeSession.zaloUserId ? { ...s, unreadCount: 0 } : s))
+        );
+
         const [history, orders, users] = await Promise.all([
           apiRequest<Message[]>(`/chat/messages?zaloUserId=${activeSession.zaloUserId}`),
           apiRequest<Order[]>('/orders/admin/all'),
@@ -253,15 +263,26 @@ export const Support: React.FC = () => {
     <div className="flex-1 flex overflow-hidden h-full" style={{ background: '#f4f6f9' }}>
 
       {/* ═══ LEFT: Sessions Panel ═══ */}
-      <div className="w-72 flex flex-col h-full bg-white border-r border-slate-200/80 shrink-0">
+      <div className="w-80 flex flex-col h-full bg-white border-r border-slate-200/80 shrink-0">
         
         {/* Panel Header */}
         <div className="px-4 pt-5 pb-3 shrink-0">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <h2 className="text-sm font-black text-slate-800 tracking-tight">Hỗ trợ khách hàng</h2>
-              <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
-                {totalMessages > 0 ? `${totalMessages} tin nhắn chưa đọc` : 'Tất cả đã đọc'}
+              <h2 className="text-sm font-black text-slate-800 tracking-tight flex items-center gap-2">
+                <span>Hỗ trợ khách hàng</span>
+                {totalMessages > 0 && (
+                  <span className="bg-rose-500 text-white font-black text-[10px] px-2 py-0.5 rounded-full animate-bounce">
+                    {totalMessages} tin mới
+                  </span>
+                )}
+              </h2>
+              <p className="text-[10px] font-bold mt-0.5">
+                {totalMessages > 0 ? (
+                  <span className="text-rose-600">🔴 {totalMessages} tin chưa trả lời</span>
+                ) : (
+                  <span className="text-emerald-600 font-semibold">✓ Tất cả đã trả lời</span>
+                )}
               </p>
             </div>
             {/* Online/Offline Toggle */}
@@ -313,26 +334,28 @@ export const Support: React.FC = () => {
                 <button
                   key={session.zaloUserId}
                   onClick={() => setActiveSession(session)}
-                  className={`w-full p-3 rounded-2xl flex gap-3 text-left transition-all duration-200 border-none cursor-pointer mb-1 ${
+                  className={`w-full p-3 rounded-2xl flex gap-3 text-left transition-all duration-200 border-none cursor-pointer mb-1.5 relative ${
                     isActive
-                      ? 'bg-[#0e6877] shadow-md shadow-[#0e6877]/20'
+                      ? 'bg-[#0e6877] text-white shadow-md shadow-[#0e6877]/20'
                       : hasUnread
-                      ? 'bg-[#ecf6f7] hover:bg-[#ddf0f2]'
-                      : 'bg-transparent hover:bg-slate-50'
+                      ? 'bg-rose-50/90 border border-rose-200/80 hover:bg-rose-100/90'
+                      : 'bg-transparent hover:bg-slate-50 border border-transparent'
                   }`}
                 >
-                  {/* Avatar */}
+                  {/* Avatar & Messenger Badge */}
                   <div className="relative shrink-0">
                     <img
                       src={session.userAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.userName)}&background=0e6877&color=fff`}
                       alt={session.userName}
-                      className={`w-10 h-10 rounded-full object-cover border-2 ${isActive ? 'border-white/40' : 'border-slate-200'}`}
+                      className={`w-11 h-11 rounded-full object-cover border-2 ${
+                        isActive ? 'border-white/40' : hasUnread ? 'border-rose-400' : 'border-slate-200'
+                      }`}
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(session.userName)}&background=0e6877&color=fff`;
                       }}
                     />
                     {hasUnread && (
-                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-rose-500 text-white font-black text-[8px] flex items-center justify-center border border-white">
+                      <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1.5 rounded-full bg-rose-600 text-white font-black text-[9px] flex items-center justify-center border-2 border-white shadow-xs animate-pulse">
                         {session.unreadCount > 9 ? '9+' : session.unreadCount}
                       </span>
                     )}
@@ -340,19 +363,28 @@ export const Support: React.FC = () => {
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-baseline">
-                      <h4 className={`text-xs font-bold truncate ${isActive ? 'text-white' : 'text-slate-800'}`}>
+                    <div className="flex justify-between items-center mb-0.5">
+                      <h4 className={`text-xs font-bold truncate ${isActive ? 'text-white' : 'text-slate-900'}`}>
                         {session.userName}
                       </h4>
                       <span className={`text-[9px] font-semibold shrink-0 ml-1 ${isActive ? 'text-white/70' : 'text-slate-400'}`}>
                         {new Date(session.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                    <p className={`text-[10px] mt-0.5 truncate ${
-                      isActive ? 'text-white/80' : hasUnread ? 'text-slate-800 font-bold' : 'text-slate-500 font-medium'
-                    }`}>
-                      {session.lastMessage.startsWith('[PRODUCT_CONTEXT]') ? '📦 Hỏi về sản phẩm' : session.lastMessage}
-                    </p>
+
+                    <div className="flex items-center justify-between gap-1">
+                      <p className={`text-[10px] truncate ${
+                        isActive ? 'text-white/80' : hasUnread ? 'text-rose-900 font-extrabold' : 'text-slate-500 font-medium'
+                      }`}>
+                        {session.lastMessage.startsWith('[PRODUCT_CONTEXT]') ? '📦 Hỏi về sản phẩm' : session.lastMessage}
+                      </p>
+
+                      {hasUnread && !isActive && (
+                        <span className="bg-rose-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shrink-0 shadow-2xs">
+                          {session.unreadCount} mới
+                        </span>
+                      )}
+                    </div>
                   </div>
                   
                   {isActive && <ChevronRight size={12} className="text-white/60 shrink-0 self-center" />}
