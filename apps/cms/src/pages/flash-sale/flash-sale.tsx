@@ -40,7 +40,7 @@ export const FlashSaleManagement: React.FC = () => {
       setLoading(true);
       const [configRes, prodsRes, catsRes] = await Promise.all([
         apiRequest<any>('/products/flash-sale/config').catch(() => null),
-        apiRequest<any[]>('/products?limit=100').catch(() => []),
+        apiRequest<any[]>('/products?limit=100&include_flash_sale=true').catch(() => []),
         apiRequest<any[]>('/categories').catch(() => []),
       ]);
 
@@ -403,8 +403,15 @@ export const FlashSaleManagement: React.FC = () => {
             <tbody className="divide-y divide-slate-100">
               {filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-400 text-xs font-semibold">
-                    Không tìm thấy sản phẩm nào phù hợp.
+                  <td colSpan={5} className="py-12 text-center text-slate-400 text-xs font-semibold">
+                    {activeTab === 'active' ? (
+                      <div className="space-y-2">
+                        <p className="text-slate-600 font-bold">Chưa chọn sản phẩm nào tham gia Flash Sale.</p>
+                        <p className="text-slate-400 text-[11px]">Chuyển sang tab <button onClick={() => setActiveTab('all')} className="text-[#0e6877] font-bold underline bg-transparent border-none cursor-pointer">Tất cả ({products.length})</button> để tích chọn sản phẩm bạn muốn sale!</p>
+                      </div>
+                    ) : (
+                      'Không tìm thấy sản phẩm nào phù hợp.'
+                    )}
                   </td>
                 </tr>
               ) : (

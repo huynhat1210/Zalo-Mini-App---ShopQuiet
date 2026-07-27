@@ -17,8 +17,9 @@ export class ProductsService {
     page: number = 1,
     limit: number = 10,
     sort?: string,
+    includeFlashSale?: boolean,
   ) {
-    const cacheKey = `products_${search || ''}_${categoryId || ''}_${page}_${limit}_${sort || ''}`;
+    const cacheKey = `products_${search || ''}_${categoryId || ''}_${page}_${limit}_${sort || ''}_${includeFlashSale ? 'inc' : 'exc'}`;
     const cachedData = await this.cacheManager.get(cacheKey);
 
     if (cachedData) {
@@ -41,9 +42,9 @@ export class ProductsService {
       where.categoryId = parseInt(categoryId, 10);
     }
 
-    // Exclude Flash Sale products from main grid when campaign is active
+    // Exclude Flash Sale products from main grid when campaign is active UNLESS includeFlashSale is true
     const isCampaignActive = await this.isFlashSaleCampaignActive();
-    if (isCampaignActive) {
+    if (isCampaignActive && !includeFlashSale) {
       where.isFlashSale = false;
     }
 

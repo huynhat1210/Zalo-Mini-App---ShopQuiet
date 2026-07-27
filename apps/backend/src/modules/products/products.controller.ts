@@ -81,6 +81,8 @@ export class ProductsController {
     @Query('limit') limit?: string,
     @Query('page_size') pageSize?: string,
     @Query('sort') sort?: string,
+    @Query('include_flash_sale') includeFlashSale?: string,
+    @Query('includeFlashSale') includeFlashSaleCamel?: string,
   ) {
     const searchKey = search || query;
     const pageNum = page ? parseInt(page, 10) : 1;
@@ -89,12 +91,19 @@ export class ProductsController {
       : limit
         ? parseInt(limit, 10)
         : 10;
+    const shouldIncludeFlashSale =
+      includeFlashSale === 'true' ||
+      includeFlashSale === '1' ||
+      includeFlashSaleCamel === 'true' ||
+      includeFlashSaleCamel === '1';
+
     return this.productsService.findAll(
       searchKey,
       categoryId,
       pageNum,
       limitNum,
       sort,
+      shouldIncludeFlashSale,
     );
   }
 
