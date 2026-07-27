@@ -52,8 +52,7 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
     defaultValues: {
       label: "",
       phone: "",
-      street: "",
-      city: "",
+      houseNumber: "",
     },
   });
 
@@ -95,10 +94,13 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
                     .trim()
                     .replace(/\s+/g, " ");
 
+                  if (city && provincesList.includes(city)) {
+                    setSelectedProvince(city);
+                  }
+
                   reset({
                     ...getValues(),
-                    street: parsedStreet || displayName,
-                    city: city,
+                    houseNumber: parsedStreet || displayName,
                   });
                   showToast("Đã định vị địa chỉ thành công!", "success");
                 } else {
@@ -166,8 +168,7 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
       reset({
         label: "",
         phone: "",
-        street: "",
-        city: "",
+        houseNumber: "",
       });
       setEditingAddressId(null);
     }
@@ -423,7 +424,7 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
 
             <div>
               <label className="text-[9px] font-bold text-textColor-variant uppercase tracking-wider block mb-1">
-                Số nhà, tên đường (Chỉ gõ phần này)
+                Số nhà, tên đường
               </label>
               <input
                 type="text"

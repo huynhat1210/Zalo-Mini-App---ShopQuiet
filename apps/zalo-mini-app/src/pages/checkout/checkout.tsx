@@ -335,10 +335,13 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           "";
         const city = addr.city || addr.town || addr.county || addr.state || "";
 
+        if (city && provincesList.includes(city)) {
+          setSelectedProvince(city);
+        }
+
         reset({
           ...watchedAddress,
-          street: street || watchedAddress.street,
-          city: city || watchedAddress.city,
+          houseNumber: street || watchedAddress.houseNumber,
         });
         showToast("Đã điền địa chỉ từ vị trí hiện tại!", "success");
       } catch (err) {
@@ -443,7 +446,18 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
             };
 
         setAddress(nextAddress);
-        reset(nextAddress);
+        const parsed = parseAddressComponents(nextAddress.street, nextAddress.city);
+        if (parsed.city && provincesList.includes(parsed.city)) {
+          setSelectedProvince(parsed.city);
+        }
+        if (parsed.district) setSelectedDistrict(parsed.district);
+        if (parsed.ward) setSelectedWard(parsed.ward);
+
+        reset({
+          name: nextAddress.name,
+          phone: nextAddress.phone,
+          houseNumber: parsed.houseNumber || nextAddress.street,
+        });
       } catch (e) {
         console.error("Failed to load checkout addresses:", e);
       }
@@ -452,29 +466,33 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   }, [zaloUser?.id, isSelectorOpen, reset]);
 
   useEffect(() => {
-    const nextAddress = {
-      name: watchedAddress.name ?? address.name,
-      street: watchedAddress.street ?? address.street,
-      city: watchedAddress.city ?? address.city,
-      phone: watchedAddress.phone ?? address.phone,
-    };
+    const compiledStreet = watchedAddress.houseNumber
+      ? `${watchedAddress.houseNumber}, ${selectedWard}, ${selectedDistrict}`
+      : address.street;
 
     setAddress((current) => {
+      const name = watchedAddress.name ?? current.name;
+      const phone = watchedAddress.phone ?? current.phone;
+      const street = compiledStreet;
+      const city = selectedProvince;
+
       if (
-        current.name === nextAddress.name &&
-        current.street === nextAddress.street &&
-        current.city === nextAddress.city &&
-        current.phone === nextAddress.phone
+        current.name === name &&
+        current.street === street &&
+        current.city === city &&
+        current.phone === phone
       ) {
         return current;
       }
-      return nextAddress;
+      return { name, street, city, phone };
     });
   }, [
-    watchedAddress.city,
+    watchedAddress.houseNumber,
     watchedAddress.name,
     watchedAddress.phone,
-    watchedAddress.street,
+    selectedProvince,
+    selectedDistrict,
+    selectedWard,
   ]);
 
   const subtotal = checkoutItems.reduce(
@@ -1102,7 +1120,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
                   <div>
                     <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
-                      Số nhà, tên đường (Chỉ gõ phần này)
+                      Số nhà, tên đường
                     </label>
                     <div className="relative">
                       <input
