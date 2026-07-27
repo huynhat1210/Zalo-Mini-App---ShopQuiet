@@ -1643,14 +1643,42 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
               </p>
             </div>
 
-            {/* QR Image */}
-            <div className="relative p-3 bg-white rounded-2xl border-2 border-dashed border-teal-200 shadow-2xs inline-block">
+            {/* QR Image & Save Button */}
+            <div className="p-3 bg-white rounded-2xl border-2 border-dashed border-teal-200 shadow-2xs text-center space-y-2">
               <img
                 src={vietQrModalData.qrUrl}
                 alt="VietQR Code"
-                className="w-56 h-56 object-contain rounded-xl mx-auto"
+                className="w-52 h-52 object-contain rounded-xl mx-auto"
               />
-              <p className="text-[9px] text-slate-400 font-bold mt-1">Mở App ngân hàng quét mã QR để thanh toán</p>
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch(vietQrModalData.qrUrl);
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `VietQR-${vietQrModalData.transferContent}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                    showToast("Đã tải mã QR về máy!", "success");
+                  } catch (e) {
+                    showToast("Nhấn giữ hình QR để lưu hoặc Chụp màn hình", "info");
+                  }
+                }}
+                className="w-full py-2 bg-teal-50 hover:bg-teal-100 text-[#0e6877] font-bold text-xs rounded-xl border border-teal-200 cursor-pointer transition-all flex items-center justify-center gap-1.5 active:scale-95"
+              >
+                <span>📥 Lưu mã QR vào album ảnh</span>
+              </button>
+
+              <div className="bg-slate-50 p-2 rounded-xl text-[9.5px] text-slate-500 font-semibold leading-snug text-left space-y-0.5">
+                <p className="font-extrabold text-[#0e6877] uppercase text-[9px]">💡 Hướng dẫn chuyển tiền trên 1 điện thoại:</p>
+                <p>1. Bấm <strong>Lưu mã QR</strong> (hoặc chụp màn hình)</p>
+                <p>2. Mở App Ngân hàng ➔ Chọn <strong>Quét QR</strong> ➔ Tải ảnh từ thư viện</p>
+                <p>3. Kiểm tra số tiền & bấm Chuyển tiền!</p>
+              </div>
             </div>
 
             {/* Bank Transfer Details with 1-click Copy */}
