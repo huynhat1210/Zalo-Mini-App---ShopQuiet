@@ -352,7 +352,35 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       }
     };
 
-    if (apiAny && apiAny.getLocation) {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => processCoords(pos.coords.latitude, pos.coords.longitude),
+        (_err) => {
+          if (apiAny && apiAny.getLocation) {
+            apiAny.getLocation({
+              success: (data: any) => {
+                const lat = data.latitude ?? data.lat;
+                const lng = data.longitude ?? data.lon ?? data.lng;
+                if (lat != null && lng != null) {
+                  processCoords(Number(lat), Number(lng));
+                } else {
+                  showToast("Không nhận được toạ độ vị trí.", "warning");
+                  setIsLoadingLocation(false);
+                }
+              },
+              fail: () => {
+                showToast("Vui lòng bật định vị GPS trên thiết bị.", "warning");
+                setIsLoadingLocation(false);
+              },
+            });
+          } else {
+            showToast("Không thể lấy vị trí từ trình duyệt.", "warning");
+            setIsLoadingLocation(false);
+          }
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 },
+      );
+    } else if (apiAny && apiAny.getLocation) {
       apiAny.getLocation({
         success: (data: any) => {
           const lat = data.latitude ?? data.lat;
@@ -364,25 +392,11 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
             setIsLoadingLocation(false);
           }
         },
-        fail: (err: any) => {
-          console.error("getLocation fail", err);
-          showToast(
-            "Không thể lấy vị trí. Vui lòng cấp quyền vị trí cho app.",
-            "warning",
-          );
+        fail: () => {
+          showToast("Vui lòng bật định vị GPS trên thiết bị.", "warning");
           setIsLoadingLocation(false);
         },
       });
-    } else if (navigator.geolocation) {
-      // Browser fallback
-      navigator.geolocation.getCurrentPosition(
-        (pos) => processCoords(pos.coords.latitude, pos.coords.longitude),
-        (err) => {
-          console.error(err);
-          showToast("Không thể lấy vị trí.", "warning");
-          setIsLoadingLocation(false);
-        },
-      );
     } else {
       showToast("Thiết bị không hỗ trợ lấy vị trí.", "warning");
       setIsLoadingLocation(false);

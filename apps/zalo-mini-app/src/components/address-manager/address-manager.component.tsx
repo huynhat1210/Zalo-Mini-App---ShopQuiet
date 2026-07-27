@@ -56,76 +56,111 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
     },
   });
 
+  const processCoordsAndFillAddress = async (lat: number, lng: number) => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=vi`,
+        {
+          headers: {
+            "User-Agent": "ShopQuiet Zalo Mini App",
+          },
+        },
+      );
+      if (res.ok) {
+        const resJson = await res.json();
+        const address = resJson.address || {};
+        const displayName = resJson.display_name || "";
+
+        const city =
+          address.city ||
+          address.province ||
+          address.state ||
+          address.town ||
+          "";
+        const district =
+          address.suburb || address.district || address.county || "";
+        const street =
+          address.road || address.suburb || address.quarter || "";
+        const houseNumber = address.house_number || "";
+
+        const parsedStreet = `${houseNumber} ${street} ${district}`
+          .trim()
+          .replace(/\s+/g, " ");
+
+        if (city && provincesList.includes(city)) {
+          setSelectedProvince(city);
+        }
+
+        reset({
+          ...getValues(),
+          houseNumber: parsedStreet || displayName,
+        });
+        showToast("Đã định vị vị trí GPS thành công!", "success");
+      } else {
+        showToast("Không thể giải mã tọa độ GPS!", "warning");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Lỗi phân tích địa chỉ GPS!", "warning");
+    } finally {
+      setLocating(false);
+    }
+  };
+
   const handleGetGPSLocation = () => {
     setLocating(true);
-    try {
-      if (api && api.getLocation) {
-        api.getLocation({
-          success: async (data: any) => {
-            const { latitude, longitude } = data;
-            if (latitude && longitude) {
-              try {
-                const res = await fetch(
-                  `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=vi`,
-                  {
-                    headers: {
-                      "User-Agent": "ShopQuiet Zalo Mini App",
-                    },
-                  },
-                );
-                if (res.ok) {
-                  const resJson = await res.json();
-                  const address = resJson.address || {};
-                  const displayName = resJson.display_name || "";
 
-                  const city =
-                    address.city ||
-                    address.province ||
-                    address.state ||
-                    address.town ||
-                    "";
-                  const district =
-                    address.suburb || address.district || address.county || "";
-                  const street =
-                    address.road || address.suburb || address.quarter || "";
-                  const houseNumber = address.house_number || "";
-
-                  const parsedStreet = `${houseNumber} ${street} ${district}`
-                    .trim()
-                    .replace(/\s+/g, " ");
-
-                  if (city && provincesList.includes(city)) {
-                    setSelectedProvince(city);
-                  }
-
-                  reset({
-                    ...getValues(),
-                    houseNumber: parsedStreet || displayName,
-                  });
-                  showToast("Đã định vị địa chỉ thành công!", "success");
+    // Primary: Standard HTML5 Geolocation API (Works on Web Browsers & Mobile WebViews)
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          processCoordsAndFillAddress(pos.coords.latitude, pos.coords.longitude);
+        },
+        (_err) => {
+          // Fallback: Zalo SDK
+          if (api && api.getLocation) {
+            api.getLocation({
+              success: (data: any) => {
+                const lat = data.latitude ?? data.lat;
+                const lng = data.longitude ?? data.lon;
+                if (lat && lng) {
+                  processCoordsAndFillAddress(Number(lat), Number(lng));
                 } else {
-                  showToast("Không thể giải mã tọa độ GPS!", "warning");
+                  showToast("Không thể lấy vị trí từ thiết bị.", "warning");
+                  setLocating(false);
                 }
-              } catch (err) {
-                console.error(err);
-                showToast("Lỗi phân tích địa chỉ GPS!", "warning");
-              }
-            }
-          },
-          fail: (err: any) => {
-            console.error(err);
-            showToast(
-              "Không lấy được vị trí GPS. Hãy bật GPS trên máy!",
-              "warning",
-            );
-          },
-        });
-      } else {
-        showToast("Zalo SDK không hỗ trợ định vị ở môi trường này!", "info");
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
+              },
+              fail: () => {
+                showToast("Vui lòng bật GPS trên thiết bị!", "warning");
+                setLocating(false);
+              },
+            });
+          } else {
+            showToast("Vui lòng bật quyền định vị GPS trên trình duyệt!", "warning");
+            setLocating(false);
+          }
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+      );
+    } else if (api && api.getLocation) {
+      api.getLocation({
+        success: (data: any) => {
+          const lat = data.latitude ?? data.lat;
+          const lng = data.longitude ?? data.lon;
+          if (lat && lng) {
+            processCoordsAndFillAddress(Number(lat), Number(lng));
+          } else {
+            showToast("Không thể lấy vị trí từ Zalo SDK.", "warning");
+            setLocating(false);
+          }
+        },
+        fail: () => {
+          showToast("Không lấy được vị trí GPS.", "warning");
+          setLocating(false);
+        },
+      });
+    } else {
+      showToast("Thiết bị không hỗ trợ định vị GPS.", "warning");
       setLocating(false);
     }
   };
