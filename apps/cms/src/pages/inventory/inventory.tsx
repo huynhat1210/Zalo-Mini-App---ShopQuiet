@@ -309,9 +309,9 @@ export const Inventory: React.FC = () => {
             <p className="text-slate-500 text-xs">Đang tải ma trận kho hàng...</p>
           </div>
         ) : paginatedVariants.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-700 min-w-[650px]">
-              <thead className="bg-[#fbf9f7] text-[#526069] text-xs font-bold uppercase tracking-wider">
+          <div className="overflow-x-auto overflow-y-auto max-h-[600px] rounded-2xl border border-slate-200 shadow-2xs">
+            <table className="w-full text-left text-sm text-slate-700 min-w-[650px] border-collapse">
+              <thead className="sticky top-0 z-10 bg-[#fbf9f7]/95 backdrop-blur-xs text-[#526069] text-xs font-bold uppercase tracking-wider border-b border-slate-200 shadow-2xs">
                 <tr>
                   <th className="py-3.5 px-4 rounded-l-xl">Sản phẩm</th>
                   <th className="py-3.5 px-4">Phân loại</th>

@@ -162,24 +162,23 @@ export const FlashSaleManagement: React.FC = () => {
     return products.filter((p) => flashSaleMap[p.id]?.isFlashSale);
   }, [products, flashSaleMap]);
 
+  const nonSaleCount = useMemo(() => {
+    return products.length - selectedCount;
+  }, [products, selectedCount]);
+
   const filteredProducts = useMemo(() => {
-    return products
-      .filter((p) => {
-        const matchSearch =
-          p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.id.toString().includes(searchTerm);
-        const matchCat =
-          selectedCategory === 'all' || p.categoryId.toString() === selectedCategory;
-        const itemConfig = flashSaleMap[p.id];
-        const matchSaleTab =
-          activeTab === 'all' || (activeTab === 'active' && itemConfig?.isFlashSale);
-        return matchSearch && matchCat && matchSaleTab;
-      })
-      .sort((a, b) => {
-        const aSale = flashSaleMap[a.id]?.isFlashSale ? 1 : 0;
-        const bSale = flashSaleMap[b.id]?.isFlashSale ? 1 : 0;
-        return bSale - aSale; // Put active flash sale products at the top!
-      });
+    return products.filter((p) => {
+      const matchSearch =
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.id.toString().includes(searchTerm);
+      const matchCat =
+        selectedCategory === 'all' || p.categoryId.toString() === selectedCategory;
+      const itemConfig = flashSaleMap[p.id];
+      // Separate: 'all' shows ONLY non-flash sale items, 'active' shows ONLY flash sale items
+      const matchSaleTab =
+        activeTab === 'all' ? !itemConfig?.isFlashSale : !!itemConfig?.isFlashSale;
+      return matchSearch && matchCat && matchSaleTab;
+    });
   }, [products, searchTerm, selectedCategory, flashSaleMap, activeTab]);
 
   if (loading) {
@@ -335,10 +334,14 @@ export const FlashSaleManagement: React.FC = () => {
           <div>
             <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
               <Package size={16} className="text-[#0e6877]" />
-              <span>Danh Sách Tất Cả Sản Phẩm Kho</span>
+              <span>
+                {activeTab === 'all' ? 'Danh Sách Sản Phẩm Chưa Sale' : 'Danh Sách Sản Phẩm Đang Flash Sale'}
+              </span>
             </h3>
             <p className="text-slate-500 text-xs mt-0.5">
-              Tích chọn sản phẩm bên dưới để đưa vào danh sách Flash Sale
+              {activeTab === 'all'
+                ? 'Tích chọn ô Bật Sale để đưa sản phẩm sang danh sách Flash Sale'
+                : 'Bỏ tích chọn nếu muốn đưa sản phẩm ra khỏi chương trình Flash Sale'}
             </p>
           </div>
 
@@ -348,16 +351,16 @@ export const FlashSaleManagement: React.FC = () => {
             <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200">
               <button
                 onClick={() => { setActiveTab('all'); setCurrentPage(1); }}
-                className={`px-3 py-1.5 text-xs font-bold rounded-xl border-none cursor-pointer transition-all ${
-                  activeTab === 'all' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-500 hover:text-slate-800'
+                className={`px-3.5 py-1.5 text-xs font-bold rounded-xl border-none cursor-pointer transition-all ${
+                  activeTab === 'all' ? 'bg-white text-slate-900 shadow-2xs font-extrabold' : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
-                Tất cả ({products.length})
+                Chưa Sale ({nonSaleCount})
               </button>
               <button
                 onClick={() => { setActiveTab('active'); setCurrentPage(1); }}
-                className={`px-3 py-1.5 text-xs font-bold rounded-xl border-none cursor-pointer transition-all ${
-                  activeTab === 'active' ? 'bg-amber-500 text-white shadow-2xs' : 'text-slate-500 hover:text-slate-800'
+                className={`px-3.5 py-1.5 text-xs font-bold rounded-xl border-none cursor-pointer transition-all ${
+                  activeTab === 'active' ? 'bg-amber-500 text-white shadow-2xs font-extrabold' : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
                 🔥 Đang Sale ({selectedCount})
@@ -388,10 +391,10 @@ export const FlashSaleManagement: React.FC = () => {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto rounded-2xl border border-slate-200">
-          <table className="w-full text-left text-xs text-slate-700 whitespace-nowrap">
-            <thead className="bg-slate-50 text-[10px] font-extrabold uppercase text-slate-500 border-b border-slate-200">
+        {/* Table with Sticky Header (Excel-Style) */}
+        <div className="overflow-x-auto overflow-y-auto max-h-[600px] rounded-2xl border border-slate-200 shadow-2xs">
+          <table className="w-full text-left text-xs text-slate-700 whitespace-nowrap border-collapse">
+            <thead className="sticky top-0 z-10 bg-slate-100/95 backdrop-blur-xs text-[10px] font-extrabold uppercase text-slate-600 border-b border-slate-200 shadow-2xs">
               <tr>
                 <th className="py-3.5 px-4 w-14 text-center">Bật Sale</th>
                 <th className="py-3.5 px-4">Sản phẩm</th>

@@ -407,9 +407,9 @@ export const Products: React.FC<IProductsProps> = (_props) => {
             <p className="text-slate-500 text-xs font-semibold">Đang tải bảng sản phẩm...</p>
           </div>
         ) : paginatedProducts.length > 0 ? (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto overflow-y-auto max-h-[600px] rounded-2xl border border-slate-200 shadow-2xs">
             <table className="w-full text-left text-sm border-collapse min-w-[760px]">
-              <thead className="bg-[#f8fafc] text-slate-500 text-[10.5px] font-extrabold uppercase tracking-wider border-b border-slate-200/80">
+              <thead className="sticky top-0 z-10 bg-[#f8fafc]/95 backdrop-blur-xs text-slate-600 text-[10.5px] font-extrabold uppercase tracking-wider border-b border-slate-200/80 shadow-2xs">
                 <tr>
                   <th className="py-4 px-4 w-12 text-center">ID</th>
                   <th className="py-4 px-4 min-w-[220px]">Sản Phẩm</th>
