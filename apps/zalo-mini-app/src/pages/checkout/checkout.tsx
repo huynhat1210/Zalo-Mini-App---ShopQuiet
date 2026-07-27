@@ -10,6 +10,12 @@ import {
   trackAnalyticsEvent,
   useTranslation,
 } from "../../utils";
+import {
+  getProvinces,
+  getDistricts,
+  getWards,
+  parseAddressComponents,
+} from "../../constants/vietnam-locations";
 import { Payment } from "zmp-sdk/apis";
 import api from "zmp-sdk";
 const PageCast = Page as any;
@@ -37,8 +43,7 @@ const checkoutAddressSchema = z.object({
     .trim()
     .min(9, "Số điện thoại không hợp lệ")
     .regex(/^[0-9]{9,11}$/, "Số điện thoại không hợp lệ"),
-  street: z.string().trim().min(5, "Vui lòng nhập địa chỉ chi tiết"),
-  city: z.string().trim().min(2, "Vui lòng nhập tỉnh/thành phố"),
+  houseNumber: z.string().trim().min(2, "Vui lòng nhập số nhà, tên đường"),
 });
 
 type CheckoutAddressFormValues = z.infer<typeof checkoutAddressSchema>;
@@ -216,19 +221,28 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
     phone: "",
   });
 
+  // Vietnam Administrative Location States for Checkout
+  const provincesList = getProvinces();
+  const [selectedProvince, setSelectedProvince] = useState<string>("TP. Hồ Chí Minh");
+  const [selectedDistrict, setSelectedDistrict] = useState<string>("Quận 1");
+  const [selectedWard, setSelectedWard] = useState<string>("Phường Bến Nghé");
+
+  const districtList = getDistricts(selectedProvince);
+  const wardList = getWards(selectedProvince, selectedDistrict);
+
   const {
     register,
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<CheckoutAddressFormValues>({
     resolver: zodResolver(checkoutAddressSchema),
     defaultValues: {
       name: "",
       phone: "",
-      street: "",
-      city: "",
+      houseNumber: "",
     },
   });
 
@@ -906,11 +920,17 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                   </button>
                   <button
                     onClick={() => {
+                      const parsed = parseAddressComponents(address.street, address.city);
+                      if (parsed.city && provincesList.includes(parsed.city)) {
+                        setSelectedProvince(parsed.city);
+                      }
+                      if (parsed.district) setSelectedDistrict(parsed.district);
+                      if (parsed.ward) setSelectedWard(parsed.ward);
+
                       reset({
                         name: address.name,
                         phone: address.phone,
-                        street: address.street,
-                        city: address.city,
+                        houseNumber: parsed.houseNumber || address.street,
                       });
                       setIsEnteringCustomAddress(true);
                     }}
@@ -921,10 +941,10 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                 </div>
               </div>
             ) : (
-              <div className="space-y-3 animate-fade-in">
+              <div className="space-y-3 animate-fade-in text-left">
                 <div className="flex justify-between items-center mb-1">
                   <p className="text-[9px] text-red-500 font-bold uppercase tracking-wider">
-                    Vui lòng nhập địa chỉ giao hàng:
+                    Vui lòng chọn địa chỉ giao hàng:
                   </p>
                   {addresses.length > 0 && (
                     <button
@@ -945,13 +965,20 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                     </button>
                   )}
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <div>
+                    <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
+                      Họ và tên người nhận
+                    </label>
                     <input
                       type="text"
                       placeholder="Họ và tên người nhận"
                       {...register("name")}
-                      className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-[#f0edeb] bg-[#fbf9f7] text-textColor focus:border-primary focus:outline-none"
+                      onChange={(e) => {
+                        register("name").onChange(e);
+                        setAddress((prev) => ({ ...prev, name: e.target.value }));
+                      }}
+                      className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-[#f0edeb] bg-[#fbf9f7] text-textColor font-semibold focus:border-primary focus:outline-none"
                     />
                     {errors.name && (
                       <p className="mt-1 text-[10px] text-red-500">
@@ -959,12 +986,20 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                       </p>
                     )}
                   </div>
+
                   <div>
+                    <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
+                      Số điện thoại liên lạc
+                    </label>
                     <input
                       type="text"
                       placeholder="Số điện thoại liên lạc"
                       {...register("phone")}
-                      className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-[#f0edeb] bg-[#fbf9f7] text-textColor focus:border-primary focus:outline-none"
+                      onChange={(e) => {
+                        register("phone").onChange(e);
+                        setAddress((prev) => ({ ...prev, phone: e.target.value }));
+                      }}
+                      className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-[#f0edeb] bg-[#fbf9f7] text-textColor font-semibold focus:border-primary focus:outline-none"
                     />
                     {errors.phone && (
                       <p className="mt-1 text-[10px] text-red-500">
@@ -972,13 +1007,118 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                       </p>
                     )}
                   </div>
+
+                  {/* Vietnam Administrative Location Dropdowns */}
+                  <div className="space-y-2">
+                    <div>
+                      <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
+                        Tỉnh / Thành phố
+                      </label>
+                      <select
+                        value={selectedProvince}
+                        onChange={(e) => {
+                          const newProv = e.target.value;
+                          setSelectedProvince(newProv);
+                          const dists = getDistricts(newProv);
+                          const newDist = dists[0] || "";
+                          setSelectedDistrict(newDist);
+                          const wards = getWards(newProv, newDist);
+                          const newWard = wards[0] || "";
+                          setSelectedWard(newWard);
+
+                          const hNum = watchedAddress.houseNumber || "";
+                          setAddress((prev) => ({
+                            ...prev,
+                            street: `${hNum}, ${newWard}, ${newDist}`,
+                            city: newProv,
+                          }));
+                        }}
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#f0edeb] bg-white text-textColor font-semibold focus:border-primary focus:outline-none cursor-pointer"
+                      >
+                        {provincesList.map((p) => (
+                          <option key={p} value={p}>
+                            {p}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
+                        Quận / Huyện
+                      </label>
+                      <select
+                        value={selectedDistrict}
+                        onChange={(e) => {
+                          const newDist = e.target.value;
+                          setSelectedDistrict(newDist);
+                          const wards = getWards(selectedProvince, newDist);
+                          const newWard = wards[0] || "";
+                          setSelectedWard(newWard);
+
+                          const hNum = watchedAddress.houseNumber || "";
+                          setAddress((prev) => ({
+                            ...prev,
+                            street: `${hNum}, ${newWard}, ${newDist}`,
+                            city: selectedProvince,
+                          }));
+                        }}
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#f0edeb] bg-white text-textColor font-semibold focus:border-primary focus:outline-none cursor-pointer"
+                      >
+                        {districtList.map((d) => (
+                          <option key={d} value={d}>
+                            {d}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
+                        Phường / Xã
+                      </label>
+                      <select
+                        value={selectedWard}
+                        onChange={(e) => {
+                          const newWard = e.target.value;
+                          setSelectedWard(newWard);
+                          const hNum = watchedAddress.houseNumber || "";
+                          setAddress((prev) => ({
+                            ...prev,
+                            street: `${hNum}, ${newWard}, ${selectedDistrict}`,
+                            city: selectedProvince,
+                          }));
+                        }}
+                        className="w-full text-xs px-3 py-2 rounded-xl border border-[#f0edeb] bg-white text-textColor font-semibold focus:border-primary focus:outline-none cursor-pointer"
+                      >
+                        {wardList.map((w) => (
+                          <option key={w} value={w}>
+                            {w}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
                   <div>
+                    <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
+                      Số nhà, tên đường (Chỉ gõ phần này)
+                    </label>
                     <div className="relative">
                       <input
                         type="text"
-                        placeholder="Địa chỉ (Số nhà, tên đường)"
-                        {...register("street")}
-                        className="w-full text-xs px-3.5 py-2.5 pr-28 rounded-xl border border-[#f0edeb] bg-[#fbf9f7] text-textColor focus:border-primary focus:outline-none"
+                        placeholder="VD: 123 Nguyễn Trãi"
+                        {...register("houseNumber")}
+                        onChange={(e) => {
+                          register("houseNumber").onChange(e);
+                          const hNum = e.target.value;
+                          setAddress((prev) => ({
+                            ...prev,
+                            street: `${hNum}, ${selectedWard}, ${selectedDistrict}`,
+                            city: selectedProvince,
+                          }));
+                        }}
+                        className="w-full text-xs px-3.5 py-2.5 pr-24 rounded-xl border border-[#f0edeb] bg-[#fbf9f7] text-textColor font-semibold focus:border-primary focus:outline-none"
                       />
                       <button
                         type="button"
@@ -1004,22 +1144,9 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                         Vị trí
                       </button>
                     </div>
-                    {errors.street && (
+                    {errors.houseNumber && (
                       <p className="mt-1 text-[10px] text-red-500">
-                        {errors.street.message}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="Tỉnh / Thành phố"
-                      {...register("city")}
-                      className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-[#f0edeb] bg-[#fbf9f7] text-textColor focus:border-primary focus:outline-none"
-                    />
-                    {errors.city && (
-                      <p className="mt-1 text-[10px] text-red-500">
-                        {errors.city.message}
+                        {errors.houseNumber.message}
                       </p>
                     )}
                   </div>

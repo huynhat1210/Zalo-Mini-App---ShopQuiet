@@ -5,6 +5,12 @@ import { z } from "zod";
 import api from "zmp-sdk";
 import { apiRequest } from "../../utils/api";
 import { IAddressManagerProps } from "./address-manager.type";
+import {
+  getProvinces,
+  getDistricts,
+  getWards,
+  parseAddressComponents,
+} from "../../constants/vietnam-locations";
 
 const profileAddressSchema = z.object({
   label: z.string().trim().min(2, "Vui lòng nhập tên nhãn"),
@@ -13,8 +19,7 @@ const profileAddressSchema = z.object({
     .trim()
     .min(9, "Số điện thoại không hợp lệ")
     .regex(/^[0-9]{9,11}$/, "Số điện thoại không hợp lệ"),
-  street: z.string().trim().min(5, "Vui lòng nhập địa chỉ chi tiết"),
-  city: z.string().trim().min(2, "Vui lòng nhập tỉnh/thành phố"),
+  houseNumber: z.string().trim().min(2, "Vui lòng nhập số nhà, tên đường"),
 });
 
 type ProfileAddressFormValues = z.infer<typeof profileAddressSchema>;
@@ -26,6 +31,15 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState<number | null>(null);
   const [locating, setLocating] = useState(false);
+
+  // Vietnam Administrative Location States
+  const provincesList = getProvinces();
+  const [selectedProvince, setSelectedProvince] = useState<string>("TP. Hồ Chí Minh");
+  const [selectedDistrict, setSelectedDistrict] = useState<string>("Quận 1");
+  const [selectedWard, setSelectedWard] = useState<string>("Phường Bến Nghé");
+
+  const districtList = getDistricts(selectedProvince);
+  const wardList = getWards(selectedProvince, selectedDistrict);
 
   const {
     register,
@@ -228,11 +242,17 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
                     onClick={(e) => {
                       e.stopPropagation();
                       setEditingAddressId(addr.id);
+                      const parsed = parseAddressComponents(addr.street || "", addr.city || "");
+                      if (parsed.city && provincesList.includes(parsed.city)) {
+                        setSelectedProvince(parsed.city);
+                      }
+                      if (parsed.district) setSelectedDistrict(parsed.district);
+                      if (parsed.ward) setSelectedWard(parsed.ward);
+
                       reset({
                         label: addr.label || "",
                         phone: addr.phone || "",
-                        street: addr.street || "",
-                        city: addr.city || "",
+                        houseNumber: parsed.houseNumber || addr.street || "",
                       });
                       setShowAddForm(true);
                     }}
@@ -267,7 +287,11 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
         {!showAddForm ? (
           <div className="space-y-3 pt-2">
             <button
-              onClick={() => setShowAddForm(true)}
+              onClick={() => {
+                setEditingAddressId(null);
+                reset({ label: "Nhà riêng", phone: zaloUser?.phone || "", houseNumber: "" });
+                setShowAddForm(true);
+              }}
               className="w-full h-10 border border-dashed border-primary/40 text-primary font-bold text-xs uppercase tracking-wider rounded-xl bg-transparent cursor-pointer hover:bg-primary/5 transition-all"
             >
               + Thêm địa chỉ mới
@@ -297,13 +321,13 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
 
             <div>
               <label className="text-[9px] font-bold text-textColor-variant uppercase tracking-wider block mb-1">
-                Tên nhãn
+                Tên nhãn địa chỉ
               </label>
               <input
                 type="text"
                 {...register("label")}
-                placeholder="Nhà riêng"
-                className="w-full bg-white border border-neutral-200 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-primary text-textColor"
+                placeholder="VD: Nhà riêng / Công ty"
+                className="w-full bg-white border border-neutral-200 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-primary text-textColor font-semibold"
               />
               {errors.label && (
                 <p className="mt-1 text-[10px] text-red-500">
@@ -314,13 +338,13 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
 
             <div>
               <label className="text-[9px] font-bold text-textColor-variant uppercase tracking-wider block mb-1">
-                Số điện thoại
+                Số điện thoại người nhận
               </label>
               <input
                 type="text"
                 {...register("phone")}
                 placeholder="0987654321"
-                className="w-full bg-white border border-neutral-200 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-primary text-textColor"
+                className="w-full bg-white border border-neutral-200 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-primary text-textColor font-semibold"
               />
               {errors.phone && (
                 <p className="mt-1 text-[10px] text-red-500">
@@ -329,36 +353,87 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
               )}
             </div>
 
-            <div>
-              <label className="text-[9px] font-bold text-textColor-variant uppercase tracking-wider block mb-1">
-                Địa chỉ chi tiết
-              </label>
-              <input
-                type="text"
-                {...register("street")}
-                placeholder="123 Nguyễn Du"
-                className="w-full bg-white border border-neutral-200 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-primary text-textColor"
-              />
-              {errors.street && (
-                <p className="mt-1 text-[10px] text-red-500">
-                  {errors.street.message}
-                </p>
-              )}
+            {/* Vietnam Administrative Location Dropdowns */}
+            <div className="grid grid-cols-1 gap-2.5">
+              <div>
+                <label className="text-[9px] font-bold text-textColor-variant uppercase tracking-wider block mb-1">
+                  Tỉnh / Thành phố
+                </label>
+                <select
+                  value={selectedProvince}
+                  onChange={(e) => {
+                    const newProv = e.target.value;
+                    setSelectedProvince(newProv);
+                    const dists = getDistricts(newProv);
+                    if (dists.length > 0) {
+                      setSelectedDistrict(dists[0]);
+                      const wards = getWards(newProv, dists[0]);
+                      if (wards.length > 0) setSelectedWard(wards[0]);
+                    }
+                  }}
+                  className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-primary text-textColor font-semibold cursor-pointer"
+                >
+                  {provincesList.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[9px] font-bold text-textColor-variant uppercase tracking-wider block mb-1">
+                  Quận / Huyện
+                </label>
+                <select
+                  value={selectedDistrict}
+                  onChange={(e) => {
+                    const newDist = e.target.value;
+                    setSelectedDistrict(newDist);
+                    const wards = getWards(selectedProvince, newDist);
+                    if (wards.length > 0) setSelectedWard(wards[0]);
+                  }}
+                  className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-primary text-textColor font-semibold cursor-pointer"
+                >
+                  {districtList.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[9px] font-bold text-textColor-variant uppercase tracking-wider block mb-1">
+                  Phường / Xã
+                </label>
+                <select
+                  value={selectedWard}
+                  onChange={(e) => setSelectedWard(e.target.value)}
+                  className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-primary text-textColor font-semibold cursor-pointer"
+                >
+                  {wardList.map((w) => (
+                    <option key={w} value={w}>
+                      {w}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div>
               <label className="text-[9px] font-bold text-textColor-variant uppercase tracking-wider block mb-1">
-                Tỉnh / Thành phố
+                Số nhà, tên đường (Chỉ gõ phần này)
               </label>
               <input
                 type="text"
-                {...register("city")}
-                placeholder="Hồ Chí Minh"
-                className="w-full bg-white border border-neutral-200 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-primary text-textColor"
+                {...register("houseNumber")}
+                placeholder="VD: 123 Nguyễn Trãi"
+                className="w-full bg-white border border-neutral-200 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-primary text-textColor font-semibold"
               />
-              {errors.city && (
+              {errors.houseNumber && (
                 <p className="mt-1 text-[10px] text-red-500">
-                  {errors.city.message}
+                  {errors.houseNumber.message}
                 </p>
               )}
             </div>
@@ -367,6 +442,9 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
               <button
                 type="button"
                 onClick={handleSubmit(async (values) => {
+                  const compiledStreet = `${values.houseNumber}, ${selectedWard}, ${selectedDistrict}`;
+                  const compiledCity = selectedProvince;
+
                   try {
                     if (editingAddressId) {
                       await apiRequest(
@@ -375,8 +453,8 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
                         {
                           label: values.label,
                           phone: values.phone,
-                          street: values.street,
-                          city: values.city,
+                          street: compiledStreet,
+                          city: compiledCity,
                         },
                       );
                       await fetchAddresses();
@@ -389,15 +467,15 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
                         {
                           label: values.label,
                           phone: values.phone,
-                          street: values.street,
-                          city: values.city,
+                          street: compiledStreet,
+                          city: compiledCity,
                           isDefault: addresses.length === 0,
                         },
                       );
                       if (saved) {
                         await fetchAddresses();
                         setShowAddForm(false);
-                        reset({ label: "", phone: "", street: "", city: "" });
+                        reset({ label: "", phone: "", houseNumber: "" });
                         showToast("Đã thêm địa chỉ mới!", "success");
                       }
                     }
