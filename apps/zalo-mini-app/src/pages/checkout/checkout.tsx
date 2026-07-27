@@ -144,6 +144,19 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
   const [vouchers, setVouchers] = useState<any[]>([]);
 
+  // VietQR Payment Modal State
+  const [vietQrModalData, setVietQrModalData] = useState<{
+    qrUrl: string;
+    bankId: string;
+    accountNo: string;
+    accountName: string;
+    amount: number;
+    transferContent: string;
+    orderId: string;
+  } | null>(null);
+  const [isCopiedNo, setIsCopiedNo] = useState(false);
+  const [isCopiedContent, setIsCopiedContent] = useState(false);
+
   // Tier benefits state
   const [tierBenefits, setTierBenefits] = useState<{
     tier: string;
@@ -643,125 +656,47 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       let createdOrder: any;
       let orderNumber: string;
 
-      if (paymentMethod === "zalopay" || paymentMethod === "bank") {
-        const checkoutRes = await apiRequest<any>(
-          "/orders/zalopay-checkout",
-          "POST",
-          {
-            ...orderData,
-            paymentMethod,
-          },
-        );
-        orderNumber = checkoutRes.orderId;
-
+      if (paymentMethod === "vietqr" || paymentMethod === "bank") {
+        const qrOrder = await apiRequest<any>("/orders", "POST", {
+          ...orderData,
+          paymentMethod: "VIETQR",
+        });
+        orderNumber = qrOrder.id;
         createdOrder = {
-          id: checkoutRes.orderId,
-          totalAmount: total,
-          status: "PENDING_PAYMENT",
-          createdAt: new Date().toISOString(),
-          paymentMethod: paymentMethod.toUpperCase(),
-          voucherCode: appliedPromo ? appliedPromo.code : null,
-          discountAmount: discount,
-          shippingAddress: `${address.street}, ${address.city}`,
-          shippingPhone: address.phone.trim(),
-          shippingName: address.name.trim(),
-          items: checkoutItems.map((item: any) => ({
+          id: qrOrder.id,
+          totalAmount: qrOrder.totalAmount,
+          status: qrOrder.status,
+          createdAt: qrOrder.createdAt,
+          paymentMethod: "VIETQR",
+          voucherCode: qrOrder.voucherCode,
+          discountAmount: qrOrder.discountAmount,
+          shippingAddress: qrOrder.shippingAddress,
+          shippingPhone: qrOrder.shippingPhone,
+          shippingName: qrOrder.shippingName,
+          items: qrOrder.items.map((item: any) => ({
             quantity: item.quantity,
-            price: item.product.price,
+            price: item.price,
             product: { name: item.product.name },
             size: item.size || "DEFAULT",
             color: item.color || "DEFAULT",
           })),
         };
 
-        // Try invoking Zalo SDK Payment sheet for ZaloPay / Bank Transfer
+        // Fetch VietQR code image & bank transfer instructions
         try {
-          Payment.createOrder({
-            amount: checkoutRes.amount,
-            desc: checkoutRes.desc,
-            item: JSON.parse(checkoutRes.item),
-            extradata: checkoutRes.extradata,
-            method: checkoutRes.method,
-            mac: checkoutRes.mac,
-            success: (data) => {
-              console.log(
-                "Payment.createOrder success, calling checkTransaction with data:",
-                data,
-              );
-              Payment.checkTransaction({
-                data: data,
-                success: (result) => {
-                  console.log(
-                    "Payment.checkTransaction success result:",
-                    result,
-                  );
-                  const resultCode = (result as any).resultCode;
-                  if (resultCode === 1) {
-                    // Success
-                    apiRequest(
-                      `/orders/${checkoutRes.orderId}/status`,
-                      "PATCH",
-                      { status: "PROCESSING" },
-                    )
-                      .then(() => {
-                        clearPurchasedItems();
-                        showToast("Thanh toán thành công!", "success");
-                        if (fetchNotifications) {
-                          fetchNotifications();
-                        }
-                        setActiveTab("order-success");
-                      })
-                      .catch((e) => {
-                        console.error(
-                          "Failed to update status on frontend after checkTransaction success:",
-                          e,
-                        );
-                        clearPurchasedItems();
-                        setSelectedOrder(createdOrder);
-                        setActiveTab("order-detail");
-                      });
-                  } else if (resultCode === 0) {
-                    showToast("Giao dịch đang được xử lý...", "info");
-                    clearPurchasedItems();
-                    setSelectedOrder(createdOrder);
-                    setActiveTab("order-detail");
-                  } else if (resultCode === -2) {
-                    showToast("Bạn đã hủy thanh toán!", "warning");
-                    clearPurchasedItems();
-                    setSelectedOrder(createdOrder);
-                    setActiveTab("order-detail");
-                  } else {
-                    showToast("Thanh toán thất bại!", "warning");
-                    clearPurchasedItems();
-                    setSelectedOrder(createdOrder);
-                    setActiveTab("order-detail");
-                  }
-                },
-                fail: (err) => {
-                  console.error("Payment.checkTransaction failed:", err);
-                  showToast("Không thể xác minh giao dịch!", "warning");
-                  clearPurchasedItems();
-                  setSelectedOrder(createdOrder);
-                  setActiveTab("order-detail");
-                },
-              });
-            },
-            fail: (err) => {
-              console.warn("Payment.createOrder failed:", err);
-              showToast("Không thể tạo đơn hàng thanh toán!", "warning");
-              clearPurchasedItems();
-              setSelectedOrder(createdOrder);
-              setActiveTab("order-detail");
-            },
+          const vietQrRes = await apiRequest<any>("/payments/vietqr/gen", "POST", {
+            orderId: qrOrder.id,
+            amount: total,
           });
-          return;
-        } catch (sdkErr) {
-          console.error("Error invoking Zalo SDK payment:", sdkErr);
-          clearPurchasedItems();
-          setSelectedOrder(createdOrder);
-          setActiveTab("order-detail");
-          return;
+          if (vietQrRes && vietQrRes.qrUrl) {
+            setVietQrModalData(vietQrRes);
+          }
+        } catch (e) {
+          console.error("Failed to generate VietQR details:", e);
         }
+
+        clearPurchasedItems();
+        showToast("Đơn hàng VietQR đã khởi tạo thành công!", "success");
       } else {
         // Cash on delivery
         const codOrder = await apiRequest<any>("/orders", "POST", orderData);
@@ -1670,6 +1605,124 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
             >
               Đóng
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ VIETQR PAYMENT MODAL OVERLAY ═══ */}
+      {vietQrModalData && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 font-black text-xs">
+                  QR
+                </span>
+                <div className="text-left">
+                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">Thanh Toán VietQR</h3>
+                  <p className="text-[10px] text-slate-400 font-semibold">Tự động xác nhận sau khi chuyển</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setVietQrModalData(null);
+                  setActiveTab("orders");
+                }}
+                className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 font-bold text-xs border-none cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Total Amount */}
+            <div className="bg-teal-50/70 p-3 rounded-2xl border border-teal-100">
+              <p className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Số tiền cần chuyển</p>
+              <p className="text-xl font-black text-[#0e6877] mt-0.5">
+                {vietQrModalData.amount.toLocaleString("vi-VN")} đ
+              </p>
+            </div>
+
+            {/* QR Image */}
+            <div className="relative p-3 bg-white rounded-2xl border-2 border-dashed border-teal-200 shadow-2xs inline-block">
+              <img
+                src={vietQrModalData.qrUrl}
+                alt="VietQR Code"
+                className="w-56 h-56 object-contain rounded-xl mx-auto"
+              />
+              <p className="text-[9px] text-slate-400 font-bold mt-1">Mở App ngân hàng quét mã QR để thanh toán</p>
+            </div>
+
+            {/* Bank Transfer Details with 1-click Copy */}
+            <div className="space-y-2 text-left bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] text-slate-500 font-bold uppercase">Ngân hàng:</span>
+                <span className="font-extrabold text-slate-900">{vietQrModalData.bankId}</span>
+              </div>
+              <div className="flex justify-between items-center pt-1 border-t border-slate-200/60">
+                <span className="text-[10px] text-slate-500 font-bold uppercase">Chủ tài khoản:</span>
+                <span className="font-extrabold text-slate-900 truncate max-w-[170px]">{vietQrModalData.accountName}</span>
+              </div>
+
+              {/* Account Number with Copy */}
+              <div className="flex justify-between items-center pt-1 border-t border-slate-200/60">
+                <div>
+                  <span className="text-[10px] text-slate-500 font-bold uppercase block">Số tài khoản:</span>
+                  <span className="font-mono font-black text-slate-900 text-sm">{vietQrModalData.accountNo}</span>
+                </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(vietQrModalData.accountNo);
+                    setIsCopiedNo(true);
+                    setTimeout(() => setIsCopiedNo(false), 2000);
+                  }}
+                  className="px-2.5 py-1 bg-teal-50 text-[#0e6877] font-bold text-[10px] rounded-lg border border-teal-200 cursor-pointer active:scale-95"
+                >
+                  {isCopiedNo ? "✓ Đã chép" : "Copy STK"}
+                </button>
+              </div>
+
+              {/* Transfer Content with Copy */}
+              <div className="flex justify-between items-center pt-1 border-t border-slate-200/60 bg-amber-50/80 -mx-3.5 -mb-3.5 p-3.5 rounded-b-2xl">
+                <div>
+                  <span className="text-[10px] text-amber-800 font-bold uppercase block">Nội dung chuyển khoản:</span>
+                  <span className="font-mono font-black text-amber-900 text-sm">{vietQrModalData.transferContent}</span>
+                </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(vietQrModalData.transferContent);
+                    setIsCopiedContent(true);
+                    setTimeout(() => setIsCopiedContent(false), 2000);
+                  }}
+                  className="px-2.5 py-1 bg-amber-500 text-white font-bold text-[10px] rounded-lg border-none cursor-pointer active:scale-95 shadow-2xs"
+                >
+                  {isCopiedContent ? "✓ Đã chép" : "Copy Cú Pháp"}
+                </button>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="space-y-2 pt-2">
+              <button
+                onClick={() => {
+                  setVietQrModalData(null);
+                  showToast("Đơn hàng đã ghi nhận! Vui lòng hoàn tất chuyển khoản.", "success");
+                  setActiveTab("orders");
+                }}
+                className="w-full py-3 bg-[#0e6877] text-white font-extrabold text-xs rounded-2xl border-none cursor-pointer shadow-md active:scale-95"
+              >
+                Tôi đã chuyển khoản thành công
+              </button>
+              <button
+                onClick={() => {
+                  setVietQrModalData(null);
+                  setActiveTab("orders");
+                }}
+                className="w-full py-2 bg-transparent text-slate-400 font-bold text-xs border-none cursor-pointer"
+              >
+                Thanh toán sau (Xem đơn hàng)
+              </button>
+            </div>
           </div>
         </div>
       )}
