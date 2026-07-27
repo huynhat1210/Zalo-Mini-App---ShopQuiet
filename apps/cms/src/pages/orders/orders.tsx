@@ -159,10 +159,7 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
       const list = Array.isArray(res) ? res : [];
       setOrders(list);
 
-      // Expand all by default so user sees everything directly
-      const expandMap: Record<string, boolean> = {};
-      list.forEach((o) => { expandMap[o.id] = true; });
-      setExpandedOrderIds((prev) => ({ ...expandMap, ...prev }));
+      // Orders stay collapsed by default for clean and compact management
     } catch (err) {
       console.error('Failed to fetch orders:', err);
     } finally {
@@ -379,18 +376,35 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
       </div>
 
       {/* ── Search & Filter Controls ── */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row justify-between items-center gap-3">
-        <div className="relative w-full md:w-96">
-          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
-            <Search size={16} />
-          </span>
-          <input
-            type="text"
-            placeholder="Tìm kiếm mã đơn, tên người nhận, số điện thoại..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 focus:border-[#0e6877] rounded-xl py-2.5 pl-10 pr-4 text-xs text-slate-800 placeholder-slate-400 focus:outline-none transition-all focus:bg-white shadow-2xs"
-          />
+      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-center gap-2 flex-1 w-full md:w-auto">
+          <div className="relative w-full sm:w-80">
+            <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+              <Search size={16} />
+            </span>
+            <input
+              type="text"
+              placeholder="Tìm kiếm mã đơn, tên, SĐT..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 focus:border-[#0e6877] rounded-xl py-2.5 pl-10 pr-4 text-xs text-slate-800 placeholder-slate-400 focus:outline-none transition-all focus:bg-white shadow-2xs"
+            />
+          </div>
+
+          <button
+            onClick={() => {
+              const allExpanded = paginatedOrders.every((o) => expandedOrderIds[o.id]);
+              const nextState = !allExpanded;
+              const newMap = { ...expandedOrderIds };
+              paginatedOrders.forEach((o) => { newMap[o.id] = nextState; });
+              setExpandedOrderIds(newMap);
+            }}
+            className="w-full sm:w-auto px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all border border-slate-200/80 cursor-pointer whitespace-nowrap"
+          >
+            {paginatedOrders.length > 0 && paginatedOrders.every((o) => expandedOrderIds[o.id])
+              ? ' Thu gọn tất cả'
+              : ' Mở rộng tất cả'}
+          </button>
         </div>
 
         {/* Status Filter Tabs */}
