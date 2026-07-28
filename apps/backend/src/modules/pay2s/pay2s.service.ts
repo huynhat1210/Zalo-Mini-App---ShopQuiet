@@ -110,7 +110,20 @@ export class Pay2sService {
       this.logger.warn(`[Pay2S Create] Gateway API call error/fallback: ${e?.message || e}`);
     }
 
-    // Self-hosted interactive VietQR payment page with QR, copy buttons, and bank app launcher
+    // Check if Sandbox mode is requested or configured
+    const useSandboxDemo = await this.getSetting('PAY2S_USE_SANDBOX', 'true');
+    if (useSandboxDemo === 'true' || endpoint.includes('sandbox')) {
+      const demoUrl = `https://sandbox.pay2s.vn/demo/transfer_demo.html?amount=${finalAmount}&content=${encodeURIComponent(orderInfo)}&orderId=${order.id}`;
+      return {
+        success: true,
+        payUrl: demoUrl,
+        orderId: order.id,
+        orderInfo,
+        amount: finalAmount,
+      };
+    }
+
+    // Self-hosted interactive VietQR payment page fallback
     const [accNo, bankCode] = bankAccounts.split('|');
     const cleanBankCode = (bankCode || 'MB').trim();
     const cleanAccNo = (accNo || '0988776655').trim();
