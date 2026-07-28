@@ -849,7 +849,7 @@ export class OrdersService {
     // Use the Checkout SDK Private Key from .env for signing MAC
     const key1 =
       process.env.ZALO_PAYMENT_PRIVATE_KEY ||
-      'sdngKKJmqEMzvh5QQcdD2A9XBSKUNaYn';
+      '07c667ab71c5b3062e84e8332ff78021';
     const mac = crypto
       .createHmac('sha256', key1)
       .update(sortedString)
