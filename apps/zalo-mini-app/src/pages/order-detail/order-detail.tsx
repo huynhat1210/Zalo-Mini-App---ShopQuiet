@@ -315,21 +315,25 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
 
       {/* Main Body */}
       <div className="flex-1 overflow-y-auto px-6 py-5.5 space-y-5 text-xs text-left pb-28">
-        {/* ZaloPay Pending Banner */}
+        {/* Pending Payment Banner */}
         {isPendingPayment && (
-          <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4.5 space-y-3 animate-fade-in">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">⏳</span>
-              <div>
-                <p className="font-bold text-orange-700 text-xs">
-                  Chờ thanh toán ZaloPay
-                </p>
-                <p className="text-orange-600/80 text-[10px] mt-0.5 leading-relaxed">
-                  Đơn hàng đã được tạo nhưng chưa thanh toán. Nếu đã thanh toán,
-                  vui lòng đợi hệ thống xác nhận (1-5 phút).
-                </p>
-              </div>
-            </div>
+          <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4.5 space-y-1.5 animate-fade-in text-left">
+            <p className="font-bold text-orange-700 text-xs">
+              Chờ thanh toán (
+              {selectedOrder.paymentMethod === "MOMO"
+                ? "Ví MoMo"
+                : selectedOrder.paymentMethod === "BANK"
+                  ? "Chuyển khoản Ngân hàng"
+                  : selectedOrder.paymentMethod === "ZALOPAY"
+                    ? "Ví ZaloPay"
+                    : selectedOrder.paymentMethod === "VIETQR"
+                      ? "VietQR"
+                      : "Trực tuyến"}
+              )
+            </p>
+            <p className="text-orange-600/80 text-[10px] leading-relaxed">
+              Đơn hàng đã được tạo nhưng chưa thanh toán. Vui lòng bấm "TIẾP TỤC THANH TOÁN" bên dưới để hoàn tất.
+            </p>
           </div>
         )}
 
@@ -587,14 +591,14 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
               <span className="text-textColor-variant">Phương thức:</span>
               <span className="font-bold text-textColor">
                 {selectedOrder.paymentMethod === "MOMO"
-                  ? "🩷 Ví MoMo"
+                  ? "Ví MoMo"
                   : selectedOrder.paymentMethod === "BANK"
-                    ? "🏦 Chuyển khoản Ngân hàng"
+                    ? "Chuyển khoản Ngân hàng"
                     : selectedOrder.paymentMethod === "ZALOPAY"
-                      ? "💳 Cổng ZaloPay"
+                      ? "Ví ZaloPay"
                       : selectedOrder.paymentMethod === "VIETQR"
-                        ? "📱 VietQR"
-                        : "💵 COD (Tiền mặt)"}
+                        ? "VietQR"
+                        : "COD (Thanh toán khi nhận hàng)"}
               </span>
             </div>
             {selectedOrder.voucherCode && (
@@ -624,7 +628,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
               onClick={handleContinuePayment}
               className="w-full h-11 bg-primary hover:bg-primary-dark text-white font-bold text-xs uppercase tracking-widest rounded-2xl cursor-pointer shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 mb-2.5 disabled:bg-neutral-300 disabled:cursor-not-allowed border-none"
             >
-              {paying ? "Đang khởi tạo..." : "💳 Tiếp Tục Thanh Toán"}
+              {paying ? "Đang khởi tạo..." : "TIẾP TỤC THANH TOÁN"}
             </button>
           )}
 
