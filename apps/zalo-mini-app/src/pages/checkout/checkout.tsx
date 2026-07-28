@@ -110,24 +110,24 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   const [paymentMethods, setPaymentMethods] = useState<CmsPaymentMethod[]>([
     {
       code: "zalopay",
-      name: "Ví ZaloPay Sandbox (Zalo SDK)",
-      description: "Thanh toán ZaloPay thử nghiệm Sandbox 1-Touch",
+      name: "Ví ZaloPay",
+      description: "Thanh toán an toàn 1-Touch qua Ví ZaloPay",
       provider: "ZALOPAY",
       badge: "KHUYÊN DÙNG",
     },
     {
       code: "momo",
-      name: "Ví MoMo Sandbox (Zalo SDK)",
-      description: "Thanh toán Ví MoMo thử nghiệm Sandbox",
+      name: "Ví MoMo",
+      description: "Thanh toán tiện lợi qua Ví MoMo",
       provider: "MOMO",
-      badge: "MoMo",
+      badge: "MOMO",
     },
     {
       code: "bank",
-      name: "Chuyển khoản Ngân hàng Sandbox (Zalo SDK)",
-      description: "Chuyển khoản ATM/Ngân hàng thử nghiệm Sandbox",
+      name: "Chuyển khoản Ngân hàng",
+      description: "Chuyển khoản ATM / Thẻ ngân hàng nội địa & quốc tế",
       provider: "BANK",
-      badge: "Ngân Hàng",
+      badge: "NGÂN HÀNG",
     },
     {
       code: "cod",
@@ -249,24 +249,24 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
         const defaultZaloPay: CmsPaymentMethod = {
           code: "zalopay",
-          name: "Ví ZaloPay Sandbox (Zalo SDK)",
-          description: "Thanh toán ZaloPay thử nghiệm Sandbox 1-Touch",
+          name: "Ví ZaloPay",
+          description: "Thanh toán an toàn 1-Touch qua Ví ZaloPay",
           provider: "ZALOPAY",
           badge: "KHUYÊN DÙNG",
         };
         const defaultMoMo: CmsPaymentMethod = {
           code: "momo",
-          name: "Ví MoMo Sandbox (Zalo SDK)",
-          description: "Thanh toán Ví MoMo thử nghiệm Sandbox",
+          name: "Ví MoMo",
+          description: "Thanh toán tiện lợi qua Ví MoMo",
           provider: "MOMO",
-          badge: "MoMo",
+          badge: "MOMO",
         };
         const defaultBank: CmsPaymentMethod = {
           code: "bank",
-          name: "Chuyển khoản Ngân hàng Sandbox (Zalo SDK)",
-          description: "Chuyển khoản ATM/Ngân hàng thử nghiệm Sandbox",
+          name: "Chuyển khoản Ngân hàng",
+          description: "Chuyển khoản ATM / Thẻ ngân hàng nội địa & quốc tế",
           provider: "BANK",
-          badge: "Ngân Hàng",
+          badge: "NGÂN HÀNG",
         };
         const defaultCod: CmsPaymentMethod = {
           code: "cod",

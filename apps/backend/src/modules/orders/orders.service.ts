@@ -832,11 +832,13 @@ export class OrdersService {
       .filter(Boolean)
       .join('')
       .toUpperCase();
-    let methodId = process.env.ZALO_PAYMENT_METHOD_ID || 'ZALOPAY_SANDBOX';
-    if (reqMethod.includes('BANK')) {
-      methodId = 'BANK_SANDBOX';
-    } else if (reqMethod.includes('MOMO')) {
+    let methodId = 'ZALOPAY_SANDBOX';
+    if (reqMethod.includes('MOMO')) {
       methodId = 'MOMO_SANDBOX';
+    } else if (reqMethod.includes('BANK')) {
+      methodId = 'BANK_SANDBOX';
+    } else if (reqMethod.includes('ZALOPAY')) {
+      methodId = 'ZALOPAY_SANDBOX';
     }
     const method = JSON.stringify({
       id: methodId,

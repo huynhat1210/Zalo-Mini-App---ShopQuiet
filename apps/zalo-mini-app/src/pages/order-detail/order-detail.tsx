@@ -586,11 +586,15 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
             <div className="flex justify-between">
               <span className="text-textColor-variant">Phương thức:</span>
               <span className="font-bold text-textColor">
-                {selectedOrder.paymentMethod === "VIETQR"
-                  ? "📱 VietQR (Chuyển khoản Ngân hàng)"
-                  : selectedOrder.paymentMethod === "ZALOPAY"
-                    ? "💳 Cổng ZaloPay"
-                    : "💵 COD (Tiền mặt)"}
+                {selectedOrder.paymentMethod === "MOMO"
+                  ? "🩷 Ví MoMo"
+                  : selectedOrder.paymentMethod === "BANK"
+                    ? "🏦 Chuyển khoản Ngân hàng"
+                    : selectedOrder.paymentMethod === "ZALOPAY"
+                      ? "💳 Cổng ZaloPay"
+                      : selectedOrder.paymentMethod === "VIETQR"
+                        ? "📱 VietQR"
+                        : "💵 COD (Tiền mặt)"}
               </span>
             </div>
             {selectedOrder.voucherCode && (
@@ -610,16 +614,19 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
           </div>
         </div>
 
-        {/* ZaloPay Continue Payment */}
-        {isPendingPayment && selectedOrder.paymentMethod === "ZALOPAY" && (
-          <button
-            disabled={paying || cancelling}
-            onClick={handleContinuePayment}
-            className="w-full h-11 bg-primary hover:bg-primary-dark text-white font-bold text-xs uppercase tracking-widest rounded-2xl cursor-pointer shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 mb-2.5 disabled:bg-neutral-300 disabled:cursor-not-allowed border-none"
-          >
-            {paying ? "Đang khởi tạo..." : "💳 Tiếp Tục Thanh Toán"}
-          </button>
-        )}
+        {/* Continue Payment for unpaid online orders */}
+        {isPendingPayment &&
+          ["ZALOPAY", "MOMO", "BANK", "VIETQR"].includes(
+            selectedOrder.paymentMethod,
+          ) && (
+            <button
+              disabled={paying || cancelling}
+              onClick={handleContinuePayment}
+              className="w-full h-11 bg-primary hover:bg-primary-dark text-white font-bold text-xs uppercase tracking-widest rounded-2xl cursor-pointer shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 mb-2.5 disabled:bg-neutral-300 disabled:cursor-not-allowed border-none"
+            >
+              {paying ? "Đang khởi tạo..." : "💳 Tiếp Tục Thanh Toán"}
+            </button>
+          )}
 
         {/* Cancel action */}
         {isCancellable && !confirmCancel && (
