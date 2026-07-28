@@ -158,6 +158,27 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   const [isCopiedNo, setIsCopiedNo] = useState(false);
   const [isCopiedContent, setIsCopiedContent] = useState(false);
 
+  // Auto-listen to Order Payment Status via Polling while VietQR modal is open
+  useEffect(() => {
+    if (!vietQrModalData?.orderId) return;
+    const interval = setInterval(async () => {
+      try {
+        const order = await apiRequest<any>(`/orders/${vietQrModalData.orderId}`);
+        if (
+          order &&
+          (order.status === "PROCESSING" ||
+            order.status === "COMPLETED" ||
+            order.status === "SHIPPED")
+        ) {
+          setVietQrModalData(null);
+          showToast(" Ngân hàng đã xác nhận thanh toán thành công!", "success");
+          setActiveTab("orders");
+        }
+      } catch (e) {}
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [vietQrModalData?.orderId]);
+
   // Tier benefits state
   const [tierBenefits, setTierBenefits] = useState<{
     tier: string;
@@ -1611,19 +1632,22 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
         </div>
       )}
 
-      {/* ═══ VIETQR PAYMENT MODAL OVERLAY ═══ */}
+      {/* ═══ VIETQR PAYMENT MODAL OVERLAY (Minimalist Commercial Style) ═══ */}
       {vietQrModalData && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto border border-slate-100">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="w-8 h-8 rounded-full bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700 font-black text-xs">
+              <div className="flex items-center gap-2.5">
+                <span className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-black text-xs">
                   QR
                 </span>
                 <div className="text-left">
-                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">Thanh Toán VietQR</h3>
-                  <p className="text-[10px] text-slate-400 font-semibold">Tự động xác nhận sau khi chuyển</p>
+                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Thanh Toán VietQR</h3>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span className="text-[10px] text-emerald-700 font-bold">Xác nhận tự động qua Webhook</span>
+                  </div>
                 </div>
               </div>
               <button
@@ -1631,26 +1655,26 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                   setVietQrModalData(null);
                   setActiveTab("orders");
                 }}
-                className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 font-bold text-xs border-none cursor-pointer"
+                className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 font-bold text-xs border-none cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
             {/* Total Amount */}
-            <div className="bg-teal-50/70 p-3 rounded-2xl border border-teal-100">
-              <p className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">Số tiền cần chuyển</p>
-              <p className="text-xl font-black text-[#0e6877] mt-0.5">
+            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
+              <p className="text-[9.5px] font-bold uppercase text-slate-400 tracking-wider">Số tiền cần thanh toán</p>
+              <p className="text-xl font-black text-slate-900 mt-0.5">
                 {vietQrModalData.amount.toLocaleString("vi-VN")} đ
               </p>
             </div>
 
-            {/* QR Image & Save Button */}
-            <div className="p-3 bg-white rounded-2xl border-2 border-dashed border-teal-200 shadow-2xs text-center space-y-2">
+            {/* QR Image Container */}
+            <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs text-center space-y-3">
               <img
                 src={vietQrModalData.qrUrl}
                 alt="VietQR Code"
-                className="w-52 h-52 object-contain rounded-xl mx-auto"
+                className="w-52 h-52 object-contain rounded-xl mx-auto border border-slate-100"
               />
               <button
                 onClick={async () => {
@@ -1665,83 +1689,30 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                     a.click();
                     a.remove();
                     window.URL.revokeObjectURL(url);
-                    showToast("Đã tải mã QR về máy!", "success");
+                    showToast("Đã lưu mã QR vào album ảnh!", "success");
                   } catch (e) {
-                    showToast("Nhấn giữ hình QR để lưu hoặc Chụp màn hình", "info");
+                    showToast("Nhấn giữ hình QR để lưu ảnh", "info");
                   }
                 }}
-                className="w-full py-2 bg-teal-50 hover:bg-teal-100 text-[#0e6877] font-bold text-xs rounded-xl border border-teal-200 cursor-pointer transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl border-none cursor-pointer transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-xs"
               >
-                <span>📥 Lưu mã QR vào album ảnh</span>
+                <span>📥 Lưu mã QR về máy</span>
               </button>
-
-              <div className="bg-slate-50 p-2 rounded-xl text-[9.5px] text-slate-500 font-semibold leading-snug text-left space-y-0.5">
-                <p className="font-extrabold text-[#0e6877] uppercase text-[9px]">💡 Hướng dẫn chuyển tiền trên 1 điện thoại:</p>
-                <p>1. Bấm <strong>Lưu mã QR</strong> (hoặc chụp màn hình)</p>
-                <p>2. Mở App Ngân hàng ➔ Chọn <strong>Quét QR</strong> ➔ Tải ảnh từ thư viện</p>
-                <p>3. Kiểm tra số tiền & bấm Chuyển tiền!</p>
-              </div>
             </div>
 
-            {/* 1-TOUCH DIRECT BANKING APP LAUNCH BUTTONS */}
-            <div className="space-y-2 text-left bg-gradient-to-br from-teal-50/90 to-blue-50/90 p-3.5 rounded-2xl border border-teal-200/80 shadow-2xs">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase text-[#0e6877] tracking-wider flex items-center gap-1">
-                  ⚡ Mở Nhanh App Ngân Hàng (1-Touch)
-                </span>
-                <span className="text-[9px] font-bold text-teal-600 bg-white px-1.5 py-0.5 rounded-full border border-teal-200">
-                  Tự điền STK & Tiền
-                </span>
-              </div>
-              <p className="text-[9.5px] text-slate-500 font-semibold">
-                Chọn ngân hàng bạn đang dùng để ứng dụng tự động mở App và điền sẵn thông tin:
-              </p>
-
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                {[
-                  { key: "vcb", label: "Vietcombank", color: "bg-emerald-600 hover:bg-emerald-700 text-white" },
-                  { key: "mb", label: "MBBank", color: "bg-blue-600 hover:bg-blue-700 text-white" },
-                  { key: "tcb", label: "Techcombank", color: "bg-red-600 hover:bg-red-700 text-white" },
-                  { key: "acb", label: "ACB", color: "bg-amber-500 hover:bg-amber-600 text-white" },
-                  { key: "momo", label: "Ví MoMo", color: "bg-pink-600 hover:bg-pink-700 text-white" },
-                  { key: "universal", label: "Ngân hàng khác", color: "bg-slate-800 hover:bg-slate-900 text-white" },
-                ].map((b) => {
-                  const link = (vietQrModalData.deepLinks as any)?.[b.key] || vietQrModalData.deepLinks?.universal;
-                  return (
-                    <button
-                      key={b.key}
-                      onClick={() => {
-                        // Copy STK and content automatically first
-                        navigator.clipboard.writeText(vietQrModalData.accountNo);
-                        showToast(`Đã copy STK! Đang mở app ${b.label}...`, "success");
-                        if (link) {
-                          setTimeout(() => {
-                            window.open(link, "_blank");
-                          }, 300);
-                        }
-                      }}
-                      className={`py-2 px-2 rounded-xl text-xs font-black transition-all border-none cursor-pointer flex items-center justify-center gap-1 shadow-2xs active:scale-95 ${b.color}`}
-                    >
-                      <span className="truncate">{b.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Bank Transfer Details with 1-click Copy */}
-            <div className="space-y-2 text-left bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-xs">
+            {/* Bank Transfer Details */}
+            <div className="space-y-2.5 text-left bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs">
               <div className="flex justify-between items-center">
                 <span className="text-[10px] text-slate-500 font-bold uppercase">Ngân hàng:</span>
-                <span className="font-extrabold text-slate-900">{vietQrModalData.bankId}</span>
+                <span className="font-bold text-slate-900">{vietQrModalData.bankId}</span>
               </div>
-              <div className="flex justify-between items-center pt-1 border-t border-slate-200/60">
+              <div className="flex justify-between items-center pt-2 border-t border-slate-200/60">
                 <span className="text-[10px] text-slate-500 font-bold uppercase">Chủ tài khoản:</span>
-                <span className="font-extrabold text-slate-900 truncate max-w-[170px]">{vietQrModalData.accountName}</span>
+                <span className="font-bold text-slate-900 truncate max-w-[170px]">{vietQrModalData.accountName}</span>
               </div>
 
-              {/* Account Number with Copy */}
-              <div className="flex justify-between items-center pt-1 border-t border-slate-200/60">
+              {/* Account Number */}
+              <div className="flex justify-between items-center pt-2 border-t border-slate-200/60">
                 <div>
                   <span className="text-[10px] text-slate-500 font-bold uppercase block">Số tài khoản:</span>
                   <span className="font-mono font-black text-slate-900 text-sm">{vietQrModalData.accountNo}</span>
@@ -1752,17 +1723,17 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                     setIsCopiedNo(true);
                     setTimeout(() => setIsCopiedNo(false), 2000);
                   }}
-                  className="px-2.5 py-1 bg-teal-50 text-[#0e6877] font-bold text-[10px] rounded-lg border border-teal-200 cursor-pointer active:scale-95"
+                  className="px-3 py-1 bg-white text-slate-800 font-bold text-[10px] rounded-lg border border-slate-300 cursor-pointer active:scale-95 shadow-2xs"
                 >
                   {isCopiedNo ? "✓ Đã chép" : "Copy STK"}
                 </button>
               </div>
 
-              {/* Transfer Content with Copy */}
-              <div className="flex justify-between items-center pt-1 border-t border-slate-200/60 bg-amber-50/80 -mx-3.5 -mb-3.5 p-3.5 rounded-b-2xl">
+              {/* Transfer Content */}
+              <div className="flex justify-between items-center pt-2 border-t border-slate-200/60">
                 <div>
-                  <span className="text-[10px] text-amber-800 font-bold uppercase block">Nội dung chuyển khoản:</span>
-                  <span className="font-mono font-black text-amber-900 text-sm">{vietQrModalData.transferContent}</span>
+                  <span className="text-[10px] text-slate-500 font-bold uppercase block">Nội dung chuyển:</span>
+                  <span className="font-mono font-black text-slate-900 text-sm">{vietQrModalData.transferContent}</span>
                 </div>
                 <button
                   onClick={() => {
@@ -1770,33 +1741,62 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                     setIsCopiedContent(true);
                     setTimeout(() => setIsCopiedContent(false), 2000);
                   }}
-                  className="px-2.5 py-1 bg-amber-500 text-white font-bold text-[10px] rounded-lg border-none cursor-pointer active:scale-95 shadow-2xs"
+                  className="px-3 py-1 bg-slate-900 text-white font-bold text-[10px] rounded-lg border-none cursor-pointer active:scale-95 shadow-2xs"
                 >
                   {isCopiedContent ? "✓ Đã chép" : "Copy Cú Pháp"}
                 </button>
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="space-y-2 pt-2">
+            {/* Direct App Launcher (Minimalist Slate Buttons) */}
+            <div className="space-y-2 text-left bg-white p-3.5 rounded-2xl border border-slate-200">
+              <span className="text-[9.5px] font-bold uppercase text-slate-500 tracking-wider block">
+                ⚡ Mở nhanh App Ngân hàng (Deep Link):
+              </span>
+              <div className="grid grid-cols-3 gap-1.5 pt-0.5">
+                {[
+                  { key: "vcb", label: "Vietcombank" },
+                  { key: "mb", label: "MBBank" },
+                  { key: "tcb", label: "Techcombank" },
+                  { key: "acb", label: "ACB" },
+                  { key: "momo", label: "Ví MoMo" },
+                  { key: "universal", label: "Khác" },
+                ].map((b) => {
+                  const link = (vietQrModalData.deepLinks as any)?.[b.key] || vietQrModalData.deepLinks?.universal;
+                  return (
+                    <button
+                      key={b.key}
+                      onClick={() => {
+                        navigator.clipboard.writeText(vietQrModalData.accountNo);
+                        showToast(`Đã copy STK! Đang mở ${b.label}...`, "info");
+                        if (link) {
+                          setTimeout(() => {
+                            window.open(link, "_blank");
+                          }, 300);
+                        }
+                      }}
+                      className="py-1.5 px-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-[10px] font-bold border border-slate-200 cursor-pointer active:scale-95 transition-all text-center truncate"
+                    >
+                      {b.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Footer Status */}
+            <div className="pt-1 text-center space-y-2">
+              <p className="text-[10px] text-slate-400 font-medium">
+                Hệ thống đang tự động theo dõi số dư qua Webhook ngân hàng 24/7. Trạng thái sẽ tự động cập nhật ngay khi tiền về.
+              </p>
               <button
                 onClick={() => {
                   setVietQrModalData(null);
-                  showToast("Đơn hàng đã ghi nhận! Vui lòng hoàn tất chuyển khoản.", "success");
                   setActiveTab("orders");
                 }}
-                className="w-full py-3 bg-[#0e6877] text-white font-extrabold text-xs rounded-2xl border-none cursor-pointer shadow-md active:scale-95"
+                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl border border-slate-200 cursor-pointer transition-all active:scale-95"
               >
-                Tôi đã chuyển khoản thành công
-              </button>
-              <button
-                onClick={() => {
-                  setVietQrModalData(null);
-                  setActiveTab("orders");
-                }}
-                className="w-full py-2 bg-transparent text-slate-400 font-bold text-xs border-none cursor-pointer"
-              >
-                Thanh toán sau (Xem đơn hàng)
+                Đóng / Quản lý đơn hàng
               </button>
             </div>
           </div>
