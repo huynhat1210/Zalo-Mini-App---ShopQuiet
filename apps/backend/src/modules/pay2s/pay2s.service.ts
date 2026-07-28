@@ -193,19 +193,40 @@ export class Pay2sService {
       this.logger.warn(`[Pay2S Hook] Invalid authorization bearer token: ${token}`);
     }
 
-    const transactions = Array.isArray(body?.transactions) ? body.transactions : [];
+    let transactions: any[] = [];
+    if (Array.isArray(body?.transactions)) {
+      transactions = body.transactions;
+    } else if (Array.isArray(body)) {
+      transactions = body;
+    } else if (body && typeof body === 'object') {
+      transactions = [body];
+    }
+
     let processedCount = 0;
 
     for (const tx of transactions) {
-      if (tx.transferType !== 'IN') continue;
+      if (tx.transferType && tx.transferType !== 'IN') continue;
 
-      const content = tx.content || '';
+      const content = String(tx.content || tx.description || tx.orderId || tx.order_id || '');
 
-      // Extract orderId from content formatted as PAY{orderId}X{randomDigits}
-      const match = content.match(/PAY([a-zA-Z0-9_-]+)X\d+/i);
-      if (!match) continue;
+      let orderId: string | null = null;
+      // Pattern 1: PAY{orderId}X{digits}
+      const matchPAY = content.match(/PAY([a-zA-Z0-9_-]+)X\d+/i);
+      if (matchPAY) {
+        orderId = matchPAY[1];
+      }
+      // Pattern 2: SQ-{digits}
+      if (!orderId) {
+        const matchSQ = content.match(/(SQ-\d+)/i);
+        if (matchSQ) orderId = matchSQ[1];
+      }
+      // Pattern 3: direct tx.orderId / tx.order_id
+      if (!orderId && (tx.orderId || tx.order_id)) {
+        orderId = String(tx.orderId || tx.order_id);
+      }
 
-      const orderId = match[1];
+      if (!orderId) continue;
+
       const order = await this.prisma.order.findUnique({
         where: { id: orderId },
       });
