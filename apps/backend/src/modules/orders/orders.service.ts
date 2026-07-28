@@ -740,7 +740,7 @@ export class OrdersService {
 
     // 2. Prepare parameters for ZaloPay Checkout SDK
     const amountVnd = Math.round(order.totalAmount); // Already in VND
-    const desc = `Thanh toan don hang #SQ-${order.id}`;
+    const desc = `Thanh toan don hang #${order.id}`;
 
     // Item must contain only id and amount as expected by Zalo Checkout SDK
     const itemData = dto.items.map((item) => ({
@@ -755,11 +755,15 @@ export class OrdersService {
       zaloUserId: zaloUserId || '',
     });
 
-    // Method config: ZALOPAY_SANDBOX or BANK_SANDBOX for sandbox
+    // Method config: ZALOPAY_SANDBOX, MOMO_SANDBOX, or BANK_SANDBOX for sandbox
     const reqMethod = (dto.paymentMethod || '').toUpperCase();
-    let methodId = process.env.ZALO_PAYMENT_METHOD_ID || 'ZALOPAY_SANDBOX';
-    if (reqMethod === 'BANK') {
+    let methodId = 'ZALOPAY_SANDBOX';
+    if (reqMethod.includes('MOMO')) {
+      methodId = 'MOMO_SANDBOX';
+    } else if (reqMethod.includes('BANK')) {
       methodId = 'BANK_SANDBOX';
+    } else if (reqMethod.includes('ZALOPAY')) {
+      methodId = 'ZALOPAY_SANDBOX';
     }
     const method = JSON.stringify({
       id: methodId,
@@ -812,7 +816,7 @@ export class OrdersService {
 
     // 2. Prepare parameters for ZaloPay Checkout SDK
     const amountVnd = Math.round(order.totalAmount); // Already in VND
-    const desc = `Thanh toan don hang #SQ-${order.id}`;
+    const desc = `Thanh toan don hang #${order.id}`;
 
     // Item must contain only id and amount as expected by Zalo Checkout SDK
     const itemData = order.items.map((item) => ({
