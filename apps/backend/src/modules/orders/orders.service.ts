@@ -335,9 +335,9 @@ export class OrdersService {
         .join(', ');
 
       const pmName =
-        order.paymentMethod === 'ZALOPAY'
-          ? 'cổng thanh toán ZaloPay'
-          : 'COD (Thanh toán khi nhận hàng)';
+        order.paymentMethod === 'COD'
+          ? 'COD (Thanh toán khi nhận hàng)'
+          : 'Chuyển khoản Ngân hàng';
       const shippingInfo = order.shippingAddress
         ? ` được giao tới địa chỉ ${order.shippingAddress}`
         : '';
@@ -387,48 +387,53 @@ export class OrdersService {
     if (order.zaloUserId) {
       await this.updateUserMembership(order.zaloUserId);
 
-      // Tích điểm thưởng mua sắm: 1 điểm cho mỗi 1.000đ
-      const earnedPoints = Math.round(order.totalAmount / 1000);
-      if (earnedPoints > 0) {
-        try {
-          const user = await this.prisma.user.findUnique({
-            where: { zaloId: order.zaloUserId },
-          });
-          if (user) {
-            const newPoints = (user.gamificationPoints || 0) + earnedPoints;
-            await this.prisma.user.update({
+      // Chỉ tích điểm khi đơn hàng ĐÃ THANH TOÁN (COD tính là đã xác nhận khi tạo)
+      // Đơn PENDING_PAYMENT (chuyển khoản chưa thanh toán) sẽ được tích điểm khi webhook xác nhận thanh toán
+      const shouldRewardPoints = order.status !== 'PENDING_PAYMENT';
+
+      if (shouldRewardPoints) {
+        const earnedPoints = Math.round(order.totalAmount / 1000);
+        if (earnedPoints > 0) {
+          try {
+            const user = await this.prisma.user.findUnique({
               where: { zaloId: order.zaloUserId },
-              data: { gamificationPoints: newPoints },
             });
+            if (user) {
+              const newPoints = (user.gamificationPoints || 0) + earnedPoints;
+              await this.prisma.user.update({
+                where: { zaloId: order.zaloUserId },
+                data: { gamificationPoints: newPoints },
+              });
 
-            await this.prisma.pointsHistory.create({
-              data: {
-                zaloUserId: order.zaloUserId,
-                points: earnedPoints,
-                reason: `Tích điểm mua sắm đơn hàng #${order.id}`,
-                metadata: { orderId: order.id },
-              },
-            });
+              await this.prisma.pointsHistory.create({
+                data: {
+                  zaloUserId: order.zaloUserId,
+                  points: earnedPoints,
+                  reason: `Tích điểm mua sắm đơn hàng #${order.id}`,
+                  metadata: { orderId: order.id },
+                },
+              });
 
-            await this.prisma.notification.create({
-              data: {
-                zaloUserId: order.zaloUserId,
-                type: 'order',
-                title: `🎉 Tích điểm thành công`,
-                content: `Bạn được cộng +${earnedPoints} điểm tích lũy từ đơn hàng #${order.id}.`,
-                date:
-                  new Date().toLocaleTimeString('vi-VN', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  }) +
-                  ' - ' +
-                  new Date().toLocaleDateString('vi-VN'),
-                read: false,
-              },
-            });
+              await this.prisma.notification.create({
+                data: {
+                  zaloUserId: order.zaloUserId,
+                  type: 'order',
+                  title: `🎉 Tích điểm thành công`,
+                  content: `Bạn được cộng +${earnedPoints} điểm tích lũy từ đơn hàng #${order.id}.`,
+                  date:
+                    new Date().toLocaleTimeString('vi-VN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    }) +
+                    ' - ' +
+                    new Date().toLocaleDateString('vi-VN'),
+                  read: false,
+                },
+              });
+            }
+          } catch (e) {
+            console.error('Failed to reward points for order creation:', e);
           }
-        } catch (e) {
-          console.error('Failed to reward points for order creation:', e);
         }
       }
     }

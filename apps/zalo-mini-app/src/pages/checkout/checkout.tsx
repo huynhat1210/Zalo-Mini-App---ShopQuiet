@@ -704,7 +704,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
         // 2. Fetch Pay2S payment URL from backend
         try {
-          showToast("Đang kết nối cổng thanh toán Pay2S...", "info");
+          showToast("Đang kết nối cổng thanh toán...", "info");
           const pay2sRes = await apiRequest<any>(
             `/orders/${createdDbOrder.id}/pay2s`,
             "POST",

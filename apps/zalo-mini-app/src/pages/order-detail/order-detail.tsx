@@ -18,7 +18,7 @@ const STATUS_LABEL: Record<string, string> = {
   DELIVERED: "Hoàn thành",
   COMPLETED: "Hoàn thành",
   CANCELLED: "Đã hủy",
-  PENDING_PAYMENT: "Chờ thanh toán Pay2S",
+  PENDING_PAYMENT: "Chờ thanh toán",
   RETURN_REQUESTED: "Chờ hoàn trả",
   RETURNED: "Đã hoàn trả",
 };
@@ -108,7 +108,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
     if (!selectedOrder) return;
     setPaying(true);
     try {
-      showToast("Đang kết nối cổng thanh toán Pay2S...", "info");
+      showToast("Đang kết nối cổng thanh toán...", "info");
       const pay2sRes = await apiRequest<any>(
         `/orders/${selectedOrder.id}/pay2s`,
         "POST",
@@ -120,11 +120,11 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
         } else if (typeof window !== "undefined") {
           window.open(pay2sRes.payUrl, "_blank");
         }
-        showToast("Vui lòng hoàn tất thanh toán trên cổng Pay2S", "info");
+        showToast("Vui lòng hoàn tất thanh toán trên trang chuyển khoản", "info");
       }
     } catch (e: any) {
       console.error(e);
-      showToast(e?.message || "Lỗi kết nối cổng thanh toán Pay2S!", "warning");
+      showToast(e?.message || "Lỗi kết nối cổng thanh toán!", "warning");
     } finally {
       setPaying(false);
     }
@@ -138,7 +138,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
         const updated = await apiRequest<any>(`/orders/${selectedOrder.id}`);
         if (updated && updated.status !== "PENDING_PAYMENT") {
           setSelectedOrder(updated);
-          showToast("Xác nhận thanh toán Pay2S thành công!", "success");
+          showToast("Xác nhận thanh toán thành công!", "success");
         }
       } catch (e) {}
     }, 4000);
