@@ -287,7 +287,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
         <button
           onClick={() => {
             setSelectedOrder(null);
-            setActiveTab("profile");
+            setActiveTab("orders");
           }}
           className="p-1.5 -ml-1.5 hover:bg-[#f0edeb] rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer"
         >

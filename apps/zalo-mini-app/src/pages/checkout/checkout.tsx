@@ -92,7 +92,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   };
 
   const [shippingMethod, setShippingMethod] = useState("standard");
-  const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [paymentMethod, setPaymentMethod] = useState("vietqr");
   const [shippingMethods, setShippingMethods] = useState<CmsShippingMethod[]>([
     {
       code: "standard",
@@ -109,24 +109,17 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   ]);
   const [paymentMethods, setPaymentMethods] = useState<CmsPaymentMethod[]>([
     {
+      code: "vietqr",
+      name: "Thanh toán VietQR 1-Touch (Tự động mở App Ngân hàng)",
+      description: "Mở App Ngân hàng (MB, VCB, TCB...), tự động điền STK & số tiền",
+      provider: "VIETQR",
+      badge: "KHUYÊN DÙNG",
+    },
+    {
       code: "cod",
       name: "Thanh toán khi nhận hàng (COD)",
-      description: "Thanh toán bằng tiền mặt khi giao hàng",
+      description: "Nhận hàng, kiểm tra hàng trước khi thanh toán cho shipper",
       provider: "COD",
-    },
-    {
-      code: "zalopay",
-      name: "Cổng Sandbox ZaloPay",
-      description: "Thanh toán nhanh bằng ví hoặc quét mã QR",
-      provider: "ZALOPAY",
-      badge: "Ví ZaloPay",
-    },
-    {
-      code: "bank",
-      name: "Chuyển khoản Ngân hàng (QR)",
-      description: "Quét mã QR để chuyển khoản nhanh 24/7",
-      provider: "BANK",
-      badge: "Chuyển Khoản",
     },
   ]);
   const [addresses, setAddresses] = useState<any[]>([]);

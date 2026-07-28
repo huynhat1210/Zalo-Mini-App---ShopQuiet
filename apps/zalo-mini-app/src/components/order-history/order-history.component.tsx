@@ -20,9 +20,14 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
     onReviewSuccess,
   } = props;
 
-  const [ordersTab, setOrdersTab] = useState<"active" | "history" | "reviews">(
-    "active",
+  const [ordersTab, setOrdersTabState] = useState<"active" | "history" | "reviews">(
+    () => (localStorage.getItem("active_order_tab") as any) || "active",
   );
+
+  const setOrdersTab = (tab: "active" | "history" | "reviews") => {
+    setOrdersTabState(tab);
+    localStorage.setItem("active_order_tab", tab);
+  };
   const [userReviews, setUserReviews] = useState<any[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
 
