@@ -67,7 +67,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
         return [...prev, msg];
       });
       if (msg.sender === "ADMIN") {
-        showToast("💬 CSKH ShopQuiet vừa phản hồi!");
+        showToast("CSKH ShopQuiet vừa phản hồi!");
       }
     });
 

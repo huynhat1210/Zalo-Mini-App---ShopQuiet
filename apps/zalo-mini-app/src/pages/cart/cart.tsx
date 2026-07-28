@@ -175,7 +175,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
               <div className="flex justify-between items-center text-xs">
                 {isFreeshipEligible ? (
                   <span className="font-bold text-teal-700">
-                    🎉 Đơn hàng của bạn đã được FREESHIP!
+                    Đơn hàng của bạn đã được FREESHIP!
                   </span>
                 ) : (
                   <span className="font-medium text-[#526069]">
