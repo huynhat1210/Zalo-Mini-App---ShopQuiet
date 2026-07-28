@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Page } from "zmp-ui";
 import { useCart, IOrderItem } from "../../App";
 import { apiRequest, API_BASE_URL } from "../../utils/api";
 import { IOrderDetailProps } from "./order-detail.type";
-import { Payment } from "zmp-sdk/apis";
+import api, { Payment } from "zmp-sdk";
 import {
   getRemainingDays,
   getDeliveryStatusText,
@@ -12,13 +12,13 @@ import {
 const PageCast = Page as any;
 
 const STATUS_LABEL: Record<string, string> = {
-  PENDING: "Chờ chuyển khoản (VietQR)",
-  PROCESSING: "Đang xử lý",
+  PENDING: "Chờ thanh toán",
+  PROCESSING: "Đang xử lý (Đã thanh toán)",
   SHIPPED: "Đang giao",
   DELIVERED: "Hoàn thành",
   COMPLETED: "Hoàn thành",
   CANCELLED: "Đã hủy",
-  PENDING_PAYMENT: "Chờ thanh toán",
+  PENDING_PAYMENT: "Chờ thanh toán Pay2S",
   RETURN_REQUESTED: "Chờ hoàn trả",
   RETURNED: "Đã hoàn trả",
 };
@@ -105,85 +105,45 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
   };
 
   const handleContinuePayment = async () => {
+    if (!selectedOrder) return;
     setPaying(true);
     try {
-      showToast("Đang khởi tạo thanh toán...", "info");
-      const checkoutRes = await apiRequest<any>(
-        `/orders/${selectedOrder.id}/zalopay-mac`,
+      showToast("Đang kết nối cổng thanh toán Pay2S...", "info");
+      const pay2sRes = await apiRequest<any>(
+        `/orders/${selectedOrder.id}/pay2s`,
         "POST",
-        { paymentMethod: selectedOrder.paymentMethod },
       );
 
-      if (checkoutRes && checkoutRes.mac) {
-        const rawItem = typeof checkoutRes.item === "string" ? JSON.parse(checkoutRes.item) : checkoutRes.item;
-        const rawMethod = typeof checkoutRes.method === "string" ? checkoutRes.method : JSON.stringify(checkoutRes.method);
-
-        Payment.createOrder({
-          amount: checkoutRes.amount,
-          desc: checkoutRes.desc,
-          item: rawItem,
-          extradata: checkoutRes.extradata,
-          method: rawMethod,
-          mac: checkoutRes.mac,
-          success: (data) => {
-            console.log("Zalo SDK Payment Success from Order Detail:", data);
-            Payment.checkTransaction({
-              data: data,
-              success: (result) => {
-                const resultCode = (result as any).resultCode;
-                if (resultCode === 1) {
-                  apiRequest(`/orders/${selectedOrder.id}/status`, "PATCH", {
-                    status: "PROCESSING",
-                  })
-                    .then(() => {
-                      showToast("Thanh toán thành công!", "success");
-                      setSelectedOrder({
-                        ...selectedOrder,
-                        status: "PROCESSING",
-                      });
-                    })
-                    .catch((e) => {
-                      console.error(
-                        "Failed to update status after checkTransaction success:",
-                        e,
-                      );
-                      showToast(
-                        "Thanh toán thành công, vui lòng chờ hệ thống cập nhật!",
-                        "success",
-                      );
-                    });
-                } else if (resultCode === 0) {
-                  showToast("Giao dịch đang được xử lý...", "info");
-                } else if (resultCode === -2) {
-                  showToast("Bạn đã hủy thanh toán!", "warning");
-                } else {
-                  showToast("Thanh toán thất bại!", "warning");
-                }
-              },
-              fail: (err) => {
-                console.error("checkTransaction failed:", err);
-                showToast("Không thể xác minh giao dịch!", "warning");
-              },
-            });
-          },
-          fail: (err: any) => {
-            console.error("Payment.createOrder failed from Order Detail:", err);
-            const msg = err?.message || err?.errMsg || "";
-            if (msg && typeof msg === "string") {
-              showToast(`Zalo SDK: ${msg}`, "info");
-            } else {
-              showToast("Không thể mở cửa sổ thanh toán trên thiết bị này!", "warning");
-            }
-          },
-        });
+      if (pay2sRes && pay2sRes.payUrl) {
+        if (typeof api !== "undefined" && (api as any).openWebview) {
+          (api as any).openWebview({ url: pay2sRes.payUrl });
+        } else if (typeof window !== "undefined") {
+          window.open(pay2sRes.payUrl, "_blank");
+        }
+        showToast("Vui lòng hoàn tất thanh toán trên cổng Pay2S", "info");
       }
     } catch (e: any) {
       console.error(e);
-      showToast(e?.message || "Lỗi khởi tạo cổng thanh toán!", "warning");
+      showToast(e?.message || "Lỗi kết nối cổng thanh toán Pay2S!", "warning");
     } finally {
       setPaying(false);
     }
   };
+
+  // Auto poll order status while waiting for Pay2S IPN / Webhook payment
+  useEffect(() => {
+    if (!selectedOrder || selectedOrder.status !== "PENDING_PAYMENT") return;
+    const interval = setInterval(async () => {
+      try {
+        const updated = await apiRequest<any>(`/orders/${selectedOrder.id}`);
+        if (updated && updated.status !== "PENDING_PAYMENT") {
+          setSelectedOrder(updated);
+          showToast("Xác nhận thanh toán Pay2S thành công!", "success");
+        }
+      } catch (e) {}
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [selectedOrder?.id, selectedOrder?.status]);
 
   const handleReorder = async () => {
     try {

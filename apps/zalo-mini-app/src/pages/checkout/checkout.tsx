@@ -109,18 +109,11 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   ]);
   const [paymentMethods, setPaymentMethods] = useState<CmsPaymentMethod[]>([
     {
-      code: "zalopay",
-      name: "Ví ZaloPay",
-      description: "Thanh toán an toàn 1-Touch qua Ví ZaloPay",
-      provider: "ZALOPAY",
+      code: "pay2s",
+      name: "Chuyển khoản Ngân hàng (Pay2S Auto QR)",
+      description: "Tự động nhận diện biến động số dư & xác nhận thanh toán tức thì qua Pay2S",
+      provider: "PAY2S",
       badge: "KHUYÊN DÙNG",
-    },
-    {
-      code: "bank",
-      name: "Chuyển khoản Ngân hàng",
-      description: "Chuyển khoản ATM / Thẻ ngân hàng nội địa & quốc tế",
-      provider: "BANK",
-      badge: "NGÂN HÀNG",
     },
     {
       code: "cod",
@@ -240,19 +233,12 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           );
         }
 
-        const defaultZaloPay: CmsPaymentMethod = {
-          code: "zalopay",
-          name: "Ví ZaloPay",
-          description: "Thanh toán an toàn 1-Touch qua Ví ZaloPay",
-          provider: "ZALOPAY",
+        const defaultPay2s: CmsPaymentMethod = {
+          code: "pay2s",
+          name: "Chuyển khoản Ngân hàng (Pay2S Auto QR)",
+          description: "Tự động nhận diện biến động số dư & xác nhận thanh toán tức thì qua Pay2S",
+          provider: "PAY2S",
           badge: "KHUYÊN DÙNG",
-        };
-        const defaultBank: CmsPaymentMethod = {
-          code: "bank",
-          name: "Chuyển khoản Ngân hàng",
-          description: "Chuyển khoản ATM / Thẻ ngân hàng nội địa & quốc tế",
-          provider: "BANK",
-          badge: "NGÂN HÀNG",
         };
         const defaultCod: CmsPaymentMethod = {
           code: "cod",
@@ -261,13 +247,13 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           provider: "COD",
         };
 
-        const mergedPaymentMethods = [defaultZaloPay, defaultBank, defaultCod];
+        const mergedPaymentMethods = [defaultPay2s, defaultCod];
 
         setPaymentMethods(mergedPaymentMethods);
         setPaymentMethod((current) =>
           mergedPaymentMethods.some((item) => item.code === current)
             ? current
-            : "zalopay",
+            : "pay2s",
         );
       } catch (e) {
         console.error("Failed to fetch checkout CMS config:", e);
@@ -706,105 +692,41 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       let createdOrder: any;
       let orderNumber: string;
 
-      if (paymentMethod === "zalopay" || paymentMethod === "bank") {
-        const checkoutRes = await apiRequest<any>(
-          "/orders/zalopay-checkout",
-          "POST",
-          {
-            ...orderData,
-            paymentMethod: paymentMethod.toUpperCase(),
-          },
-        );
-        orderNumber = checkoutRes.orderId;
-
-        createdOrder = {
-          id: checkoutRes.orderId,
-          totalAmount: total,
+      if (paymentMethod === "pay2s") {
+        // 1. Create order in DB with PENDING_PAYMENT status
+        const createdDbOrder = await apiRequest<any>("/orders", "POST", {
+          ...orderData,
           status: "PENDING_PAYMENT",
-          createdAt: new Date().toISOString(),
-          paymentMethod: paymentMethod.toUpperCase(),
-          voucherCode: appliedPromo ? appliedPromo.code : null,
-          discountAmount: discount,
-          shippingAddress: `${address.street}, ${address.city}`,
-          shippingPhone: address.phone.trim(),
-          shippingName: address.name.trim(),
-          items: checkoutItems.map((item: any) => ({
-            quantity: item.quantity,
-            price: item.product.price,
-            product: { name: item.product.name },
-            size: item.size || "DEFAULT",
-            color: item.color || "DEFAULT",
-          })),
-        };
+          paymentMethod: "PAY2S",
+        });
+        orderNumber = createdDbOrder.id;
+        createdOrder = createdDbOrder;
 
-        // Invoke Native Zalo SDK Checkout SDK
+        // 2. Fetch Pay2S payment URL from backend
         try {
-          const rawItem = typeof checkoutRes.item === "string" ? JSON.parse(checkoutRes.item) : checkoutRes.item;
-          const rawMethod = typeof checkoutRes.method === "string" ? checkoutRes.method : JSON.stringify(checkoutRes.method);
-          
-          Payment.createOrder({
-            amount: checkoutRes.amount,
-            desc: checkoutRes.desc,
-            item: rawItem,
-            extradata: checkoutRes.extradata,
-            method: rawMethod,
-            mac: checkoutRes.mac,
-            success: (data) => {
-              console.log("Payment.createOrder success:", data);
-              Payment.checkTransaction({
-                data: data,
-                success: (result) => {
-                  const resultCode = (result as any).resultCode;
-                  if (resultCode === 1) {
-                    apiRequest(`/orders/${checkoutRes.orderId}/status`, "PATCH", {
-                      status: "PROCESSING",
-                    })
-                      .then(() => {
-                        clearPurchasedItems();
-                        showToast("Thanh toán thành công!", "success");
-                        if (fetchNotifications) fetchNotifications();
-                        setActiveTab("order-success");
-                      })
-                      .catch(() => {
-                        clearPurchasedItems();
-                        setSelectedOrder(createdOrder);
-                        setActiveTab("order-detail");
-                      });
-                  } else {
-                    showToast("Đã tạo đơn hàng (Chờ thanh toán)", "info");
-                    clearPurchasedItems();
-                    setSelectedOrder(createdOrder);
-                    setActiveTab("order-detail");
-                  }
-                },
-                fail: () => {
-                  clearPurchasedItems();
-                  setSelectedOrder(createdOrder);
-                  setActiveTab("order-detail");
-                },
-              });
-            },
-            fail: (err: any) => {
-              console.warn("Payment.createOrder fail/cancel:", err);
-              const msg = err?.message || err?.errMsg || "";
-              if (msg && typeof msg === "string") {
-                showToast(`Thông báo Zalo SDK: ${msg}`, "info");
-              } else {
-                showToast("Đã tạo đơn hàng (Chờ thanh toán)", "info");
-              }
-              clearPurchasedItems();
-              setSelectedOrder(createdOrder);
-              setActiveTab("order-detail");
-            },
-          });
-          return;
-        } catch (sdkErr: any) {
-          console.error("Zalo SDK Payment error:", sdkErr);
-          clearPurchasedItems();
-          setSelectedOrder(createdOrder);
-          setActiveTab("order-detail");
-          return;
+          showToast("Đang kết nối cổng thanh toán Pay2S...", "info");
+          const pay2sRes = await apiRequest<any>(
+            `/orders/${createdDbOrder.id}/pay2s`,
+            "POST",
+          );
+
+          if (pay2sRes && pay2sRes.payUrl) {
+            // Open Pay2S gateway URL
+            if (typeof api !== "undefined" && (api as any).openWebview) {
+              (api as any).openWebview({ url: pay2sRes.payUrl });
+            } else if (typeof window !== "undefined") {
+              window.open(pay2sRes.payUrl, "_blank");
+            }
+          }
+        } catch (pay2sErr) {
+          console.error("Failed to generate Pay2S link:", pay2sErr);
         }
+
+        clearPurchasedItems();
+        setSelectedOrder(createdOrder);
+        if (fetchNotifications) fetchNotifications();
+        setActiveTab("order-detail");
+        return;
       } else {
         // Cash on delivery
         const codOrder = await apiRequest<any>("/orders", "POST", orderData);
