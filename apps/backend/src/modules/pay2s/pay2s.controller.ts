@@ -1,4 +1,4 @@
-import { Controller, Post, Param, Body, Headers, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, Headers, HttpCode, HttpStatus } from '@nestjs/common';
 import { Pay2sService } from './pay2s.service';
 
 @Controller()
@@ -15,6 +15,15 @@ export class Pay2sController {
     return this.pay2sService.createPaymentUrl(id);
   }
 
+  @Get('pay2s/ipn')
+  @Get('api/pay2s/ipn')
+  async checkIPNGet() {
+    return {
+      status: 'active',
+      message: 'Pay2S IPN endpoint is online (expects POST requests from Pay2S gateway)',
+    };
+  }
+
   @Post('pay2s/ipn')
   @HttpCode(HttpStatus.OK)
   async handleIPN(@Body() body: any) {
@@ -25,6 +34,15 @@ export class Pay2sController {
   @HttpCode(HttpStatus.OK)
   async handleIPNApi(@Body() body: any) {
     return this.pay2sService.handleIPN(body);
+  }
+
+  @Get('pay2s/hook')
+  @Get('api/pay2s/hook')
+  async checkHookGet() {
+    return {
+      status: 'active',
+      message: 'Pay2S Webhook endpoint is online (expects POST requests with Bearer token)',
+    };
   }
 
   @Post('pay2s/hook')
