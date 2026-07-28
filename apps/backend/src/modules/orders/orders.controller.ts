@@ -69,29 +69,6 @@ export class OrdersController {
     return this.ordersService.updateStatus(id, status, trackingNumber);
   }
 
-  @Post('zalopay-checkout')
-  @UseGuards(JwtAuthGuard)
-  async createZaloPayCheckout(
-    @Body() body: CreateOrderDto,
-    @Headers('x-zalo-user-id') zaloUserId?: string,
-  ) {
-    return this.ordersService.createZaloPayCheckout(body, zaloUserId);
-  }
-
-  @Post(':id/zalopay-mac')
-  @UseGuards(JwtAuthGuard)
-  async getZaloPayMacForExistingOrder(
-    @Param('id') id: string,
-    @Body('paymentMethod') paymentMethod?: string,
-    @Headers('x-zalo-user-id') zaloUserId?: string,
-  ) {
-    return this.ordersService.getZaloPayMacForExistingOrder(
-      id,
-      paymentMethod,
-      zaloUserId,
-    );
-  }
-
   @Post(':id/return')
   @UseGuards(JwtAuthGuard)
   async requestReturn(
@@ -101,10 +78,5 @@ export class OrdersController {
     @Body('images') images?: string[],
   ) {
     return this.ordersService.requestReturn(id, reason, description, images);
-  }
-
-  @Post('zalopay-callback')
-  async handleZaloPayCallback(@Body() body: unknown) {
-    return this.ordersService.handleZaloPayCallback(body);
   }
 }

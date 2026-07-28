@@ -110,8 +110,8 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   const [paymentMethods, setPaymentMethods] = useState<CmsPaymentMethod[]>([
     {
       code: "pay2s",
-      name: "Chuyển khoản Ngân hàng (Pay2S Auto QR)",
-      description: "Tự động nhận diện biến động số dư & xác nhận thanh toán tức thì qua Pay2S",
+      name: "Chuyển khoản Ngân hàng",
+      description: "Thanh toán an toàn qua mã QR Ngân hàng (Tự động xác nhận)",
       provider: "PAY2S",
       badge: "KHUYÊN DÙNG",
     },
@@ -235,8 +235,8 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
         const defaultPay2s: CmsPaymentMethod = {
           code: "pay2s",
-          name: "Chuyển khoản Ngân hàng (Pay2S Auto QR)",
-          description: "Tự động nhận diện biến động số dư & xác nhận thanh toán tức thì qua Pay2S",
+          name: "Chuyển khoản Ngân hàng",
+          description: "Thanh toán an toàn qua mã QR Ngân hàng (Tự động xác nhận)",
           provider: "PAY2S",
           badge: "KHUYÊN DÙNG",
         };

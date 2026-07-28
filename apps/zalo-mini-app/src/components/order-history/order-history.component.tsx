@@ -406,7 +406,7 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                       <span className="text-orange-500 text-lg mt-0.5">•</span>
                       <div className="text-xs">
                         <p className="font-bold text-orange-700">
-                          Chờ thanh toán ({order.paymentMethod === "BANK" ? "Chuyển khoản Ngân hàng" : "Ví ZaloPay"})
+                          Chờ thanh toán ({order.paymentMethod === "COD" ? "Thanh toán khi nhận hàng" : "Chuyển khoản Ngân hàng"})
                         </p>
                         <p className="text-orange-600/80 text-[10px] mt-0.5 leading-relaxed">
                           Đơn hàng này chưa được thanh toán thành công. Bạn có

@@ -290,7 +290,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
               Chờ thanh toán (
               {selectedOrder.paymentMethod === "COD"
                 ? "Thanh toán khi nhận hàng (COD)"
-                : "Chuyển khoản Ngân hàng (Pay2S Auto QR)"}
+                : "Chuyển khoản Ngân hàng"}
               )
             </p>
             <p className="text-orange-600/80 text-[10px] leading-relaxed">
@@ -554,7 +554,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
               <span className="font-bold text-textColor">
                 {selectedOrder.paymentMethod === "COD"
                   ? "COD (Thanh toán khi nhận hàng)"
-                  : "Chuyển khoản Ngân hàng (Pay2S Auto QR)"}
+                  : "Chuyển khoản Ngân hàng"}
               </span>
             </div>
             {selectedOrder.voucherCode && (
