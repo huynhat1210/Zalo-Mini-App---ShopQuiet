@@ -185,7 +185,7 @@ export class Pay2sService {
   async handleHook(authorizationHeader: string, body: any) {
     this.logger.log(`[Pay2S Hook] Received webhook: ${JSON.stringify(body)}`);
 
-    const expectedSecret = await this.getSetting('PAY2S_HOOK_SECRET', 'pay2s_hook_secret_token');
+    const expectedSecret = await this.getSetting('PAY2S_HOOK_SECRET', 'c99b9e7e530be38696827bd178dcc85516a66a38990d40c62b');
     const token = (authorizationHeader || '').replace(/^Bearer\s+/i, '').trim();
 
     if (expectedSecret && token !== expectedSecret) {
