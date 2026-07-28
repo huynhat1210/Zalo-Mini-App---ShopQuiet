@@ -233,14 +233,32 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           );
         }
 
-        if (cmsPaymentMethods?.length) {
-          setPaymentMethods(cmsPaymentMethods);
-          setPaymentMethod((current) =>
-            cmsPaymentMethods.some((item) => item.code === current)
-              ? current
-              : cmsPaymentMethods[0].code,
-          );
-        }
+        const vietQrOption: CmsPaymentMethod = {
+          code: "vietqr",
+          name: "Thanh toán VietQR 1-Touch (Tự động mở App Ngân hàng)",
+          description: "Mở App Ngân hàng (MB, VCB, TCB...), tự động điền STK & số tiền",
+          provider: "VIETQR",
+          badge: "KHUYÊN DÙNG",
+        };
+
+        const mergedPaymentMethods = cmsPaymentMethods?.length
+          ? [vietQrOption, ...cmsPaymentMethods.filter((m) => m.code !== "vietqr")]
+          : [
+              vietQrOption,
+              {
+                code: "cod",
+                name: "Thanh toán khi nhận hàng (COD)",
+                description: "Nhận hàng, kiểm tra hàng trước khi thanh toán cho shipper",
+                provider: "COD",
+              },
+            ];
+
+        setPaymentMethods(mergedPaymentMethods);
+        setPaymentMethod((current) =>
+          mergedPaymentMethods.some((item) => item.code === current)
+            ? current
+            : "vietqr",
+        );
       } catch (e) {
         console.error("Failed to fetch checkout CMS config:", e);
       }
@@ -1771,8 +1789,16 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                         showToast(`Đã copy STK! Đang mở ${b.label}...`, "info");
                         if (link) {
                           setTimeout(() => {
-                            window.open(link, "_blank");
-                          }, 300);
+                            try {
+                              if ((api as any)?.openWebview) {
+                                (api as any).openWebview({ url: link });
+                              } else {
+                                window.location.href = link;
+                              }
+                            } catch (e) {
+                              window.location.href = link;
+                            }
+                          }, 200);
                         }
                       }}
                       className="py-1.5 px-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-[10px] font-bold border border-slate-200 cursor-pointer active:scale-95 transition-all text-center truncate"
