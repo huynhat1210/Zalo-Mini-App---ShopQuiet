@@ -110,17 +110,22 @@ export class Pay2sService {
       this.logger.warn(`[Pay2S Create] Gateway API call error/fallback: ${e?.message || e}`);
     }
 
-    // Direct VietQR Deep Link: Immediately opens Banking App chooser on user's phone!
+    // Self-hosted interactive VietQR payment page with QR, copy buttons, and bank app launcher
     const [accNo, bankCode] = bankAccounts.split('|');
     const cleanBankCode = (bankCode || 'MB').trim();
     const cleanAccNo = (accNo || '0988776655').trim();
+    const accountName = await this.getSetting('PAY2S_ACCOUNT_NAME', 'SHOPQUIET STORE');
     
-    // Direct VietQR Deep Link URL
-    const vietQrDeepLink = `https://dl.vietqr.io/pay?app=vietqr&ba=${cleanAccNo}@${cleanBankCode}&am=${finalAmount}&tn=${encodeURIComponent(orderInfo)}`;
+    const baseUrl = await this.getSetting(
+      'APP_BASE_URL',
+      'https://zalo-mini-app-shopquiet.onrender.com',
+    );
+    
+    const payPageUrl = `${baseUrl}/pay/order/${order.id}?info=${encodeURIComponent(orderInfo)}&amount=${finalAmount}&bank=${cleanBankCode}&acc=${cleanAccNo}&name=${encodeURIComponent(accountName)}`;
 
     return {
       success: true,
-      payUrl: vietQrDeepLink,
+      payUrl: payPageUrl,
       orderId: order.id,
       orderInfo,
       amount: finalAmount,
