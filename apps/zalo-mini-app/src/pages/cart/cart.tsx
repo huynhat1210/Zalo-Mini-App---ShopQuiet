@@ -101,8 +101,20 @@ export const Cart: React.FC<ICartProps> = (_props) => {
     0,
   );
 
-  // Freeship threshold limit at 300,000 đ
-  const freeshipThreshold = 300000;
+  const [cmsSettings, setCmsSettings] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    async function loadCmsSettings() {
+      try {
+        const res = await apiRequest<Record<string, string>>('/cms/settings');
+        if (res && typeof res === 'object') setCmsSettings(res);
+      } catch (e) {}
+    }
+    loadCmsSettings();
+  }, []);
+
+  // Freeship threshold dynamically from CMS (default: 500,000 đ)
+  const freeshipThreshold = Number(cmsSettings['shipping.freeThreshold']) || 500000;
   const isFreeshipEligible = subtotal >= freeshipThreshold;
   const remainingForFreeship = Math.max(0, freeshipThreshold - subtotal);
   const freeshipProgressPercent = Math.min(
@@ -171,11 +183,11 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                     <span className="font-bold text-teal-600">
                       {remainingForFreeship.toLocaleString("vi-VN")} đ
                     </span>{" "}
-                    để được Freeship (Mốc 300K)
+                    để được Freeship (Mốc {freeshipThreshold >= 1000 ? `${(freeshipThreshold / 1000).toFixed(0)}K` : `${freeshipThreshold}đ`})
                   </span>
                 )}
                 <span className="text-[10px] text-teal-600 font-extrabold">
-                  {subtotal.toLocaleString("vi-VN")}đ / 300.000đ
+                  {subtotal.toLocaleString("vi-VN")}đ / {freeshipThreshold.toLocaleString("vi-VN")}đ
                 </span>
               </div>
               <div className="w-full h-2.5 bg-teal-100 rounded-full overflow-hidden">

@@ -161,21 +161,27 @@ export const Settings: React.FC<ISettingsProps> = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Hotline Hỗ Trợ</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Hotline Hỗ Trợ (Zalo App)</label>
               <input
                 type="text"
-                value={settings['brand.hotline'] || ''}
-                onChange={(e) => handleSettingChange('brand.hotline', e.target.value)}
+                value={settings['support.hotline'] || settings['brand.hotline'] || ''}
+                onChange={(e) => {
+                  handleSettingChange('support.hotline', e.target.value);
+                  handleSettingChange('brand.hotline', e.target.value);
+                }}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Email Liên Hệ</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Email Liên Hệ Hỗ Trợ</label>
               <input
                 type="email"
-                value={settings['brand.email'] || ''}
-                onChange={(e) => handleSettingChange('brand.email', e.target.value)}
+                value={settings['support.email'] || settings['brand.email'] || ''}
+                onChange={(e) => {
+                  handleSettingChange('support.email', e.target.value);
+                  handleSettingChange('brand.email', e.target.value);
+                }}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none"
               />
             </div>
@@ -186,6 +192,16 @@ export const Settings: React.FC<ISettingsProps> = () => {
                 type="text"
                 value={settings['brand.address'] || ''}
                 onChange={(e) => handleSettingChange('brand.address', e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Chính Sách Đổi Trả Ngắn</label>
+              <input
+                type="text"
+                value={settings['support.returnPolicyShort'] || ''}
+                onChange={(e) => handleSettingChange('support.returnPolicyShort', e.target.value)}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none"
               />
             </div>
@@ -208,15 +224,48 @@ export const Settings: React.FC<ISettingsProps> = () => {
         </form>
       )}
 
-      {/* Tab 2: Shipping Methods */}
+      {/* Tab 2: Shipping Methods & Fees */}
       {activeTab === 'SHIPPING' && (
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-sm">
+        <form onSubmit={handleSaveBrandSettings} className="bg-white border border-slate-200 rounded-3xl p-6 space-y-5 shadow-sm">
           <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-            <h3 className="text-sm font-bold text-slate-800">Phương Thức Giao Hàng & Phí Ship</h3>
-            <span className="text-[11px] font-semibold text-slate-400">Kích hoạt các tùy chọn giao hàng trên Mini App</span>
+            <h3 className="text-sm font-bold text-slate-800">Cấu hình Phí Vận Chuyển & Ngưỡng Miễn Phí Ship</h3>
+            <span className="text-[11px] font-semibold text-slate-400">Tự động áp dụng trên Zalo Mini App</span>
           </div>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Phí Ship Tiêu Chuẩn (VNĐ)</label>
+              <input
+                type="number"
+                value={settings['shipping.feeStandard'] || '15000'}
+                onChange={(e) => handleSettingChange('shipping.feeStandard', e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Phí Ship Hỏa Tốc (VNĐ)</label>
+              <input
+                type="number"
+                value={settings['shipping.feeFast'] || '30000'}
+                onChange={(e) => handleSettingChange('shipping.feeFast', e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Mốc Miễn Phí Ship (VNĐ)</label>
+              <input
+                type="number"
+                value={settings['shipping.freeThreshold'] || '500000'}
+                onChange={(e) => handleSettingChange('shipping.freeThreshold', e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-xs text-slate-800 focus:border-[#0e6877] focus:outline-none font-mono"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            <h4 className="text-xs font-bold text-slate-700">Trạng Thái Các Phương Thức Vận Chuyển:</h4>
             {shippingMethods.map((ship) => (
               <div key={ship.id} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -233,6 +282,7 @@ export const Settings: React.FC<ISettingsProps> = () => {
                     {ship.active ? 'Kích hoạt' : 'Tắt'}
                   </span>
                   <button
+                    type="button"
                     onClick={() => toggleShippingActive(ship.id)}
                     className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all border-none cursor-pointer ${
                       ship.active ? 'bg-rose-50 text-rose-600 hover:bg-rose-100' : 'bg-[#0e6877] text-white hover:bg-[#0b5460]'
@@ -244,7 +294,17 @@ export const Settings: React.FC<ISettingsProps> = () => {
               </div>
             ))}
           </div>
-        </div>
+
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+            <button
+              type="submit"
+              disabled={loading}
+              className="ml-auto px-5 py-2.5 bg-[#0e6877] text-white text-xs font-bold rounded-xl hover:bg-[#0b5460] transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95"
+            >
+              <Save size={16} /> {loading ? 'Đang lưu...' : 'Lưu Cấu Hình Phí Ship'}
+            </button>
+          </div>
+        </form>
       )}
 
       {/* Tab 3: Payment Gateways */}
