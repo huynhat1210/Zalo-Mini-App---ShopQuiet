@@ -292,9 +292,7 @@ export class OrdersService {
         data: {
           id: orderId,
           totalAmount: finalTotalAmount,
-          status:
-            dto.status ||
-            (dto.paymentMethod === "VIETQR" ? "PENDING" : "PROCESSING"),
+          status: dto.status || "PROCESSING",
           zaloUserId: filterUserId,
           paymentMethod: dto.paymentMethod || "COD",
           voucherCode: dto.voucherCode || null,
@@ -755,14 +753,12 @@ export class OrdersService {
       zaloUserId: zaloUserId || '',
     });
 
-    // Method config: ZALOPAY_SANDBOX, MOMO_SANDBOX, or BANK_SANDBOX for sandbox
+    // Method config: ZALOPAY_SANDBOX or BANK_SANDBOX for sandbox
     const reqMethod = (dto.paymentMethod || '').toUpperCase();
     let methodId = 'ZALOPAY_SANDBOX';
-    if (reqMethod.includes('MOMO')) {
-      methodId = 'MOMO_SANDBOX';
-    } else if (reqMethod.includes('BANK')) {
+    if (reqMethod.includes('BANK')) {
       methodId = 'BANK_SANDBOX';
-    } else if (reqMethod.includes('ZALOPAY')) {
+    } else {
       methodId = 'ZALOPAY_SANDBOX';
     }
     const method = JSON.stringify({
@@ -837,11 +833,9 @@ export class OrdersService {
       .join('')
       .toUpperCase();
     let methodId = 'ZALOPAY_SANDBOX';
-    if (reqMethod.includes('MOMO')) {
-      methodId = 'MOMO_SANDBOX';
-    } else if (reqMethod.includes('BANK')) {
+    if (reqMethod.includes('BANK')) {
       methodId = 'BANK_SANDBOX';
-    } else if (reqMethod.includes('ZALOPAY')) {
+    } else {
       methodId = 'ZALOPAY_SANDBOX';
     }
     const method = JSON.stringify({

@@ -75,7 +75,6 @@ export class PaymentsService {
       mb: `https://dl.vietqr.io/pay?app=mb&ba=${config.accountNo}@${config.bankId}&am=${roundedAmount}&des=${encodeURIComponent(transferContent)}`,
       tcb: `https://dl.vietqr.io/pay?app=tcb&ba=${config.accountNo}@${config.bankId}&am=${roundedAmount}&des=${encodeURIComponent(transferContent)}`,
       acb: `https://dl.vietqr.io/pay?app=acb&ba=${config.accountNo}@${config.bankId}&am=${roundedAmount}&des=${encodeURIComponent(transferContent)}`,
-      momo: `https://dl.vietqr.io/pay?app=momo&ba=${config.accountNo}@${config.bankId}&am=${roundedAmount}&des=${encodeURIComponent(transferContent)}`,
       universal: `https://dl.vietqr.io/pay?ba=${config.accountNo}@${config.bankId}&am=${roundedAmount}&des=${encodeURIComponent(transferContent)}`,
     };
 

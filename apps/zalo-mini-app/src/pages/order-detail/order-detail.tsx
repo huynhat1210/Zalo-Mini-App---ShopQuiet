@@ -328,15 +328,9 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
           <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4.5 space-y-1.5 animate-fade-in text-left">
             <p className="font-bold text-orange-700 text-xs">
               Chờ thanh toán (
-              {selectedOrder.paymentMethod === "MOMO"
-                ? "Ví MoMo"
-                : selectedOrder.paymentMethod === "BANK"
-                  ? "Chuyển khoản Ngân hàng"
-                  : selectedOrder.paymentMethod === "ZALOPAY"
-                    ? "Ví ZaloPay"
-                    : selectedOrder.paymentMethod === "VIETQR"
-                      ? "VietQR"
-                      : "Trực tuyến"}
+              {selectedOrder.paymentMethod === "BANK"
+                ? "Chuyển khoản Ngân hàng"
+                : "Ví ZaloPay"}
               )
             </p>
             <p className="text-orange-600/80 text-[10px] leading-relaxed">
@@ -598,15 +592,11 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
             <div className="flex justify-between">
               <span className="text-textColor-variant">Phương thức:</span>
               <span className="font-bold text-textColor">
-                {selectedOrder.paymentMethod === "MOMO"
-                  ? "Ví MoMo"
-                  : selectedOrder.paymentMethod === "BANK"
-                    ? "Chuyển khoản Ngân hàng"
-                    : selectedOrder.paymentMethod === "ZALOPAY"
-                      ? "Ví ZaloPay"
-                      : selectedOrder.paymentMethod === "VIETQR"
-                        ? "VietQR"
-                        : "COD (Thanh toán khi nhận hàng)"}
+                {selectedOrder.paymentMethod === "BANK"
+                  ? "Chuyển khoản Ngân hàng"
+                  : selectedOrder.paymentMethod === "ZALOPAY"
+                    ? "Ví ZaloPay"
+                    : "COD (Thanh toán khi nhận hàng)"}
               </span>
             </div>
             {selectedOrder.voucherCode && (
@@ -628,9 +618,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
 
         {/* Continue Payment for unpaid online orders */}
         {isPendingPayment &&
-          ["ZALOPAY", "MOMO", "BANK", "VIETQR"].includes(
-            selectedOrder.paymentMethod,
-          ) && (
+          ["ZALOPAY", "BANK"].includes(selectedOrder.paymentMethod) && (
             <button
               disabled={paying || cancelling}
               onClick={handleContinuePayment}

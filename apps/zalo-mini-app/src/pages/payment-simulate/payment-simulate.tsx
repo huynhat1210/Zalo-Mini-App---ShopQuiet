@@ -99,16 +99,12 @@ export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
     setActiveTab("orders");
   };
 
-  const isMoMo = selectedOrder.paymentMethod === "MOMO";
   const isBank = selectedOrder.paymentMethod === "BANK";
 
-  let methodTitle = "Cổng thanh toán ZaloPay";
+  let methodTitle = "Ví ZaloPay";
   let methodBg = "bg-[#007aff]";
-  if (isMoMo) {
-    methodTitle = "Cổng thanh toán MoMo";
-    methodBg = "bg-[#a50064]";
-  } else if (isBank) {
-    methodTitle = "Chuyển khoản Ngân hàng (QR)";
+  if (isBank) {
+    methodTitle = "Chuyển khoản Ngân hàng (ATM / QR)";
     methodBg = "bg-[#1b5e20]";
   }
 

@@ -116,13 +116,6 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       badge: "KHUYÊN DÙNG",
     },
     {
-      code: "momo",
-      name: "Ví MoMo",
-      description: "Thanh toán tiện lợi qua Ví MoMo",
-      provider: "MOMO",
-      badge: "MOMO",
-    },
-    {
       code: "bank",
       name: "Chuyển khoản Ngân hàng",
       description: "Chuyển khoản ATM / Thẻ ngân hàng nội địa & quốc tế",
@@ -254,13 +247,6 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           provider: "ZALOPAY",
           badge: "KHUYÊN DÙNG",
         };
-        const defaultMoMo: CmsPaymentMethod = {
-          code: "momo",
-          name: "Ví MoMo",
-          description: "Thanh toán tiện lợi qua Ví MoMo",
-          provider: "MOMO",
-          badge: "MOMO",
-        };
         const defaultBank: CmsPaymentMethod = {
           code: "bank",
           name: "Chuyển khoản Ngân hàng",
@@ -275,7 +261,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           provider: "COD",
         };
 
-        const mergedPaymentMethods = [defaultZaloPay, defaultMoMo, defaultBank, defaultCod];
+        const mergedPaymentMethods = [defaultZaloPay, defaultBank, defaultCod];
 
         setPaymentMethods(mergedPaymentMethods);
         setPaymentMethod((current) =>
@@ -720,7 +706,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       let createdOrder: any;
       let orderNumber: string;
 
-      if (paymentMethod === "zalopay" || paymentMethod === "momo" || paymentMethod === "bank") {
+      if (paymentMethod === "zalopay" || paymentMethod === "bank") {
         const checkoutRes = await apiRequest<any>(
           "/orders/zalopay-checkout",
           "POST",
