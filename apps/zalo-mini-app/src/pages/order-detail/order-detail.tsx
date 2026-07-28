@@ -115,15 +115,15 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
       );
 
       if (checkoutRes && checkoutRes.mac) {
+        const rawItem = typeof checkoutRes.item === "string" ? JSON.parse(checkoutRes.item) : checkoutRes.item;
+        const rawMethod = typeof checkoutRes.method === "string" ? checkoutRes.method : JSON.stringify(checkoutRes.method);
+
         Payment.createOrder({
           amount: checkoutRes.amount,
           desc: checkoutRes.desc,
-          item: JSON.parse(checkoutRes.item),
+          item: rawItem,
           extradata: checkoutRes.extradata,
-          method:
-            typeof checkoutRes.method === "string"
-              ? JSON.parse(checkoutRes.method)
-              : checkoutRes.method,
+          method: rawMethod,
           mac: checkoutRes.mac,
           success: (data) => {
             console.log("Zalo SDK Payment Success from Order Detail:", data);
@@ -166,9 +166,14 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
               },
             });
           },
-          fail: (err) => {
+          fail: (err: any) => {
             console.error("Payment.createOrder failed from Order Detail:", err);
-            showToast("Không thể khởi chạy cổng thanh toán!", "warning");
+            const msg = err?.message || err?.errMsg || "";
+            if (msg && typeof msg === "string") {
+              showToast(`Zalo SDK: ${msg}`, "info");
+            } else {
+              showToast("Không thể mở cửa sổ thanh toán trên thiết bị này!", "warning");
+            }
           },
         });
       }

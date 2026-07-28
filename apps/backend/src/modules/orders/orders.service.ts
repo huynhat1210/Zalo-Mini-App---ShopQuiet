@@ -863,7 +863,7 @@ export class OrdersService {
       desc,
       item,
       extradata,
-      method: JSON.parse(method),
+      method,
       mac,
     };
   }

@@ -753,15 +753,15 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
         // Invoke Native Zalo SDK Checkout SDK
         try {
+          const rawItem = typeof checkoutRes.item === "string" ? JSON.parse(checkoutRes.item) : checkoutRes.item;
+          const rawMethod = typeof checkoutRes.method === "string" ? checkoutRes.method : JSON.stringify(checkoutRes.method);
+          
           Payment.createOrder({
             amount: checkoutRes.amount,
             desc: checkoutRes.desc,
-            item: JSON.parse(checkoutRes.item),
+            item: rawItem,
             extradata: checkoutRes.extradata,
-            method:
-              typeof checkoutRes.method === "string"
-                ? JSON.parse(checkoutRes.method)
-                : checkoutRes.method,
+            method: rawMethod,
             mac: checkoutRes.mac,
             success: (data) => {
               console.log("Payment.createOrder success:", data);
@@ -775,7 +775,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                     })
                       .then(() => {
                         clearPurchasedItems();
-                        showToast("Thanh toán Sandbox thành công!", "success");
+                        showToast("Thanh toán thành công!", "success");
                         if (fetchNotifications) fetchNotifications();
                         setActiveTab("order-success");
                       })
@@ -785,7 +785,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                         setActiveTab("order-detail");
                       });
                   } else {
-                    showToast("Đã ghi nhận đơn hàng Sandbox (Chờ xác nhận)", "info");
+                    showToast("Đã tạo đơn hàng (Chờ thanh toán)", "info");
                     clearPurchasedItems();
                     setSelectedOrder(createdOrder);
                     setActiveTab("order-detail");
@@ -798,16 +798,21 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                 },
               });
             },
-            fail: (err) => {
+            fail: (err: any) => {
               console.warn("Payment.createOrder fail/cancel:", err);
-              showToast("Đã khởi tạo đơn hàng Sandbox!", "info");
+              const msg = err?.message || err?.errMsg || "";
+              if (msg && typeof msg === "string") {
+                showToast(`Thông báo Zalo SDK: ${msg}`, "info");
+              } else {
+                showToast("Đã tạo đơn hàng (Chờ thanh toán)", "info");
+              }
               clearPurchasedItems();
               setSelectedOrder(createdOrder);
               setActiveTab("order-detail");
             },
           });
           return;
-        } catch (sdkErr) {
+        } catch (sdkErr: any) {
           console.error("Zalo SDK Payment error:", sdkErr);
           clearPurchasedItems();
           setSelectedOrder(createdOrder);
