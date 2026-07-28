@@ -43,10 +43,13 @@ async function bootstrap() {
     }),
   );
 
-  // Enable rate limiting
-  app.enableShutdownHooks();
-
-  app.setGlobalPrefix('api/v1', { exclude: ['/'] });
+  app.setGlobalPrefix('api/v1', {
+    exclude: [
+      '/',
+      'pay2s/(.*)',
+      'api/pay2s/(.*)',
+    ],
+  });
 
   // Swagger API Documentation
   const config = new DocumentBuilder()

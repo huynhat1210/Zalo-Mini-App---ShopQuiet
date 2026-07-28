@@ -17,6 +17,7 @@ export class Pay2sController {
 
   @Get('pay2s/ipn')
   @Get('api/pay2s/ipn')
+  @Get('api/v1/pay2s/ipn')
   async checkIPNGet() {
     return {
       status: 'active',
@@ -25,19 +26,16 @@ export class Pay2sController {
   }
 
   @Post('pay2s/ipn')
+  @Post('api/pay2s/ipn')
+  @Post('api/v1/pay2s/ipn')
   @HttpCode(HttpStatus.OK)
   async handleIPN(@Body() body: any) {
     return this.pay2sService.handleIPN(body);
   }
 
-  @Post('api/pay2s/ipn')
-  @HttpCode(HttpStatus.OK)
-  async handleIPNApi(@Body() body: any) {
-    return this.pay2sService.handleIPN(body);
-  }
-
   @Get('pay2s/hook')
   @Get('api/pay2s/hook')
+  @Get('api/v1/pay2s/hook')
   async checkHookGet() {
     return {
       status: 'active',
@@ -46,14 +44,10 @@ export class Pay2sController {
   }
 
   @Post('pay2s/hook')
+  @Post('api/pay2s/hook')
+  @Post('api/v1/pay2s/hook')
   @HttpCode(HttpStatus.OK)
   async handleHook(@Headers('authorization') auth: string, @Body() body: any) {
-    return this.pay2sService.handleHook(auth, body);
-  }
-
-  @Post('api/pay2s/hook')
-  @HttpCode(HttpStatus.OK)
-  async handleHookApi(@Headers('authorization') auth: string, @Body() body: any) {
     return this.pay2sService.handleHook(auth, body);
   }
 }
