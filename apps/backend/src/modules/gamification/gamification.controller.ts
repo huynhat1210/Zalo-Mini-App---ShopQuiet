@@ -1,8 +1,10 @@
 import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { GamificationService } from './gamification.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+@ApiTags('Gamification & Rewards')
 @Controller('gamification')
 export class GamificationController {
   constructor(private gamificationService: GamificationService) {}

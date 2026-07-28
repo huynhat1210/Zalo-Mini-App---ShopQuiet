@@ -16,6 +16,9 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CreateNotificationDto } from './dto/notification.dto';
 
+import { ApiTags } from '@nestjs/swagger';
+
+@ApiTags('Notifications')
 @Controller('notifications')
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}

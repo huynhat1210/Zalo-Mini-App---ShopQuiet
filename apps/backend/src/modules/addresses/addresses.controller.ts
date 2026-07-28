@@ -13,6 +13,9 @@ import {
 } from '@nestjs/common';
 import { AddressesService } from './addresses.service';
 
+import { ApiTags } from '@nestjs/swagger';
+
+@ApiTags('Users & Addresses')
 @Controller('addresses')
 export class AddressesController {
   constructor(private readonly addressesService: AddressesService) {}

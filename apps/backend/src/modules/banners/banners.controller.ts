@@ -12,6 +12,9 @@ import {
 import { BannersService } from './banners.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+import { ApiTags } from '@nestjs/swagger';
+
+@ApiTags('Banners & Media')
 @Controller('banners')
 export class BannersController {
   constructor(private readonly bannersService: BannersService) {}

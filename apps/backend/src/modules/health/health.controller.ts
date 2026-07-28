@@ -5,7 +5,7 @@ import { Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 
-@ApiTags('health')
+@ApiTags('Health Check')
 @Controller('health')
 export class HealthController {
   constructor(

@@ -29,7 +29,7 @@ import {
   ErrorResponseDto,
 } from '../../common/dto/api-response.dto';
 
-@ApiTags('auth')
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}

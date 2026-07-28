@@ -56,20 +56,29 @@ async function bootstrap() {
 
   // Swagger API Documentation
   const config = new DocumentBuilder()
-    .setTitle('ShopQuiet API')
-    .setDescription('Zalo Mini App E-Commerce API Documentation')
-    .setVersion('1.0')
-    .addTag('auth', 'Authentication endpoints')
-    .addTag('products', 'Product management')
-    .addTag('cart', 'Shopping cart')
-    .addTag('orders', 'Order management')
-    .addTag('users', 'User management')
-    .addTag('notifications', 'Notifications')
-    .addTag('favorites', 'Favorites')
-    .addTag('comments', 'Product comments')
-    .addTag('vouchers', 'Voucher management')
-    .addTag('banners', 'Banner management')
-    .addBearerAuth()
+    .setTitle('ShopQuiet E-Commerce API Server')
+    .setDescription('Hệ thống API Server dành cho Zalo Mini App E-Commerce và Trang Quản trị ShopQuiet CMS')
+    .setVersion('1.0.0')
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT', name: 'Authorization', description: 'Nhập JWT Token', in: 'header' },
+      'JWT-auth',
+    )
+    .addTag('Auth', 'Xác thực & Phân quyền tài khoản')
+    .addTag('Products & Categories', 'Quản lý Sản phẩm & Danh mục')
+    .addTag('Orders', 'Quản lý Đơn hàng & Trạng thái giao hàng')
+    .addTag('Pay2S Payment', 'Cổng thanh toán tự động Pay2S & Webhook IPN')
+    .addTag('Cart', 'Giỏ hàng người dùng')
+    .addTag('Users & Addresses', 'Tài khoản Khách hàng & Sổ địa chỉ')
+    .addTag('Comments & Reviews', 'Bình luận & Đánh giá sản phẩm')
+    .addTag('CMS Admin', 'API Quản trị trang CMS')
+    .addTag('Gamification & Rewards', 'Tích điểm, Đổi quà & Điểm danh hàng ngày')
+    .addTag('AI Recommendations', 'Gợi ý sản phẩm thông minh AI')
+    .addTag('Vouchers & Discounts', 'Mã giảm giá & Khuyến mãi')
+    .addTag('Banners & Media', 'Banner quảng cáo & Thư viện hình ảnh')
+    .addTag('Notifications', 'Thông báo hệ thống & Đẩy Zalo ZNS')
+    .addTag('Chat Support', 'Hệ thống Live Chat CSKH')
+    .addTag('Analytics & Reports', 'Báo cáo & Thống kê doanh thu')
+    .addTag('Health Check', 'Kiểm tra trạng thái máy chủ')
     .build();
   const document = SwaggerModule.createDocument(app, config, {
     extraModels: [SuccessResponseDto, ErrorResponseDto],

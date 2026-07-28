@@ -29,7 +29,7 @@ import {
   UpdateVariantStockDto,
 } from './dto/create-product.dto';
 
-@ApiTags('products')
+@ApiTags('Products & Categories')
 @Controller()
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}

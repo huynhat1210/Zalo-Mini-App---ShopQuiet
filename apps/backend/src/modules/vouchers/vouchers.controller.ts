@@ -23,6 +23,9 @@ type CreateVoucherDto = {
   expiresAt?: string;
 };
 
+import { ApiTags } from '@nestjs/swagger';
+
+@ApiTags('Vouchers & Discounts')
 @Controller('vouchers')
 export class VouchersController {
   constructor(private readonly vouchersService: VouchersService) {}

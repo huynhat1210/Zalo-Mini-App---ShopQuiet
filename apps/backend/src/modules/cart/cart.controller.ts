@@ -24,7 +24,7 @@ import {
   UpdateItemVariantDto,
 } from './dto/cart.dto';
 
-@ApiTags('cart')
+@ApiTags('Cart')
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}

@@ -17,6 +17,9 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 
+import { ApiTags } from '@nestjs/swagger';
+
+@ApiTags('CMS Admin')
 @Controller('cms')
 export class CmsController {
   constructor(private readonly cmsService: CmsService) {}

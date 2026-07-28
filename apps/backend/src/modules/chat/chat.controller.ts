@@ -1,7 +1,9 @@
 import { Controller, Get, Post, Body, Query, UseGuards, Inject, forwardRef } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { ChatService } from './chat.service';
 import { ChatGateway } from './chat.gateway';
 
+@ApiTags('Chat Support')
 @Controller('chat')
 export class ChatController {
   constructor(

@@ -20,6 +20,9 @@ import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/comment.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
+
+@ApiTags('Comments & Reviews')
 @Controller('products/:productId/comments')
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
@@ -105,6 +108,7 @@ export class CommentsController {
   }
 }
 
+@ApiTags('Comments & Reviews')
 @Controller('cms/comments')
 export class CmsCommentsController {
   constructor(private readonly commentsService: CommentsService) {}

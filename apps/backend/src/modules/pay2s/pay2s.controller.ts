@@ -1,11 +1,14 @@
 import { Controller, Post, Get, Param, Query, Body, Headers, HttpCode, HttpStatus, Res } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Pay2sService } from './pay2s.service';
 import type { Response } from 'express';
 
+@ApiTags('Pay2S Payment')
 @Controller()
 export class Pay2sController {
   constructor(private readonly pay2sService: Pay2sService) { }
 
+  @ApiOperation({ summary: 'Tạo URL thanh toán Pay2S cho đơn hàng' })
   @Post('orders/:id/pay2s')
   async createPay2sUrl(@Param('id') id: string) {
     return this.pay2sService.createPaymentUrl(id);

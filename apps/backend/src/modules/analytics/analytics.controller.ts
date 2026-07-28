@@ -1,7 +1,9 @@
 import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { AnalyticsService } from './analytics.service';
 import type { TrackEventDto } from './analytics.service';
 
+@ApiTags('Analytics & Reports')
 @Controller('analytics')
 export class AnalyticsController {
   constructor(private analyticsService: AnalyticsService) {}

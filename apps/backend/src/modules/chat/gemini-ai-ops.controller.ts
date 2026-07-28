@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { GeminiAiOpsService } from './gemini-ai-ops.service';
 
+@ApiTags('CMS Admin')
 @Controller('cms/ai-ops')
 export class GeminiAiOpsController {
   constructor(private readonly geminiAiOpsService: GeminiAiOpsService) {}

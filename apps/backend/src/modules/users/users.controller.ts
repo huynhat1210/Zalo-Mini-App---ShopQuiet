@@ -15,6 +15,9 @@ import { SyncUserDto, DecryptPhoneDto } from './dto/sync-user.dto';
 import { UpdateSizeProfileDto } from './dto/update-size-profile.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 
+import { ApiTags } from '@nestjs/swagger';
+
+@ApiTags('Users & Addresses')
 @Controller('users')
 export class UsersController {
   constructor(

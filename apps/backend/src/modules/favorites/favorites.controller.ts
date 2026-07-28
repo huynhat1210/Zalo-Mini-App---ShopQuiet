@@ -14,6 +14,9 @@ import { FavoritesService } from './favorites.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AddFavoriteDto } from './dto/favorite.dto';
 
+import { ApiTags } from '@nestjs/swagger';
+
+@ApiTags('Products & Categories')
 @Controller('favorites')
 export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
