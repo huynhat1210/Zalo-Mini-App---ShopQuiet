@@ -153,6 +153,14 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
     amount: number;
     transferContent: string;
     orderId: string;
+    deepLinks?: {
+      vcb?: string;
+      mb?: string;
+      tcb?: string;
+      acb?: string;
+      momo?: string;
+      universal?: string;
+    };
   } | null>(null);
   const [isCopiedNo, setIsCopiedNo] = useState(false);
   const [isCopiedContent, setIsCopiedContent] = useState(false);
@@ -1678,6 +1686,52 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                 <p>1. Bấm <strong>Lưu mã QR</strong> (hoặc chụp màn hình)</p>
                 <p>2. Mở App Ngân hàng ➔ Chọn <strong>Quét QR</strong> ➔ Tải ảnh từ thư viện</p>
                 <p>3. Kiểm tra số tiền & bấm Chuyển tiền!</p>
+              </div>
+            </div>
+
+            {/* 1-TOUCH DIRECT BANKING APP LAUNCH BUTTONS */}
+            <div className="space-y-2 text-left bg-gradient-to-br from-teal-50/90 to-blue-50/90 p-3.5 rounded-2xl border border-teal-200/80 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase text-[#0e6877] tracking-wider flex items-center gap-1">
+                  ⚡ Mở Nhanh App Ngân Hàng (1-Touch)
+                </span>
+                <span className="text-[9px] font-bold text-teal-600 bg-white px-1.5 py-0.5 rounded-full border border-teal-200">
+                  Tự điền STK & Tiền
+                </span>
+              </div>
+              <p className="text-[9.5px] text-slate-500 font-semibold">
+                Chọn ngân hàng bạn đang dùng để ứng dụng tự động mở App và điền sẵn thông tin:
+              </p>
+
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                {[
+                  { key: "vcb", label: "Vietcombank", color: "bg-emerald-600 hover:bg-emerald-700 text-white" },
+                  { key: "mb", label: "MBBank", color: "bg-blue-600 hover:bg-blue-700 text-white" },
+                  { key: "tcb", label: "Techcombank", color: "bg-red-600 hover:bg-red-700 text-white" },
+                  { key: "acb", label: "ACB", color: "bg-amber-500 hover:bg-amber-600 text-white" },
+                  { key: "momo", label: "Ví MoMo", color: "bg-pink-600 hover:bg-pink-700 text-white" },
+                  { key: "universal", label: "Ngân hàng khác", color: "bg-slate-800 hover:bg-slate-900 text-white" },
+                ].map((b) => {
+                  const link = (vietQrModalData.deepLinks as any)?.[b.key] || vietQrModalData.deepLinks?.universal;
+                  return (
+                    <button
+                      key={b.key}
+                      onClick={() => {
+                        // Copy STK and content automatically first
+                        navigator.clipboard.writeText(vietQrModalData.accountNo);
+                        showToast(`Đã copy STK! Đang mở app ${b.label}...`, "success");
+                        if (link) {
+                          setTimeout(() => {
+                            window.open(link, "_blank");
+                          }, 300);
+                        }
+                      }}
+                      className={`py-2 px-2 rounded-xl text-xs font-black transition-all border-none cursor-pointer flex items-center justify-center gap-1 shadow-2xs active:scale-95 ${b.color}`}
+                    >
+                      <span className="truncate">{b.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

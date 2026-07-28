@@ -62,11 +62,22 @@ export class PaymentsService {
     const config = await this.getBankConfig();
     const shortCode = typeof orderId === 'string' ? orderId.slice(-6).toUpperCase() : String(orderId);
     const transferContent = `DH${shortCode}`;
+    const roundedAmount = Math.round(amount);
 
     // VietQR QuickLink Open Standard
-    const qrUrl = `https://img.vietqr.io/image/${config.bankId}-${config.accountNo}-compact2.png?amount=${Math.round(
-      amount,
-    )}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(config.accountName)}`;
+    const qrUrl = `https://img.vietqr.io/image/${config.bankId}-${config.accountNo}-compact2.png?amount=${roundedAmount}&addInfo=${encodeURIComponent(
+      transferContent,
+    )}&accountName=${encodeURIComponent(config.accountName)}`;
+
+    // VietQR Universal DeepLinks for 1-Touch App Launching
+    const deepLinks = {
+      vcb: `https://dl.vietqr.io/pay?app=vcb&ba=${config.accountNo}@${config.bankId}&am=${roundedAmount}&des=${encodeURIComponent(transferContent)}`,
+      mb: `https://dl.vietqr.io/pay?app=mb&ba=${config.accountNo}@${config.bankId}&am=${roundedAmount}&des=${encodeURIComponent(transferContent)}`,
+      tcb: `https://dl.vietqr.io/pay?app=tcb&ba=${config.accountNo}@${config.bankId}&am=${roundedAmount}&des=${encodeURIComponent(transferContent)}`,
+      acb: `https://dl.vietqr.io/pay?app=acb&ba=${config.accountNo}@${config.bankId}&am=${roundedAmount}&des=${encodeURIComponent(transferContent)}`,
+      momo: `https://dl.vietqr.io/pay?app=momo&ba=${config.accountNo}@${config.bankId}&am=${roundedAmount}&des=${encodeURIComponent(transferContent)}`,
+      universal: `https://dl.vietqr.io/pay?ba=${config.accountNo}@${config.bankId}&am=${roundedAmount}&des=${encodeURIComponent(transferContent)}`,
+    };
 
     return {
       success: true,
@@ -74,9 +85,10 @@ export class PaymentsService {
       bankId: config.bankId,
       accountNo: config.accountNo,
       accountName: config.accountName,
-      amount,
+      amount: roundedAmount,
       transferContent,
       orderId,
+      deepLinks,
     };
   }
 
