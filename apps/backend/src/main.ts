@@ -49,6 +49,8 @@ async function bootstrap() {
       'pay2s/(.*)',
       'api/pay2s/(.*)',
       'pay/(.*)',
+      'uploads/(.*)',
+      'public/(.*)',
     ],
   });
 

@@ -127,7 +127,18 @@ export const Support: React.FC = () => {
     socket.on('message', (msg: Message) => {
       if (activeSession && msg.zaloUserId === activeSession.zaloUserId) {
         setMessages((prev) => {
-          if (prev.some((m) => m.id === msg.id)) return prev;
+          // Strict deduplication by ID or by content+sender within 5 seconds
+          if (
+            prev.some(
+              (m) =>
+                m.id === msg.id ||
+                (m.content === msg.content &&
+                  m.sender === msg.sender &&
+                  Math.abs(new Date(m.createdAt).getTime() - new Date(msg.createdAt).getTime()) < 5000),
+            )
+          ) {
+            return prev.map((m) => (m.content === msg.content && m.sender === msg.sender ? msg : m));
+          }
           return [...prev, msg];
         });
         socket.emit('mark_read', { zaloUserId: activeSession.zaloUserId, sender: 'USER' });
@@ -142,12 +153,6 @@ export const Support: React.FC = () => {
     const fetchThread = async () => {
       setLoadingMessages(true);
       try {
-        // Instantly mark as read in DB and local state
-        apiRequest('/chat/messages/read', 'POST', {
-          zaloUserId: activeSession.zaloUserId,
-          sender: 'USER',
-        }).catch(() => {});
-
         setSessions((prev) =>
           prev.map((s) => (s.zaloUserId === activeSession.zaloUserId ? { ...s, unreadCount: 0 } : s))
         );
@@ -177,31 +182,14 @@ export const Support: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = () => {
     if (!inputValue.trim() || !activeSession) return;
     const text = inputValue.trim();
     setInputValue('');
     setShowCanned(false);
     inputRef.current?.focus();
 
-    // Optimistic UI update — render message instantly without waiting
-    const tempMsg: Message = {
-      id: Math.floor(Date.now() + Math.random() * 1000),
-      zaloUserId: activeSession.zaloUserId,
-      sender: 'ADMIN',
-      content: text,
-      read: true,
-      createdAt: new Date().toISOString(),
-    };
-
-    setMessages((prev) => {
-      if (prev.some((m) => m.content === text && m.sender === 'ADMIN' && Math.abs(new Date(m.createdAt).getTime() - Date.now()) < 3000)) {
-        return prev;
-      }
-      return [...prev, tempMsg];
-    });
-
-    // Update session list sidebar instantly
+    // Update active session sidebar text
     setSessions((prev) =>
       prev.map((s) =>
         s.zaloUserId === activeSession.zaloUserId
@@ -210,23 +198,12 @@ export const Support: React.FC = () => {
       ),
     );
 
-    // Emit via Socket
+    // Socket emit saves to DB & broadcasts to room instantly
     socketRef.current?.emit('send_message', {
       zaloUserId: activeSession.zaloUserId,
       sender: 'ADMIN',
       content: text,
     });
-
-    // REST fallback save
-    try {
-      await apiRequest('/chat/messages', 'POST', {
-        zaloUserId: activeSession.zaloUserId,
-        sender: 'ADMIN',
-        content: text,
-      });
-    } catch (e) {
-      console.error('Failed to send message via REST:', e);
-    }
   };
 
   const handleCannedResponse = (text: string) => {

@@ -378,12 +378,20 @@ export const CommentsPage: React.FC = () => {
                             </span>
                             <div className="flex flex-wrap gap-1.5">
                               {reviewImgs.map((img, idx) => {
-                                const fullImg = img.startsWith('http') ? img : `${serverUrl}${img}`;
+                                const fullImg = img.startsWith('http') ? img : `${serverUrl}${img.startsWith('/') ? '' : '/'}${img}`;
                                 return (
                                   <img
                                     key={idx}
                                     src={fullImg}
                                     alt={`Review img ${idx}`}
+                                    onError={(e) => {
+                                      const target = e.currentTarget;
+                                      if (fullImg.includes('onrender.com/uploads/')) {
+                                        target.src = fullImg.replace('https://zalo-mini-app-shopquiet.onrender.com', 'http://localhost:3000');
+                                      } else {
+                                        target.src = 'https://images.unsplash.com/photo-1560343090-f0409e92791a?auto=format&fit=crop&w=200&q=80';
+                                      }
+                                    }}
                                     onClick={() => setPreviewImage(fullImg)}
                                     className="w-14 h-14 rounded-xl object-cover border border-slate-200 cursor-pointer hover:opacity-85 hover:scale-105 transition-all shadow-2xs"
                                   />
