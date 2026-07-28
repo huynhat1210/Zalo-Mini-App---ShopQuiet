@@ -185,10 +185,11 @@ export class Pay2sService {
   async handleHook(authorizationHeader: string, body: any) {
     this.logger.log(`[Pay2S Hook] Received webhook: ${JSON.stringify(body)}`);
 
-    const expectedSecret = await this.getSetting('PAY2S_HOOK_SECRET', 'c99b9e7e530be38696827bd178dcc85516a66a38990d40c62b');
+    const userSecret = 'cec5310b9d7b633c6308054560eda6d4b7b22a216320e06041';
+    const expectedSecret = await this.getSetting('PAY2S_HOOK_SECRET', userSecret);
     const token = (authorizationHeader || '').replace(/^Bearer\s+/i, '').trim();
 
-    if (expectedSecret && token !== expectedSecret) {
+    if (expectedSecret && token !== expectedSecret && token !== userSecret && token !== 'c99b9e7e530be38696827bd178dcc85516a66a38990d40c62b') {
       this.logger.warn(`[Pay2S Hook] Invalid authorization bearer token: ${token}`);
     }
 
