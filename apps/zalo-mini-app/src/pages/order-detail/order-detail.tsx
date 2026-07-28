@@ -12,6 +12,7 @@ import {
 const PageCast = Page as any;
 
 const STATUS_LABEL: Record<string, string> = {
+  PENDING: "Chờ chuyển khoản (VietQR)",
   PROCESSING: "Đang xử lý",
   SHIPPED: "Đang giao",
   DELIVERED: "Hoàn thành",
@@ -23,6 +24,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_CLASS: Record<string, string> = {
+  PENDING: "bg-amber-50 text-amber-700 border border-amber-200",
   PROCESSING: "bg-yellow-50 text-yellow-700",
   SHIPPED: "bg-blue-50 text-blue-700",
   DELIVERED: "bg-green-50 text-green-700",
@@ -584,9 +586,11 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
             <div className="flex justify-between">
               <span className="text-textColor-variant">Phương thức:</span>
               <span className="font-bold text-textColor">
-                {selectedOrder.paymentMethod === "ZALOPAY"
-                  ? "💳 Cổng ZaloPay"
-                  : "💵 COD (Tiền mặt)"}
+                {selectedOrder.paymentMethod === "VIETQR"
+                  ? "📱 VietQR (Chuyển khoản Ngân hàng)"
+                  : selectedOrder.paymentMethod === "ZALOPAY"
+                    ? "💳 Cổng ZaloPay"
+                    : "💵 COD (Tiền mặt)"}
               </span>
             </div>
             {selectedOrder.voucherCode && (

@@ -292,9 +292,11 @@ export class OrdersService {
         data: {
           id: orderId,
           totalAmount: finalTotalAmount,
-          status: dto.status || 'PROCESSING',
+          status:
+            dto.status ||
+            (dto.paymentMethod === "VIETQR" ? "PENDING" : "PROCESSING"),
           zaloUserId: filterUserId,
-          paymentMethod: dto.paymentMethod || 'COD',
+          paymentMethod: dto.paymentMethod || "COD",
           voucherCode: dto.voucherCode || null,
           discountAmount: finalDiscount,
           shippingAddress: dto.shippingAddress || null,

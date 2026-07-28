@@ -1788,17 +1788,11 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                         navigator.clipboard.writeText(vietQrModalData.accountNo);
                         showToast(`Đã copy STK! Đang mở ${b.label}...`, "info");
                         if (link) {
-                          setTimeout(() => {
-                            try {
-                              if ((api as any)?.openWebview) {
-                                (api as any).openWebview({ url: link });
-                              } else {
-                                window.location.href = link;
-                              }
-                            } catch (e) {
-                              window.location.href = link;
-                            }
-                          }, 200);
+                          try {
+                            window.location.href = link;
+                          } catch (e) {
+                            window.open(link, "_system");
+                          }
                         }
                       }}
                       className="py-1.5 px-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-[10px] font-bold border border-slate-200 cursor-pointer active:scale-95 transition-all text-center truncate"
