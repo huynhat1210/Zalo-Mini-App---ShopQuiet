@@ -758,7 +758,10 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
             desc: checkoutRes.desc,
             item: JSON.parse(checkoutRes.item),
             extradata: checkoutRes.extradata,
-            method: checkoutRes.method,
+            method:
+              typeof checkoutRes.method === "string"
+                ? JSON.parse(checkoutRes.method)
+                : checkoutRes.method,
             mac: checkoutRes.mac,
             success: (data) => {
               console.log("Payment.createOrder success:", data);

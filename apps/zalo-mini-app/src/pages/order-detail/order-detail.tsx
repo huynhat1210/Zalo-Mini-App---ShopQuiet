@@ -120,7 +120,10 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
           desc: checkoutRes.desc,
           item: JSON.parse(checkoutRes.item),
           extradata: checkoutRes.extradata,
-          method: checkoutRes.method,
+          method:
+            typeof checkoutRes.method === "string"
+              ? JSON.parse(checkoutRes.method)
+              : checkoutRes.method,
           mac: checkoutRes.mac,
           success: (data) => {
             console.log("Zalo SDK Payment Success from Order Detail:", data);
@@ -133,7 +136,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                     status: "PROCESSING",
                   })
                     .then(() => {
-                      showToast("Thanh toán ZaloPay thành công!", "success");
+                      showToast("Thanh toán thành công!", "success");
                       setSelectedOrder({
                         ...selectedOrder,
                         status: "PROCESSING",
@@ -152,9 +155,9 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                 } else if (resultCode === 0) {
                   showToast("Giao dịch đang được xử lý...", "info");
                 } else if (resultCode === -2) {
-                  showToast("Bạn đã hủy thanh toán ZaloPay!", "warning");
+                  showToast("Bạn đã hủy thanh toán!", "warning");
                 } else {
-                  showToast("Thanh toán ZaloPay thất bại!", "warning");
+                  showToast("Thanh toán thất bại!", "warning");
                 }
               },
               fail: (err) => {
@@ -165,7 +168,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
           },
           fail: (err) => {
             console.error("Payment.createOrder failed from Order Detail:", err);
-            showToast("Không thể khởi chạy cổng ZaloPay!", "warning");
+            showToast("Không thể khởi chạy cổng thanh toán!", "warning");
           },
         });
       }
