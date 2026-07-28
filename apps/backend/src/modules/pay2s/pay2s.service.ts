@@ -110,14 +110,18 @@ export class Pay2sService {
       this.logger.warn(`[Pay2S Create] Gateway API call error/fallback: ${e?.message || e}`);
     }
 
-    // Fallback demo sandbox URL if Pay2S endpoint is sandbox or offline
-    const demoUrl = `https://sandbox.pay2s.vn/demo/transfer_demo.html?amount=${finalAmount}&content=${encodeURIComponent(
+    // Production VietQR QuickLink fallback (Zero login prompts required)
+    const [accNo, bankCode] = bankAccounts.split('|');
+    const cleanBankCode = (bankCode || 'MB').trim();
+    const cleanAccNo = (accNo || '0988776655').trim();
+    
+    const directQrUrl = `https://img.vietqr.io/image/${cleanBankCode}-${cleanAccNo}-compact2.png?amount=${finalAmount}&addInfo=${encodeURIComponent(
       orderInfo,
-    )}&orderId=${order.id}`;
+    )}&accountName=${encodeURIComponent('SHOPQUIET STORE')}`;
 
     return {
       success: true,
-      payUrl: demoUrl,
+      payUrl: directQrUrl,
       orderId: order.id,
       orderInfo,
       amount: finalAmount,
