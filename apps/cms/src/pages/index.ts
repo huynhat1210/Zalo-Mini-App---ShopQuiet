@@ -14,4 +14,5 @@ export * from './support';
 export * from './user-management';
 export * from './vouchers';
 export * from './flash-sale/flash-sale';
+export * from './comments/comments';
 

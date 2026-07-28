@@ -54,8 +54,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       data.content,
     );
 
-    // Broadcast message to the specific user's chat room
-    this.server.to(data.zaloUserId).emit('message', savedMsg);
+    // Broadcast message to both user's room and admin room instantly
+    this.server.to(data.zaloUserId).to('admin').emit('message', savedMsg);
 
     // Broadcast session update to all admin clients
     const updatedSessions = await this.chatService.getSessions();

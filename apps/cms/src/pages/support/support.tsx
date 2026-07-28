@@ -177,16 +177,56 @@ export const Support: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputValue.trim() || !activeSession) return;
-    socketRef.current?.emit('send_message', {
-      zaloUserId: activeSession.zaloUserId,
-      sender: 'ADMIN',
-      content: inputValue.trim(),
-    });
+    const text = inputValue.trim();
     setInputValue('');
     setShowCanned(false);
     inputRef.current?.focus();
+
+    // Optimistic UI update — render message instantly without waiting
+    const tempMsg: Message = {
+      id: Math.floor(Date.now() + Math.random() * 1000),
+      zaloUserId: activeSession.zaloUserId,
+      sender: 'ADMIN',
+      content: text,
+      read: true,
+      createdAt: new Date().toISOString(),
+    };
+
+    setMessages((prev) => {
+      if (prev.some((m) => m.content === text && m.sender === 'ADMIN' && Math.abs(new Date(m.createdAt).getTime() - Date.now()) < 3000)) {
+        return prev;
+      }
+      return [...prev, tempMsg];
+    });
+
+    // Update session list sidebar instantly
+    setSessions((prev) =>
+      prev.map((s) =>
+        s.zaloUserId === activeSession.zaloUserId
+          ? { ...s, lastMessage: text, lastMessageTime: 'Vừa xong' }
+          : s,
+      ),
+    );
+
+    // Emit via Socket
+    socketRef.current?.emit('send_message', {
+      zaloUserId: activeSession.zaloUserId,
+      sender: 'ADMIN',
+      content: text,
+    });
+
+    // REST fallback save
+    try {
+      await apiRequest('/chat/messages', 'POST', {
+        zaloUserId: activeSession.zaloUserId,
+        sender: 'ADMIN',
+        content: text,
+      });
+    } catch (e) {
+      console.error('Failed to send message via REST:', e);
+    }
   };
 
   const handleCannedResponse = (text: string) => {

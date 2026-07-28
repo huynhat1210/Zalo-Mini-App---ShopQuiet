@@ -58,13 +58,16 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
     socketRef.current = socket;
 
     socket.on("connect", () => {
-      socket.emit("join_room", { zaloUserId: userId });
+      socket.emit("join", { roomId: userId });
     });
 
-    socket.on("receive_message", (msg: Message) => {
+    socket.on("message", (msg: Message) => {
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === msg.id)) return prev;
+        return [...prev, msg];
+      });
       if (msg.sender === "ADMIN") {
-        setMessages((prev) => [...prev, msg]);
-        showToast("💬 Tin nhắn mới từ CSKH ShopQuiet!");
+        showToast("💬 CSKH ShopQuiet vừa phản hồi!");
       }
     });
 
@@ -78,9 +81,21 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = (textToSend?: string) => {
+  const handleSendMessage = async (textToSend?: string) => {
     const text = textToSend || inputValue.trim();
     if (!text) return;
+    setInputValue("");
+
+    const newMsg: Message = {
+      id: Date.now(),
+      zaloUserId: userId,
+      sender: "USER",
+      content: text,
+      read: true,
+      createdAt: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, newMsg]);
 
     if (socketRef.current) {
       socketRef.current.emit("send_message", {
@@ -90,17 +105,15 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
       });
     }
 
-    const newMsg: Message = {
-      id: Date.now(),
-      zaloUserId: userId,
-      sender: "USER",
-      content: text,
-      read: true,
-      createdAt: new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }),
-    };
-
-    setMessages((prev) => [...prev, newMsg]);
-    setInputValue("");
+    try {
+      await apiRequest("/chat/messages", "POST", {
+        zaloUserId: userId,
+        sender: "USER",
+        content: text,
+      });
+    } catch (err) {
+      console.error("Failed to send message via REST:", err);
+    }
   };
 
   const renderMessageContent = (content: string) => {

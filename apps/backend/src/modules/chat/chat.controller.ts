@@ -1,9 +1,14 @@
-import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, UseGuards, Inject, forwardRef } from '@nestjs/common';
 import { ChatService } from './chat.service';
+import { ChatGateway } from './chat.gateway';
 
 @Controller('chat')
 export class ChatController {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    @Inject(forwardRef(() => ChatGateway))
+    private readonly chatGateway: ChatGateway,
+  ) {}
 
   @Get('messages')
   async getMessages(@Query('zaloUserId') zaloUserId: string) {
@@ -16,7 +21,17 @@ export class ChatController {
     @Body('sender') sender: string,
     @Body('content') content: string,
   ) {
-    return this.chatService.saveMessage(zaloUserId, sender, content);
+    const savedMsg = await this.chatService.saveMessage(zaloUserId, sender, content);
+    try {
+      if (this.chatGateway?.server) {
+        this.chatGateway.server.to(zaloUserId).to('admin').emit('message', savedMsg);
+        const updatedSessions = await this.chatService.getSessions();
+        this.chatGateway.server.to('admin').emit('sessions_list', updatedSessions);
+      }
+    } catch (e) {
+      console.error('Socket broadcast error in ChatController:', e);
+    }
+    return savedMsg;
   }
 
   @Post('messages/read')

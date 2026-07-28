@@ -88,4 +88,39 @@ export class CommentsService {
 
     return comment;
   }
+
+  async findAllCMS(search?: string, rating?: number): Promise<CommentWithUser[]> {
+    const where: any = {};
+    if (rating && rating >= 1 && rating <= 5) {
+      where.rating = Number(rating);
+    }
+    if (search && search.trim()) {
+      const q = search.trim();
+      where.OR = [
+        { content: { contains: q, mode: 'insensitive' } },
+        { user: { name: { contains: q, mode: 'insensitive' } } },
+        { product: { name: { contains: q, mode: 'insensitive' } } },
+      ];
+    }
+
+    return (this.prisma.comment as any).findMany({
+      where,
+      include: {
+        user: true,
+        product: {
+          select: { id: true, name: true, images: true },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
+  async deleteComment(id: number): Promise<{ success: boolean }> {
+    await this.prisma.comment.delete({
+      where: { id },
+    });
+    return { success: true };
+  }
 }

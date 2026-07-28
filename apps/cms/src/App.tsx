@@ -19,6 +19,7 @@ import {
   Inventory,
   FlashSaleManagement,
   Settings,
+  CommentsPage,
 } from './pages';
 import { ToastProviderComponent, useToast, PermissionProviderComponent } from './contexts';
 import './App.css';
@@ -74,6 +75,7 @@ export const App: React.FC = () => {
               <Route path="/banners" element={<Banners />} />
               <Route path="/database/:modelName" element={<DatabaseManager />} />
               <Route path="/users" element={<UserManagement />} />
+              <Route path="/comments" element={<CommentsPage />} />
               <Route path="/support" element={<Support />} />
               <Route path="/categories" element={<Categories />} />
               <Route path="/inventory" element={<Inventory />} />

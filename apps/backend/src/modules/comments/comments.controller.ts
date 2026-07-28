@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
+  Query,
   Body,
   Param,
   Headers,
@@ -100,5 +102,23 @@ export class CommentsController {
         return { success: false, message: 'Không thể lưu trữ hình ảnh!' };
       }
     }
+  }
+}
+
+@Controller('cms/comments')
+export class CmsCommentsController {
+  constructor(private readonly commentsService: CommentsService) {}
+
+  @Get()
+  async getAllComments(
+    @Query('search') search?: string,
+    @Query('rating') rating?: number,
+  ) {
+    return this.commentsService.findAllCMS(search, rating);
+  }
+
+  @Delete(':id')
+  async deleteComment(@Param('id', ParseIntPipe) id: number) {
+    return this.commentsService.deleteComment(id);
   }
 }

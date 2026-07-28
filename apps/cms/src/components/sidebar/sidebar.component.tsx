@@ -15,6 +15,7 @@ import {
   Layers,
   Image as ImageIcon,
   MessageSquare,
+  Star,
   Settings,
   Database,
   X,
@@ -112,6 +113,7 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
       title: 'MARKETING & KHÁCH HÀNG',
       items: [
         { to: '/users', label: 'Khách hàng', icon: <Users size={17} /> },
+        { to: '/comments', label: 'Bình luận & Đánh giá', icon: <Star size={17} /> },
         { to: '/flash-sale', label: 'Quản lý Flash Sale ⚡', icon: <Zap size={17} /> },
         { to: '/vouchers', label: 'Mã giảm giá & KM', icon: <Ticket size={17} /> },
         { to: '/banners', label: 'Banner & Quảng cáo', icon: <Layers size={17} /> },
