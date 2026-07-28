@@ -4,7 +4,7 @@ import type { Response } from 'express';
 
 @Controller()
 export class Pay2sController {
-  constructor(private readonly pay2sService: Pay2sService) {}
+  constructor(private readonly pay2sService: Pay2sService) { }
 
   @Post('orders/:id/pay2s')
   async createPay2sUrl(@Param('id') id: string) {
@@ -14,6 +14,28 @@ export class Pay2sController {
   @Post('api/orders/:id/pay2s')
   async createPay2sUrlApi(@Param('id') id: string) {
     return this.pay2sService.createPaymentUrl(id);
+  }
+
+  @Get('pay/qr-download/:id')
+  async downloadQrImage(
+    @Param('id') orderId: string,
+    @Query('info') orderInfo: string,
+    @Query('amount') amount: string,
+    @Query('bank') bankCode: string,
+    @Query('acc') accNo: string,
+    @Res() res: Response,
+  ) {
+    const amountNum = parseInt(amount) || 0;
+    const qrUrl = `https://img.vietqr.io/image/${bankCode}-${accNo}-compact2.png?amount=${amountNum}&addInfo=${encodeURIComponent(orderInfo || '')}`;
+    try {
+      const resp = await fetch(qrUrl);
+      const buffer = Buffer.from(await resp.arrayBuffer());
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Content-Disposition', `inline; filename="VietQR_Order_${orderId}.png"`);
+      res.send(buffer);
+    } catch (e) {
+      res.redirect(qrUrl);
+    }
   }
 
   /** Self-hosted interactive payment page: QR + deep link buttons */
@@ -30,9 +52,7 @@ export class Pay2sController {
     const amountNum = parseInt(amount) || 0;
     const amountFormatted = amountNum.toLocaleString('vi-VN');
     const qrUrl = `https://img.vietqr.io/image/${bankCode}-${accNo}-compact2.png?amount=${amountNum}&addInfo=${encodeURIComponent(orderInfo || '')}&accountName=${encodeURIComponent(accountName || 'SHOPQUIET')}`;
-    
-    // VietQR deep link to open banking apps directly
-    const vietqrDeepLink = `https://dl.vietqr.io/pay?app=vietqr&ba=${accNo}@${bankCode}&am=${amountNum}&tn=${encodeURIComponent(orderInfo || '')}`;
+    const qrDownloadUrl = `/pay/qr-download/${orderId}?info=${encodeURIComponent(orderInfo || '')}&amount=${amountNum}&bank=${bankCode}&acc=${accNo}`;
 
     const html = `<!DOCTYPE html>
 <html lang="vi">
@@ -125,6 +145,13 @@ export class Pay2sController {
       border-radius: 12px;
       display: block;
       margin: 0 auto;
+      cursor: pointer;
+    }
+    .qr-hint {
+      font-size: 11px;
+      color: #0e6877;
+      font-weight: 600;
+      margin-top: 10px;
     }
     .qr-actions {
       display: flex;
@@ -136,7 +163,7 @@ export class Pay2sController {
       background: #0e6877;
       color: #ffffff;
       border: none;
-      padding: 9px 16px;
+      padding: 10px 18px;
       border-radius: 12px;
       font-size: 12px;
       font-weight: 700;
@@ -241,13 +268,16 @@ export class Pay2sController {
     </div>
 
     <div class="qr-container">
-      <img id="qrImg" src="${qrUrl}" alt="Mã VietQR" />
+      <a href="${qrDownloadUrl}" target="_blank">
+        <img id="qrImg" src="${qrUrl}" alt="Mã VietQR" title="Bấm hoặc nhấn giữ để xem/lưu mã QR" />
+      </a>
       <div class="qr-actions">
-        <button onclick="downloadQR()" class="btn-qr-action">
+        <a href="${qrDownloadUrl}" target="_blank" class="btn-qr-action">
           <svg class="icon" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-          Tải / Lưu mã QR
-        </button>
+          Mở / Lưu mã QR
+        </a>
       </div>
+      <p class="qr-hint">💡 Nhấn giữ mã QR bên trên để lưu vào Ảnh</p>
     </div>
 
     <div class="details-box">
@@ -308,26 +338,6 @@ export class Pay2sController {
       t.textContent = msg;
       t.classList.add('show');
       setTimeout(() => t.classList.remove('show'), 2000);
-    }
-
-    async function downloadQR() {
-      const img = document.getElementById('qrImg');
-      try {
-        const resp = await fetch(img.src);
-        const blob = await resp.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = 'VietQR_Order_${orderId}.png';
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        showToast('✅ Đã tải mã QR về máy!');
-      } catch (e) {
-        window.open(img.src, '_blank');
-        showToast('Bấm giữ hình ảnh để lưu mã QR');
-      }
     }
   </script>
 </body>
