@@ -14,11 +14,6 @@ export class Pay2sController {
     return this.pay2sService.createPaymentUrl(id);
   }
 
-  @Post('api/orders/:id/pay2s')
-  async createPay2sUrlApi(@Param('id') id: string) {
-    return this.pay2sService.createPaymentUrl(id);
-  }
-
   @Get('pay/qr-download/:id')
   async downloadQrImage(
     @Param('id') orderId: string,
@@ -350,9 +345,8 @@ export class Pay2sController {
     res.send(html);
   }
 
+  @ApiOperation({ summary: 'Kiểm tra trạng thái Cổng IPN Pay2S (GET)' })
   @Get('pay2s/ipn')
-  @Get('api/pay2s/ipn')
-  @Get('api/v1/pay2s/ipn')
   async checkIPNGet() {
     return {
       status: 'active',
@@ -360,17 +354,15 @@ export class Pay2sController {
     };
   }
 
+  @ApiOperation({ summary: 'Xử lý phản hồi IPN tự động từ Cổng Pay2S (POST)' })
   @Post('pay2s/ipn')
-  @Post('api/pay2s/ipn')
-  @Post('api/v1/pay2s/ipn')
   @HttpCode(HttpStatus.OK)
   async handleIPN(@Body() body: any) {
     return this.pay2sService.handleIPN(body);
   }
 
+  @ApiOperation({ summary: 'Kiểm tra trạng thái Webhook Pay2S (GET)' })
   @Get('pay2s/hook')
-  @Get('api/pay2s/hook')
-  @Get('api/v1/pay2s/hook')
   async checkHookGet() {
     return {
       status: 'active',
@@ -378,9 +370,8 @@ export class Pay2sController {
     };
   }
 
+  @ApiOperation({ summary: 'Xử lý Webhook biến động số dư ngân hàng từ Pay2S (POST)' })
   @Post('pay2s/hook')
-  @Post('api/pay2s/hook')
-  @Post('api/v1/pay2s/hook')
   @HttpCode(HttpStatus.OK)
   async handleHook(@Headers('authorization') auth: string, @Body() body: any) {
     return this.pay2sService.handleHook(auth, body);
