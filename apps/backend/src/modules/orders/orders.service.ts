@@ -833,8 +833,10 @@ export class OrdersService {
       .join('')
       .toUpperCase();
     let methodId = process.env.ZALO_PAYMENT_METHOD_ID || 'ZALOPAY_SANDBOX';
-    if (reqMethod === 'BANK') {
+    if (reqMethod.includes('BANK')) {
       methodId = 'BANK_SANDBOX';
+    } else if (reqMethod.includes('MOMO')) {
+      methodId = 'MOMO_SANDBOX';
     }
     const method = JSON.stringify({
       id: methodId,

@@ -92,7 +92,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   };
 
   const [shippingMethod, setShippingMethod] = useState("standard");
-  const [paymentMethod, setPaymentMethod] = useState("vietqr");
+  const [paymentMethod, setPaymentMethod] = useState("zalopay");
   const [shippingMethods, setShippingMethods] = useState<CmsShippingMethod[]>([
     {
       code: "standard",
@@ -109,11 +109,25 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   ]);
   const [paymentMethods, setPaymentMethods] = useState<CmsPaymentMethod[]>([
     {
-      code: "vietqr",
-      name: "Thanh toán VietQR 1-Touch (Tự động mở App Ngân hàng)",
-      description: "Mở App Ngân hàng (MB, VCB, TCB...), tự động điền STK & số tiền",
-      provider: "VIETQR",
+      code: "zalopay",
+      name: "Ví ZaloPay Sandbox (Zalo SDK)",
+      description: "Thanh toán ZaloPay thử nghiệm Sandbox 1-Touch",
+      provider: "ZALOPAY",
       badge: "KHUYÊN DÙNG",
+    },
+    {
+      code: "momo",
+      name: "Ví MoMo Sandbox (Zalo SDK)",
+      description: "Thanh toán Ví MoMo thử nghiệm Sandbox",
+      provider: "MOMO",
+      badge: "MoMo",
+    },
+    {
+      code: "bank",
+      name: "Chuyển khoản Ngân hàng Sandbox (Zalo SDK)",
+      description: "Chuyển khoản ATM/Ngân hàng thử nghiệm Sandbox",
+      provider: "BANK",
+      badge: "Ngân Hàng",
     },
     {
       code: "cod",
@@ -233,31 +247,41 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           );
         }
 
-        const vietQrOption: CmsPaymentMethod = {
-          code: "vietqr",
-          name: "Thanh toán VietQR 1-Touch (Tự động mở App Ngân hàng)",
-          description: "Mở App Ngân hàng (MB, VCB, TCB...), tự động điền STK & số tiền",
-          provider: "VIETQR",
+        const defaultZaloPay: CmsPaymentMethod = {
+          code: "zalopay",
+          name: "Ví ZaloPay Sandbox (Zalo SDK)",
+          description: "Thanh toán ZaloPay thử nghiệm Sandbox 1-Touch",
+          provider: "ZALOPAY",
           badge: "KHUYÊN DÙNG",
         };
+        const defaultMoMo: CmsPaymentMethod = {
+          code: "momo",
+          name: "Ví MoMo Sandbox (Zalo SDK)",
+          description: "Thanh toán Ví MoMo thử nghiệm Sandbox",
+          provider: "MOMO",
+          badge: "MoMo",
+        };
+        const defaultBank: CmsPaymentMethod = {
+          code: "bank",
+          name: "Chuyển khoản Ngân hàng Sandbox (Zalo SDK)",
+          description: "Chuyển khoản ATM/Ngân hàng thử nghiệm Sandbox",
+          provider: "BANK",
+          badge: "Ngân Hàng",
+        };
+        const defaultCod: CmsPaymentMethod = {
+          code: "cod",
+          name: "Thanh toán khi nhận hàng (COD)",
+          description: "Nhận hàng, kiểm tra hàng trước khi thanh toán cho shipper",
+          provider: "COD",
+        };
 
-        const mergedPaymentMethods = cmsPaymentMethods?.length
-          ? [vietQrOption, ...cmsPaymentMethods.filter((m) => m.code !== "vietqr")]
-          : [
-              vietQrOption,
-              {
-                code: "cod",
-                name: "Thanh toán khi nhận hàng (COD)",
-                description: "Nhận hàng, kiểm tra hàng trước khi thanh toán cho shipper",
-                provider: "COD",
-              },
-            ];
+        const mergedPaymentMethods = [defaultZaloPay, defaultMoMo, defaultBank, defaultCod];
 
         setPaymentMethods(mergedPaymentMethods);
         setPaymentMethod((current) =>
           mergedPaymentMethods.some((item) => item.code === current)
             ? current
-            : "vietqr",
+            : "zalopay",
         );
       } catch (e) {
         console.error("Failed to fetch checkout CMS config:", e);
@@ -696,48 +720,97 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       let createdOrder: any;
       let orderNumber: string;
 
-      if (paymentMethod === "vietqr" || paymentMethod === "bank") {
-        const qrOrder = await apiRequest<any>("/orders", "POST", {
-          ...orderData,
-          paymentMethod: "VIETQR",
-        });
-        orderNumber = qrOrder.id;
+      if (paymentMethod === "zalopay" || paymentMethod === "momo" || paymentMethod === "bank") {
+        const checkoutRes = await apiRequest<any>(
+          "/orders/zalopay-checkout",
+          "POST",
+          {
+            ...orderData,
+            paymentMethod: paymentMethod.toUpperCase(),
+          },
+        );
+        orderNumber = checkoutRes.orderId;
+
         createdOrder = {
-          id: qrOrder.id,
-          totalAmount: qrOrder.totalAmount,
-          status: qrOrder.status,
-          createdAt: qrOrder.createdAt,
-          paymentMethod: "VIETQR",
-          voucherCode: qrOrder.voucherCode,
-          discountAmount: qrOrder.discountAmount,
-          shippingAddress: qrOrder.shippingAddress,
-          shippingPhone: qrOrder.shippingPhone,
-          shippingName: qrOrder.shippingName,
-          items: qrOrder.items.map((item: any) => ({
+          id: checkoutRes.orderId,
+          totalAmount: total,
+          status: "PENDING_PAYMENT",
+          createdAt: new Date().toISOString(),
+          paymentMethod: paymentMethod.toUpperCase(),
+          voucherCode: appliedPromo ? appliedPromo.code : null,
+          discountAmount: discount,
+          shippingAddress: `${address.street}, ${address.city}`,
+          shippingPhone: address.phone.trim(),
+          shippingName: address.name.trim(),
+          items: checkoutItems.map((item: any) => ({
             quantity: item.quantity,
-            price: item.price,
+            price: item.product.price,
             product: { name: item.product.name },
             size: item.size || "DEFAULT",
             color: item.color || "DEFAULT",
           })),
         };
 
-        // Fetch VietQR code image & bank transfer instructions
+        // Invoke Native Zalo SDK Checkout SDK
         try {
-          const vietQrRes = await apiRequest<any>("/payments/vietqr/gen", "POST", {
-            orderId: qrOrder.id,
-            amount: total,
+          Payment.createOrder({
+            amount: checkoutRes.amount,
+            desc: checkoutRes.desc,
+            item: JSON.parse(checkoutRes.item),
+            extradata: checkoutRes.extradata,
+            method: checkoutRes.method,
+            mac: checkoutRes.mac,
+            success: (data) => {
+              console.log("Payment.createOrder success:", data);
+              Payment.checkTransaction({
+                data: data,
+                success: (result) => {
+                  const resultCode = (result as any).resultCode;
+                  if (resultCode === 1) {
+                    apiRequest(`/orders/${checkoutRes.orderId}/status`, "PATCH", {
+                      status: "PROCESSING",
+                    })
+                      .then(() => {
+                        clearPurchasedItems();
+                        showToast("Thanh toán Sandbox thành công!", "success");
+                        if (fetchNotifications) fetchNotifications();
+                        setActiveTab("order-success");
+                      })
+                      .catch(() => {
+                        clearPurchasedItems();
+                        setSelectedOrder(createdOrder);
+                        setActiveTab("order-detail");
+                      });
+                  } else {
+                    showToast("Đã ghi nhận đơn hàng Sandbox (Chờ xác nhận)", "info");
+                    clearPurchasedItems();
+                    setSelectedOrder(createdOrder);
+                    setActiveTab("order-detail");
+                  }
+                },
+                fail: () => {
+                  clearPurchasedItems();
+                  setSelectedOrder(createdOrder);
+                  setActiveTab("order-detail");
+                },
+              });
+            },
+            fail: (err) => {
+              console.warn("Payment.createOrder fail/cancel:", err);
+              showToast("Đã khởi tạo đơn hàng Sandbox!", "info");
+              clearPurchasedItems();
+              setSelectedOrder(createdOrder);
+              setActiveTab("order-detail");
+            },
           });
-          if (vietQrRes && vietQrRes.qrUrl) {
-            setVietQrModalData(vietQrRes);
-          }
-        } catch (e) {
-          console.error("Failed to generate VietQR details:", e);
+          return;
+        } catch (sdkErr) {
+          console.error("Zalo SDK Payment error:", sdkErr);
+          clearPurchasedItems();
+          setSelectedOrder(createdOrder);
+          setActiveTab("order-detail");
+          return;
         }
-
-        clearPurchasedItems();
-        showToast("Đơn hàng VietQR đã khởi tạo thành công!", "success");
-        return;
       } else {
         // Cash on delivery
         const codOrder = await apiRequest<any>("/orders", "POST", orderData);
@@ -1650,178 +1723,6 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
         </div>
       )}
 
-      {/* ═══ VIETQR PAYMENT MODAL OVERLAY (Minimalist Commercial Style) ═══ */}
-      {vietQrModalData && (
-        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto border border-slate-100">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2.5">
-                <span className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-black text-xs">
-                  QR
-                </span>
-                <div className="text-left">
-                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Thanh Toán VietQR</h3>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span className="text-[10px] text-emerald-700 font-bold">Xác nhận tự động qua Webhook</span>
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setVietQrModalData(null);
-                  setActiveTab("orders");
-                }}
-                className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 font-bold text-xs border-none cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Total Amount */}
-            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
-              <p className="text-[9.5px] font-bold uppercase text-slate-400 tracking-wider">Số tiền cần thanh toán</p>
-              <p className="text-xl font-black text-slate-900 mt-0.5">
-                {vietQrModalData.amount.toLocaleString("vi-VN")} đ
-              </p>
-            </div>
-
-            {/* QR Image Container */}
-            <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs text-center space-y-3">
-              <img
-                src={vietQrModalData.qrUrl}
-                alt="VietQR Code"
-                className="w-52 h-52 object-contain rounded-xl mx-auto border border-slate-100"
-              />
-              <button
-                onClick={async () => {
-                  try {
-                    const response = await fetch(vietQrModalData.qrUrl);
-                    const blob = await response.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `VietQR-${vietQrModalData.transferContent}.png`;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    window.URL.revokeObjectURL(url);
-                    showToast("Đã lưu mã QR vào album ảnh!", "success");
-                  } catch (e) {
-                    showToast("Nhấn giữ hình QR để lưu ảnh", "info");
-                  }
-                }}
-                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl border-none cursor-pointer transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-xs"
-              >
-                <span>📥 Lưu mã QR về máy</span>
-              </button>
-            </div>
-
-            {/* Bank Transfer Details */}
-            <div className="space-y-2.5 text-left bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs">
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] text-slate-500 font-bold uppercase">Ngân hàng:</span>
-                <span className="font-bold text-slate-900">{vietQrModalData.bankId}</span>
-              </div>
-              <div className="flex justify-between items-center pt-2 border-t border-slate-200/60">
-                <span className="text-[10px] text-slate-500 font-bold uppercase">Chủ tài khoản:</span>
-                <span className="font-bold text-slate-900 truncate max-w-[170px]">{vietQrModalData.accountName}</span>
-              </div>
-
-              {/* Account Number */}
-              <div className="flex justify-between items-center pt-2 border-t border-slate-200/60">
-                <div>
-                  <span className="text-[10px] text-slate-500 font-bold uppercase block">Số tài khoản:</span>
-                  <span className="font-mono font-black text-slate-900 text-sm">{vietQrModalData.accountNo}</span>
-                </div>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(vietQrModalData.accountNo);
-                    setIsCopiedNo(true);
-                    setTimeout(() => setIsCopiedNo(false), 2000);
-                  }}
-                  className="px-3 py-1 bg-white text-slate-800 font-bold text-[10px] rounded-lg border border-slate-300 cursor-pointer active:scale-95 shadow-2xs"
-                >
-                  {isCopiedNo ? "✓ Đã chép" : "Copy STK"}
-                </button>
-              </div>
-
-              {/* Transfer Content */}
-              <div className="flex justify-between items-center pt-2 border-t border-slate-200/60">
-                <div>
-                  <span className="text-[10px] text-slate-500 font-bold uppercase block">Nội dung chuyển:</span>
-                  <span className="font-mono font-black text-slate-900 text-sm">{vietQrModalData.transferContent}</span>
-                </div>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(vietQrModalData.transferContent);
-                    setIsCopiedContent(true);
-                    setTimeout(() => setIsCopiedContent(false), 2000);
-                  }}
-                  className="px-3 py-1 bg-slate-900 text-white font-bold text-[10px] rounded-lg border-none cursor-pointer active:scale-95 shadow-2xs"
-                >
-                  {isCopiedContent ? "✓ Đã chép" : "Copy Cú Pháp"}
-                </button>
-              </div>
-            </div>
-
-            {/* Direct App Launcher (Minimalist Slate Buttons) */}
-            <div className="space-y-2 text-left bg-white p-3.5 rounded-2xl border border-slate-200">
-              <span className="text-[9.5px] font-bold uppercase text-slate-500 tracking-wider block">
-                ⚡ Mở nhanh App Ngân hàng (Deep Link):
-              </span>
-              <div className="grid grid-cols-3 gap-1.5 pt-0.5">
-                {[
-                  { key: "vcb", label: "Vietcombank" },
-                  { key: "mb", label: "MBBank" },
-                  { key: "tcb", label: "Techcombank" },
-                  { key: "acb", label: "ACB" },
-                  { key: "momo", label: "Ví MoMo" },
-                  { key: "universal", label: "Khác" },
-                ].map((b) => {
-                  const link = (vietQrModalData.deepLinks as any)?.[b.key] || vietQrModalData.deepLinks?.universal;
-                  return (
-                    <button
-                      key={b.key}
-                      onClick={() => {
-                        navigator.clipboard.writeText(vietQrModalData.accountNo);
-                        showToast(`Đã copy STK! Đang mở ${b.label}...`, "info");
-                        if (link) {
-                          try {
-                            window.location.href = link;
-                          } catch (e) {
-                            window.open(link, "_system");
-                          }
-                        }
-                      }}
-                      className="py-1.5 px-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-[10px] font-bold border border-slate-200 cursor-pointer active:scale-95 transition-all text-center truncate"
-                    >
-                      {b.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Footer Status */}
-            <div className="pt-1 text-center space-y-2">
-              <p className="text-[10px] text-slate-400 font-medium">
-                Hệ thống đang tự động theo dõi số dư qua Webhook ngân hàng 24/7. Trạng thái sẽ tự động cập nhật ngay khi tiền về.
-              </p>
-              <button
-                onClick={() => {
-                  setVietQrModalData(null);
-                  setActiveTab("orders");
-                }}
-                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl border border-slate-200 cursor-pointer transition-all active:scale-95"
-              >
-                Đóng / Quản lý đơn hàng
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </PageCast>
   );
 };
