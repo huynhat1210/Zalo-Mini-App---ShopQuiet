@@ -121,17 +121,15 @@ export class PaymentsService {
         where: { id: matchedOrder.id },
         data: {
           status: 'PROCESSING',
-          updatedAt: new Date(),
         },
       });
 
       this.logger.log(`Order #${matchedOrder.id} marked as PAID via VietQR Webhook!`);
 
       // Realtime notification via WebSocket
-      this.orderTrackingGateway.notifyOrderStatusChange(
+      this.orderTrackingGateway.broadcastOrderStatus(
         matchedOrder.id,
         'PROCESSING',
-        matchedOrder.zaloUserId || undefined,
       );
 
       return {
