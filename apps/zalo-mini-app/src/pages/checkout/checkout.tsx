@@ -705,6 +705,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
         clearPurchasedItems();
         showToast("Đơn hàng VietQR đã khởi tạo thành công!", "success");
+        return;
       } else {
         // Cash on delivery
         const codOrder = await apiRequest<any>("/orders", "POST", orderData);
