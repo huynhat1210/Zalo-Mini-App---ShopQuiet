@@ -47,8 +47,8 @@ export class Pay2sController {
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #0f172a;
-      color: #f8fafc;
+      background: #f4f5f7;
+      color: #1a1a1a;
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -56,39 +56,41 @@ export class Pay2sController {
       padding: 16px;
     }
     .card {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 28px;
+      background: #ffffff;
+      border: 1px solid #f0edeb;
+      border-radius: 24px;
       padding: 24px;
-      max-width: 420px;
+      max-width: 400px;
       width: 100%;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
     }
     .header {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
     .header .badge {
-      display: inline-block;
-      background: rgba(14, 116, 144, 0.2);
-      color: #38bdf8;
-      border: 1px solid rgba(56, 189, 248, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(14, 104, 119, 0.08);
+      color: #0e6877;
+      border: 1px solid rgba(14, 104, 119, 0.2);
       font-size: 11px;
-      font-weight: 700;
-      padding: 4px 12px;
+      font-weight: 800;
+      padding: 4px 14px;
       border-radius: 20px;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
     .header h1 {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 800;
-      color: #fff;
+      color: #1a1a1a;
       margin-top: 8px;
     }
     .amount-box {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 182, 212, 0.1));
-      border: 1.5px solid rgba(16, 185, 129, 0.3);
+      background: #fbf9f7;
+      border: 1px solid #f0edeb;
       border-radius: 20px;
       padding: 16px;
       text-align: center;
@@ -96,28 +98,29 @@ export class Pay2sController {
     }
     .amount-box .label {
       font-size: 11px;
-      color: #94a3b8;
+      color: #526069;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
     .amount-box .value {
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 800;
-      color: #34d399;
+      color: #0e6877;
       margin-top: 4px;
     }
     .qr-container {
-      background: #fff;
+      background: #ffffff;
+      border: 1px solid #f0edeb;
       border-radius: 20px;
       padding: 16px;
       text-align: center;
       margin-bottom: 20px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
     }
     .qr-container img {
       width: 100%;
-      max-width: 220px;
+      max-width: 210px;
       height: auto;
       border-radius: 12px;
       display: block;
@@ -130,10 +133,10 @@ export class Pay2sController {
       justify-content: center;
     }
     .btn-qr-action {
-      background: #f1f5f9;
-      color: #0f172a;
+      background: #0e6877;
+      color: #ffffff;
       border: none;
-      padding: 8px 14px;
+      padding: 9px 16px;
       border-radius: 12px;
       font-size: 12px;
       font-weight: 700;
@@ -143,26 +146,27 @@ export class Pay2sController {
       gap: 6px;
       text-decoration: none;
       transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(14, 104, 119, 0.2);
     }
     .btn-qr-action:active { transform: scale(0.96); }
     .details-box {
-      background: #0f172a;
-      border: 1px solid #334155;
+      background: #fbf9f7;
+      border: 1px solid #f0edeb;
       border-radius: 20px;
       padding: 16px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
     .detail-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 10px 0;
-      border-bottom: 1px solid #1e293b;
+      border-bottom: 1px dashed #e2e8f0;
     }
     .detail-row:last-child { border-bottom: none; }
     .detail-row .lbl {
       font-size: 12px;
-      color: #94a3b8;
+      color: #526069;
       font-weight: 600;
     }
     .detail-row .val-group {
@@ -173,61 +177,28 @@ export class Pay2sController {
     .detail-row .val {
       font-size: 13px;
       font-weight: 700;
-      color: #f8fafc;
+      color: #1a1a1a;
     }
     .btn-small-copy {
-      background: #1e293b;
-      color: #38bdf8;
-      border: 1px solid #334155;
-      padding: 4px 8px;
+      background: #ffffff;
+      color: #0e6877;
+      border: 1px solid #0e6877;
+      padding: 4px 10px;
       border-radius: 8px;
       font-size: 11px;
       font-weight: 700;
       cursor: pointer;
-    }
-    .btn-small-copy:active { background: #38bdf8; color: #0f172a; }
-    .primary-btn {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      padding: 16px;
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: #fff;
-      font-size: 15px;
-      font-weight: 800;
-      border: none;
-      border-radius: 18px;
-      cursor: pointer;
-      text-decoration: none;
-      box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.4);
-      transition: all 0.2s;
-      margin-bottom: 10px;
+      gap: 4px;
+      transition: all 0.15s;
     }
-    .primary-btn:active { transform: scale(0.98); }
-    .secondary-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      padding: 14px;
-      background: #334155;
-      color: #f8fafc;
-      font-size: 14px;
-      font-weight: 700;
-      border: none;
-      border-radius: 18px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .secondary-btn:active { background: #475569; }
+    .btn-small-copy:active { background: #0e6877; color: #ffffff; }
     .footer-note {
       text-align: center;
       font-size: 11px;
-      color: #64748b;
-      margin-top: 16px;
+      color: #526069;
+      margin-top: 12px;
       line-height: 1.5;
     }
     .toast {
@@ -235,13 +206,13 @@ export class Pay2sController {
       bottom: 24px;
       left: 50%;
       transform: translateX(-50%) translateY(100px);
-      background: #10b981;
+      background: #0e6877;
       color: #fff;
       padding: 10px 20px;
       border-radius: 30px;
       font-size: 13px;
       font-weight: 700;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
       transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       opacity: 0;
       pointer-events: none;
@@ -251,26 +222,31 @@ export class Pay2sController {
       transform: translateX(-50%) translateY(0);
       opacity: 1;
     }
+    .icon { width: 14px; height: 14px; fill: currentColor; }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="header">
-      <span class="badge">Chuyển khoản Ngân hàng</span>
+      <span class="badge">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M3 10h18M7 15h1m4 0h1m-9 5h16a2 2 0 002-2V6a2 2 0 00-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+        Chuyển khoản Ngân hàng
+      </span>
       <h1>Đơn hàng #${orderId}</h1>
     </div>
 
     <div class="amount-box">
-      <div class="label">Số tiền cần thanh toán</div>
+      <div class="label">Số tiền thanh toán</div>
       <div class="value">${amountFormatted} đ</div>
     </div>
 
     <div class="qr-container">
       <img id="qrImg" src="${qrUrl}" alt="Mã VietQR" />
       <div class="qr-actions">
-        <a href="${qrUrl}" download="VietQR_Order_${orderId}.png" target="_blank" class="btn-qr-action">
-          📥 Lưu mã QR
-        </a>
+        <button onclick="downloadQR()" class="btn-qr-action">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          Tải / Lưu mã QR
+        </button>
       </div>
     </div>
 
@@ -283,7 +259,10 @@ export class Pay2sController {
         <span class="lbl">Số tài khoản</span>
         <div class="val-group">
           <span class="val">${accNo}</span>
-          <button class="btn-small-copy" onclick="copyText('${accNo}', 'Đã sao chép STK!')">Copy</button>
+          <button class="btn-small-copy" onclick="copyText('${accNo}', 'Đã sao chép Số tài khoản!')">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+            Copy
+          </button>
         </div>
       </div>
       <div class="detail-row">
@@ -293,22 +272,17 @@ export class Pay2sController {
       <div class="detail-row">
         <span class="lbl">Nội dung CK</span>
         <div class="val-group">
-          <span class="val" style="color: #38bdf8;">${orderInfo}</span>
-          <button class="btn-small-copy" onclick="copyText('${orderInfo}', 'Đã sao chép Nội dung CK!')">Copy</button>
+          <span class="val" style="color: #0e6877;">${orderInfo}</span>
+          <button class="btn-small-copy" onclick="copyText('${orderInfo}', 'Đã sao chép Nội dung CK!')">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+            Copy
+          </button>
         </div>
       </div>
     </div>
 
-    <a href="${vietqrDeepLink}" class="primary-btn">
-      📱 Mở App Ngân hàng
-    </a>
-
-    <button class="secondary-btn" onclick="copyText('${orderInfo}', 'Đã sao chép Nội dung CK!')">
-      📋 Sao chép nội dung chuyển khoản
-    </button>
-
     <div class="footer-note">
-      Chuyển khoản xong hệ thống sẽ tự động xác nhận.<br/>Cảm ơn bạn đã mua hàng!
+      Sau khi chuyển khoản thành công, hệ thống sẽ tự động xác nhận.<br/>Cảm ơn bạn đã mua hàng!
     </div>
   </div>
 
@@ -334,6 +308,26 @@ export class Pay2sController {
       t.textContent = msg;
       t.classList.add('show');
       setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    async function downloadQR() {
+      const img = document.getElementById('qrImg');
+      try {
+        const resp = await fetch(img.src);
+        const blob = await resp.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'VietQR_Order_${orderId}.png';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        showToast('✅ Đã tải mã QR về máy!');
+      } catch (e) {
+        window.open(img.src, '_blank');
+        showToast('Bấm giữ hình ảnh để lưu mã QR');
+      }
     }
   </script>
 </body>
