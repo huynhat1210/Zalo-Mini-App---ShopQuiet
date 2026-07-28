@@ -826,4 +826,65 @@ export class CmsService implements OnModuleInit {
     });
     return { success: true, status };
   }
+
+  async getTransactions(search?: string, gateway?: string, status?: string) {
+    const orders = await this.prisma.order.findMany({
+      where: {
+        AND: [
+          search
+            ? {
+                OR: [
+                  { id: { contains: search, mode: 'insensitive' } },
+                  { paymentMethod: { contains: search, mode: 'insensitive' } },
+                  { shippingName: { contains: search, mode: 'insensitive' } },
+                  { shippingPhone: { contains: search, mode: 'insensitive' } },
+                ],
+              }
+            : {},
+          gateway && gateway !== 'ALL'
+            ? { paymentMethod: { contains: gateway, mode: 'insensitive' } }
+            : {},
+          status && status !== 'ALL'
+            ? { status: status }
+            : {},
+        ],
+      },
+      include: {
+        user: {
+          select: { zaloId: true, name: true, phone: true, avatar: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return orders.map((o) => ({
+      id: `TXN-${o.id}`,
+      orderId: o.id,
+      amount: o.totalAmount,
+      paymentMethod: o.paymentMethod || 'PAY2S',
+      paymentStatus: ['COMPLETED', 'PAID', 'DELIVERED', 'SHIPPED'].includes(o.status)
+        ? 'PAID'
+        : o.status === 'CANCELLED'
+        ? 'CANCELLED'
+        : 'PENDING',
+      transferContent: `PAYSQ-${o.id}`,
+      createdAt: o.createdAt,
+      paidAt: ['COMPLETED', 'PAID', 'DELIVERED', 'SHIPPED'].includes(o.status) ? o.createdAt : undefined,
+      user: o.user || { zaloId: o.zaloUserId || '', name: o.shippingName || 'Khách hàng', phone: o.shippingPhone || '' },
+    }));
+  }
+
+  async manualConfirmTransaction(orderId: string) {
+    const order = await this.prisma.order.findUnique({ where: { id: orderId } });
+    if (!order) throw new NotFoundException('Đơn hàng không tồn tại');
+
+    const updated = await this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: 'PROCESSING',
+      },
+    });
+
+    return { success: true, message: 'Đã xác nhận thanh toán thủ công thành công!', order: updated };
+  }
 }

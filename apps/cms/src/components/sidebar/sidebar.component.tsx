@@ -16,6 +16,7 @@ import {
   Image as ImageIcon,
   MessageSquare,
   Star,
+  CreditCard,
   Settings,
   Database,
   X,
@@ -104,6 +105,7 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
       title: 'BÁN HÀNG & KHO',
       items: [
         { to: '/orders', label: 'Quản lý đơn hàng', icon: <ShoppingBag size={17} /> },
+        { to: '/transactions', label: 'Quản lý Giao dịch', icon: <CreditCard size={17} /> },
         { to: '/products', label: 'Sản phẩm', icon: <Package size={17} /> },
         { to: '/categories', label: 'Danh mục sản phẩm', icon: <FolderTree size={17} /> },
         { to: '/inventory', label: 'Quản lý kho hàng', icon: <Boxes size={17} /> },
@@ -114,7 +116,7 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
       items: [
         { to: '/users', label: 'Khách hàng', icon: <Users size={17} /> },
         { to: '/comments', label: 'Bình luận & Đánh giá', icon: <Star size={17} /> },
-        { to: '/flash-sale', label: 'Quản lý Flash Sale ⚡', icon: <Zap size={17} /> },
+        { to: '/flash-sale', label: 'Quản lý Flash Sale', icon: <Zap size={17} /> },
         { to: '/vouchers', label: 'Mã giảm giá & KM', icon: <Ticket size={17} /> },
         { to: '/banners', label: 'Banner & Quảng cáo', icon: <Layers size={17} /> },
         { to: '/media', label: 'Thư viện hình ảnh', icon: <ImageIcon size={17} /> },

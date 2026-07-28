@@ -20,6 +20,7 @@ import {
   FlashSaleManagement,
   Settings,
   CommentsPage,
+  TransactionsPage,
 } from './pages';
 import { ToastProviderComponent, useToast, PermissionProviderComponent } from './contexts';
 import './App.css';
@@ -70,6 +71,7 @@ export const App: React.FC = () => {
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/products" element={<Products />} />
               <Route path="/orders" element={<Orders />} />
+              <Route path="/transactions" element={<TransactionsPage />} />
               <Route path="/vouchers" element={<Vouchers />} />
               <Route path="/flash-sale" element={<FlashSaleManagement />} />
               <Route path="/banners" element={<Banners />} />

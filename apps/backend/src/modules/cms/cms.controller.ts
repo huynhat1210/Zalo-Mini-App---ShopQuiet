@@ -162,4 +162,22 @@ export class CmsController {
     const fileUrl = `/uploads/${fileName}`;
     return { success: true, url: fileUrl };
   }
+
+  @Get('transactions')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async getTransactions(
+    @Query('search') search?: string,
+    @Query('gateway') gateway?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.cmsService.getTransactions(search, gateway, status);
+  }
+
+  @Post('transactions/:orderId/manual-confirm')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async manualConfirmTransaction(@Param('orderId') orderId: string) {
+    return this.cmsService.manualConfirmTransaction(orderId);
+  }
 }
