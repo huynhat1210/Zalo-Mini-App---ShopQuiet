@@ -605,31 +605,14 @@ export const Home: React.FC<IHomeProps> = (_props) => {
         setSelectedCategory={setSelectedCategory}
       />
 
-      {/* Floating Lucky Wheel Button (Nằm ở trên) */}
+      {/* Floating Lucky Wheel Button */}
       <button
         onClick={() => setIsLuckyWheelOpen(true)}
-        className="fixed bottom-44 right-5 z-40 w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-white flex items-center justify-center shadow-lg active:scale-90 transition-transform animate-pulse border-2 border-white cursor-pointer"
+        className="fixed bottom-24 right-5 z-40 w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-white flex items-center justify-center shadow-lg active:scale-90 transition-transform animate-pulse border-2 border-white cursor-pointer"
         style={{ animationDuration: "3s" }}
         title="Vòng quay may mắn"
       >
         <span className="text-xl">🎡</span>
-      </button>
-
-      {/* Floating Chat CSKH Button (NẰM NGAY BÊN DƯỚI VÒNG QUAY) */}
-      <button
-        onClick={() => {
-          setChatContextProduct(null); // Clear context product when clicking general chat button
-          setIsChatOpen(true);
-        }}
-        className="fixed bottom-24 right-5 z-40 w-12 h-12 rounded-full bg-gradient-to-br from-[#0e6877] to-[#168a9e] text-white flex items-center justify-center shadow-xl active:scale-90 transition-all border-2 border-white cursor-pointer group"
-        title="Chat với CSKH"
-      >
-        <span className="text-xl group-hover:scale-110 transition-transform">💬</span>
-        {unreadChatCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white animate-pulse">
-            {unreadChatCount > 9 ? "9+" : unreadChatCount}
-          </span>
-        )}
       </button>
 
       {/* Lucky Wheel Modal */}
