@@ -189,21 +189,15 @@ export class AuthService {
     // Generate refresh token (long-lived: 7 days)
     const refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' });
 
-    // Store refresh token in database
+    // Store refresh token directly in User record
     const refreshTokenExpiresAt = new Date();
     refreshTokenExpiresAt.setDate(refreshTokenExpiresAt.getDate() + 7);
 
-    // Delete old refresh tokens for this user
-    await this.prisma.refreshToken.deleteMany({
-      where: { zaloUserId: user.zaloId },
-    });
-
-    // Create new refresh token
-    await this.prisma.refreshToken.create({
+    await this.prisma.user.update({
+      where: { zaloId: user.zaloId },
       data: {
-        token: refresh_token,
-        zaloUserId: user.zaloId,
-        expiresAt: refreshTokenExpiresAt,
+        refreshToken: refresh_token,
+        refreshTokenExpiresAt: refreshTokenExpiresAt,
       },
     });
 
@@ -229,27 +223,20 @@ export class AuthService {
       // Verify refresh token
       const payload = this.jwtService.verify(refreshToken);
 
-      // Check if refresh token exists in database
-      const storedToken = await this.prisma.refreshToken.findUnique({
-        where: { token: refreshToken },
-        include: { user: true },
+      // Check if refresh token exists in User record
+      const user = await this.prisma.user.findUnique({
+        where: { refreshToken },
       });
 
-      if (!storedToken || storedToken.expiresAt < new Date()) {
-        // Delete expired token
-        if (storedToken) {
-          await this.prisma.refreshToken.delete({
-            where: { id: storedToken.id },
-          });
-        }
+      if (!user || !user.refreshTokenExpiresAt || user.refreshTokenExpiresAt < new Date()) {
         throw new UnauthorizedException('Invalid or expired refresh token');
       }
 
       // Generate new access token
       const newPayload = {
-        sub: storedToken.user.zaloId,
-        zaloId: storedToken.user.zaloId,
-        role: storedToken.user.role || 'user',
+        sub: user.zaloId,
+        zaloId: user.zaloId,
+        role: user.role || 'user',
       };
 
       const new_access_token = this.jwtService.sign(newPayload, {
@@ -263,16 +250,12 @@ export class AuthService {
       const newExpiresAt = new Date();
       newExpiresAt.setDate(newExpiresAt.getDate() + 7);
 
-      // Delete old refresh token and create new one
-      await this.prisma.refreshToken.delete({
-        where: { id: storedToken.id },
-      });
-
-      await this.prisma.refreshToken.create({
+      // Update User inline refresh token
+      await this.prisma.user.update({
+        where: { zaloId: user.zaloId },
         data: {
-          token: new_refresh_token,
-          zaloUserId: storedToken.user.zaloId,
-          expiresAt: newExpiresAt,
+          refreshToken: new_refresh_token,
+          refreshTokenExpiresAt: newExpiresAt,
         },
       });
 

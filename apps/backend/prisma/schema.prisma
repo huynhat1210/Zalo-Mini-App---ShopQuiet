@@ -69,15 +69,15 @@ model User {
   footLength        Float?
   clothingSize      String?
   shoeSize          String?
+  refreshToken      String?        @unique
+  refreshTokenExpiresAt DateTime?
   cartItems     CartItem[]
   comments      Comment[]
   favorites     Favorite[]
   notifications Notification[]
   orders        Order[]
-  refreshTokens RefreshToken[]
   addresses     UserAddress[]
   chatMessages  ChatMessage[]
-  dailyRewardClaims DailyRewardClaim[]
   pointsHistory PointsHistory[]
 
   @@index([name])
@@ -216,19 +216,6 @@ model Favorite {
   @@index([createdAt])
 }
 
-model RefreshToken {
-  id         String   @id @default(uuid())
-  token      String   @unique
-  zaloUserId String
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
-  user       User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
-
-  @@index([token])
-  @@index([zaloUserId])
-  @@index([expiresAt])
-}
-
 model Voucher {
   code        String    @id
   type        String
@@ -283,19 +270,6 @@ model MenuItem {
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-}
-
-model StaticPage {
-  id           Int      @id @default(autoincrement())
-  slug         String   @unique
-  title        String
-  excerpt      String?
-  content      String
-  contactPhone String?
-  contactEmail String?
-  active       Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
 }
 
 model ShippingMethod {
@@ -362,19 +336,6 @@ model AnalyticsEvent {
   @@index([createdAt])
 }
 
-model DailyRewardClaim {
-  id             Int      @id @default(autoincrement())
-  zaloUserId     String
-  points         Int
-  consecutiveDays Int      @default(1)
-  claimedAt      DateTime @default(now())
-
-  user           User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
-
-  @@index([zaloUserId])
-  @@index([claimedAt])
-}
-
 model PointsHistory {
   id         Int      @id @default(autoincrement())
   zaloUserId String
@@ -387,20 +348,4 @@ model PointsHistory {
 
   @@index([zaloUserId])
   @@index([createdAt])
-}
-
-model MembershipPrivilege {
-  id             Int      @id @default(autoincrement())
-  tier           String
-  title          String
-  description    String
-  icon           String
-  sortOrder      Int      @default(0)
-  active         Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  @@unique([tier, title])
-  @@index([tier])
-  @@index([active])
 }
