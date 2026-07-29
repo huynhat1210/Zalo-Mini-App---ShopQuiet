@@ -1,9 +1,25 @@
+import { useState } from "react";
 import { Page } from "zmp-ui";
 import { useCart } from "../../App";
 import { EmptyStateComponent, LazyImageComponent } from "../../components";
 import { ISavedItemsProps } from "./saved-items.type";
+import {
+  ChevronLeftIcon,
+  ShareIcon,
+  ShoppingBagIcon,
+  FolderIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
+import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 
 const PageCast = Page as any;
+
+const WISHLIST_FOLDERS = [
+  { id: "all", name: "Tất cả yêu thích" },
+  { id: "summer", name: "Đồ mùa hè ☀️" },
+  { id: "gifts", name: "Gợi ý quà tặng 🎁" },
+  { id: "work", name: "Trang phục công sở 💼" },
+];
 
 export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
   const {
@@ -15,8 +31,9 @@ export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
     showToast,
   } = useCart();
 
+  const [activeFolder, setActiveFolder] = useState("all");
+
   const handleAddToCart = (product: any) => {
-    // Check if product has variants (size or color)
     const hasVariants = product.variants && product.variants.length > 0;
     const hasColors =
       hasVariants &&
@@ -26,14 +43,22 @@ export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
       product.variants.some((v: any) => v.size && v.size !== "DEFAULT");
 
     if (hasColors || hasSizes) {
-      // Product has variants - open product detail to select
       setSelectedProductDetail(product);
       showToast("Vui lòng chọn phân loại sản phẩm!", "info");
     } else {
-      // Product has no variants - add directly
       addToCart(product);
       showToast(`Đã thêm ${product.name} vào giỏ hàng!`, "success");
     }
+  };
+
+  const handleMoveAllToCart = () => {
+    if (savedItems.length === 0) return;
+    let count = 0;
+    savedItems.forEach((p) => {
+      addToCart(p);
+      count++;
+    });
+    showToast(`Đã chuyển toàn bộ ${count} sản phẩm vào giỏ hàng!`, "success");
   };
 
   const handleShareWishlist = () => {
@@ -86,44 +111,55 @@ export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
       <div className="bg-white/95 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-[#f0edeb] sticky top-0 z-30 shadow-xs">
         <button
           onClick={() => setActiveTab("profile")}
-          className="p-1.5 hover:bg-[#f0edeb] rounded-full transition-colors active:scale-95"
+          className="p-1.5 hover:bg-[#f0edeb] rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer"
         >
-          <svg
-            className="w-5.5 h-5.5 text-textColor"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15.75 19.5L8.25 12l7.5-7.5"
-            />
-          </svg>
+          <ChevronLeftIcon className="w-5.5 h-5.5 text-textColor" strokeWidth={2.2} />
         </button>
         <span className="text-xs font-bold uppercase tracking-widest text-textColor">
-          Sản phẩm đã lưu
+          Wishlist Yêu Thích ({savedItems.length})
         </span>
         <button
           onClick={handleShareWishlist}
-          className="p-1.5 hover:bg-[#f0edeb] rounded-full transition-colors active:scale-95"
+          className="p-1.5 hover:bg-[#f0edeb] rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer"
+          title="Chia sẻ Wishlist"
         >
-          <svg
-            className="w-5.5 h-5.5 text-textColor"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z"
-            />
-          </svg>
+          <ShareIcon className="w-5.5 h-5.5 text-textColor" strokeWidth={2.2} />
         </button>
       </div>
+
+      {/* Multi-Wishlist Folder Tabs */}
+      <div className="flex gap-2 px-6 py-3 bg-white border-b border-slate-100 overflow-x-auto scrollbar-none">
+        {WISHLIST_FOLDERS.map((f) => (
+          <button
+            key={f.id}
+            onClick={() => setActiveFolder(f.id)}
+            className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold tracking-wider shrink-0 transition-all border-none cursor-pointer flex items-center gap-1.5 ${
+              activeFolder === f.id
+                ? "bg-primary text-white shadow-xs"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            <FolderIcon className="w-3.5 h-3.5" />
+            {f.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Bulk Action Header Bar */}
+      {savedItems.length > 0 && (
+        <div className="px-6 pt-3 flex justify-between items-center">
+          <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+            Danh sách ({savedItems.length} món)
+          </span>
+          <button
+            onClick={handleMoveAllToCart}
+            className="text-[10px] font-bold text-primary hover:text-primary-dark uppercase tracking-wider flex items-center gap-1 border-none bg-transparent cursor-pointer active:scale-95"
+          >
+            <ShoppingBagIcon className="w-4 h-4" />
+            Chuyển tất cả vào giỏ
+          </button>
+        </div>
+      )}
 
       <div className="flex-1 px-6 py-5.5 space-y-4 pb-28">
         {savedItems.length === 0 ? (

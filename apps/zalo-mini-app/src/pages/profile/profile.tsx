@@ -3,7 +3,13 @@ import { Page } from "zmp-ui";
 import { useCart, IOrder } from "../../App";
 import { apiRequest, useTranslation } from "../../utils";
 import { IProfileProps } from "./profile.type";
-import { SunIcon, MoonIcon } from "@heroicons/react/24/outline";
+import {
+  SunIcon,
+  MoonIcon,
+  UserPlusIcon,
+  ShareIcon,
+  DocumentDuplicateIcon,
+} from "@heroicons/react/24/outline";
 
 // Import sub-components from global components folder
 import {
@@ -668,6 +674,48 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                 </svg>
               </div>
             </button>
+
+            {/* Zalo Referral System Card */}
+            <div className="w-full px-4.5 py-3.5 bg-gradient-to-r from-teal-500/10 via-primary/5 to-emerald-500/10 border-y border-teal-100/60 flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <UserPlusIcon className="w-4.5 h-4.5" strokeWidth={2.2} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-textColor">Giới thiệu bạn bè tích điểm</h4>
+                    <p className="text-[9px] text-[#526069]">Tặng +50 xu cho mỗi lượt mời Zalo thành công</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    const refCode = `REF-${zaloUser?.id || "SHOPQUIET"}`;
+                    navigator.clipboard?.writeText(refCode).catch(() => {});
+                    showToast(`Đã sao chép mã giới thiệu: ${refCode}`, "success");
+                  }}
+                  className="px-2.5 py-1 bg-white hover:bg-slate-50 text-primary border border-primary/30 rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-2xs active:scale-95 transition-all cursor-pointer"
+                >
+                  <DocumentDuplicateIcon className="w-3 h-3" />
+                  Mã: REF-{zaloUser?.id ? zaloUser.id.substring(0, 6) : "ZALO"}
+                </button>
+              </div>
+
+              <button
+                onClick={() => {
+                  const shareText = `Tặng bạn voucher giảm giá khi mua sắm thời trang tại ShopQuiet Zalo Mini App! Nhập mã giới thiệu REF-${zaloUser?.id || "VIP"} để nhận +50 điểm thưởng ngay.`;
+                  if (navigator.share) {
+                    navigator.share({ title: "ShopQuiet Zalo Mini App", text: shareText }).catch(() => {});
+                  } else {
+                    navigator.clipboard?.writeText(shareText).catch(() => {});
+                    showToast("Đã sao chép liên kết giới thiệu Zalo!", "success");
+                  }
+                }}
+                className="w-full py-2 bg-primary text-white text-[10px] font-bold uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 shadow-xs hover:bg-primary-dark active:scale-98 transition-all border-none cursor-pointer mt-1"
+              >
+                <ShareIcon className="w-3.5 h-3.5" />
+                Mời bạn bè qua Zalo (+50 Điểm)
+              </button>
+            </div>
           </div>
         </div>
 
