@@ -31,6 +31,8 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
+  // Track optimistic message IDs to replace them when real ID arrives from WebSocket
+  const pendingTempIds = useRef<Set<string>>(new Set());
 
   const userId = zaloUser?.id || "guest";
   const serverUrl = API_BASE_URL.replace("/api/v1", "");
@@ -42,7 +44,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
         const history = await apiRequest<Message[]>(
           `/chat/messages?zaloUserId=${userId}`,
         );
-        setMessages(history);
+        setMessages(Array.isArray(history) ? history : []);
       } catch (err) {
         console.error("Failed to load chat history:", err);
       } finally {
@@ -63,9 +65,30 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
 
     socket.on("message", (msg: Message) => {
       setMessages((prev) => {
+        // Deduplicate by real ID
         if (prev.some((m) => m.id === msg.id)) return prev;
+
+        // If this message was sent by the current user and we have a pending temp ID,
+        // replace the optimistic message instead of appending a duplicate
+        if (msg.sender === "USER" && pendingTempIds.current.size > 0) {
+          // Find the oldest pending temp message that matches content
+          const tempIdx = prev.findIndex(
+            (m) =>
+              typeof m.id === "string" &&
+              m.id.startsWith("tmp-") &&
+              m.content === msg.content,
+          );
+          if (tempIdx !== -1) {
+            pendingTempIds.current.delete(prev[tempIdx].id as string);
+            const updated = [...prev];
+            updated[tempIdx] = msg; // Replace temp with real message
+            return updated;
+          }
+        }
+
         return [...prev, msg];
       });
+
       if (msg.sender === "ADMIN") {
         showToast("CSKH ShopQuiet vừa phản hồi!");
       }
@@ -86,8 +109,12 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
     if (!text) return;
     setInputValue("");
 
+    // Generate a stable temp ID for this optimistic message
+    const tempId = `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    pendingTempIds.current.add(tempId);
+
     const newMsg: Message = {
-      id: Date.now(),
+      id: tempId,
       zaloUserId: userId,
       sender: "USER",
       content: text,
@@ -97,20 +124,31 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
 
     setMessages((prev) => [...prev, newMsg]);
 
-    if (socketRef.current) {
+    // Send via WebSocket — the server will broadcast back the saved message with a real DB ID
+    if (socketRef.current?.connected) {
       socketRef.current.emit("send_message", {
         zaloUserId: userId,
         sender: "USER",
         content: text,
       });
+      // WebSocket path handles persistence — skip REST to avoid duplicate
+      return;
     }
 
+    // Fallback: WebSocket not connected → persist via REST (offline-safe)
     try {
-      await apiRequest("/chat/messages", "POST", {
+      const saved = await apiRequest<Message>("/chat/messages", "POST", {
         zaloUserId: userId,
         sender: "USER",
         content: text,
       });
+      if (saved?.id) {
+        // Replace optimistic message with real one
+        setMessages((prev) =>
+          prev.map((m) => (m.id === tempId ? { ...saved } : m)),
+        );
+        pendingTempIds.current.delete(tempId);
+      }
     } catch (err) {
       console.error("Failed to send message via REST:", err);
     }
@@ -235,6 +273,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
           ) : (
             messages.map((msg) => {
               const isUser = msg.sender === "USER";
+              const isOptimistic = typeof msg.id === "string" && msg.id.startsWith("tmp-");
               return (
                 <div key={msg.id} className={`flex flex-col ${isUser ? "items-end" : "items-start"} space-y-1 animate-fadeIn`}>
                   <div className="flex items-end gap-1.5 max-w-[82%]">
@@ -247,7 +286,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
                     <div
                       className={`p-3 rounded-2xl ${
                         isUser
-                          ? "bg-[#0e6877] text-white rounded-br-2xs shadow-xs"
+                          ? `bg-[#0e6877] text-white rounded-br-2xs shadow-xs${isOptimistic ? " opacity-70" : ""}`
                           : "bg-white text-slate-800 border border-slate-200/90 rounded-bl-2xs shadow-2xs"
                       }`}
                     >
@@ -255,7 +294,11 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
                     </div>
                   </div>
 
-                  <span className="text-[9px] text-slate-400 px-1 font-medium">{msg.createdAt}</span>
+                  <span className="text-[9px] text-slate-400 px-1 font-medium">
+                    {isOptimistic
+                      ? "Đang gửi..."
+                      : new Date(msg.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+                  </span>
                 </div>
               );
             })

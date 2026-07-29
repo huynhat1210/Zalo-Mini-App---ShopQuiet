@@ -917,11 +917,46 @@ export class CmsService implements OnModuleInit {
           gateway && gateway !== 'ALL'
             ? { paymentMethod: { contains: gateway, mode: 'insensitive' } }
             : {},
+          // Status filter: phân biệt COD vs Pay2S
           status && status !== 'ALL'
             ? status === 'PAID'
-              ? { status: { in: ['COMPLETED', 'PAID', 'DELIVERED', 'SHIPPED', 'PROCESSING'] } }
+              ? {
+                  OR: [
+                    // Pay2S đã nhận chuyển khoản (PROCESSING trở lên)
+                    {
+                      AND: [
+                        { paymentMethod: 'PAY2S' },
+                        { status: { in: ['PROCESSING', 'SHIPPED', 'DELIVERED', 'COMPLETED'] } },
+                      ],
+                    },
+                    // COD chỉ tính khi giao hàng xong (COMPLETED)
+                    {
+                      AND: [
+                        { paymentMethod: 'COD' },
+                        { status: 'COMPLETED' },
+                      ],
+                    },
+                  ],
+                }
               : status === 'PENDING'
-              ? { status: { notIn: ['COMPLETED', 'PAID', 'DELIVERED', 'SHIPPED', 'PROCESSING', 'CANCELLED'] } }
+              ? {
+                  OR: [
+                    // Pay2S chưa thanh toán
+                    {
+                      AND: [
+                        { paymentMethod: 'PAY2S' },
+                        { status: { notIn: ['PROCESSING', 'SHIPPED', 'DELIVERED', 'COMPLETED', 'CANCELLED'] } },
+                      ],
+                    },
+                    // COD đang chuẩn bị / giao hàng (chưa thu tiền)
+                    {
+                      AND: [
+                        { paymentMethod: 'COD' },
+                        { status: { notIn: ['COMPLETED', 'CANCELLED'] } },
+                      ],
+                    },
+                  ],
+                }
               : { status: status }
             : {},
         ],
@@ -934,21 +969,35 @@ export class CmsService implements OnModuleInit {
       orderBy: { createdAt: 'desc' },
     });
 
-    return orders.map((o) => ({
-      id: `TXN-${o.id}`,
-      orderId: o.id,
-      amount: o.totalAmount,
-      paymentMethod: o.paymentMethod || 'PAY2S',
-      paymentStatus: ['COMPLETED', 'PAID', 'DELIVERED', 'SHIPPED', 'PROCESSING'].includes(o.status)
-        ? 'PAID'
-        : o.status === 'CANCELLED'
-        ? 'CANCELLED'
-        : 'PENDING',
-      transferContent: `PAYSQ-${o.id}`,
-      createdAt: o.createdAt,
-      paidAt: ['COMPLETED', 'PAID', 'DELIVERED', 'SHIPPED', 'PROCESSING'].includes(o.status) ? o.createdAt : undefined,
-      user: o.user || { zaloId: o.zaloUserId || '', name: o.shippingName || 'Khách hàng', phone: o.shippingPhone || '' },
-    }));
+    return orders.map((o) => {
+      const isCod = (o.paymentMethod || 'COD').toUpperCase() === 'COD';
+      const isPay2sPaid = !isCod && ['PROCESSING', 'SHIPPED', 'DELIVERED', 'COMPLETED'].includes(o.status);
+      const isCodPaid = isCod && o.status === 'COMPLETED';
+
+      let paymentStatus: string;
+      if (o.status === 'CANCELLED') {
+        paymentStatus = 'CANCELLED';
+      } else if (isCod) {
+        // COD: chỉ thu tiền khi giao xong
+        paymentStatus = isCodPaid ? 'PAID' : 'COD_PENDING';
+      } else {
+        // Pay2S: PROCESSING trở lên = đã nhận chuyển khoản
+        paymentStatus = isPay2sPaid ? 'PAID' : 'PENDING';
+      }
+
+      return {
+        id: `TXN-${o.id}`,
+        orderId: o.id,
+        amount: o.totalAmount,
+        paymentMethod: o.paymentMethod || 'PAY2S',
+        paymentStatus,
+        orderStatus: o.status,
+        transferContent: isCod ? `Thu tiền mặt khi giao (${o.id})` : `PAYSQ-${o.id}`,
+        createdAt: o.createdAt,
+        paidAt: (isPay2sPaid || isCodPaid) ? o.createdAt : undefined,
+        user: o.user || { zaloId: o.zaloUserId || '', name: o.shippingName || 'Khách hàng', phone: o.shippingPhone || '' },
+      };
+    });
   }
 
   async manualConfirmTransaction(orderId: string) {

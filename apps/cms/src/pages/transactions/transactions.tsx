@@ -28,6 +28,7 @@ interface ITransaction {
   amount: number;
   paymentMethod: string;
   paymentStatus: string;
+  orderStatus?: string;
   transferContent: string;
   createdAt: string;
   paidAt?: string;
@@ -105,8 +106,8 @@ export const TransactionsPage: React.FC = () => {
     .reduce((sum, t) => sum + (t.amount || 0), 0);
 
   const pay2sCount = transactions.filter((t) => t.paymentMethod?.toUpperCase().includes('PAY2S')).length;
-  const pendingCount = transactions.filter((t) => t.paymentStatus === 'PENDING').length;
   const successCount = transactions.filter((t) => ['PAID', 'COMPLETED'].includes(t.paymentStatus)).length;
+  const codPendingCount = transactions.filter((t) => t.paymentStatus === 'COD_PENDING').length;
 
   const formatVND = (num: number) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
@@ -185,13 +186,13 @@ export const TransactionsPage: React.FC = () => {
 
         <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Chờ Thanh Toán</span>
-            <div className="p-2.5 bg-amber-50 text-amber-600 rounded-2xl">
-              <Clock className="w-5 h-5" />
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">COD Chờ Thu</span>
+            <div className="p-2.5 bg-orange-50 text-orange-600 rounded-2xl">
+              <Truck className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-2xl font-black text-amber-600">{pendingCount} đơn</p>
-          <p className="text-[11px] font-medium text-slate-400">Đang chờ quét QR/Chuyển khoản</p>
+          <p className="text-2xl font-black text-orange-600">{codPendingCount} đơn</p>
+          <p className="text-[11px] font-medium text-slate-400">Thu tiền khi giao hàng</p>
         </div>
 
         <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-2">
@@ -276,8 +277,8 @@ export const TransactionsPage: React.FC = () => {
                   <th className="py-3.5 px-5">Khách Hàng</th>
                   <th className="py-3.5 px-5">Phương Thức</th>
                   <th className="py-3.5 px-5">Số Tiền</th>
-                  <th className="py-3.5 px-5">Cú Pháp CK</th>
-                  <th className="py-3.5 px-5">Trạng Thái</th>
+                  <th className="py-3.5 px-5">Nội Dung / Ghi Chú</th>
+                  <th className="py-3.5 px-5">Trạng Thái TT</th>
                   <th className="py-3.5 px-5 text-right">Thao Tác</th>
                 </tr>
               </thead>
@@ -285,6 +286,8 @@ export const TransactionsPage: React.FC = () => {
                 {transactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((txn) => {
                   const isPaid = ['PAID', 'COMPLETED'].includes(txn.paymentStatus);
                   const isPending = txn.paymentStatus === 'PENDING';
+                  const isCodPending = txn.paymentStatus === 'COD_PENDING';
+                  const isCancelled = txn.paymentStatus === 'CANCELLED';
 
                   return (
                     <tr key={txn.id} className="hover:bg-slate-50/80 transition-colors">
@@ -348,23 +351,25 @@ export const TransactionsPage: React.FC = () => {
                           className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-extrabold ${
                             isPaid
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : isCodPending
+                              ? 'bg-orange-50 text-orange-700 border border-orange-200'
                               : isPending
                               ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                              : 'bg-rose-50 text-rose-700 border border-rose-200'
+                              : isCancelled
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                              : 'bg-slate-100 text-slate-600 border border-slate-200'
                           }`}
                         >
                           {isPaid ? (
-                            <>
-                              <CheckCircle className="w-3.5 h-3.5" /> Đã nhận tiền
-                            </>
+                            <><CheckCircle className="w-3.5 h-3.5" /> Đã nhận tiền</>
+                          ) : isCodPending ? (
+                            <><Truck className="w-3.5 h-3.5" /> Chờ thu COD</>
                           ) : isPending ? (
-                            <>
-                              <Clock className="w-3.5 h-3.5" /> Chờ chuyển khoản
-                            </>
+                            <><Clock className="w-3.5 h-3.5" /> Chờ chuyển khoản</>
+                          ) : isCancelled ? (
+                            <><XCircle className="w-3.5 h-3.5" /> Đã hủy</>
                           ) : (
-                            <>
-                              <XCircle className="w-3.5 h-3.5" /> Đã hủy
-                            </>
+                            <><Clock className="w-3.5 h-3.5" /> {txn.paymentStatus}</>
                           )}
                         </span>
                       </td>
@@ -380,7 +385,8 @@ export const TransactionsPage: React.FC = () => {
                             <Eye className="w-4 h-4" />
                           </button>
 
-                          {isPending && (
+                          {/* Nút duyệt thủ công chỉ dành cho Pay2S chưa thanh toán */}
+                          {isPending && !isCodPending && (
                             <button
                               onClick={() => setConfirmingOrder(txn)}
                               className="flex items-center gap-1 px-2.5 py-1.5 bg-[#0e6877] hover:bg-[#0b5460] text-white text-[11px] font-bold rounded-xl transition-all border-none cursor-pointer shadow-xs active:scale-95"
