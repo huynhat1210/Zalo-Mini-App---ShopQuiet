@@ -31,9 +31,21 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('join')
   handleJoinRoom(
-    @MessageBody() data: { roomId: string },
+    @MessageBody() data: { roomId: string; token?: string },
     @ConnectedSocket() client: Socket,
   ) {
+    if (!data || !data.roomId) return;
+    
+    // Security Guard: Prevent unauthorized clients from joining admin room
+    if (data.roomId === 'admin') {
+      const authHeader = client.handshake.headers?.authorization || client.handshake.auth?.token || data.token;
+      if (!authHeader) {
+        console.warn(`Unauthorized attempt to join admin room from client ${client.id}`);
+        client.emit('error', { message: 'Unauthorized room join' });
+        return;
+      }
+    }
+
     client.join(data.roomId);
     console.log(`Client ${client.id} joined room: ${data.roomId}`);
   }

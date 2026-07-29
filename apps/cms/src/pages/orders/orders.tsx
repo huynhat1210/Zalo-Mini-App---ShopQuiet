@@ -81,11 +81,6 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
   const [trackingModalOrderId, setTrackingModalOrderId] = useState<string | null>(null);
   const [trackingNumberInput, setTrackingNumberInput] = useState('');
 
-  // ZNS Push Logs state
-  const [showZnsModal, setShowZnsModal] = useState(false);
-  const [znsLogs, setZnsLogs] = useState<any[]>([]);
-  const [loadingZns, setLoadingZns] = useState(false);
-
   // Field Normalizers (Fixes missing name/phone/address bugs)
   const getRecipientName = (o: Order): string => {
     return o.shippingName || o.customerName || 'Khách hàng Zalo';
@@ -138,18 +133,6 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
 
   const toggleExpand = (id: string) => {
     setExpandedOrderIds((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const fetchZnsLogs = async () => {
-    try {
-      setLoadingZns(true);
-      const res = await apiRequest('/orders/zns-logs');
-      setZnsLogs(Array.isArray(res) ? res : []);
-    } catch (e) {
-      console.error('Failed to fetch ZNS logs:', e);
-    } finally {
-      setLoadingZns(false);
-    }
   };
 
   const fetchOrders = async (isSilent = false) => {
@@ -362,15 +345,6 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
             className="px-4 py-2.5 bg-emerald-700 text-white text-xs font-bold rounded-xl hover:bg-emerald-800 transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95"
           >
             Xuất Excel Đơn Hàng
-          </button>
-          <button
-            onClick={() => {
-              setShowZnsModal(true);
-              fetchZnsLogs();
-            }}
-            className="px-4 py-2.5 bg-[#0e6877] text-white text-xs font-bold rounded-xl hover:bg-[#0b5460] transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95"
-          >
-            Nhật Ký ZNS Push (Zalo OA)
           </button>
         </div>
       </div>
@@ -787,56 +761,6 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
       )}
 
 
-
-      {/* ── ZNS Push Logs Modal ── */}
-      {showZnsModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-2xl w-full space-y-4 shadow-xl border border-slate-200 animate-scaleUp text-left">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
-              <div>
-                <h3 className="text-lg font-black text-slate-800">📱 Lịch sử Gửi Thông Báo ZNS (Zalo OA)</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Nhật ký tin nhắn Zalo Notification Service được đẩy tới khách hàng</p>
-              </div>
-              <button
-                onClick={() => setShowZnsModal(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center border-none cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            {loadingZns ? (
-              <div className="py-12 text-center text-xs text-slate-500">Đang tải nhật ký ZNS...</div>
-            ) : znsLogs.length > 0 ? (
-              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
-                {znsLogs.map((log: any) => (
-                  <div key={log.id} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col space-y-1">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-bold text-[#0e6877]">{log.name} ({log.phone})</span>
-                      <span className="text-slate-400 font-medium">{log.time}</span>
-                    </div>
-                    <p className="text-xs text-slate-700 font-semibold">{log.content}</p>
-                    <span className="text-[10px] font-black text-emerald-600 self-start bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                      ✓ Sent via Zalo OA ({log.status})
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="py-12 text-center text-xs text-slate-400">Chưa có nhật ký tin nhắn ZNS nào.</div>
-            )}
-
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={() => setShowZnsModal(false)}
-                className="px-5 py-2 bg-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-300 transition-colors border-none cursor-pointer"
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );
