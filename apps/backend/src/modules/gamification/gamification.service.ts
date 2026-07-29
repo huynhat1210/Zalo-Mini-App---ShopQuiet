@@ -24,11 +24,12 @@ export class GamificationService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Check if already claimed today
-    const existingClaim = await this.prisma.dailyRewardClaim.findFirst({
+    // Check if already claimed today in PointsHistory
+    const existingClaim = await this.prisma.pointsHistory.findFirst({
       where: {
         zaloUserId,
-        claimedAt: { gte: today },
+        reason: { startsWith: 'Điểm danh' },
+        createdAt: { gte: today },
       },
     });
 
@@ -39,20 +40,21 @@ export class GamificationService {
       };
     }
 
-    // Calculate reward based on consecutive days
+    // Calculate reward based on consecutive days from PointsHistory
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    const yesterdayClaim = await this.prisma.dailyRewardClaim.findFirst({
+    const yesterdayClaim = await this.prisma.pointsHistory.findFirst({
       where: {
         zaloUserId,
-        claimedAt: { gte: yesterday, lt: today },
+        reason: { startsWith: 'Điểm danh' },
+        createdAt: { gte: yesterday, lt: today },
       },
     });
 
     let consecutiveDays = 1;
     if (yesterdayClaim) {
-      consecutiveDays = (yesterdayClaim.consecutiveDays || 0) + 1;
+      consecutiveDays = ((yesterdayClaim.metadata as any)?.consecutiveDays || 1) + 1;
     }
 
     // Get user's membership tier for points multiplier
@@ -81,17 +83,8 @@ export class GamificationService {
     const currentDayConfig = dayRewardMap[dayOfWeek] || { name: 'Ngày', points: 200 };
     const rewardPoints = currentDayConfig.points;
 
-    // Create claim record
-    await this.prisma.dailyRewardClaim.create({
-      data: {
-        zaloUserId,
-        points: rewardPoints,
-        consecutiveDays,
-      },
-    });
-
-    // Add xu points to user balance
-    await this.addPoints(zaloUserId, rewardPoints, `Điểm danh ngày ${currentDayConfig.name}`);
+    // Add xu points to user balance and record history
+    await this.addPoints(zaloUserId, rewardPoints, `Điểm danh ngày ${currentDayConfig.name}`, { consecutiveDays });
 
     // Create Notification
     try {
@@ -169,10 +162,11 @@ export class GamificationService {
           gamificationPoints: true,
         },
       }),
-      this.prisma.dailyRewardClaim.findFirst({
+      this.prisma.pointsHistory.findFirst({
         where: {
           zaloUserId,
-          claimedAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+          reason: { startsWith: 'Điểm danh' },
+          createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
         },
       }),
       this.prisma.pointsHistory.findMany({
