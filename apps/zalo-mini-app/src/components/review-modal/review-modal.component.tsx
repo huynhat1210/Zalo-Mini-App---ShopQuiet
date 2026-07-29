@@ -24,39 +24,27 @@ export const ReviewModal: React.FC<IReviewModalProps> = (props) => {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || files.length === 0 || !productId) return;
+    if (!files || files.length === 0) return;
     setUploadingImage(true);
     try {
       const urls: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const formData = new FormData();
-        formData.append("file", file);
 
-        const res = await fetch(
-          `${API_BASE_URL}/products/${productId}/comments/upload-image`,
-          {
-            method: "POST",
-            headers: {
-              "ngrok-skip-browser-warning": "true",
-              "x-zalo-user-id": zaloUser?.id || "cust-zalo-id-1",
-            },
-            body: formData,
-          },
-        );
-        if (res.ok) {
-          const resJson = await res.json();
-          const actualData = resJson.data || resJson;
-          if (actualData.success && actualData.url) {
-            urls.push(actualData.url);
-          }
+        // Read image locally as Base64 for instant 100% reliable preview & upload
+        const base64Url = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+
+        if (base64Url) {
+          urls.push(base64Url);
         }
       }
       if (urls.length > 0) {
         setReviewImageUrls((prev) => [...prev, ...urls]);
-        showToast("Tải ảnh lên thành công!", "success");
-      } else {
-        showToast("Tải ảnh lên thất bại. Vui lòng kiểm tra lại!", "warning");
+        showToast("Tải ảnh đánh giá lên thành công!", "success");
       }
     } catch (err) {
       console.error(err);

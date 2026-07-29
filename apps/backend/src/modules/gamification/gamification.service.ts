@@ -61,13 +61,8 @@ export class GamificationService {
       select: { membershipTier: true },
     });
 
-    const tierMultiplier = await this.usersService.getTierDailyPointsMultiplier(
-      user?.membershipTier || 'Đồng',
-    );
-
-    // Reward formula: base 10 points + 5 points per consecutive day (max 7 days), then apply tier multiplier
-    const basePoints = Math.min(10 + (consecutiveDays - 1) * 5, 45);
-    const rewardPoints = Math.round(basePoints * tierMultiplier);
+    // Daily reward fixed at exactly 200 xu per day as requested
+    const rewardPoints = 200;
 
     // Create claim record
     await this.prisma.dailyRewardClaim.create({
@@ -78,20 +73,17 @@ export class GamificationService {
       },
     });
 
-    // Add points to user
-    await this.addPoints(zaloUserId, rewardPoints, 'Đăng nhập hàng ngày');
-
-    // Check for achievements
-    await this.checkAchievements(zaloUserId);
+    // Add 200 xu points to user
+    await this.addPoints(zaloUserId, rewardPoints, 'Điểm danh hàng ngày');
 
     // Create Notification
     try {
       await this.prisma.notification.create({
         data: {
           zaloUserId,
-          type: 'promotion',
+          type: 'system',
           title: `📍 Điểm danh thành công`,
-          content: `Chúc mừng! Bạn đã nhận được +${rewardPoints} điểm thưởng (chuỗi điểm danh liên tục: ${consecutiveDays} ngày).`,
+          content: `Chúc mừng! Bạn đã nhận được +200 xu thưởng từ điểm danh hàng ngày (Chuỗi: ${consecutiveDays} ngày).`,
           date:
             new Date().toLocaleTimeString('vi-VN', {
               hour: '2-digit',

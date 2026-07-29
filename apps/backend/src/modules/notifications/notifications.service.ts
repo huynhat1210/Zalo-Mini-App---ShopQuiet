@@ -37,6 +37,13 @@ export class NotificationsService {
     });
   }
 
+  async deleteAll(zaloUserId?: string) {
+    if (!zaloUserId) return { count: 0 };
+    return this.prisma.notification.deleteMany({
+      where: { zaloUserId },
+    });
+  }
+
   async markRead(id: number, zaloUserId?: string) {
     return this.prisma.notification.updateMany({
       where: zaloUserId

@@ -341,26 +341,10 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                 {profile.name}
               </h2>
               <span
-                className={`${badgeColor} font-black tracking-widest text-[8px] uppercase px-2 py-0.5 rounded flex items-center gap-1 shadow-xs`}
+                className={`${badgeColor} font-black tracking-widest text-[8px] uppercase px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs border border-white/20`}
               >
-                ★ {tierBadge}
+                ★ {tierBadge} • {gamificationData?.points ? Math.round(gamificationData.points) : 0} Xu
               </span>
-
-              {/* Render unlocked badges mini list */}
-              {gamificationData?.achievements &&
-                gamificationData.achievements.length > 0 && (
-                  <div className="flex items-center gap-1 bg-white/10 px-1.5 py-0.5 rounded-full backdrop-blur-xs">
-                    {gamificationData.achievements.map((ach: any) => (
-                      <span
-                        key={ach.id}
-                        className="text-[10px] filter drop-shadow-xs"
-                        title={ach.name}
-                      >
-                        {ach.icon}
-                      </span>
-                    ))}
-                  </div>
-                )}
             </div>
 
             <div className="space-y-0.5 text-[10.5px] text-white/80 font-medium">
@@ -675,47 +659,6 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               </div>
             </button>
 
-            {/* Zalo Referral System Card */}
-            <div className="w-full px-4.5 py-3.5 bg-gradient-to-r from-teal-500/10 via-primary/5 to-emerald-500/10 border-y border-teal-100/60 flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <UserPlusIcon className="w-4.5 h-4.5" strokeWidth={2.2} />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-textColor">Giới thiệu bạn bè tích điểm</h4>
-                    <p className="text-[9px] text-[#526069]">Tặng +50 xu cho mỗi lượt mời Zalo thành công</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    const refCode = `REF-${zaloUser?.id || "SHOPQUIET"}`;
-                    navigator.clipboard?.writeText(refCode).catch(() => {});
-                    showToast(`Đã sao chép mã giới thiệu: ${refCode}`, "success");
-                  }}
-                  className="px-2.5 py-1 bg-white hover:bg-slate-50 text-primary border border-primary/30 rounded-lg text-[9px] font-bold flex items-center gap-1 shadow-2xs active:scale-95 transition-all cursor-pointer"
-                >
-                  <DocumentDuplicateIcon className="w-3 h-3" />
-                  Mã: REF-{zaloUser?.id ? zaloUser.id.substring(0, 6) : "ZALO"}
-                </button>
-              </div>
-
-              <button
-                onClick={() => {
-                  const shareText = `Tặng bạn voucher giảm giá khi mua sắm thời trang tại ShopQuiet Zalo Mini App! Nhập mã giới thiệu REF-${zaloUser?.id || "VIP"} để nhận +50 điểm thưởng ngay.`;
-                  if (navigator.share) {
-                    navigator.share({ title: "ShopQuiet Zalo Mini App", text: shareText }).catch(() => {});
-                  } else {
-                    navigator.clipboard?.writeText(shareText).catch(() => {});
-                    showToast("Đã sao chép liên kết giới thiệu Zalo!", "success");
-                  }
-                }}
-                className="w-full py-2 bg-primary text-white text-[10px] font-bold uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 shadow-xs hover:bg-primary-dark active:scale-98 transition-all border-none cursor-pointer mt-1"
-              >
-                <ShareIcon className="w-3.5 h-3.5" />
-                Mời bạn bè qua Zalo (+50 Điểm)
-              </button>
-            </div>
           </div>
         </div>
 
@@ -1092,6 +1035,52 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               </svg>
             </button>
           </div>
+        </div>
+
+        {/* Premium Zalo Referral System Card (Placed at very bottom of profile page) */}
+        <div className="bg-gradient-to-br from-teal-900 via-primary to-teal-950 rounded-3xl p-5 text-white shadow-lg space-y-3.5 border border-teal-700/50 relative overflow-hidden mt-6 mb-16">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center text-amber-300 border border-white/20">
+              <UserPlusIcon className="w-5.5 h-5.5" strokeWidth={2.2} />
+            </div>
+            <div>
+              <h4 className="text-sm font-extrabold tracking-wide text-white">Giới Thiệu Bạn Bè Qua Zalo</h4>
+              <p className="text-[10px] text-teal-100/80 font-medium">Nhận ngay <strong className="text-amber-300 font-bold">+50 Xu</strong> khi người thân truy cập ứng dụng</p>
+            </div>
+          </div>
+
+          <div className="bg-black/25 backdrop-blur-xs p-3 rounded-2xl border border-white/10 flex items-center justify-between">
+            <span className="text-[11px] font-bold text-teal-100 tracking-wider">
+              Mã Zalo ID: <span className="font-mono text-white text-xs underline">REF-{zaloUser?.id ? zaloUser.id.substring(0, 8) : "SHOPQUIET"}</span>
+            </span>
+            <button
+              onClick={() => {
+                const refCode = `REF-${zaloUser?.id || "SHOPQUIET"}`;
+                navigator.clipboard?.writeText(refCode).catch(() => {});
+                showToast(`Đã sao chép mã giới thiệu: ${refCode}`, "success");
+              }}
+              className="px-3 py-1.5 bg-amber-400 hover:bg-amber-300 text-teal-950 font-black text-[10px] uppercase rounded-xl flex items-center gap-1 shadow-sm active:scale-95 transition-all border-none cursor-pointer"
+            >
+              <DocumentDuplicateIcon className="w-3.5 h-3.5" />
+              Sao Chép
+            </button>
+          </div>
+
+          <button
+            onClick={() => {
+              const shareText = `Tặng bạn voucher giảm giá khi mua sắm thời trang tại ShopQuiet Zalo Mini App! Nhập mã giới thiệu REF-${zaloUser?.id || "VIP"} để nhận +50 xu thưởng ngay.`;
+              if (navigator.share) {
+                navigator.share({ title: "ShopQuiet Zalo Mini App", text: shareText }).catch(() => {});
+              } else {
+                navigator.clipboard?.writeText(shareText).catch(() => {});
+                showToast("Đã sao chép liên kết giới thiệu Zalo!", "success");
+              }
+            }}
+            className="w-full py-3 bg-white hover:bg-teal-50 text-primary font-black text-xs uppercase tracking-wider rounded-2xl flex items-center justify-center gap-2 shadow-md active:scale-98 transition-all border-none cursor-pointer"
+          >
+            <ShareIcon className="w-4 h-4 text-primary" strokeWidth={2.5} />
+            Chia Sẻ Mời Bạn Bè (+50 Xu Thưởng)
+          </button>
         </div>
       </div>
 

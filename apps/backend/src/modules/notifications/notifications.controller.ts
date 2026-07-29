@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   Headers,
@@ -42,6 +43,12 @@ export class NotificationsController {
   @UseGuards(JwtAuthGuard)
   async markAllRead(@Headers('x-zalo-user-id') zaloUserId?: string) {
     return this.notificationsService.markAllRead(zaloUserId);
+  }
+
+  @Delete('delete-all')
+  @UseGuards(JwtAuthGuard)
+  async deleteAll(@Headers('x-zalo-user-id') zaloUserId?: string) {
+    return this.notificationsService.deleteAll(zaloUserId);
   }
 
   @Patch(':id/read')
