@@ -94,8 +94,12 @@ async function bootstrap() {
     next();
   });
 
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+    : true; // Default fallback to allow all origins in development
+
   app.enableCors({
-    origin: true,
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
@@ -139,14 +143,15 @@ async function bootstrap() {
   }
   app.use('/uploads', express.static(uploadsDir));
 
-  app.use(
-    express.static('d:\\Zalo Mini App e-commerce\\apps\\zalo-mini-app\\dist'),
-  );
-  app.use(
-    express.static(
-      'd:\\Zalo Mini App e-commerce\\apps\\zalo-mini-app\\dist\\assets',
-    ),
-  );
+  // Serve static files dynamically based on environment
+  const miniAppDistPath = process.env.MINI_APP_DIST_PATH || path.join(__dirname, '..', '..', 'zalo-mini-app', 'dist');
+  if (fs.existsSync(miniAppDistPath)) {
+    app.use(express.static(miniAppDistPath));
+    const assetsPath = path.join(miniAppDistPath, 'assets');
+    if (fs.existsSync(assetsPath)) {
+      app.use(express.static(assetsPath));
+    }
+  }
 
   const port = process.env.PORT ?? 3000;
   const host = process.env.HOST ?? '0.0.0.0';
