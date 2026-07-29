@@ -399,9 +399,9 @@ export class OrdersService {
               await this.prisma.notification.create({
                 data: {
                   zaloUserId: order.zaloUserId,
-                  type: 'order',
-                  title: `🎉 Tích điểm thành công`,
-                  content: `Bạn được cộng +${earnedPoints} điểm tích lũy từ đơn hàng #${order.id}.`,
+                  type: 'system',
+                  title: `🎁 Thưởng điểm mua sắm thành công`,
+                  content: `Chúc mừng bạn! Đơn hàng #${order.id} đã hoàn tất và bạn nhận được +${earnedPoints} điểm thưởng tích lũy tài khoản.`,
                   date:
                     new Date().toLocaleTimeString('vi-VN', {
                       hour: '2-digit',

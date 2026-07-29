@@ -467,10 +467,10 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
             loading="eager"
           />
 
-          {/* Tap to Zoom Icon Overlay */}
+          {/* Tap to Zoom Icon Overlay (Bottom-left of image as requested) */}
           <button
             onClick={() => setIsZoomOpen(true)}
-            className="absolute top-3 left-3 bg-black/40 backdrop-blur-md text-white p-2 rounded-full shadow-sm hover:bg-black/60 transition-colors border-none cursor-pointer z-10"
+            className="absolute bottom-3 left-3 bg-black/50 backdrop-blur-md text-white p-2 rounded-full shadow-sm hover:bg-black/70 transition-colors border-none cursor-pointer z-10"
             title="Xem phóng to ảnh"
           >
             <MagnifyingGlassPlusIcon className="w-4.5 h-4.5 text-white" strokeWidth={2.2} />
