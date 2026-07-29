@@ -392,28 +392,6 @@ export class CmsService implements OnModuleInit {
   private async ensureStaticPages() {
     const defaults = [
       {
-        slug: 'help-support',
-        title: 'Trợ giúp & Hỗ trợ',
-        excerpt: 'Thông tin hỗ trợ khách hàng ShopQuiet.',
-        content:
-          'Chào mừng bạn đến với tổng đài hỗ trợ của ShopQuiet.\n\nNếu bạn gặp bất kỳ vấn đề gì về đơn hàng hoặc thanh toán Pay2S, vui lòng liên hệ với chúng tôi qua hotline hoặc email bên dưới.',
-        contactPhone: '1900 6000',
-        contactEmail: 'support@shopquiet.vn',
-      },
-      {
-        slug: 'about-shopquiet',
-        title: 'About ShopQuiet',
-        excerpt: 'Câu chuyện thương hiệu ShopQuiet.',
-        content:
-          'ShopQuiet là cửa hàng theo đuổi tinh thần tối giản, chất liệu tự nhiên và trải nghiệm mua sắm nhẹ nhàng cho cuộc sống hằng ngày.',
-        contactPhone: '1900 6868',
-        contactEmail: 'support@shopquiet.vn',
-      },
-    ];
-
-  private async ensureStaticPages() {
-    const defaults = [
-      {
         key: 'static_page_about-shopquiet',
         label: 'Về ShopQuiet',
         value:
