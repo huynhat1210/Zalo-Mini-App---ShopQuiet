@@ -6,7 +6,6 @@ import {
   ReceiptText,
   Ticket,
   DollarSign,
-  TrendingUp,
   ArrowRight,
   Package,
   Clock,
