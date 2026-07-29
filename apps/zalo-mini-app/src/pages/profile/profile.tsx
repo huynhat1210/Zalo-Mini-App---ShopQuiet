@@ -456,84 +456,90 @@ export const Profile: React.FC<IProfileProps> = (props) => {
 
       {/* Profile menu categories list */}
       <div className="flex-1 overflow-y-auto px-6 py-5.5 space-y-5 pb-28">
-        {/* Gamification Reward & Achievements Card */}
-        <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 space-y-4 shadow-xs">
-          <div className="flex justify-between items-center">
-            <div className="text-left">
-              <h4 className="text-xs font-bold text-textColor flex items-center gap-1.5">
-                <span>🏆</span> Điểm thưởng & Thành tựu
-              </h4>
-              <p className="text-[10px] text-textColor-variant mt-0.5 font-semibold">
-                Điểm tích lũy:{" "}
-                <span className="text-primary font-bold">
-                  {gamificationData?.points || 0}
-                </span>
-              </p>
-            </div>
-            <button
-              onClick={() => claimDailyReward()}
-              disabled={gamificationData?.hasClaimedToday}
-              className={`px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border-none transition-all active:scale-95 cursor-pointer ${
-                gamificationData?.hasClaimedToday
-                  ? "bg-neutral-100 text-neutral-400 cursor-not-allowed"
-                  : "bg-primary hover:bg-primary-dark text-white shadow-sm"
-              }`}
-            >
-              {gamificationData?.hasClaimedToday
-                ? "Đã điểm danh ✓"
-                : "📍 Điểm danh (+10đ)"}
-            </button>
-          </div>
+        {/* Gamification Reward & Daily Check-in Card */}
+        {(() => {
+          const now = new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' });
+          const todayVN = new Date(now);
+          const dayOfWeek = todayVN.getDay(); // 0=CN, 1=T2...6=T7
+          const weekDays = [
+            { key: 0, label: 'CN',  xu: 500, color: 'bg-violet-500' },
+            { key: 1, label: 'T2',  xu: 100, color: 'bg-sky-400' },
+            { key: 2, label: 'T3',  xu: 150, color: 'bg-sky-400' },
+            { key: 3, label: 'T4',  xu: 200, color: 'bg-teal-400' },
+            { key: 4, label: 'T5',  xu: 250, color: 'bg-teal-400' },
+            { key: 5, label: 'T6',  xu: 300, color: 'bg-orange-400' },
+            { key: 6, label: 'T7',  xu: 400, color: 'bg-orange-500' },
+          ];
+          const orderedDays = [
+            weekDays[1], weekDays[2], weekDays[3],
+            weekDays[4], weekDays[5], weekDays[6], weekDays[0],
+          ];
+          const todayConfig = weekDays.find(d => d.key === dayOfWeek) || weekDays[1];
+          const hasClaimed = gamificationData?.hasClaimedToday;
+          return (
+            <div className="bg-white rounded-2xl border border-[#f0edeb] p-4 shadow-xs space-y-3">
+              {/* Header */}
+              <div className="flex justify-between items-center">
+                <div>
+                  <h4 className="text-xs font-bold text-textColor flex items-center gap-1.5">
+                    <span>📍</span> Điểm danh nhận Xu
+                  </h4>
+                  <p className="text-[10px] text-textColor-variant mt-0.5 font-semibold">
+                    Hôm nay{' '}
+                    <span className="text-primary font-bold">
+                      +{todayConfig.xu} Xu
+                    </span>{' '}• Số dư:{' '}
+                    <span className="text-amber-500 font-bold">
+                      {gamificationData?.points || 0} Xu
+                    </span>
+                  </p>
+                </div>
+                <button
+                  onClick={() => claimDailyReward()}
+                  disabled={!!hasClaimed}
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border-none transition-all active:scale-95 cursor-pointer ${
+                    hasClaimed
+                      ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
+                      : 'bg-primary hover:bg-primary-dark text-white shadow-sm'
+                  }`}
+                >
+                  {hasClaimed ? 'Đã nhận ✓' : `+${todayConfig.xu} Xu`}
+                </button>
+              </div>
 
-          <div className="border-t border-[#f0edeb] pt-3">
-            <div className="grid grid-cols-5 gap-1 pt-1">
-              {[
-                { id: 1, name: "Tân thủ", desc: "Đặt 1 đơn", icon: "🎉" },
-                { id: 2, name: "Mua sắm", desc: "Đặt 5 đơn", icon: "🛍️" },
-                { id: 3, name: "Sành điệu", desc: "Lưu 10 tim", icon: "❤️" },
-                {
-                  id: 4,
-                  name: "Đánh giá",
-                  desc: "Viết 5 bình luận",
-                  icon: "⭐",
-                },
-                { id: 5, name: "VIP", desc: "Tiêu > 1Tr", icon: "👑" },
-              ].map((badge) => {
-                const isUnlocked = gamificationData?.achievements?.some(
-                  (a: any) => a.id === badge.id,
-                );
-                return (
-                  <div
-                    key={badge.id}
-                    className="flex flex-col items-center text-center"
-                  >
+              {/* Weekly days strip */}
+              <div className="grid grid-cols-7 gap-1">
+                {orderedDays.map((day) => {
+                  const isToday = day.key === dayOfWeek;
+                  const isPast = (() => {
+                    const ordered = [1,2,3,4,5,6,0];
+                    return ordered.indexOf(day.key) < ordered.indexOf(dayOfWeek);
+                  })();
+                  return (
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-lg shadow-xs border relative transition-all duration-300 ${
-                        isUnlocked
-                          ? "bg-amber-50 border-amber-400 scale-105"
-                          : "bg-neutral-50 border-neutral-200 filter grayscale opacity-40"
+                      key={day.key}
+                      className={`flex flex-col items-center rounded-xl py-1.5 transition-all ${
+                        isToday
+                          ? `${day.color} shadow-sm scale-105`
+                          : isPast
+                          ? 'bg-neutral-100'
+                          : 'bg-neutral-50 border border-neutral-100'
                       }`}
-                      title={badge.desc}
                     >
-                      {badge.icon}
-                      {isUnlocked && (
-                        <span className="absolute -top-1 -right-1 bg-amber-400 text-[7px] w-3 h-3 rounded-full text-teal-950 font-bold border border-white flex items-center justify-center">
-                          ✓
-                        </span>
-                      )}
+                      <span className={`text-[9px] font-bold ${isToday ? 'text-white' : 'text-textColor-variant'}`}>
+                        {day.label}
+                      </span>
+                      <span className={`text-[11px] font-black mt-0.5 ${isToday ? 'text-white' : isPast ? 'text-neutral-400' : 'text-textColor'}`}>
+                        {isPast && hasClaimed ? '✓' : `${day.xu}`}
+                      </span>
+                      <span className={`text-[7px] font-semibold ${isToday ? 'text-white/80' : 'text-textColor-variant'}`}>xu</span>
                     </div>
-                    <span className="text-[7.5px] font-bold text-textColor mt-1.5 line-clamp-1 w-full">
-                      {badge.name}
-                    </span>
-                    <span className="text-[6.5px] text-textColor-variant scale-90 origin-top mt-0.5 line-clamp-1 w-full">
-                      {badge.desc}
-                    </span>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Section 1: Shopping */}
         <div className="space-y-2.5">
