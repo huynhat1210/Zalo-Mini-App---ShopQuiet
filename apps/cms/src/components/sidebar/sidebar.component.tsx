@@ -90,7 +90,7 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
     const interval = setInterval(() => {
       fetchPendingCount();
       fetchUnreadChatCount();
-    }, 10000);
+    }, 45000);
     return () => clearInterval(interval);
   }, []);
 
