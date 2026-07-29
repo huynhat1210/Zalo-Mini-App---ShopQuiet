@@ -102,10 +102,12 @@ export const LayoutComponent: React.FC<ILayoutComponentProps> = (props) => {
         {/* Glass Header */}
         <header className="h-16 border-b border-slate-200/80 bg-white/90 backdrop-blur-md flex items-center justify-between px-4 md:px-8 shrink-0 z-30 shadow-2xs">
           <div className="flex items-center gap-3">
-            {/* Toggle Hamburger Button (Mobile & Desktop) */}
+            {/* Toggle Hamburger Button (Only on Mobile or when Sidebar is collapsed) */}
             <button 
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 text-slate-500 hover:text-[#0e6877] hover:bg-teal-50 rounded-xl transition-all border-none cursor-pointer"
+              className={`p-2 text-slate-500 hover:text-[#0e6877] hover:bg-teal-50 rounded-xl transition-all border-none cursor-pointer ${
+                isSidebarOpen ? 'md:hidden' : 'block'
+              }`}
               title="Chuyển đổi Menu Sidebar"
             >
               <Menu size={20} />
