@@ -4,10 +4,10 @@ import {
   Body,
   Get,
   UseGuards,
-  Request,
   Query,
-  Res,
+  Req,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiTags,
   ApiOperation,
@@ -43,6 +43,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // Rate limit: Max 10 login attempts per minute
   @ApiOperation({ summary: 'Login with Zalo ID' })
   @ApiResponse({
     status: 200,
@@ -135,7 +136,7 @@ export class AuthController {
     type: SuccessResponseDto,
     description: 'Profile retrieved',
   })
-  getProfile(@Request() req: any) {
+  getProfile(@Req() req: any) {
     return req.user;
   }
 
