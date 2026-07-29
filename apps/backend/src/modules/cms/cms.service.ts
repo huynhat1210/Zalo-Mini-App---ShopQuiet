@@ -123,16 +123,32 @@ export class CmsService implements OnModuleInit {
   }
 
   async getStaticPages() {
-    return this.prisma.staticPage.findMany({
-      where: { active: true },
-      orderBy: [{ title: 'asc' }],
+    const settings = await this.prisma.siteSetting.findMany({
+      where: { group: 'static_pages', active: true },
     });
+    return settings.map((s) => ({
+      slug: s.key.replace('static_page_', ''),
+      title: s.label,
+      content: s.value,
+    }));
   }
 
   async getStaticPage(slug: string) {
-    return this.prisma.staticPage.findFirst({
-      where: { slug, active: true },
+    const setting = await this.prisma.siteSetting.findUnique({
+      where: { key: `static_page_${slug}` },
     });
+    if (!setting || !setting.active) {
+      return {
+        slug,
+        title: slug === 'about-shopquiet' ? 'Về ShopQuiet' : 'Chính sách',
+        content: 'ShopQuiet - Phong cách thời trang tối giản, tinh tế & hiện đại.',
+      };
+    }
+    return {
+      slug,
+      title: setting.label,
+      content: setting.value,
+    };
   }
 
   async getShippingMethods() {
@@ -395,11 +411,27 @@ export class CmsService implements OnModuleInit {
       },
     ];
 
+  private async ensureStaticPages() {
+    const defaults = [
+      {
+        key: 'static_page_about-shopquiet',
+        label: 'Về ShopQuiet',
+        value:
+          'ShopQuiet là cửa hàng theo đuổi tinh thần tối giản, chất liệu tự nhiên và trải nghiệm mua sắm nhẹ nhàng cho cuộc sống hằng ngày.',
+        group: 'static_pages',
+      },
+    ];
+
     for (const item of defaults) {
-      await this.prisma.staticPage.upsert({
-        where: { slug: item.slug },
+      await this.prisma.siteSetting.upsert({
+        where: { key: item.key },
         update: {},
-        create: item,
+        create: {
+          key: item.key,
+          label: item.label,
+          value: item.value,
+          group: item.group,
+        },
       });
     }
   }
