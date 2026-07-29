@@ -25,7 +25,7 @@ export class AuthService {
     accessToken: string,
   ): Promise<{ zaloId: string; name: string; avatar: string } | null> {
     // 1. If it's a mock token for local testing, return mock data
-    if (accessToken.startsWith('mock_zalo_token_')) {
+    if (process.env.NODE_ENV !== 'production' && accessToken.startsWith('mock_zalo_token_')) {
       const mockId =
         accessToken.replace('mock_zalo_token_', '') || 'cust-zalo-id-1';
       return {
@@ -126,6 +126,9 @@ export class AuthService {
           '[Zalo Auth] validateZaloAccessToken failed, falling back to client-provided parameters:',
           err,
         );
+        if (process.env.NODE_ENV === 'production') {
+          throw new UnauthorizedException('Không thể xác thực tài khoản Zalo');
+        }
         targetZaloId = String(zaloId);
         targetName = name;
         targetAvatar = avatar;
@@ -148,10 +151,15 @@ export class AuthService {
     if (isAdminId) {
       const adminPasswordHash =
         process.env.ADMIN_PASSWORD_HASH ||
-        '$2b$10$tZ/n07XU0mD65fH4kY/vveHWh3h7FvFv.u9k5CjEszkX9H/7CveQ2'; // default bcrypt hash for 'admin123'
+        (process.env.NODE_ENV !== 'production'
+          ? '$2b$10$tZ/n07XU0mD65fH4kY/vveHWh3h7FvFv.u9k5CjEszkX9H/7CveQ2'
+          : '');
+      if (!adminPasswordHash && process.env.NODE_ENV === 'production') {
+        throw new UnauthorizedException('Tài khoản quản trị chưa được cấu hình an toàn');
+      }
 
       const isPasswordMatch =
-        password && (await bcrypt.compare(password, adminPasswordHash));
+        password && adminPasswordHash && (await bcrypt.compare(password, adminPasswordHash));
       if (!isPasswordMatch) {
         throw new UnauthorizedException(
           'Mật khẩu quản trị viên không chính xác',

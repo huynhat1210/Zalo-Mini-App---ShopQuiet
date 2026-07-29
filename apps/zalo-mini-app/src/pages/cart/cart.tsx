@@ -26,8 +26,9 @@ export const Cart: React.FC<ICartProps> = (_props) => {
           apiRequest<Array<{ price: number }>>("/cms/shipping-methods").catch(() => []),
           apiRequest<any[]>("/vouchers").catch(() => []),
         ]);
-        const paidMethod = methods.find((method) => method.price > 0);
-        setEstimatedShipping(paidMethod?.price ?? methods[0]?.price ?? 0);
+        // Checkout selects the first CMS method by default, so mirror that
+        // selection here rather than choosing the first paid method.
+        setEstimatedShipping(methods[0]?.price ?? 0);
 
         if (Array.isArray(list)) {
           setVouchersList(list);

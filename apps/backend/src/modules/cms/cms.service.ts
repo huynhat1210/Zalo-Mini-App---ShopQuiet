@@ -92,6 +92,26 @@ export class CmsService implements OnModuleInit {
     }, {});
   }
 
+  async updateSettings(settings: Record<string, string>) {
+    for (const [key, value] of Object.entries(settings)) {
+      if (typeof value !== 'string' || !key.trim()) continue;
+      const existing = await this.prisma.siteSetting.findUnique({ where: { key } });
+      await this.prisma.siteSetting.upsert({
+        where: { key },
+        update: { value, active: true },
+        create: {
+          key,
+          value,
+          label: existing?.label || key,
+          type: existing?.type || 'TEXT',
+          group: existing?.group || key.split('.')[0] || 'general',
+          active: true,
+        },
+      });
+    }
+    return this.getSettings();
+  }
+
   async getMenuItems(section?: string) {
     return this.prisma.menuItem.findMany({
       where: {
@@ -127,6 +147,14 @@ export class CmsService implements OnModuleInit {
       where: { active: true },
       orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
     });
+  }
+
+  async setShippingMethodActive(id: number, active: boolean) {
+    return this.prisma.shippingMethod.update({ where: { id }, data: { active } });
+  }
+
+  async setPaymentMethodActive(id: number, active: boolean) {
+    return this.prisma.paymentMethod.update({ where: { id }, data: { active } });
   }
 
   async getBootstrap() {
@@ -274,6 +302,18 @@ export class CmsService implements OnModuleInit {
         create: item,
       });
     }
+
+    await this.prisma.siteSetting.upsert({
+      where: { key: 'shipping.freeThreshold' },
+      update: {},
+      create: {
+        key: 'shipping.freeThreshold',
+        label: 'Ngưỡng miễn phí vận chuyển',
+        value: '500000',
+        type: 'NUMBER',
+        group: 'shipping',
+      },
+    });
   }
 
   private async ensureMenuItems() {
@@ -340,7 +380,7 @@ export class CmsService implements OnModuleInit {
         title: 'Trợ giúp & Hỗ trợ',
         excerpt: 'Thông tin hỗ trợ khách hàng ShopQuiet.',
         content:
-          'Chào mừng bạn đến với tổng đài hỗ trợ của ShopQuiet.\n\nNếu bạn gặp bất kỳ vấn đề gì về đơn hàng hoặc thanh toán ZaloPay, vui lòng liên hệ với chúng tôi qua hotline hoặc email bên dưới.',
+          'Chào mừng bạn đến với tổng đài hỗ trợ của ShopQuiet.\n\nNếu bạn gặp bất kỳ vấn đề gì về đơn hàng hoặc thanh toán Pay2S, vui lòng liên hệ với chúng tôi qua hotline hoặc email bên dưới.',
         contactPhone: '1900 6000',
         contactEmail: 'support@shopquiet.vn',
       },
@@ -401,23 +441,24 @@ export class CmsService implements OnModuleInit {
   private async ensurePaymentMethods() {
     const defaults = [
       {
-        code: 'cod',
-        name: 'Thanh toán khi nhận hàng (COD)',
-        description: 'Thanh toán bằng tiền mặt khi giao hàng',
-        provider: 'COD',
-        badge: '',
+        code: 'pay2s',
+        name: 'Chuyển khoản Ngân hàng',
+        description: 'Thanh toán an toàn qua mã QR Ngân hàng (tự động xác nhận)',
+        provider: 'PAY2S',
+        badge: 'KHUYẾN DÙNG',
         sortOrder: 1,
       },
       {
-        code: 'zalopay',
-        name: 'Cổng Sandbox ZaloPay',
-        description: 'Thanh toán nhanh bằng ví hoặc quét mã QR',
-        provider: 'ZALOPAY',
-        badge: 'Ví ZaloPay',
+        code: 'cod',
+        name: 'Thanh toán khi nhận hàng (COD)',
+        description: 'Nhận hàng, kiểm tra hàng trước khi thanh toán cho shipper',
+        provider: 'COD',
+        badge: '',
         sortOrder: 2,
       },
       {
-        code: 'bank',
+        code: 'legacy-bank',
+        active: false,
         name: 'Chuyển khoản Ngân hàng (QR)',
         description: 'Quét mã QR để chuyển khoản nhanh 24/7',
         provider: 'BANK',
@@ -433,6 +474,38 @@ export class CmsService implements OnModuleInit {
         create: item,
       });
     }
+
+    const paymentMethods = [
+      {
+        code: 'pay2s',
+        name: 'Chuyển khoản Ngân hàng',
+        description: 'Thanh toán an toàn qua mã QR Ngân hàng (tự động xác nhận)',
+        provider: 'PAY2S',
+        badge: 'KHUYẾN DÙNG',
+        sortOrder: 1,
+      },
+      {
+        code: 'cod',
+        name: 'Thanh toán khi nhận hàng (COD)',
+        description: 'Nhận hàng, kiểm tra hàng trước khi thanh toán cho shipper',
+        provider: 'COD',
+        badge: '',
+        sortOrder: 2,
+      },
+    ];
+
+    for (const method of paymentMethods) {
+      await this.prisma.paymentMethod.upsert({
+        where: { code: method.code },
+        update: { ...method, active: true },
+        create: method,
+      });
+    }
+
+    await this.prisma.paymentMethod.updateMany({
+      where: { code: { in: ['zalopay', 'bank', 'legacy-bank'] } },
+      data: { active: false },
+    });
   }
 
   private getModelKey(modelName: string): string {

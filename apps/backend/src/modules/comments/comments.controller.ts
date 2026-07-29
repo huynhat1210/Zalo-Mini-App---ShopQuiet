@@ -19,6 +19,8 @@ import { Comment } from '@prisma/client';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/comment.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
@@ -53,6 +55,7 @@ export class CommentsController {
   }
 
   @Post('upload-image')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file'))
   async uploadReviewImage(@UploadedFile() file: any) {
     if (!file) return { success: false, message: 'No file uploaded' };
@@ -110,6 +113,8 @@ export class CommentsController {
 
 @ApiTags('Comments & Reviews')
 @Controller('cms/comments')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin')
 export class CmsCommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 

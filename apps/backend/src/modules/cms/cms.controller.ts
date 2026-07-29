@@ -10,6 +10,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { CmsService, CmsContentType } from './cms.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -42,6 +43,13 @@ export class CmsController {
     return this.cmsService.getSettings();
   }
 
+  @Post('settings')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async updateSettings(@Body() settings: Record<string, string>) {
+    return this.cmsService.updateSettings(settings);
+  }
+
   @Get('menu-items')
   async getMenuItems(@Query('section') section?: string) {
     return this.cmsService.getMenuItems(section);
@@ -62,9 +70,29 @@ export class CmsController {
     return this.cmsService.getShippingMethods();
   }
 
+  @Patch('shipping-methods/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async updateShippingMethod(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('active') active: boolean,
+  ) {
+    return this.cmsService.setShippingMethodActive(id, active);
+  }
+
   @Get('payment-methods')
   async getPaymentMethods() {
     return this.cmsService.getPaymentMethods();
+  }
+
+  @Patch('payment-methods/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async updatePaymentMethod(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('active') active: boolean,
+  ) {
+    return this.cmsService.setPaymentMethodActive(id, active);
   }
 
   // --- Dynamic Database Manager CRUD ---

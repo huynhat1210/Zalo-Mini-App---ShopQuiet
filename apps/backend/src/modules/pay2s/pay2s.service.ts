@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { OrderTrackingGateway } from '../websocket/websocket.gateway';
 import * as crypto from 'crypto';
@@ -24,7 +24,7 @@ export class Pay2sService {
     return process.env[key] || defaultValue;
   }
 
-  async createPaymentUrl(orderId: string) {
+  async createPaymentUrl(orderId: string, requesterId: string, isAdmin = false) {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: { items: true },
@@ -32,6 +32,13 @@ export class Pay2sService {
 
     if (!order) {
       throw new NotFoundException('Đơn hàng không tồn tại');
+    }
+
+    if (!isAdmin && order.zaloUserId !== requesterId) {
+      throw new UnauthorizedException('You cannot pay for this order.');
+    }
+    if (order.paymentMethod !== 'PAY2S' || order.status !== 'PENDING_PAYMENT') {
+      throw new UnauthorizedException('Order is not awaiting Pay2S payment.');
     }
 
     const partnerCode = await this.getSetting('PAY2S_PARTNER_CODE', 'pay2s');
@@ -145,8 +152,9 @@ export class Pay2sService {
     };
   }
 
-  async handleIPN(body: any) {
+  async handleIPN(body: any, authorizationHeader?: string) {
     this.logger.log(`[Pay2S IPN] Received callback: ${JSON.stringify(body)}`);
+    this.assertWebhookSecret(authorizationHeader, 'PAY2S_IPN_SECRET');
 
     const {
       orderId,
@@ -167,6 +175,10 @@ export class Pay2sService {
       throw new NotFoundException('Đơn hàng không tồn tại');
     }
 
+    if (order.paymentMethod !== 'PAY2S' || order.status !== 'PENDING_PAYMENT') {
+      throw new UnauthorizedException('Order is not awaiting Pay2S payment.');
+    }
+
     // Update order status to PROCESSING
     await this.prisma.order.update({
       where: { id: order.id },
@@ -185,13 +197,7 @@ export class Pay2sService {
   async handleHook(authorizationHeader: string, body: any) {
     this.logger.log(`[Pay2S Hook] Received webhook: ${JSON.stringify(body)}`);
 
-    const userSecret = 'cec5310b9d7b633c6308054560eda6d4b7b22a216320e06041';
-    const expectedSecret = await this.getSetting('PAY2S_HOOK_SECRET', userSecret);
-    const token = (authorizationHeader || '').replace(/^Bearer\s+/i, '').trim();
-
-    if (expectedSecret && token !== expectedSecret && token !== userSecret && token !== 'c99b9e7e530be38696827bd178dcc85516a66a38990d40c62b') {
-      this.logger.warn(`[Pay2S Hook] Invalid authorization bearer token: ${token}`);
-    }
+    this.assertWebhookSecret(authorizationHeader, 'PAY2S_HOOK_SECRET');
 
     let transactions: any[] = [];
     if (Array.isArray(body?.transactions)) {
@@ -235,6 +241,10 @@ export class Pay2sService {
         this.logger.warn(`[Pay2S Hook] Order ${orderId} not found in DB`);
         continue;
       }
+      if (order.paymentMethod !== 'PAY2S' || order.status !== 'PENDING_PAYMENT') {
+        this.logger.warn(`[Pay2S Hook] Order ${orderId} is not pending Pay2S payment`);
+        continue;
+      }
 
       // Update order status to PROCESSING
       await this.prisma.order.update({
@@ -252,5 +262,13 @@ export class Pay2sService {
     }
 
     return { success: true, processed: processedCount };
+  }
+
+  private assertWebhookSecret(authorizationHeader: string | undefined, settingKey: string) {
+    const expectedSecret = process.env[settingKey]?.trim();
+    const token = (authorizationHeader || '').replace(/^Bearer\s+/i, '').trim();
+    if (!expectedSecret || !token || token !== expectedSecret) {
+      throw new UnauthorizedException('Webhook authorization is invalid.');
+    }
   }
 }

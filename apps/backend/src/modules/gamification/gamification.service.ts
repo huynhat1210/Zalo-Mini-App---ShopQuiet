@@ -397,6 +397,16 @@ export class GamificationService {
     voucherCode: string,
     pointsCost: number,
   ) {
+    const exchangeCosts: Record<string, number> = {
+      DISCOUNT10: 100,
+      DISCOUNT20: 250,
+      DISCOUNT50: 500,
+    };
+    const expectedCost = exchangeCosts[voucherCode.toUpperCase()];
+    if (!expectedCost || pointsCost !== expectedCost) {
+      return { success: false, message: 'Chi phí đổi voucher không hợp lệ.' };
+    }
+
     // 1. Ensure the voucher exists (seed/upsert statically if not in DB to prevent failure)
     const vouchersToSeed = [
       {

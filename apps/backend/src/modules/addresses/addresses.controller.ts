@@ -10,13 +10,16 @@ import {
   Headers,
   ParseIntPipe,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { AddressesService } from './addresses.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Users & Addresses')
 @Controller('addresses')
+@UseGuards(JwtAuthGuard)
 export class AddressesController {
   constructor(private readonly addressesService: AddressesService) {}
 

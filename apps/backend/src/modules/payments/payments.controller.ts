@@ -61,6 +61,8 @@ export class PaymentsController {
 
   @ApiOperation({ summary: 'Webhook nhận thông báo biến động số dư ngân hàng' })
   @Post('webhook')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   async handleBankWebhook(@Body() payload: any) {
     return this.paymentsService.handleWebhook(payload);
   }

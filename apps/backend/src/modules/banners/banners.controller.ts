@@ -11,6 +11,8 @@ import {
 } from '@nestjs/common';
 import { BannersService } from './banners.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 import { ApiTags } from '@nestjs/swagger';
 
@@ -25,13 +27,15 @@ export class BannersController {
   }
 
   @Get('admin/all')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   async getAllBannersAdmin() {
     return this.bannersService.findAllAdmin();
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   async createBanner(
     @Body()
     body: {
@@ -45,7 +49,8 @@ export class BannersController {
   }
 
   @Patch(':id/toggle')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   async toggleBanner(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { active?: boolean },
@@ -54,7 +59,8 @@ export class BannersController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   async deleteBanner(@Param('id', ParseIntPipe) id: number) {
     return this.bannersService.remove(id);
   }

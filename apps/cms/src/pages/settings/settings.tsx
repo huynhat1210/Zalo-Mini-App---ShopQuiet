@@ -75,7 +75,7 @@ export const Settings: React.FC<ISettingsProps> = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      await apiRequest('/cms/settings', 'POST', settings).catch(() => {});
+      await apiRequest('/cms/settings', 'POST', settings);
       setSaveSuccess(true);
       toastSuccess('Đã lưu cấu hình', 'Thông tin cửa hàng đã được cập nhật thành công.');
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -88,11 +88,11 @@ export const Settings: React.FC<ISettingsProps> = () => {
 
   const toggleShippingActive = async (id: number) => {
     const updated = shippingMethods.map((s) => (s.id === id ? { ...s, active: !s.active } : s));
-    setShippingMethods(updated);
     try {
       const target = updated.find((s) => s.id === id);
       if (target) {
-        await apiRequest(`/cms/shipping-methods/${id}`, 'PATCH', { active: target.active }).catch(() => {});
+        await apiRequest(`/cms/shipping-methods/${id}`, 'PATCH', { active: target.active });
+        setShippingMethods(updated);
         toastSuccess('Cập nhật thành công', `Đã ${target.active ? 'bật' : 'tắt'} ${target.name}`);
       }
     } catch (e: any) {
@@ -102,11 +102,11 @@ export const Settings: React.FC<ISettingsProps> = () => {
 
   const togglePaymentActive = async (id: number) => {
     const updated = paymentMethods.map((p) => (p.id === id ? { ...p, active: !p.active } : p));
-    setPaymentMethods(updated);
     try {
       const target = updated.find((p) => p.id === id);
       if (target) {
-        await apiRequest(`/cms/payment-methods/${id}`, 'PATCH', { active: target.active }).catch(() => {});
+        await apiRequest(`/cms/payment-methods/${id}`, 'PATCH', { active: target.active });
+        setPaymentMethods(updated);
         toastSuccess('Cập nhật thành công', `Đã ${target.active ? 'bật' : 'tắt'} ${target.name}`);
       }
     } catch (e: any) {

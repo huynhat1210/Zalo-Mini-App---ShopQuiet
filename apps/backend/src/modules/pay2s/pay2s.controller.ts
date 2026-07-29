@@ -1,7 +1,9 @@
-import { Controller, Post, Get, Param, Query, Body, Headers, HttpCode, HttpStatus, Res } from '@nestjs/common';
+import { Controller, Post, Get, Param, Query, Body, Headers, HttpCode, HttpStatus, Res, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Pay2sService } from './pay2s.service';
 import type { Response } from 'express';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('Pay2S Payment')
 @Controller()
@@ -10,8 +12,9 @@ export class Pay2sController {
 
   @ApiOperation({ summary: 'Tạo URL thanh toán Pay2S cho đơn hàng' })
   @Post('orders/:id/pay2s')
-  async createPay2sUrl(@Param('id') id: string) {
-    return this.pay2sService.createPaymentUrl(id);
+  @UseGuards(JwtAuthGuard)
+  async createPay2sUrl(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.pay2sService.createPaymentUrl(id, user.zaloId, user.role === 'admin');
   }
 
   @Get('pay/qr-download/:id')
@@ -357,8 +360,8 @@ export class Pay2sController {
   @ApiOperation({ summary: 'Xử lý phản hồi IPN tự động từ Cổng Pay2S (POST)' })
   @Post('pay2s/ipn')
   @HttpCode(HttpStatus.OK)
-  async handleIPN(@Body() body: any) {
-    return this.pay2sService.handleIPN(body);
+  async handleIPN(@Headers('authorization') auth: string, @Body() body: any) {
+    return this.pay2sService.handleIPN(body, auth);
   }
 
   @ApiOperation({ summary: 'Kiểm tra trạng thái Webhook Pay2S (GET)' })

@@ -6,6 +6,7 @@ import {
   Headers,
   UseGuards,
   Param,
+  ForbiddenException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -14,6 +15,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { SyncUserDto, DecryptPhoneDto } from './dto/sync-user.dto';
 import { UpdateSizeProfileDto } from './dto/update-size-profile.dto';
 import { PrismaService } from '../../prisma/prisma.service';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 import { ApiTags } from '@nestjs/swagger';
 
@@ -26,12 +28,14 @@ export class UsersController {
   ) {}
 
   @Get('size-profile')
+  @UseGuards(JwtAuthGuard)
   async getSizeProfile(@Headers('x-zalo-user-id') zaloUserId?: string) {
     if (!zaloUserId) return { height: null, weight: null, footLength: null, clothingSize: null, shoeSize: null };
     return this.usersService.getSizeProfile(zaloUserId);
   }
 
   @Post('size-profile')
+  @UseGuards(JwtAuthGuard)
   async updateSizeProfile(
     @Headers('x-zalo-user-id') zaloUserId: string,
     @Body() body: UpdateSizeProfileDto,
@@ -42,16 +46,20 @@ export class UsersController {
   }
 
   @Post('sync')
-  async syncUser(@Body() body: SyncUserDto) {
+  @UseGuards(JwtAuthGuard)
+  async syncUser(@Body() body: SyncUserDto, @CurrentUser() user: any) {
+    if (body.zaloId !== user.zaloId) {
+      throw new ForbiddenException('Không thể đồng bộ thông tin của người dùng khác.');
+    }
     return this.usersService.syncUser(
-      body.zaloId,
+      user.zaloId,
       body.name,
       body.avatar,
       body.phone,
       body.birthday,
       body.email,
       body.gender,
-      body.membershipTier,
+      undefined,
     );
   }
 
@@ -80,6 +88,7 @@ export class UsersController {
   }
 
   @Post('decrypt-phone')
+  @UseGuards(JwtAuthGuard)
   async decryptPhone(@Body() body: DecryptPhoneDto) {
     if (!body.token) {
       return { phoneNumber: '0987654321' };

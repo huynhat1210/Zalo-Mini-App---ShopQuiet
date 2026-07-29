@@ -125,6 +125,9 @@ export class OrdersService {
   }
 
   async create(dto: CreateOrderDto, zaloUserId?: string) {
+    if (!Array.isArray(dto.items) || dto.items.length === 0) {
+      throw new BadRequestException('Đơn hàng phải có ít nhất một sản phẩm.');
+    }
     // Generate a unique order ID matching SQ-XXXXX format
     let orderId = '';
     let isUnique = false;
@@ -164,24 +167,44 @@ export class OrdersService {
             : 200000;
 
     let subtotal = 0;
+    const resolvedItemPrices = new Map<number, number>();
     for (const item of dto.items) {
+      if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
+        throw new BadRequestException('Số lượng sản phẩm không hợp lệ.');
+      }
       const product = await this.prisma.product.findUnique({
         where: { id: item.productId },
       });
-      if (product) {
-        let effectivePrice = item.price;
-        if (!effectivePrice || effectivePrice <= 0) {
-          if (product.isFlashSale && product.flashSalePrice) {
-            effectivePrice = product.flashSalePrice;
-          } else {
-            effectivePrice = product.price;
-          }
-        }
-        subtotal += effectivePrice * item.quantity;
+      if (!product) {
+        throw new NotFoundException(`Không tìm thấy sản phẩm ID ${item.productId}.`);
       }
+      const effectivePrice =
+        product.isFlashSale && product.flashSalePrice
+          ? product.flashSalePrice
+          : product.price;
+      resolvedItemPrices.set(item.productId, effectivePrice);
+      subtotal += effectivePrice * item.quantity;
     }
 
-    let shippingCost = dto.shippingMethodCode === 'express' ? 50000 : 30000;
+    const paymentCode = (dto.paymentMethod || 'COD').toLowerCase();
+    const paymentMethod = await this.prisma.paymentMethod.findFirst({
+      where: { code: paymentCode, active: true },
+    });
+    if (!paymentMethod || !['cod', 'pay2s'].includes(paymentCode)) {
+      throw new BadRequestException('Phương thức thanh toán không khả dụng.');
+    }
+    const orderPaymentMethod = paymentCode === 'pay2s' ? 'PAY2S' : 'COD';
+    const initialStatus = paymentCode === 'pay2s' ? 'PENDING_PAYMENT' : 'PROCESSING';
+
+    const shippingMethodCode = dto.shippingMethodCode || 'standard';
+    const shippingMethod = await this.prisma.shippingMethod.findFirst({
+      where: { code: shippingMethodCode, active: true },
+    });
+    if (!shippingMethod) {
+      throw new BadRequestException('Shipping method is unavailable.');
+    }
+
+    let shippingCost = shippingMethod.price;
     if (subtotal >= freeShipThreshold) {
       shippingCost = 0;
     }
@@ -193,17 +216,24 @@ export class OrdersService {
       const voucher = await this.prisma.voucher.findUnique({
         where: { code: dto.voucherCode.trim().toUpperCase() },
       });
-      if (voucher) {
-        if (voucher.type.toUpperCase() === 'PERCENT') {
-          voucherDiscount = Math.round(subtotal * (voucher.value / 100));
-          if (voucher.maxDiscount) {
-            voucherDiscount = Math.min(voucherDiscount, voucher.maxDiscount);
-          }
-        } else if (voucher.type.toUpperCase() === 'FIXED') {
-          voucherDiscount = voucher.value;
-        } else if (voucher.type.toUpperCase() === 'FREESHIP') {
-          voucherDiscount = shippingCost;
+      if (!voucher || voucher.stock <= 0) {
+        throw new BadRequestException('Mã giảm giá không khả dụng.');
+      }
+      if (voucher.expiresAt && voucher.expiresAt < new Date()) {
+        throw new BadRequestException('Mã giảm giá đã hết hạn.');
+      }
+      if (subtotal < voucher.minOrderVal) {
+        throw new BadRequestException('Đơn hàng chưa đạt giá trị tối thiểu của mã giảm giá.');
+      }
+      if (voucher.type.toUpperCase() === 'PERCENT') {
+        voucherDiscount = Math.round(subtotal * (voucher.value / 100));
+        if (voucher.maxDiscount) {
+          voucherDiscount = Math.min(voucherDiscount, voucher.maxDiscount);
         }
+      } else if (voucher.type.toUpperCase() === 'FIXED') {
+        voucherDiscount = Math.min(voucher.value, subtotal);
+      } else if (voucher.type.toUpperCase() === 'FREESHIP') {
+        voucherDiscount = shippingCost;
       }
     }
 
@@ -281,7 +311,6 @@ export class OrdersService {
       }
 
       // 2. Calculate estimated delivery date
-      const shippingMethodCode = dto.shippingMethodCode || 'standard';
       const deliveryDateRange = calculateEstimatedDeliveryDate(
         new Date(),
         shippingMethodCode,
@@ -292,9 +321,9 @@ export class OrdersService {
         data: {
           id: orderId,
           totalAmount: finalTotalAmount,
-          status: dto.status || "PROCESSING",
+          status: initialStatus,
           zaloUserId: filterUserId,
-          paymentMethod: dto.paymentMethod || "COD",
+          paymentMethod: orderPaymentMethod,
           voucherCode: dto.voucherCode || null,
           discountAmount: finalDiscount,
           shippingAddress: dto.shippingAddress || null,
@@ -305,7 +334,7 @@ export class OrdersService {
           items: {
             create: dto.items.map((item) => ({
               quantity: item.quantity,
-              price: item.price,
+              price: resolvedItemPrices.get(item.productId)!,
               productId: item.productId,
               size: item.size || 'DEFAULT',
               color: item.color || 'DEFAULT',

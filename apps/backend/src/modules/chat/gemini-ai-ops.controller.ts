@@ -1,6 +1,9 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiProperty } from '@nestjs/swagger';
 import { GeminiAiOpsService } from './gemini-ai-ops.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 export class MarkAlertReadDto {
   @ApiProperty({ example: 'alert_123', required: false, description: 'ID của cảnh báo vận hành cần đánh dấu đọc' })
@@ -28,6 +31,8 @@ export class AskGeminiDto {
 
 @ApiTags('CMS Admin')
 @Controller('cms/ai-ops')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin')
 export class GeminiAiOpsController {
   constructor(private readonly geminiAiOpsService: GeminiAiOpsService) {}
 

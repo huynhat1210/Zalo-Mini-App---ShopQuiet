@@ -3,6 +3,8 @@ import { ApiTags } from '@nestjs/swagger';
 import { GamificationService } from './gamification.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('Gamification & Rewards')
 @Controller('gamification')
@@ -22,7 +24,8 @@ export class GamificationController {
   }
 
   @Post('add-points')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   async addPoints(
     @CurrentUser() user: any,
     @Body() body: { points: number; reason: string },

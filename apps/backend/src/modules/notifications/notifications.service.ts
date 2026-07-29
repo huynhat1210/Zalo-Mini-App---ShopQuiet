@@ -37,11 +37,11 @@ export class NotificationsService {
     });
   }
 
-  async markRead(id: number) {
-    return this.prisma.notification.update({
-      where: {
-        id,
-      },
+  async markRead(id: number, zaloUserId?: string) {
+    return this.prisma.notification.updateMany({
+      where: zaloUserId
+        ? { id, OR: [{ zaloUserId }, { zaloUserId: null }] }
+        : { id: -1 },
       data: {
         read: true,
       },

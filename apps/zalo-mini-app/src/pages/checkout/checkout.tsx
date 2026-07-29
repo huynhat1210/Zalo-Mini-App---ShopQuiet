@@ -92,7 +92,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   };
 
   const [shippingMethod, setShippingMethod] = useState("standard");
-  const [paymentMethod, setPaymentMethod] = useState("zalopay");
+  const [paymentMethod, setPaymentMethod] = useState("pay2s");
   const [shippingMethods, setShippingMethods] = useState<CmsShippingMethod[]>([
     {
       code: "standard",
@@ -233,7 +233,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           );
         }
 
-        const defaultPay2s: CmsPaymentMethod = {
+        /* const defaultPay2s: CmsPaymentMethod = {
           code: "pay2s",
           name: "Chuyển khoản Ngân hàng",
           description: "Thanh toán an toàn qua mã QR Ngân hàng (Tự động xác nhận)",
@@ -247,13 +247,19 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           provider: "COD",
         };
 
-        const mergedPaymentMethods = [defaultPay2s, defaultCod];
+        const mergedPaymentMethods = [defaultPay2s, defaultCod]; */
+
+        // Labels, descriptions and ordering are maintained in CMS. Only the
+        // two payment codes implemented by checkout are eligible here.
+        const mergedPaymentMethods = (cmsPaymentMethods || []).filter(
+          (item) => item.code === "pay2s" || item.code === "cod",
+        );
 
         setPaymentMethods(mergedPaymentMethods);
         setPaymentMethod((current) =>
           mergedPaymentMethods.some((item) => item.code === current)
             ? current
-            : "pay2s",
+            : mergedPaymentMethods[0]?.code || "pay2s",
         );
       } catch (e) {
         console.error("Failed to fetch checkout CMS config:", e);

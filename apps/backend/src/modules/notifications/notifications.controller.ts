@@ -46,8 +46,11 @@ export class NotificationsController {
 
   @Patch(':id/read')
   @UseGuards(JwtAuthGuard)
-  async markRead(@Param('id', ParseIntPipe) id: number) {
-    return this.notificationsService.markRead(id);
+  async markRead(
+    @Param('id', ParseIntPipe) id: number,
+    @Headers('x-zalo-user-id') zaloUserId?: string,
+  ) {
+    return this.notificationsService.markRead(id, zaloUserId);
   }
 
   @Post()

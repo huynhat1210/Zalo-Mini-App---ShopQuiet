@@ -35,6 +35,8 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Get('test-zalo')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiOperation({ summary: 'Test Zalo token verification' })
   async testZalo(@Query('token') token: string) {
     return this.authService.testZaloVerification(token);
@@ -138,6 +140,7 @@ export class AuthController {
   }
 
   @Post('decrypt-phone')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Decrypt Zalo phone number' })
   @ApiResponse({
     status: 200,
