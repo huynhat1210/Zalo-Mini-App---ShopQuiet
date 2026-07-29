@@ -37,42 +37,6 @@ export class OrdersService {
     private orderTrackingGateway: OrderTrackingGateway,
   ) {}
 
-  private znsLogs: Array<{
-    id: string;
-    phone: string;
-    name: string;
-    content: string;
-    time: string;
-    status: string;
-  }> = [
-    {
-      id: '1',
-      phone: '0987654321',
-      name: 'Alex Johnson',
-      content: 'Đơn hàng #SQ-98243 của bạn đang được xử lý chuẩn bị.',
-      time: '1 giờ trước',
-      status: 'SUCCESS',
-    },
-    {
-      id: '2',
-      phone: '0912345678',
-      name: 'Khánh Linh',
-      content: 'Đơn hàng #SQ-82934 đã bàn giao cho shipper vận chuyển.',
-      time: '2 giờ trước',
-      status: 'SUCCESS',
-    },
-  ];
-
-  getZnsLogs(): Array<{
-    id: string;
-    phone: string;
-    name: string;
-    content: string;
-    time: string;
-    status: string;
-  }> {
-    return this.znsLogs;
-  }
 
   private async ensureUserExists(zaloId: string, name?: string) {
     const user = await this.prisma.user.findUnique({
@@ -400,18 +364,7 @@ export class OrdersService {
       console.error('Error creating post-order notification:', e?.message || e);
     }
 
-    // Simulate ZNS dispatch
-    this.znsLogs.unshift({
-      id: Math.random().toString(36).substring(7),
-      phone: order.shippingPhone || '0987654321',
-      name: order.shippingName || 'Alex Johnson',
-      content: `Đơn hàng mới #${order.id} trị giá $${order.totalAmount.toFixed(2)} đã được tiếp nhận thành công!`,
-      time: new Date().toLocaleTimeString('vi-VN', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-      status: 'SUCCESS',
-    });
+
 
     if (order.zaloUserId) {
       await this.updateUserMembership(order.zaloUserId);
@@ -728,18 +681,7 @@ export class OrdersService {
       }
     }
 
-    // Simulate ZNS dispatch
-    this.znsLogs.unshift({
-      id: Math.random().toString(36).substring(7),
-      phone: order.shippingPhone || '0987654321',
-      name: order.shippingName || 'Alex Johnson',
-      content: `Đơn hàng mới #${order.id} trị giá $${order.totalAmount.toFixed(2)} đã được tiếp nhận thành công!`,
-      time: new Date().toLocaleTimeString('vi-VN', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-      status: 'SUCCESS',
-    });
+
 
     if (order.zaloUserId) {
       await this.updateUserMembership(order.zaloUserId);

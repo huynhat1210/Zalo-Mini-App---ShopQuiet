@@ -45,12 +45,6 @@ export class OrdersController {
     return this.ordersService.findAllAdmin();
   }
 
-  @Get('zns-logs')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  getZnsLogs() {
-    return this.ordersService.getZnsLogs();
-  }
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)

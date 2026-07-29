@@ -20,6 +20,7 @@ import {
 import { apiRequest } from '../../utils/api';
 import { exportToExcel } from '../../utils/excel-export.util';
 import { useToast } from '../../contexts';
+import { PaginationComponent } from '../../components';
 
 interface ITransaction {
   id: string;
@@ -45,6 +46,12 @@ export const TransactionsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [gatewayFilter, setGatewayFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+
   const [selectedTxn, setSelectedTxn] = useState<ITransaction | null>(null);
   const [confirmingOrder, setConfirmingOrder] = useState<ITransaction | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -275,7 +282,7 @@ export const TransactionsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
-                {transactions.map((txn) => {
+                {transactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((txn) => {
                   const isPaid = ['PAID', 'COMPLETED'].includes(txn.paymentStatus);
                   const isPending = txn.paymentStatus === 'PENDING';
 
@@ -389,6 +396,21 @@ export const TransactionsPage: React.FC = () => {
                 })}
               </tbody>
             </table>
+            {transactions.length > 0 && (
+              <div className="p-4 border-t border-slate-100">
+                <PaginationComponent
+                  currentPage={currentPage}
+                  totalPages={Math.ceil(transactions.length / itemsPerPage)}
+                  totalItems={transactions.length}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                  onItemsPerPageChange={(newSize) => {
+                    setItemsPerPage(newSize);
+                    setCurrentPage(1);
+                  }}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

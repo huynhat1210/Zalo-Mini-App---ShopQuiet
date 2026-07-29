@@ -11,6 +11,7 @@ import {
   ImageIcon,
 } from 'lucide-react';
 import { apiRequest, API_BASE_URL } from '../../utils/api';
+import { PaginationComponent } from '../../components';
 
 interface CustomerComment {
   id: number;
@@ -40,6 +41,10 @@ export const CommentsPage: React.FC = () => {
   const [selectedRatingFilter, setSelectedRatingFilter] = useState<number | 'ALL'>('ALL');
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const serverUrl = API_BASE_URL.replace('/api/v1', '');
 
@@ -285,7 +290,7 @@ export const CommentsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
-                {comments.map((item) => {
+                {comments.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((item) => {
                   const reviewImgs = parseImages(item.images);
                   let productImg = '';
                   try {
@@ -428,6 +433,21 @@ export const CommentsPage: React.FC = () => {
                 })}
               </tbody>
             </table>
+            {comments.length > 0 && (
+              <div className="p-4 border-t border-slate-100">
+                <PaginationComponent
+                  currentPage={currentPage}
+                  totalPages={Math.ceil(comments.length / itemsPerPage)}
+                  totalItems={comments.length}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={setCurrentPage}
+                  onItemsPerPageChange={(newSize) => {
+                    setItemsPerPage(newSize);
+                    setCurrentPage(1);
+                  }}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

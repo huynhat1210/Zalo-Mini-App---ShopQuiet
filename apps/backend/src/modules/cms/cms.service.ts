@@ -918,7 +918,11 @@ export class CmsService implements OnModuleInit {
             ? { paymentMethod: { contains: gateway, mode: 'insensitive' } }
             : {},
           status && status !== 'ALL'
-            ? { status: status }
+            ? status === 'PAID'
+              ? { status: { in: ['COMPLETED', 'PAID', 'DELIVERED', 'SHIPPED', 'PROCESSING'] } }
+              : status === 'PENDING'
+              ? { status: { notIn: ['COMPLETED', 'PAID', 'DELIVERED', 'SHIPPED', 'PROCESSING', 'CANCELLED'] } }
+              : { status: status }
             : {},
         ],
       },

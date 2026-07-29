@@ -60,6 +60,8 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
   const [showDevTools, setShowDevTools] = useState(false);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
 
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+
   useEffect(() => {
     const fetchPendingCount = async () => {
       try {
@@ -72,8 +74,23 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
         console.error('Failed to load pending orders count in sidebar:', e);
       }
     };
+
+    const fetchUnreadChatCount = async () => {
+      try {
+        const res = await apiRequest<{ unreadCount: number }>('/chat/unread-count').catch(() => null);
+        if (res && typeof res.unreadCount === 'number') {
+          setUnreadChatCount(res.unreadCount);
+        }
+      } catch (e) {}
+    };
+
     fetchPendingCount();
-    const interval = setInterval(fetchPendingCount, 15000);
+    fetchUnreadChatCount();
+
+    const interval = setInterval(() => {
+      fetchPendingCount();
+      fetchUnreadChatCount();
+    }, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -186,6 +203,11 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
                   {item.to === '/orders' && pendingOrdersCount > 0 && (
                     <span className="px-2 py-0.5 text-[9.5px] font-black bg-red-500 text-white rounded-full animate-pulse shadow-2xs">
                       +{pendingOrdersCount}
+                    </span>
+                  )}
+                  {item.to === '/support' && unreadChatCount > 0 && (
+                    <span className="px-2 py-0.5 text-[9.5px] font-black bg-[#0e6877] text-white rounded-full animate-pulse shadow-2xs">
+                      {unreadChatCount}
                     </span>
                   )}
                 </NavLink>

@@ -81,4 +81,16 @@ export class ChatService {
 
     return sessions;
   }
+
+  async getUnreadSessionsCount() {
+    const unreadUsers = await this.prisma.chatMessage.findMany({
+      where: {
+        sender: 'USER',
+        read: false,
+      },
+      distinct: ['zaloUserId'],
+      select: { zaloUserId: true },
+    });
+    return { unreadCount: unreadUsers.length };
+  }
 }

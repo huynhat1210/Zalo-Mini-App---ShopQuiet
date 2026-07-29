@@ -73,4 +73,12 @@ export class ChatController {
   async getSessions() {
     return this.chatService.getSessions();
   }
+
+  @ApiOperation({ summary: 'Lấy số lượng cuộc hội thoại chưa trả lời (Unread Badge Count)' })
+  @Get('unread-count')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async getUnreadCount() {
+    return this.chatService.getUnreadSessionsCount();
+  }
 }
