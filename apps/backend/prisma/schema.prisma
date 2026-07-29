@@ -245,6 +245,19 @@ model Banner {
   createdAt   DateTime @default(now())
 }
 
+model MembershipPrivilege {
+  id          Int      @id @default(autoincrement())
+  tier        String   // 'Đồng', 'Bạc', 'Vàng', 'Kim cương'
+  title       String
+  description String
+  icon        String   @default("🎁")
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@index([tier])
+}
+
 model SiteSetting {
   id          Int      @id @default(autoincrement())
   key         String   @unique

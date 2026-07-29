@@ -1,11 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit {
   private readonly logger = new Logger(UsersService.name);
 
   constructor(private prisma: PrismaService) {}
+
+  async onModuleInit() {
+    try {
+      await this.seedMembershipPrivileges();
+    } catch (e) {
+      this.logger.error('Failed to seed membership privileges on startup:', e);
+    }
+  }
 
   async syncUser(
     zaloId: string,
@@ -213,6 +221,16 @@ export class UsersService {
   }
 
   async getMembershipPrivileges(tier: string) {
+    const list = await this.prisma.membershipPrivilege.findMany({
+      where: { tier },
+      orderBy: { sortOrder: 'asc' },
+    });
+
+    if (list && list.length > 0) {
+      return list;
+    }
+
+    // Default fallback + auto seed if empty
     const defaultPrivileges: Record<string, any[]> = {
       Đồng: [
         { title: 'Tích điểm mua sắm', description: 'Tích lũy xu mỗi đơn hàng', icon: '🛒' },
@@ -235,7 +253,23 @@ export class UsersService {
   }
 
   async seedMembershipPrivileges() {
-    return { success: true, message: 'Thành viên đặc quyền đã được đồng bộ chuẩn.' };
+    const count = await this.prisma.membershipPrivilege.count();
+    if (count === 0) {
+      const defaultPrivileges = [
+        { tier: 'Đồng', title: 'Tích điểm mua sắm', description: 'Tích lũy xu mỗi đơn hàng', icon: '🛒', sortOrder: 1 },
+        { tier: 'Đồng', title: 'Ưu đãi thành viên', description: 'Nhận thông báo ưu đãi', icon: '🎁', sortOrder: 2 },
+        { tier: 'Bạc', title: 'Giảm 5% đơn hàng', description: 'Giảm 5% cho tất cả đơn hàng', icon: '💰', sortOrder: 1 },
+        { tier: 'Bạc', title: 'Freeship đơn 150k', description: 'Miễn phí vận chuyển từ 150.000đ', icon: '🚚', sortOrder: 2 },
+        { tier: 'Vàng', title: 'Giảm 10% đơn hàng', description: 'Giảm 10% cho tất cả đơn hàng', icon: '💎', sortOrder: 1 },
+        { tier: 'Vàng', title: 'Freeship đơn 100k', description: 'Miễn phí vận chuyển từ 100.000đ', icon: '🚚', sortOrder: 2 },
+        { tier: 'Kim cương', title: 'Giảm 15% đơn hàng', description: 'Giảm 15% cho tất cả đơn hàng', icon: '👑', sortOrder: 1 },
+        { tier: 'Kim cương', title: 'Freeship 0đ', description: 'Miễn phí vận chuyển mọi đơn hàng', icon: '🚀', sortOrder: 2 },
+      ];
+      await this.prisma.membershipPrivilege.createMany({
+        data: defaultPrivileges,
+      });
+    }
+    return { success: true, message: 'Đặc quyền thành viên đã được đồng bộ chuẩn vào DB.' };
   }
 
   getTierDiscountPercentage(tier: string): number {

@@ -51,6 +51,7 @@ const MODEL_DISPLAY_NAMES: Record<string, string> = {
   PaymentMethod: 'Phương thức thanh toán',
   CartItem: 'Chi tiết giỏ hàng',
   PointsHistory: 'Lịch sử điểm thưởng & Xu',
+  MembershipPrivilege: 'Đặc quyền hạng thành viên',
   AuditLog: 'Nhật ký quản trị',
   AnalyticsEvent: 'Sự kiện phân tích',
 };
