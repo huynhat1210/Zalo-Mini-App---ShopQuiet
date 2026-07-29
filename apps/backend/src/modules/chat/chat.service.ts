@@ -13,13 +13,66 @@ export class ChatService {
   }
 
   async saveMessage(zaloUserId: string, sender: string, content: string) {
-    return this.prisma.chatMessage.create({
+    const userMsg = await this.prisma.chatMessage.create({
       data: {
         zaloUserId,
         sender,
         content,
       },
     });
+
+    // Feature 5: Auto-Responder for Off-Hours / OFFLINE Status
+    if (sender === 'USER') {
+      try {
+        const shopStatusSetting = await this.prisma.siteSetting.findUnique({
+          where: { key: 'shop.status' },
+        });
+        const isOfflineSetting = shopStatusSetting?.value === 'OFFLINE';
+
+        // Check if current hour in Vietnam (UTC+7) is outside business hours (22:00 to 07:00)
+        const now = new Date();
+        const vnHour = (now.getUTCHours() + 7) % 24;
+        const isOffHours = vnHour >= 22 || vnHour < 7;
+
+        if (isOfflineSetting || isOffHours) {
+          // Check if we already sent an auto-response to this user in the last 30 minutes to prevent spam
+          const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
+          const recentAutoReply = await this.prisma.chatMessage.findFirst({
+            where: {
+              zaloUserId,
+              sender: 'ADMIN',
+              content: { startsWith: '[Tự động]' },
+              createdAt: { gte: thirtyMinsAgo },
+            },
+          });
+
+          if (!recentAutoReply) {
+            const replyText = isOfflineSetting
+              ? '[Tự động] Chào bạn! Cửa hàng hiện đang tạm dừng nhận tư vấn trực tiếp. Tin nhắn của bạn đã được ghi nhận, CSKH sẽ hồi đáp ngay khi hoạt động trở lại!'
+              : '[Tự động] Cảm ơn bạn đã liên hệ ShopQuiet! Hiện tại đang ngoài giờ làm việc (8:00 - 22:00). Chúng tôi đã nhận được tin nhắn và sẽ phản hồi bạn vào đầu giờ sáng mai nhé! 🌙';
+
+            // Create auto reply from ADMIN after a tiny delay
+            setTimeout(async () => {
+              try {
+                await this.prisma.chatMessage.create({
+                  data: {
+                    zaloUserId,
+                    sender: 'ADMIN',
+                    content: replyText,
+                  },
+                });
+              } catch (e) {
+                console.error('Auto reply creation error:', e);
+              }
+            }, 1000);
+          }
+        }
+      } catch (err) {
+        console.error('Auto-responder error:', err);
+      }
+    }
+
+    return userMsg;
   }
 
   async markAsRead(zaloUserId: string, senderToMarkRead: string) {
