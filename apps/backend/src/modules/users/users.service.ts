@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(private prisma: PrismaService) {}
 
   async syncUser(
@@ -17,7 +19,7 @@ export class UsersService {
   ) {
     if (!zaloId) return null;
 
-    console.log('[syncUser Debug] Received parameters:', {
+    this.logger.debug('[syncUser Debug] Received parameters:', {
       zaloId,
       name,
       avatar,

@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -7,6 +7,8 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
@@ -319,9 +321,8 @@ export class AuthService {
             },
           });
 
-          console.log(
-            '[AuthService] Recovered refresh token for user:',
-            storedToken.user.zaloId,
+          this.logger.log(
+            `Recovered refresh token for user: ${storedToken.user.zaloId}`,
           );
 
           return {
