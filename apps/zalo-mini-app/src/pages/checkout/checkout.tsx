@@ -578,6 +578,24 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   let shippingCost = isFreeshipEligible
     ? 0
     : selectedShippingMethod?.price || 0;
+  const [usePoints, setUsePoints] = useState(false);
+  const [userCoins, setUserCoins] = useState(0);
+
+  useEffect(() => {
+    const fetchUserCoins = async () => {
+      if (!zaloUser?.id) return;
+      try {
+        const res = await apiRequest<any>("/users/profile");
+        if (res && res.gamificationPoints != null) {
+          setUserCoins(Math.round(res.gamificationPoints));
+        }
+      } catch (e) {
+        console.error("Failed to fetch user coins:", e);
+      }
+    };
+    fetchUserCoins();
+  }, [zaloUser?.id]);
+
   let discount = 0;
 
   // Apply tier discount percentage
@@ -596,7 +614,9 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
     }
   }
 
-  const total = Math.max(0, subtotal + shippingCost - discount);
+  const amountBeforeCoins = Math.max(0, subtotal + shippingCost - discount);
+  const coinDiscount = usePoints ? Math.min(userCoins, amountBeforeCoins) : 0;
+  const total = Math.max(0, amountBeforeCoins - coinDiscount);
 
   const applyPromoCode = async (code: string) => {
     try {
@@ -685,6 +705,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
         shippingPhone: address.phone.trim(),
         shippingName: address.name.trim(),
         shippingMethodCode: shippingMethod,
+        usePoints: usePoints && coinDiscount > 0,
         items: checkoutItems.map((item: any) => ({
           productId: item.product.id,
           quantity: item.quantity,
@@ -1306,6 +1327,41 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           </div>
         </div>
 
+        {/* Use Xu Coins Payment Section (1 Xu = 1 VNĐ) */}
+        <div className="space-y-2.5">
+          <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1 flex items-center justify-between">
+            <span>Dùng Xu Tích Lũy</span>
+            <span className="text-amber-600 font-black">1 Xu = 1 VNĐ</span>
+          </h2>
+          <div className="bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-amber-500/10 rounded-2xl border border-amber-200 p-4 shadow-xs flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-amber-400 text-teal-950 flex items-center justify-center font-black text-sm shadow-xs border border-amber-300">
+                💰
+              </div>
+              <div>
+                <p className="text-xs font-extrabold text-textColor">
+                  Ví Xu Hiện Có: <span className="text-amber-600 font-black">{userCoins.toLocaleString("vi-VN")} Xu</span>
+                </p>
+                <p className="text-[10px] text-[#526069] font-medium mt-0.5">
+                  {userCoins > 0
+                    ? `Dùng Xu để giảm ${Math.min(userCoins, amountBeforeCoins).toLocaleString("vi-VN")}đ tiền đơn hàng`
+                    : "Bạn chưa có xu tích lũy trong ví"}
+                </p>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={usePoints}
+                disabled={userCoins <= 0}
+                onChange={(e) => setUsePoints(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500 peer-disabled:opacity-50"></div>
+            </label>
+          </div>
+        </div>
+
         {/* IOrder Review Section */}
         <div className="space-y-2.5">
           <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">
@@ -1393,6 +1449,12 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                     Giảm giá {appliedPromo ? `(${appliedPromo.code})` : ""}
                   </span>
                   <span>-{discount.toLocaleString("vi-VN")} đ</span>
+                </div>
+              )}
+              {coinDiscount > 0 && (
+                <div className="flex justify-between text-amber-600 font-bold animate-fade-in">
+                  <span>Trừ Xu tích lũy ({coinDiscount.toLocaleString("vi-VN")} Xu)</span>
+                  <span>-{coinDiscount.toLocaleString("vi-VN")} đ</span>
                 </div>
               )}
               <div className="flex justify-between font-bold text-textColor pt-2.5 border-t border-dashed border-[#f0edeb]">

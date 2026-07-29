@@ -79,7 +79,6 @@ model User {
   chatMessages  ChatMessage[]
   dailyRewardClaims DailyRewardClaim[]
   pointsHistory PointsHistory[]
-  userAchievements UserAchievement[]
 
   @@index([name])
   @@index([role])
@@ -388,30 +387,6 @@ model PointsHistory {
 
   @@index([zaloUserId])
   @@index([createdAt])
-}
-
-model Achievement {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String
-  icon        String
-  condition   String
-  createdAt   DateTime @default(now())
-
-  userAchievements UserAchievement[]
-}
-
-model UserAchievement {
-  id             Int      @id @default(autoincrement())
-  zaloUserId     String
-  achievementId  Int
-  unlockedAt     DateTime @default(now())
-
-  user           User       @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
-  achievement    Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
-
-  @@unique([zaloUserId, achievementId], name: "zaloUserId_achievementId")
-  @@index([zaloUserId])
 }
 
 model MembershipPrivilege {

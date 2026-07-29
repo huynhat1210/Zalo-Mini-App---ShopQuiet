@@ -61,8 +61,25 @@ export class GamificationService {
       select: { membershipTier: true },
     });
 
-    // Daily reward fixed at exactly 200 xu per day as requested
-    const rewardPoints = 200;
+    // Calculate reward based on real-time day of week in Vietnam time (UTC+7)
+    const vnDateStr = new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' });
+    const vnDate = new Date(vnDateStr);
+    const dayOfWeek = vnDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+
+    // Weekly day-of-week rewards:
+    // T2: +100, T3: +150, T4: +200, T5: +250, T6: +300, T7: +400, CN: +500
+    const dayRewardMap: Record<number, { name: string; points: number }> = {
+      1: { name: 'Thứ 2', points: 100 },
+      2: { name: 'Thứ 3', points: 150 },
+      3: { name: 'Thứ 4', points: 200 },
+      4: { name: 'Thứ 5', points: 250 },
+      5: { name: 'Thứ 6', points: 300 },
+      6: { name: 'Thứ 7', points: 400 },
+      0: { name: 'Chủ Nhật', points: 500 },
+    };
+
+    const currentDayConfig = dayRewardMap[dayOfWeek] || { name: 'Ngày', points: 200 };
+    const rewardPoints = currentDayConfig.points;
 
     // Create claim record
     await this.prisma.dailyRewardClaim.create({
@@ -73,8 +90,8 @@ export class GamificationService {
       },
     });
 
-    // Add 200 xu points to user
-    await this.addPoints(zaloUserId, rewardPoints, 'Điểm danh hàng ngày');
+    // Add xu points to user balance
+    await this.addPoints(zaloUserId, rewardPoints, `Điểm danh ngày ${currentDayConfig.name}`);
 
     // Create Notification
     try {
@@ -82,8 +99,8 @@ export class GamificationService {
         data: {
           zaloUserId,
           type: 'system',
-          title: `📍 Điểm danh thành công`,
-          content: `Chúc mừng! Bạn đã nhận được +200 xu thưởng từ điểm danh hàng ngày (Chuỗi: ${consecutiveDays} ngày).`,
+          title: `📍 Điểm danh ${currentDayConfig.name} thành công`,
+          content: `Chúc mừng! Bạn nhận được +${rewardPoints} xu từ điểm danh ${currentDayConfig.name}.`,
           date:
             new Date().toLocaleTimeString('vi-VN', {
               hour: '2-digit',
@@ -100,9 +117,10 @@ export class GamificationService {
 
     return {
       success: true,
-      points: rewardPoints,
+      message: `Điểm danh ${currentDayConfig.name} thành công! +${rewardPoints} Xu`,
+      rewardPoints,
       consecutiveDays,
-      message: `Nhận ${rewardPoints} điểm!`,
+      dayName: currentDayConfig.name,
     };
   }
 
@@ -142,16 +160,7 @@ export class GamificationService {
   }
 
   async getUserGamification(zaloUserId: string) {
-    try {
-      await this.checkAchievements(zaloUserId);
-    } catch (e) {
-      console.error(
-        'Error pre-checking achievements in getUserGamification:',
-        e,
-      );
-    }
-
-    const [user, todayClaim, achievements, pointsHistory] = await Promise.all([
+    const [user, todayClaim, pointsHistory] = await Promise.all([
       this.prisma.user.findUnique({
         where: { zaloId: zaloUserId },
         select: {
@@ -166,10 +175,6 @@ export class GamificationService {
           claimedAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
         },
       }),
-      this.prisma.userAchievement.findMany({
-        where: { zaloUserId },
-        include: { achievement: true },
-      }),
       this.prisma.pointsHistory.findMany({
         where: { zaloUserId },
         orderBy: { createdAt: 'desc' },
@@ -181,13 +186,7 @@ export class GamificationService {
       points: user?.gamificationPoints || 0,
       membershipTier: user?.membershipTier || 'Đồng',
       hasClaimedToday: !!todayClaim,
-      achievements: achievements.map((ua) => ({
-        id: ua.achievement.id,
-        name: ua.achievement.name,
-        description: ua.achievement.description,
-        icon: ua.achievement.icon,
-        unlockedAt: ua.unlockedAt,
-      })),
+      achievements: [],
       pointsHistory,
     };
   }

@@ -28,6 +28,7 @@ export interface CreateOrderDto {
   shippingName?: string;
   isDirectBuy?: boolean;
   shippingMethodCode?: string;
+  usePoints?: boolean;
 }
 
 @Injectable()
@@ -201,7 +202,24 @@ export class OrdersService {
       }
     }
 
-    const finalDiscount = tierDiscount + voucherDiscount;
+    let pointsDiscount = 0;
+    let pointsToDeduct = 0;
+
+    // Check if user requested to use coins to deduct order amount (1 Xu = 1 VNĐ)
+    if (dto.usePoints && filterUserId) {
+      const user = await this.prisma.user.findUnique({
+        where: { zaloId: filterUserId },
+        select: { gamificationPoints: true },
+      });
+      const userPoints = user?.gamificationPoints || 0;
+      if (userPoints > 0) {
+        const amountBeforePoints = Math.max(0, subtotal + shippingCost - (tierDiscount + voucherDiscount));
+        pointsDiscount = Math.min(Math.round(userPoints), amountBeforePoints);
+        pointsToDeduct = pointsDiscount;
+      }
+    }
+
+    const finalDiscount = tierDiscount + voucherDiscount + pointsDiscount;
     const finalTotalAmount = Math.max(
       0,
       subtotal + shippingCost - finalDiscount,
@@ -209,6 +227,24 @@ export class OrdersService {
 
     // We run the verification, stock decrement, and order creation inside a transaction
     const order = await this.prisma.$transaction(async (tx) => {
+      // 0. Deduct user coins if used
+      if (pointsToDeduct > 0 && filterUserId) {
+        await tx.user.update({
+          where: { zaloId: filterUserId },
+          data: {
+            gamificationPoints: { decrement: pointsToDeduct },
+          },
+        });
+
+        await tx.pointsHistory.create({
+          data: {
+            zaloUserId: filterUserId,
+            points: -pointsToDeduct,
+            reason: `Trừ ${pointsToDeduct} xu thanh toán đơn hàng #${orderId}`,
+            metadata: { orderId },
+          },
+        });
+      }
       // 1. Verify stock and decrement for each item
       for (const item of dto.items) {
         const itemSize = item.size || 'DEFAULT';
