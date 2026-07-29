@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { useCart } from "../../App";
+import { useAppStore } from "../../store";
 import { apiRequest, API_BASE_URL } from "../../utils/api";
 
 interface Message {
@@ -45,6 +46,9 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
           `/chat/messages?zaloUserId=${userId}`,
         );
         setMessages(Array.isArray(history) ? history : []);
+        // Mark ADMIN messages as read for this user
+        await apiRequest('/chat/messages/read', 'POST', { zaloUserId: userId, sender: 'ADMIN' }).catch(() => {});
+        useAppStore.getState().setUnreadChatCount(0);
       } catch (err) {
         console.error("Failed to load chat history:", err);
       } finally {

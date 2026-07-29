@@ -3,12 +3,14 @@ import { useCart } from "../../App";
 import {
   HomeIcon as HomeOutline,
   ClipboardDocumentListIcon as ClipboardOutline,
+  ChatBubbleLeftEllipsisIcon as ChatOutline,
   BellIcon as BellOutline,
   UserIcon as UserOutline,
 } from "@heroicons/react/24/outline";
 import {
   HomeIcon as HomeSolid,
   ClipboardDocumentListIcon as ClipboardSolid,
+  ChatBubbleLeftEllipsisIcon as ChatSolid,
   BellIcon as BellSolid,
   UserIcon as UserSolid,
 } from "@heroicons/react/24/solid";
@@ -16,10 +18,11 @@ import {
 export const BottomNavBarComponent: React.FC<IBottomNavBarComponentProps> = (
   _props,
 ) => {
-  const { activeTab, setActiveTab, setIsCartOpen, notifications } = useCart();
+  const { activeTab, setActiveTab, setIsCartOpen, setIsChatOpen, setChatContextProduct, notifications, unreadChatCount } = useCart();
   const showNavbar = [
     "home",
     "orders",
+    "chat",
     "notifications",
     "profile",
   ].includes(activeTab);
@@ -71,6 +74,36 @@ export const BottomNavBarComponent: React.FC<IBottomNavBarComponentProps> = (
           }`}
         >
           Đơn hàng
+        </span>
+      </button>
+
+      {/* Tư Vấn CSKH Tab (MỚI - Độc lập, không kèm sản phẩm rác, có Unread Badge) */}
+      <button
+        onClick={() => {
+          setChatContextProduct(null); // Xóa bối cảnh sản phẩm rác để mở màn hình chat sạch sẽ
+          setIsChatOpen(true);
+          setIsCartOpen(false);
+        }}
+        className="flex flex-col items-center justify-center flex-1 h-full transition-all relative border-none bg-transparent cursor-pointer group"
+      >
+        <div className="relative">
+          {activeTab === "chat" ? (
+            <ChatSolid className="w-5.5 h-5.5 text-primary scale-105 transition-transform" />
+          ) : (
+            <ChatOutline className="w-5.5 h-5.5 text-[#526069] opacity-70 group-hover:opacity-100 transition-opacity" />
+          )}
+          {unreadChatCount > 0 && (
+            <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-white z-10 animate-pulse">
+              {unreadChatCount > 9 ? "9+" : unreadChatCount}
+            </span>
+          )}
+        </div>
+        <span
+          className={`text-[10px] mt-1 font-extrabold tracking-tight transition-colors ${
+            activeTab === "chat" ? "text-primary" : "text-[#526069]/70"
+          }`}
+        >
+          Tư vấn
         </span>
       </button>
 
@@ -127,3 +160,5 @@ export const BottomNavBarComponent: React.FC<IBottomNavBarComponentProps> = (
     </div>
   );
 };
+
+export default BottomNavBarComponent;

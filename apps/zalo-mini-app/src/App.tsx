@@ -123,6 +123,8 @@ export default function App() {
   const isCartOpen = useAppStore((state) => state.isCartOpen);
   const isChatOpen = useAppStore((state) => state.isChatOpen);
   const chatContextProduct = useAppStore((state) => state.chatContextProduct);
+  const unreadChatCount = useAppStore((state) => state.unreadChatCount);
+  const setUnreadChatCount = useAppStore((state) => state.setUnreadChatCount);
   const toast = useAppStore((state) => state.toast);
   const zaloUser = useAppStore((state) => state.zaloUser);
   const selectedOrder = useAppStore((state) => state.selectedOrder);
@@ -266,6 +268,18 @@ export default function App() {
     fetchCart();
   }, [fetchCart, zaloUser?.id]);
 
+  // Fetch unread CSKH chat count for current user
+  useEffect(() => {
+    if (!zaloUser?.id) return;
+    apiRequest<{ unreadCount: number }>(`/chat/user-unread-count?zaloUserId=${zaloUser.id}`)
+      .then((res) => {
+        if (res && typeof res.unreadCount === "number") {
+          setUnreadChatCount(res.unreadCount);
+        }
+      })
+      .catch(() => {});
+  }, [zaloUser?.id, setUnreadChatCount]);
+
   // Deep Link handling: Open product detail if URL has query parameters
   useEffect(() => {
     try {
@@ -308,6 +322,8 @@ export default function App() {
               setIsChatOpen,
               chatContextProduct,
               setChatContextProduct,
+              unreadChatCount,
+              setUnreadChatCount,
               showToast,
               toast,
               zaloUser,
@@ -338,6 +354,7 @@ export default function App() {
                   "home",
                   "search",
                   "orders",
+                  "chat",
                   "notifications",
                   "profile",
                 ].includes(activeTab);

@@ -16,6 +16,7 @@ export interface IAppState {
   isCartOpen: boolean;
   isChatOpen: boolean;
   chatContextProduct: IProduct | null;
+  unreadChatCount: number;
   toast: IToastState | null;
   zaloUser: IZaloUser | null;
   selectedOrder: IOrder | null;
@@ -29,6 +30,7 @@ export interface IAppState {
   setIsCartOpen: (open: boolean) => void;
   setIsChatOpen: (open: boolean) => void;
   setChatContextProduct: (product: IProduct | null) => void;
+  setUnreadChatCount: (count: number | ((prev: number) => number)) => void;
   setToast: (toast: IToastState | null) => void;
   showToast: (message: string, type?: TToastType) => void;
   updateZaloUser: (user: IZaloUser) => void;

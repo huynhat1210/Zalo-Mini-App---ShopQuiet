@@ -20,6 +20,7 @@ export const useAppStore = create<IAppState>()(
       isCartOpen: false,
       isChatOpen: false,
       chatContextProduct: null,
+      unreadChatCount: 0,
       toast: null,
       zaloUser: null,
       selectedOrder: null,
@@ -36,6 +37,10 @@ export const useAppStore = create<IAppState>()(
       setIsCartOpen: (open) => set({ isCartOpen: open }),
       setIsChatOpen: (open) => set({ isChatOpen: open }),
       setChatContextProduct: (product) => set({ chatContextProduct: product }),
+      setUnreadChatCount: (count) =>
+        set((state) => ({
+          unreadChatCount: typeof count === "function" ? count(state.unreadChatCount) : count,
+        })),
       setToast: (toast) => set({ toast }),
       showToast: (message, type = "success") => {
         const { toastTimerRef } = get();

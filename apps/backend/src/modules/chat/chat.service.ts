@@ -93,4 +93,15 @@ export class ChatService {
     });
     return { unreadCount: unreadUsers.length };
   }
+
+  async getUserUnreadCount(zaloUserId: string) {
+    const count = await this.prisma.chatMessage.count({
+      where: {
+        zaloUserId,
+        sender: 'ADMIN',
+        read: false,
+      },
+    });
+    return { unreadCount: count };
+  }
 }

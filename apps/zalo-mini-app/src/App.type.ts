@@ -134,6 +134,8 @@ export interface ICartContextType {
   setIsChatOpen: (open: boolean) => void;
   chatContextProduct: IProduct | null;
   setChatContextProduct: (product: IProduct | null) => void;
+  unreadChatCount: number;
+  setUnreadChatCount: (count: number | ((prev: number) => number)) => void;
   showToast: (message: string, type?: TToastType) => void;
   toast: IToastState | null;
   zaloUser: IZaloUser | null;

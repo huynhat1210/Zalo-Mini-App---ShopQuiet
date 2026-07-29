@@ -81,4 +81,15 @@ export class ChatController {
   async getUnreadCount() {
     return this.chatService.getUnreadSessionsCount();
   }
+
+  @ApiOperation({ summary: 'Lấy số lượng tin nhắn CSKH chưa đọc của User' })
+  @Get('user-unread-count')
+  @UseGuards(JwtAuthGuard)
+  async getUserUnreadCount(@Query('zaloUserId') zaloUserId: string, @CurrentUser() user: any) {
+    const targetUserId = zaloUserId || user.zaloId;
+    if (user.role !== 'admin' && targetUserId !== user.zaloId) {
+      throw new ForbiddenException('Không có quyền xem thông tin này.');
+    }
+    return this.chatService.getUserUnreadCount(targetUserId);
+  }
 }
