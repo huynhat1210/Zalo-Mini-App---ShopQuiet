@@ -221,13 +221,17 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
 
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="p-6 bg-gray-50 min-h-screen space-y-6">
-
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 animate-fadeIn">
+      {/* ── Top Banner & Header ── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/90 shadow-xs">
         <div>
-          <h1 className="text-2xl font-black text-gray-900">Phân Tích & Báo Cáo</h1>
-          <p className="text-gray-500 text-xs mt-1">Tổng quan hiệu suất kinh doanh theo thời gian thực</p>
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 bg-teal-50 text-[#0e6877] text-xs font-black uppercase tracking-wider rounded-full border border-teal-200 flex items-center gap-1.5">
+              <TrendingUp size={13} /> Realtime Analytics
+            </span>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 mt-2 tracking-tight">Phân Tích & Báo Cáo Kinh Doanh</h1>
+          <p className="text-xs text-slate-500 font-medium mt-1">Tổng quan doanh thu, tỷ lệ chuyển đổi giỏ hàng & sản phẩm bán chạy</p>
         </div>
         <div className="flex items-center gap-3">
           <button
