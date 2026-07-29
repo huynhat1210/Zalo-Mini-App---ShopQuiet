@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { apiRequest, API_BASE_URL } from "../../utils/api";
+import { apiRequest, apiUploadRequest, API_BASE_URL } from "../../utils/api";
 import { IReviewModalProps } from "./review-modal.type";
 
 export const ReviewModal: React.FC<IReviewModalProps> = (props) => {
@@ -30,16 +30,22 @@ export const ReviewModal: React.FC<IReviewModalProps> = (props) => {
       const urls: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-
-        // Read image locally as Base64 for instant 100% reliable preview & upload
-        const base64Url = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(file);
-        });
-
-        if (base64Url) {
-          urls.push(base64Url);
+        try {
+          const uploadedUrl = await apiUploadRequest(
+            file,
+            `/products/${productId || 0}/comments/upload-image`
+          );
+          if (uploadedUrl) {
+            urls.push(uploadedUrl);
+          }
+        } catch (uploadErr) {
+          console.error("Upload error for file:", file.name, uploadErr);
+          const base64Url = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(file);
+          });
+          if (base64Url) urls.push(base64Url);
         }
       }
       if (urls.length > 0) {
@@ -170,7 +176,7 @@ export const ReviewModal: React.FC<IReviewModalProps> = (props) => {
               >
                 <img
                   src={
-                    url.startsWith("http")
+                    url.startsWith("http") || url.startsWith("data:") || url.startsWith("blob:")
                       ? url
                       : `${API_BASE_URL.replace("/api/v1", "")}${url}`
                   }

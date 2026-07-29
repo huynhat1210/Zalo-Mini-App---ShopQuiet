@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Page } from "zmp-ui";
 import { useCart, IOrderItem } from "../../App";
-import { apiRequest, API_BASE_URL } from "../../utils/api";
+import { apiRequest, apiUploadRequest, API_BASE_URL } from "../../utils/api";
 import { IOrderDetailProps } from "./order-detail.type";
 import api, { Payment } from "zmp-sdk";
 import {
@@ -177,18 +177,13 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
       const urls: string[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await fetch(
-          `${API_BASE_URL}/products/0/comments/upload-image`,
-          {
-            method: "POST",
-            body: formData,
-          },
-        );
-        const data = await res.json();
-        if (data && data.url) {
-          urls.push(data.url);
+        try {
+          const uploadedUrl = await apiUploadRequest(file, "/products/0/comments/upload-image");
+          if (uploadedUrl) {
+            urls.push(uploadedUrl);
+          }
+        } catch (uploadErr) {
+          console.error("Upload return image error:", uploadErr);
         }
       }
       if (urls.length > 0) {
@@ -779,7 +774,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                   >
                     <img
                       src={
-                        url.startsWith("http")
+                        url.startsWith("http") || url.startsWith("data:") || url.startsWith("blob:")
                           ? url
                           : `${API_BASE_URL.replace("/api/v1", "")}${url}`
                       }

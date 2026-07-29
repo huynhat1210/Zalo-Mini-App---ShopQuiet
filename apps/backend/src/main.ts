@@ -21,6 +21,10 @@ async function bootstrap() {
     logger: ['error', 'warn'], // Enable basic default logger to diagnose bootstrap crashes
   });
 
+  // Increase JSON & URL-encoded body limit for image & data payloads
+  app.use(express.json({ limit: '25mb' }));
+  app.use(express.urlencoded({ limit: '25mb', extended: true }));
+
   // Get Pino logger instance
   const logger = await app.resolve(PinoLogger);
   logger.log('Starting application...');

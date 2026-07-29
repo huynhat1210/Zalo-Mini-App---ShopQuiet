@@ -169,3 +169,64 @@ export async function apiRequest<T = unknown>(
 
   return json;
 }
+
+export async function apiUploadRequest(
+  file: File,
+  endpoint = "/products/0/comments/upload-image"
+): Promise<string> {
+  const url = endpoint.startsWith("http")
+    ? endpoint
+    : `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const headers: Record<string, string> = {
+    "ngrok-skip-browser-warning": "true",
+  };
+
+  const accessToken = tokenStorage.getAccessToken();
+  if (accessToken) {
+    headers["Authorization"] = `Bearer ${accessToken}`;
+  }
+
+  let zaloUserId = tokenStorage.getZaloUserId();
+  if (!zaloUserId) {
+    try {
+      const cached = localStorage.getItem("zalo_profile_custom");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed?.id) zaloUserId = parsed.id;
+        else if (parsed?.zaloId) zaloUserId = parsed.zaloId;
+      }
+    } catch (e) {}
+  }
+  if (zaloUserId) {
+    headers["x-zalo-user-id"] = zaloUserId;
+  }
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  if (!response.ok) {
+    let errMsg = `Lỗi tải ảnh: ${response.status}`;
+    try {
+      const errJson = await response.json();
+      if (errJson?.message) {
+        errMsg = Array.isArray(errJson.message)
+          ? errJson.message[0]
+          : errJson.message;
+      }
+    } catch (e) {}
+    throw new Error(errMsg);
+  }
+
+  const json = await response.json();
+  if (json && json.url) {
+    return json.url;
+  }
+  throw new Error("Không nhận được đường dẫn ảnh sau khi tải lên");
+}
