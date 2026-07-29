@@ -221,35 +221,10 @@ export class UsersService implements OnModuleInit {
   }
 
   async getMembershipPrivileges(tier: string) {
-    const list = await this.prisma.membershipPrivilege.findMany({
+    return this.prisma.membershipPrivilege.findMany({
       where: { tier },
       orderBy: { sortOrder: 'asc' },
     });
-
-    if (list && list.length > 0) {
-      return list;
-    }
-
-    // Default fallback + auto seed if empty
-    const defaultPrivileges: Record<string, any[]> = {
-      Đồng: [
-        { title: 'Tích điểm mua sắm', description: 'Tích lũy xu mỗi đơn hàng', icon: '🛒' },
-        { title: 'Ưu đãi thành viên', description: 'Nhận thông báo ưu đãi', icon: '🎁' },
-      ],
-      Bạc: [
-        { title: 'Giảm 5% đơn hàng', description: 'Giảm 5% cho tất cả đơn hàng', icon: '💰' },
-        { title: 'Freeship đơn 150k', description: 'Miễn phí vận chuyển từ 150.000đ', icon: '🚚' },
-      ],
-      Vàng: [
-        { title: 'Giảm 10% đơn hàng', description: 'Giảm 10% cho tất cả đơn hàng', icon: '💎' },
-        { title: 'Freeship đơn 100k', description: 'Miễn phí vận chuyển từ 100.000đ', icon: '🚚' },
-      ],
-      'Kim cương': [
-        { title: 'Giảm 15% đơn hàng', description: 'Giảm 15% cho tất cả đơn hàng', icon: '👑' },
-        { title: 'Freeship 0đ', description: 'Miễn phí vận chuyển mọi đơn hàng', icon: '🚀' },
-      ],
-    };
-    return defaultPrivileges[tier] || defaultPrivileges['Đồng'];
   }
 
   async seedMembershipPrivileges() {
