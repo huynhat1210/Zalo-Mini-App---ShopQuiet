@@ -56,4 +56,16 @@ export class GamificationController {
       body.pointsCost,
     );
   }
+
+  @Post('claim-referral')
+  @UseGuards(JwtAuthGuard)
+  async claimReferral(
+    @CurrentUser() user: any,
+    @Body() body: { referrerCode: string },
+  ) {
+    return this.gamificationService.processReferral(
+      user.zaloId,
+      body.referrerCode,
+    );
+  }
 }

@@ -528,4 +528,47 @@ export class GamificationService {
       voucherCode,
     };
   }
+
+  async processReferral(zaloUserId: string, referrerCode: string) {
+    if (!zaloUserId || !referrerCode) return { success: false, message: 'Thiếu thông tin giới thiệu' };
+
+    const cleanCode = referrerCode.replace('REF-', '').trim();
+    const referrer = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { zaloId: cleanCode },
+          { zaloId: { startsWith: cleanCode } },
+        ],
+      },
+    });
+
+    if (!referrer) {
+      return { success: false, message: 'Mã giới thiệu không tồn tại!' };
+    }
+
+    if (referrer.zaloId === zaloUserId) {
+      return { success: false, message: 'Không thể tự giới thiệu chính mình!' };
+    }
+
+    const existingBonus = await this.prisma.pointsHistory.findFirst({
+      where: {
+        zaloUserId: referrer.zaloId,
+        reason: { contains: `Giới thiệu người dùng ${zaloUserId}` },
+      },
+    });
+
+    if (existingBonus) {
+      return { success: false, message: 'Đã nhận thưởng giới thiệu trước đó!' };
+    }
+
+    const bonusPoints = 50;
+    await this.addPoints(referrer.zaloId, bonusPoints, `Giới thiệu người dùng ${zaloUserId} qua Zalo`);
+    await this.addPoints(zaloUserId, 20, `Nhập mã giới thiệu từ ${referrer.name || referrer.zaloId}`);
+
+    return {
+      success: true,
+      message: `Đã cộng +${bonusPoints} điểm thưởng giới thiệu thành công!`,
+      referrerName: referrer.name,
+    };
+  }
 }
