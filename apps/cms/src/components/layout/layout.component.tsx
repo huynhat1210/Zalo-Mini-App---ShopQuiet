@@ -55,8 +55,8 @@ export const LayoutComponent: React.FC<ILayoutComponentProps> = (props) => {
 
   useEffect(() => {
     fetchNotifications();
-    // Poll notifications every 10 seconds for real-time order alerts
-    const interval = setInterval(fetchNotifications, 10000);
+    // Poll notifications every 60 seconds for real-time order alerts
+    const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
   }, []);
 
