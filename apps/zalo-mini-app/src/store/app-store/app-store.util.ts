@@ -790,14 +790,31 @@ export const useAppStore = create<IAppState>()(
           return false;
         }
       },
+      theme: (typeof window !== "undefined" && (localStorage.getItem("shopquiet_theme") as "light" | "dark")) || "light",
+      setTheme: (newTheme: "light" | "dark") => {
+        set({ theme: newTheme });
+        if (typeof window !== "undefined") {
+          localStorage.setItem("shopquiet_theme", newTheme);
+          if (newTheme === "dark") {
+            document.documentElement.classList.add("dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+          }
+        }
+      },
+      toggleTheme: () => {
+        const current = get().theme;
+        const next = current === "dark" ? "light" : "dark";
+        get().setTheme(next);
+      },
     }),
     {
-      name: "shopquiet-app-storage",
+      name: "shopquiet_app_store",
       partialize: (state) => ({
         cart: state.cart,
         savedItems: state.savedItems,
-        zaloUser: state.zaloUser,
         viewedProducts: state.viewedProducts,
+        theme: state.theme,
       }),
     },
   ),

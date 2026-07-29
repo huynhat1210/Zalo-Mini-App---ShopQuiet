@@ -161,4 +161,7 @@ export interface ICartContextType {
     voucherCode: string,
     pointsCost: number,
   ) => Promise<boolean>;
+  theme: "light" | "dark";
+  setTheme: (theme: "light" | "dark") => void;
+  toggleTheme: () => void;
 }

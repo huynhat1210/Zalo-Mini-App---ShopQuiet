@@ -166,6 +166,19 @@ export default function App() {
     (state) => state.fetchRecommendations,
   );
   const exchangeVoucher = useAppStore((state) => state.exchangeVoucher);
+  const theme = useAppStore((state) => state.theme);
+  const setTheme = useAppStore((state) => state.setTheme);
+  const toggleTheme = useAppStore((state) => state.toggleTheme);
+
+  // Synchronize HTML dark class on initial mount & system preference change
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("shopquiet_theme") as "light" | "dark" | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      setTheme("dark");
+    }
+  }, [setTheme]);
 
   // TanStack React Query for Notifications
   const { data: notificationsData, refetch: fetchNotifications } =
@@ -346,6 +359,9 @@ export default function App() {
               recommendations,
               fetchRecommendations,
               exchangeVoucher,
+              theme,
+              setTheme,
+              toggleTheme,
             }}
           >
             <ZMPRouterCast>

@@ -3,6 +3,7 @@ import { Page } from "zmp-ui";
 import { useCart, IOrder } from "../../App";
 import { apiRequest, useTranslation } from "../../utils";
 import { IProfileProps } from "./profile.type";
+import { SunIcon, MoonIcon } from "@heroicons/react/24/outline";
 
 // Import sub-components from global components folder
 import {
@@ -50,6 +51,8 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     fetchGamificationData,
     claimDailyReward,
     exchangeVoucher,
+    theme,
+    toggleTheme,
   } = useCart();
 
   const [orders, setOrders] = useState<IOrder[]>([]);
@@ -280,24 +283,37 @@ export const Profile: React.FC<IProfileProps> = (props) => {
           <span className="text-xs font-black uppercase tracking-[0.2em] font-sans">
             ShopQuiet ID
           </span>
-          <button
-            onClick={() => setIsEditProfileOpen(true)}
-            className="p-2 -mr-2 bg-white/10 hover:bg-white/20 active:scale-95 rounded-full transition-colors border-none text-white cursor-pointer"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              viewBox="0 0 24 24"
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 bg-white/10 hover:bg-white/20 active:scale-95 rounded-full transition-colors border-none text-white cursor-pointer"
+              title={theme === "dark" ? "Chuyển giao diện sáng" : "Chuyển giao diện tối"}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"
-              />
-            </svg>
-          </button>
+              {theme === "dark" ? (
+                <SunIcon className="w-5 h-5 text-amber-300" strokeWidth={2.2} />
+              ) : (
+                <MoonIcon className="w-5 h-5 text-teal-100" strokeWidth={2.2} />
+              )}
+            </button>
+            <button
+              onClick={() => setIsEditProfileOpen(true)}
+              className="p-2 -mr-2 bg-white/10 hover:bg-white/20 active:scale-95 rounded-full transition-colors border-none text-white cursor-pointer"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* User Card Row */}

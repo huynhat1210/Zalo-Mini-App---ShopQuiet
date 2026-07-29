@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Page, Box, Swiper } from "zmp-ui";
+import { Page, Box } from "zmp-ui";
 import { IProduct, useCart } from "../../App";
 import api from "zmp-sdk";
 import { apiRequest, API_BASE_URL, trackAnalyticsEvent } from "../../utils";
@@ -9,6 +9,8 @@ import {
   ShoppingBagIcon,
   HeartIcon as HeartOutline,
   ChatBubbleOvalLeftEllipsisIcon,
+  MagnifyingGlassPlusIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 import { IProductDetailProps } from "./product-detail.type";
@@ -35,6 +37,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
   const [quantity, setQuantity] = useState(1);
   const [likeCount, setLikeCount] = useState(product.likeCount || 0);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
 
   useEffect(() => {
     setLikeCount(product.likeCount || 0);
@@ -459,9 +462,19 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
           <img
             src={images[activeImageIndex] || images[0]}
             alt={`${product.name} ${activeImageIndex + 1}`}
-            className="w-full h-full object-contain select-none transition-all duration-300 animate-fade-in"
+            onClick={() => setIsZoomOpen(true)}
+            className="w-full h-full object-contain select-none transition-all duration-300 animate-fade-in cursor-zoom-in"
             loading="eager"
           />
+
+          {/* Tap to Zoom Icon Overlay */}
+          <button
+            onClick={() => setIsZoomOpen(true)}
+            className="absolute top-3 left-3 bg-black/40 backdrop-blur-md text-white p-2 rounded-full shadow-sm hover:bg-black/60 transition-colors border-none cursor-pointer z-10"
+            title="Xem phóng to ảnh"
+          >
+            <MagnifyingGlassPlusIcon className="w-4.5 h-4.5 text-white" strokeWidth={2.2} />
+          </button>
 
           {/* Photo Counter Badge (Bottom Right as requested) */}
           <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-sm tracking-wider z-10">
@@ -1165,6 +1178,58 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
           {(hasColors || hasSizes) && stockCount <= 0 ? "Hết hàng" : "Mua ngay"}
         </button>
       </div>
+
+      {/* Full-Screen Image Gallery Lightbox Modal */}
+      {isZoomOpen && (
+        <div
+          onClick={() => setIsZoomOpen(false)}
+          className="fixed inset-0 z-[999] bg-black/95 backdrop-blur-md flex flex-col justify-between items-center p-4 animate-fade-in"
+        >
+          {/* Top Bar with Close Button & Counter */}
+          <div className="w-full flex justify-between items-center text-white pt-2 px-2 z-10">
+            <span className="text-xs font-bold tracking-wider text-slate-300">
+              {activeImageIndex + 1} / {images.length}
+            </span>
+            <button
+              onClick={() => setIsZoomOpen(false)}
+              className="p-2.5 rounded-full bg-white/20 hover:bg-white/30 text-white border-none cursor-pointer active:scale-95 transition-all"
+            >
+              <XMarkIcon className="w-6 h-6 text-white" strokeWidth={2.5} />
+            </button>
+          </div>
+
+          {/* Large Image View */}
+          <div className="flex-1 w-full flex items-center justify-center relative my-auto overflow-hidden">
+            <img
+              src={images[activeImageIndex]}
+              alt={product.name}
+              className="max-w-full max-h-[80vh] object-contain transition-transform duration-300 active:scale-125 cursor-grab"
+            />
+          </div>
+
+          {/* Bottom Thumbnails Strip */}
+          {images.length > 1 && (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="flex gap-3 px-4 py-3 bg-black/50 backdrop-blur-md rounded-2xl max-w-full overflow-x-auto scrollbar-none mb-4"
+            >
+              {images.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveImageIndex(idx)}
+                  className={`w-12 h-12 rounded-xl overflow-hidden border-2 transition-all cursor-pointer p-0 shrink-0 ${
+                    activeImageIndex === idx
+                      ? "border-primary shadow-lg scale-110"
+                      : "border-slate-600 opacity-50 hover:opacity-100"
+                  }`}
+                >
+                  <img src={img} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </PageCast>
   );
 };
