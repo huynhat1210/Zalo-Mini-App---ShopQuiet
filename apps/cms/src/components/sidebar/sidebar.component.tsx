@@ -45,13 +45,14 @@ const MODEL_DISPLAY_NAMES: Record<string, string> = {
   User: 'Khách hàng (Raw)',
   Voucher: 'Mã giảm giá (Raw)',
   Banner: 'Banner quảng cáo',
-  RefreshToken: 'Token bảo mật',
   ShippingMethod: 'Phương thức giao hàng',
   SiteSetting: 'Cấu hình hệ thống',
-  StaticPage: 'Trang tĩnh',
   UserAddress: 'Địa chỉ khách hàng',
   PaymentMethod: 'Phương thức thanh toán',
   CartItem: 'Chi tiết giỏ hàng',
+  PointsHistory: 'Lịch sử điểm thưởng & Xu',
+  AuditLog: 'Nhật ký quản trị',
+  AnalyticsEvent: 'Sự kiện phân tích',
 };
 
 export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
