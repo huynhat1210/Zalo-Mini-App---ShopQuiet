@@ -246,14 +246,16 @@ export class Pay2sService {
         continue;
       }
 
-      // Update order status to PROCESSING
-      await this.prisma.order.update({
-        where: { id: order.id },
-        data: {
-          status: 'PROCESSING',
-          paymentMethod: 'PAY2S_HOOK',
-        },
-      });
+      // Update order status to PROCESSING with ACID Transaction
+      await this.prisma.$transaction([
+        this.prisma.order.update({
+          where: { id: order.id },
+          data: {
+            status: 'PROCESSING',
+            paymentMethod: 'PAY2S',
+          },
+        }),
+      ]);
 
       this.orderTrackingGateway.broadcastOrderStatus(order.id, 'PROCESSING');
 

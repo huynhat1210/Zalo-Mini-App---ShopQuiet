@@ -180,7 +180,7 @@ export const LuckyWheel: React.FC<ILuckyWheelProps> = (props) => {
     ctx.fill();
   }, [prizes]);
 
-  const spinTheWheel = () => {
+  const spinTheWheel = async () => {
     if (spinning || prizes.length === 0) return;
     const eligibility = checkSpinEligibility();
     if (!eligibility.eligible) {
@@ -195,27 +195,25 @@ export const LuckyWheel: React.FC<ILuckyWheelProps> = (props) => {
 
     let finalPrizeCode = selected.code;
 
-    // Call backend API in parallel to generate the unique voucher and create user notification
-    const callBackendPromise = (async () => {
-      if (selected.type !== "LUCKY" && zaloUser?.id) {
-        try {
-          const res = await apiRequest<any>(
-            "/vouchers/lucky-draw/generate",
-            "POST",
-            {
-              rewardType: selected.type,
-              rewardValue: selected.value,
-              minOrderVal: 0,
-            },
-          );
-          if (res && res.code) {
-            finalPrizeCode = res.code;
-          }
-        } catch (e) {
-          console.error("Failed to generate backend voucher:", e);
+    // Call backend API FIRST to generate unique voucher before starting wheel animation
+    if (selected.type !== "LUCKY" && zaloUser?.id) {
+      try {
+        const res = await apiRequest<any>(
+          "/vouchers/lucky-draw/generate",
+          "POST",
+          {
+            rewardType: selected.type,
+            rewardValue: selected.value,
+            minOrderVal: 0,
+          },
+        );
+        if (res && res.code) {
+          finalPrizeCode = res.code;
         }
+      } catch (e) {
+        console.error("Failed to generate backend voucher:", e);
       }
-    })();
+    }
 
     const sliceAngle = 360 / prizes.length;
     // Calculate stop degree (stop inside the sliced arc)
@@ -230,10 +228,7 @@ export const LuckyWheel: React.FC<ILuckyWheelProps> = (props) => {
       canvasRef.current.style.transform = `rotate(${totalRotation}deg)`;
     }
 
-    setTimeout(async () => {
-      // Wait for backend code generation API to resolve
-      await callBackendPromise;
-
+    setTimeout(() => {
       setSpinning(false);
       const updatedSpinResult = {
         ...selected,
