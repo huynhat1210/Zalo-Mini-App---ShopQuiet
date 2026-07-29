@@ -104,4 +104,24 @@ export class ChatService {
     });
     return { unreadCount: count };
   }
+
+  async getShopStatus() {
+    const setting = await this.prisma.siteSetting.findUnique({
+      where: { key: 'shop.status' },
+    });
+    return { status: setting?.value || 'ONLINE' };
+  }
+
+  async getLatestUserOrder(zaloUserId: string) {
+    const order = await this.prisma.order.findFirst({
+      where: { zaloUserId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        items: {
+          include: { product: true },
+        },
+      },
+    });
+    return order;
+  }
 }

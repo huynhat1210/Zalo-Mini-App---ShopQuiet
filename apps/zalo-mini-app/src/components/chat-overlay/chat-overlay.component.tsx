@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
+import api from "zmp-sdk";
 import { useCart } from "../../App";
 import { useAppStore } from "../../store";
 import { apiRequest, API_BASE_URL } from "../../utils/api";
@@ -29,33 +30,40 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [loading, setLoading] = useState(true);
+  const [shopStatus, setShopStatus] = useState<string>("ONLINE");
+  const [latestOrder, setLatestOrder] = useState<any | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
-  // Track optimistic message IDs to replace them when real ID arrives from WebSocket
   const pendingTempIds = useRef<Set<string>>(new Set());
 
   const userId = zaloUser?.id || "guest";
   const serverUrl = API_BASE_URL.replace("/api/v1", "");
 
-  // 1. Fetch History on open
+  // 1. Fetch History, Shop Status, & Latest Order on open
   useEffect(() => {
-    const fetchHistory = async () => {
+    const fetchChatInitialData = async () => {
       try {
-        const history = await apiRequest<Message[]>(
-          `/chat/messages?zaloUserId=${userId}`,
-        );
+        const [history, statusRes, orderRes] = await Promise.all([
+          apiRequest<Message[]>(`/chat/messages?zaloUserId=${userId}`).catch(() => []),
+          apiRequest<{ status: string }>('/chat/shop-status').catch(() => ({ status: 'ONLINE' })),
+          apiRequest<any>(`/chat/latest-order?zaloUserId=${userId}`).catch(() => null),
+        ]);
+
         setMessages(Array.isArray(history) ? history : []);
+        setShopStatus(statusRes?.status || "ONLINE");
+        setLatestOrder(orderRes || null);
+
         // Mark ADMIN messages as read for this user
         await apiRequest('/chat/messages/read', 'POST', { zaloUserId: userId, sender: 'ADMIN' }).catch(() => {});
         useAppStore.getState().setUnreadChatCount(0);
       } catch (err) {
-        console.error("Failed to load chat history:", err);
+        console.error("Failed to load chat data:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchHistory();
+    fetchChatInitialData();
   }, [userId]);
 
   // 2. Connect WebSockets (Socket.IO)
@@ -69,13 +77,9 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
 
     socket.on("message", (msg: Message) => {
       setMessages((prev) => {
-        // Deduplicate by real ID
         if (prev.some((m) => m.id === msg.id)) return prev;
 
-        // If this message was sent by the current user and we have a pending temp ID,
-        // replace the optimistic message instead of appending a duplicate
         if (msg.sender === "USER" && pendingTempIds.current.size > 0) {
-          // Find the oldest pending temp message that matches content
           const tempIdx = prev.findIndex(
             (m) =>
               typeof m.id === "string" &&
@@ -85,7 +89,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
           if (tempIdx !== -1) {
             pendingTempIds.current.delete(prev[tempIdx].id as string);
             const updated = [...prev];
-            updated[tempIdx] = msg; // Replace temp with real message
+            updated[tempIdx] = msg;
             return updated;
           }
         }
@@ -113,7 +117,6 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
     if (!text) return;
     setInputValue("");
 
-    // Generate a stable temp ID for this optimistic message
     const tempId = `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     pendingTempIds.current.add(tempId);
 
@@ -128,18 +131,15 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
 
     setMessages((prev) => [...prev, newMsg]);
 
-    // Send via WebSocket — the server will broadcast back the saved message with a real DB ID
     if (socketRef.current?.connected) {
       socketRef.current.emit("send_message", {
         zaloUserId: userId,
         sender: "USER",
         content: text,
       });
-      // WebSocket path handles persistence — skip REST to avoid duplicate
       return;
     }
 
-    // Fallback: WebSocket not connected → persist via REST (offline-safe)
     try {
       const saved = await apiRequest<Message>("/chat/messages", "POST", {
         zaloUserId: userId,
@@ -147,7 +147,6 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
         content: text,
       });
       if (saved?.id) {
-        // Replace optimistic message with real one
         setMessages((prev) =>
           prev.map((m) => (m.id === tempId ? { ...saved } : m)),
         );
@@ -158,7 +157,43 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
     }
   };
 
+  // Feature 4: Pick image via Zalo SDK & Send
+  const handleChooseImage = async () => {
+    try {
+      if (api.chooseImage) {
+        api.chooseImage({
+          count: 1,
+          sourceType: ["album", "camera"],
+          success: (res: any) => {
+            if (res.filePaths && res.filePaths.length > 0) {
+              const imgPath = res.filePaths[0];
+              const text = `[IMAGE_ATTACHMENT] ${imgPath}`;
+              handleSendMessage(text);
+            }
+          },
+          fail: (err: any) => {
+            console.log("chooseImage fail:", err);
+          },
+        });
+      } else {
+        showToast("Tính năng chọn ảnh khả dụng trên ứng dụng Zalo Mobile", "info");
+      }
+    } catch (e) {
+      console.error("Image pick error:", e);
+    }
+  };
+
   const renderMessageContent = (content: string) => {
+    if (content.startsWith("[IMAGE_ATTACHMENT]")) {
+      const url = content.substring("[IMAGE_ATTACHMENT]".length).trim();
+      return (
+        <div className="space-y-1">
+          <span className="text-[10px] text-teal-800 font-bold block">📷 Ảnh đính kèm:</span>
+          <img src={url} alt="Attached" className="max-w-[200px] max-h-[200px] rounded-xl object-cover border border-slate-200" />
+        </div>
+      );
+    }
+
     if (content.startsWith("[PRODUCT_CONTEXT]")) {
       try {
         const payloadStr = content.substring("[PRODUCT_CONTEXT]".length).trim();
@@ -198,29 +233,58 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
     return <p className="text-xs leading-relaxed font-medium break-words whitespace-pre-wrap">{content}</p>;
   };
 
+  // Feature 1: Smart Quick Actions Bar
   const quickTemplates = [
-    "Sản phẩm này còn hàng không shop?",
-    "Đơn hàng của mình khi nào giao?",
-    "Shop có chính sách đổi trả như thế nào?",
-    "Có mã giảm giá nào cho đơn đầu tiên không ạ?",
+    "🚚 Kiểm tra hành trình đơn hàng",
+    "🎟️ Xin mã giảm giá đơn tiếp theo",
+    "📞 Yêu cầu tư vấn viên gọi lại",
+    "Shop có chính sách đổi trả thế nào?",
   ];
+
+  const handleQuickActionClick = (template: string) => {
+    if (template.includes("Kiểm tra hành trình") && latestOrder) {
+      const msg = `Hỏi CSKH: Tôi muốn kiểm tra hành trình Đơn hàng #${latestOrder.id} (Trạng thái: ${latestOrder.status})`;
+      handleSendMessage(msg);
+      return;
+    }
+    handleSendMessage(template);
+  };
 
   return (
     <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-xs flex flex-col justify-end animate-fadeIn">
-      <div className="bg-white rounded-t-3xl h-[85vh] flex flex-col overflow-hidden shadow-2xl border-t border-white/20">
+      <div className="bg-white rounded-t-3xl h-[88vh] flex flex-col overflow-hidden shadow-2xl border-t border-white/20">
 
-        {/* ── Top Header ── */}
+        {/* ── Top Header with Feature 3: Online Status ── */}
         <div className="bg-gradient-to-r from-[#0e6877] to-[#168a9e] text-white p-4 flex justify-between items-center shadow-sm">
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-lg font-black border border-white/30">
                 💬
               </div>
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-teal-800 rounded-full animate-pulse"></span>
+              <span
+                className={`absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-teal-800 rounded-full ${
+                  shopStatus === "ONLINE" ? "bg-emerald-400 animate-pulse" : "bg-slate-400"
+                }`}
+              ></span>
             </div>
             <div>
-              <h3 className="font-extrabold text-sm tracking-tight">Chát Trực Tiếp Với CSKH</h3>
-              <p className="text-[10px] text-teal-100/90 font-medium">ShopQuiet CSKH sẵn sàng hỗ trợ bạn</p>
+              <div className="flex items-center gap-2">
+                <h3 className="font-extrabold text-sm tracking-tight">Tư Vấn CSKH ShopQuiet</h3>
+                <span
+                  className={`text-[9px] px-2 py-0.2 rounded-full font-black uppercase tracking-wider ${
+                    shopStatus === "ONLINE"
+                      ? "bg-emerald-500/30 text-emerald-100 border border-emerald-400/40"
+                      : "bg-slate-500/40 text-slate-200"
+                  }`}
+                >
+                  {shopStatus === "ONLINE" ? "Online 24/7" : "Offline (Chờ phản hồi)"}
+                </span>
+              </div>
+              <p className="text-[10px] text-teal-100/90 font-medium mt-0.5">
+                {shopStatus === "ONLINE"
+                  ? "Sẵn sàng hỗ trợ tư vấn & chốt đơn ngay"
+                  : "Vui lòng để lại tin nhắn, CSKH sẽ hồi đáp sớm nhất"}
+              </p>
             </div>
           </div>
 
@@ -231,6 +295,27 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
             ✕
           </button>
         </div>
+
+        {/* ── Feature 2: Order Attachment Context Banner ── */}
+        {latestOrder && !chatContextProduct && (
+          <div className="bg-amber-50 border-b border-amber-200 p-2.5 px-4 flex items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-[9px] bg-amber-600 text-white px-2 py-0.5 rounded font-black uppercase tracking-wider shrink-0">Đơn mới nhất</span>
+              <p className="text-xs font-bold text-amber-950 truncate">
+                #{latestOrder.id} - {latestOrder.totalAmount?.toLocaleString("vi-VN")} đ
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                const text = `Tôi cần hỗ trợ về Đơn hàng #${latestOrder.id} (${latestOrder.totalAmount?.toLocaleString("vi-VN")} đ, trạng thái: ${latestOrder.status})`;
+                handleSendMessage(text);
+              }}
+              className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[10px] font-bold border-none cursor-pointer active:scale-95 shrink-0 shadow-2xs"
+            >
+              Hỏi về đơn này
+            </button>
+          </div>
+        )}
 
         {/* ── Context Product Preview (if opened from product page) ── */}
         {chatContextProduct && (
@@ -272,7 +357,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
           ) : messages.length === 0 ? (
             <div className="text-center py-12 text-slate-400 space-y-2">
               <p className="text-xs font-semibold">Chưa có tin nhắn nào với tư vấn viên.</p>
-              <p className="text-[10px] text-slate-400">Hãy gửi câu hỏi bên dưới để được nhân viên hỗ trợ ngay!</p>
+              <p className="text-[10px] text-slate-400">Hãy chọn câu hỏi bên dưới hoặc nhập tin nhắn để được hỗ trợ ngay!</p>
             </div>
           ) : (
             messages.map((msg) => {
@@ -316,16 +401,23 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
           {quickTemplates.map((template, i) => (
             <button
               key={i}
-              onClick={() => handleSendMessage(template)}
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10.5px] font-bold rounded-full whitespace-nowrap border-none cursor-pointer active:scale-95 transition-transform shrink-0"
+              onClick={() => handleQuickActionClick(template)}
+              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10.5px] font-bold rounded-full whitespace-nowrap border-none cursor-pointer active:scale-95 transition-transform shrink-0 shadow-2xs"
             >
               {template}
             </button>
           ))}
         </div>
 
-        {/* ── Message Input Bar ── */}
+        {/* ── Message Input Bar + Feature 4: Camera / Image Button ── */}
         <div className="p-3 bg-white border-t border-slate-200 flex items-center gap-2">
+          <button
+            onClick={handleChooseImage}
+            className="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold border-none cursor-pointer active:scale-90 transition-transform shrink-0"
+            title="Gửi hình ảnh"
+          >
+            📷
+          </button>
           <input
             type="text"
             placeholder="Nhập tin nhắn tư vấn..."

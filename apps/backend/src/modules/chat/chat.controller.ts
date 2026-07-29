@@ -92,4 +92,21 @@ export class ChatController {
     }
     return this.chatService.getUserUnreadCount(targetUserId);
   }
+
+  @ApiOperation({ summary: 'Lấy trạng thái hoạt động CSKH của Shop' })
+  @Get('shop-status')
+  async getShopStatus() {
+    return this.chatService.getShopStatus();
+  }
+
+  @ApiOperation({ summary: 'Lấy đơn hàng mới nhất của người dùng để hỗ trợ CSKH' })
+  @Get('latest-order')
+  @UseGuards(JwtAuthGuard)
+  async getLatestOrder(@Query('zaloUserId') zaloUserId: string, @CurrentUser() user: any) {
+    const targetUserId = zaloUserId || user.zaloId;
+    if (user.role !== 'admin' && targetUserId !== user.zaloId) {
+      throw new ForbiddenException('Không có quyền xem thông tin đơn hàng này.');
+    }
+    return this.chatService.getLatestUserOrder(targetUserId);
+  }
 }
