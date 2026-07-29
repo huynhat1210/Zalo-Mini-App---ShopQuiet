@@ -935,14 +935,14 @@ export class CmsService implements OnModuleInit {
       orderId: o.id,
       amount: o.totalAmount,
       paymentMethod: o.paymentMethod || 'PAY2S',
-      paymentStatus: ['COMPLETED', 'PAID', 'DELIVERED', 'SHIPPED'].includes(o.status)
+      paymentStatus: ['COMPLETED', 'PAID', 'DELIVERED', 'SHIPPED', 'PROCESSING'].includes(o.status)
         ? 'PAID'
         : o.status === 'CANCELLED'
         ? 'CANCELLED'
         : 'PENDING',
       transferContent: `PAYSQ-${o.id}`,
       createdAt: o.createdAt,
-      paidAt: ['COMPLETED', 'PAID', 'DELIVERED', 'SHIPPED'].includes(o.status) ? o.createdAt : undefined,
+      paidAt: ['COMPLETED', 'PAID', 'DELIVERED', 'SHIPPED', 'PROCESSING'].includes(o.status) ? o.createdAt : undefined,
       user: o.user || { zaloId: o.zaloUserId || '', name: o.shippingName || 'Khách hàng', phone: o.shippingPhone || '' },
     }));
   }
