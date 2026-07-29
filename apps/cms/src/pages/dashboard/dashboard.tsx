@@ -9,6 +9,11 @@ import {
   TrendingUp,
   ArrowRight,
   Package,
+  Clock,
+  CheckCircle,
+  Truck,
+  AlertTriangle,
+  Zap,
 } from 'lucide-react';
 import type { IDashboardProps } from './dashboard.type';
 
@@ -49,7 +54,6 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
         const productList = products && Array.isArray(products) ? products : products?.data || [];
         const voucherList = Array.isArray(vouchers) ? vouchers : [];
 
-        // Calculate revenue for completed & processing orders
         const revenue = orderList
           .filter(
             (o: any) =>
@@ -60,7 +64,6 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
           )
           .reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0);
 
-        // Find products with low stock variants (stock < 5)
         const lowStock = productList
           .filter((prod: any) => {
             if (Array.isArray(prod.variants)) {
@@ -75,7 +78,7 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
           totalOrders: orderList.length,
           totalRevenue: revenue,
           totalVouchers: voucherList.length,
-          recentOrders: orderList.slice(0, 5),
+          recentOrders: orderList.slice(0, 6),
           allOrders: orderList,
           lowStockProducts: lowStock,
         });
@@ -89,7 +92,7 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
     fetchDashboardData();
     const interval = setInterval(() => {
       fetchDashboardData(true);
-    }, 30000); // 30s polling
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -97,201 +100,286 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, paymentMethod?: string) => {
+    const isCod = (paymentMethod || 'COD').toUpperCase() === 'COD';
     switch (status) {
       case 'PENDING':
       case 'PENDING_PAYMENT':
-        return <span className="px-2.5 py-1 text-[11px] font-bold text-amber-700 bg-amber-50 rounded-full border border-amber-200">Chờ thanh toán</span>;
+        return (
+          <span className="px-2.5 py-1 text-[11px] font-black text-amber-700 bg-amber-50 rounded-xl border border-amber-200 inline-flex items-center gap-1">
+            <Clock size={12} /> Chờ thanh toán
+          </span>
+        );
       case 'PROCESSING':
-        return <span className="px-2.5 py-1 text-[11px] font-bold text-blue-700 bg-blue-50 rounded-full border border-blue-200">Đang xử lý</span>;
+        return isCod ? (
+          <span className="px-2.5 py-1 text-[11px] font-black text-orange-700 bg-orange-50 rounded-xl border border-orange-200 inline-flex items-center gap-1">
+            <Truck size={12} /> Chuẩn bị (COD)
+          </span>
+        ) : (
+          <span className="px-2.5 py-1 text-[11px] font-black text-blue-700 bg-blue-50 rounded-xl border border-blue-200 inline-flex items-center gap-1">
+            <CheckCircle size={12} /> Đã nhận tiền (Pay2S)
+          </span>
+        );
       case 'SHIPPED':
-        return <span className="px-2.5 py-1 text-[11px] font-bold text-indigo-700 bg-indigo-50 rounded-full border border-indigo-200">Đang giao</span>;
+        return (
+          <span className="px-2.5 py-1 text-[11px] font-black text-indigo-700 bg-indigo-50 rounded-xl border border-indigo-200 inline-flex items-center gap-1">
+            <Truck size={12} /> Đang giao
+          </span>
+        );
       case 'COMPLETED':
       case 'DELIVERED':
-        return <span className="px-2.5 py-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 rounded-full border border-emerald-200">Hoàn thành</span>;
+        return (
+          <span className="px-2.5 py-1 text-[11px] font-black text-emerald-700 bg-emerald-50 rounded-xl border border-emerald-200 inline-flex items-center gap-1">
+            <CheckCircle size={12} /> Hoàn thành
+          </span>
+        );
       case 'CANCELLED':
-        return <span className="px-2.5 py-1 text-[11px] font-bold text-rose-700 bg-rose-50 rounded-full border border-rose-200">Đã hủy</span>;
+        return (
+          <span className="px-2.5 py-1 text-[11px] font-black text-rose-700 bg-rose-50 rounded-xl border border-rose-200">
+            Đã hủy
+          </span>
+        );
       default:
-        return <span className="px-2.5 py-1 text-[11px] font-bold text-slate-700 bg-slate-100 rounded-full">{status}</span>;
+        return <span className="px-2.5 py-1 text-[11px] font-black text-slate-700 bg-slate-100 rounded-xl">{status}</span>;
     }
   };
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-4 animate-fadeIn">
-        <div className="w-12 h-12 border-4 border-[#0e6877] border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-slate-500 text-xs font-semibold">Đang tải dữ liệu tổng quan...</p>
+      <div className="space-y-6 animate-fadeIn">
+        <div className="h-8 w-48 bg-slate-200 rounded-xl animate-pulse" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-32 bg-white rounded-3xl border border-slate-200/80 p-5 animate-pulse" />
+          ))}
+        </div>
       </div>
     );
   }
 
   const statCards = [
     {
-      title: 'Doanh thu tích lũy',
+      title: 'TỔNG DOANH THU',
       value: formatPrice(stats.totalRevenue),
-      desc: 'Từ các đơn hàng thành công',
+      desc: 'Doanh số thực tế ghi nhận',
       icon: DollarSign,
-      color: 'text-[#0e6877] bg-teal-50 border-teal-100',
+      bgIcon: 'bg-teal-50 text-[#0e6877] border-teal-200',
+      gradient: 'from-[#0e6877]/5 via-white to-white',
+      badge: 'Thanh toán thành công',
       onClick: () => navigate('/orders'),
     },
     {
-      title: 'Tổng đơn hàng',
+      title: 'TỔNG ĐƠN HÀNG',
       value: `${stats.totalOrders} đơn`,
-      desc: 'Toàn bộ đơn hàng ghi nhận',
+      desc: 'Toàn bộ đơn trên Mini App',
       icon: ReceiptText,
-      color: 'text-blue-600 bg-blue-50 border-blue-100',
+      bgIcon: 'bg-blue-50 text-blue-600 border-blue-200',
+      gradient: 'from-blue-50/40 via-white to-white',
+      badge: 'Cập nhật realtime',
       onClick: () => navigate('/orders'),
     },
     {
-      title: 'Sản phẩm kinh doanh',
-      value: `${stats.totalProducts} sp`,
-      desc: 'Đang hiển thị trên Mini App',
+      title: 'SẢN PHẨM HIỂN THỊ',
+      value: `${stats.totalProducts} sản phẩm`,
+      desc: 'Đang bán trên Cửa hàng',
       icon: Package,
-      color: 'text-indigo-600 bg-indigo-50 border-indigo-100',
+      bgIcon: 'bg-indigo-50 text-indigo-600 border-indigo-200',
+      gradient: 'from-indigo-50/40 via-white to-white',
+      badge: 'Kho hàng sẵn sàng',
       onClick: () => navigate('/products'),
     },
     {
-      title: 'Mã giảm giá (Vouchers)',
+      title: 'VOUCHER KHUYẾN MÃI',
       value: `${stats.totalVouchers} mã`,
-      desc: 'Mã khuyến mãi đang phát hành',
+      desc: 'Chương trình ưu đãi active',
       icon: Ticket,
-      color: 'text-amber-600 bg-amber-50 border-amber-100',
+      bgIcon: 'bg-amber-50 text-amber-600 border-amber-200',
+      gradient: 'from-amber-50/40 via-white to-white',
+      badge: 'Kích cầu mua sắm',
       onClick: () => navigate('/vouchers'),
     },
   ];
 
   return (
-    <div className="space-y-6 animate-fadeIn text-[#1b1c1b]">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-black text-slate-800 tracking-tight">Tổng Quan Hệ Thống</h1>
-        <p className="text-slate-500 text-xs mt-1">Theo dõi các chỉ số hoạt động chính của cửa hàng ShopQuiet</p>
+    <div className="space-y-6 animate-fadeIn">
+      {/* Top Banner & Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 bg-teal-50 text-[#0e6877] text-xs font-black uppercase tracking-wider rounded-full border border-teal-200 flex items-center gap-1.5">
+              <Zap size={13} /> Control Dashboard
+            </span>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 mt-2 tracking-tight">
+            Trung Tâm Điều Hành ShopQuiet
+          </h1>
+          <p className="text-xs text-slate-500 font-medium mt-1">
+            Tổng quan hiệu suất kinh doanh, quản lý đơn hàng & cảnh báo tồn kho thời gian thực
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/orders')}
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#0e6877] hover:bg-[#0b5460] text-white text-xs font-bold rounded-2xl transition-all border-none cursor-pointer shadow-sm active:scale-95"
+          >
+            <ShoppingBag size={15} /> Xử lý đơn mới ({stats.recentOrders.filter(o => o.status === 'PROCESSING' || o.status === 'PENDING').length})
+          </button>
+        </div>
       </div>
 
-      {/* Stats Grid */}
+      {/* Modern Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((card, i) => {
           const Icon = card.icon;
           return (
-            <button
+            <div
               key={i}
               onClick={card.onClick}
-              className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm hover:shadow-md hover:border-[#0e6877]/30 transition-all duration-200 group text-left cursor-pointer border-none"
+              className={`bg-gradient-to-br ${card.gradient} bg-white border border-slate-200/90 rounded-3xl p-5 shadow-xs hover:shadow-md hover:border-[#0e6877]/40 transition-all duration-200 group text-left cursor-pointer relative overflow-hidden`}
             >
               <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">{card.title}</span>
-                  <h3 className="text-xl font-black text-slate-900 tracking-tight">{card.value}</h3>
-                  <p className="text-slate-500 text-xs font-normal">{card.desc}</p>
+                <div className="space-y-1 z-10">
+                  <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{card.title}</span>
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight">{card.value}</h3>
+                  <p className="text-slate-500 text-[11px] font-medium">{card.desc}</p>
                 </div>
-                <div className={`p-3 rounded-2xl border ${card.color} transition-transform group-hover:scale-110 duration-200`}>
-                  <Icon size={20} />
+                <div className={`p-3 rounded-2xl border ${card.bgIcon} transition-transform group-hover:scale-110 duration-200 shrink-0 shadow-2xs`}>
+                  <Icon size={22} />
                 </div>
               </div>
-            </button>
+              <div className="mt-4 pt-3 border-t border-slate-100/80 flex items-center justify-between">
+                <span className="text-[10px] font-bold text-[#0e6877]">{card.badge}</span>
+                <ArrowRight size={13} className="text-slate-400 group-hover:text-[#0e6877] group-hover:translate-x-1 transition-all" />
+              </div>
+            </div>
           );
         })}
       </div>
 
       {/* Main Sections Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Orders Table */}
-        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-sm">
-          <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+        {/* Recent Orders Cards */}
+        <div className="lg:col-span-2 bg-white border border-slate-200/90 rounded-3xl p-6 space-y-4 shadow-xs">
+          <div className="flex justify-between items-center pb-3 border-b border-slate-100">
             <div>
-              <h3 className="text-sm font-bold text-slate-800">🛍️ Đơn hàng mới tiếp nhận</h3>
-              <p className="text-slate-400 text-xs mt-0.5">Danh sách các đơn hàng vừa tạo trên Zalo Mini App</p>
+              <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                🛍️ Đơn Hàng Tiếp Nhận Gần Đây
+              </h3>
+              <p className="text-slate-400 text-xs mt-0.5 font-medium">Danh sách các đơn phát sinh từ Zalo Mini App</p>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-extrabold text-[#0e6877] bg-teal-50 px-2.5 py-1 rounded-full flex items-center gap-1 border border-teal-200">
-                <TrendingUp size={12} /> Live Sync
-              </span>
-              <button
-                onClick={() => navigate('/orders')}
-                className="text-xs font-bold text-slate-600 hover:text-[#0e6877] bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1 rounded-xl flex items-center gap-1 transition-all cursor-pointer border-none"
-              >
-                Xem tất cả <ArrowRight size={12} />
-              </button>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-[#fbf9f7] text-[#526069] text-xs font-bold uppercase tracking-wider">
-                <tr>
-                  <th className="py-3 px-4 rounded-l-xl">Mã đơn</th>
-                  <th className="py-3 px-4">Khách hàng</th>
-                  <th className="py-3 px-4">Tổng tiền</th>
-                  <th className="py-3 px-4 text-right rounded-r-xl">Trạng thái</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {stats.recentOrders.length > 0 ? (
-                  stats.recentOrders.map((order) => (
-                    <tr
-                      key={order.id}
-                      className="hover:bg-slate-50 transition-colors cursor-pointer"
-                      onClick={() => navigate('/orders')}
-                    >
-                      <td className="py-3.5 px-4 font-mono text-xs text-[#0e6877] font-bold">
-                        #{typeof order.id === 'string' ? order.id.slice(-6).toUpperCase() : String(order.id)}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="font-bold text-slate-800 text-xs">{order.customerName || order.shippingName || order.user?.name || 'Khách Zalo'}</div>
-                        <div className="text-[10px] text-slate-500 font-medium">{order.shippingPhone || order.phone || order.userAddress?.phone || order.user?.phone || '0336433234'}</div>
-                      </td>
-                      <td className="py-3.5 px-4 text-[#0e6877] font-black text-xs">{formatPrice(order.totalAmount || order.total || 0)}</td>
-                      <td className="py-3.5 px-4 text-right">{getStatusBadge(order.status)}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="py-8 text-center text-slate-400 text-xs">Chưa có đơn hàng nào cần xử lý</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Low Stock Warning Panel */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-sm">
-          <div className="flex justify-between items-center pb-2 border-b border-slate-100">
-            <div>
-              <h3 className="text-sm font-bold text-slate-800">⚠️ Cảnh báo kho hàng</h3>
-              <p className="text-slate-400 text-xs mt-0.5">Sản phẩm sắp hết hàng (kho &lt; 5)</p>
-            </div>
-            <div className="p-2 bg-amber-50 rounded-xl text-amber-600">
-              <ShoppingBag size={18} />
-            </div>
+            <button
+              onClick={() => navigate('/orders')}
+              className="text-xs font-bold text-[#0e6877] bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer border-none"
+            >
+              Xem tất cả <ArrowRight size={13} />
+            </button>
           </div>
 
           <div className="space-y-3">
-            {stats.lowStockProducts.length > 0 ? (
-              stats.lowStockProducts.map((product, index) => {
-                const lowVariants = product.variants.filter((v: any) => v.stock < 5);
+            {stats.recentOrders.length > 0 ? (
+              stats.recentOrders.map((order) => {
+                const customerName = order.shippingName || order.customerName || order.user?.name || 'Khách hàng Zalo';
+                const customerPhone = order.shippingPhone || order.phone || order.user?.phone || '0336433234';
+                const itemsCount = Array.isArray(order.items) ? order.items.reduce((s: number, it: any) => s + (it.quantity || 1), 0) : 1;
+
                 return (
-                  <div key={index} className="flex items-center justify-between p-3 bg-amber-50/50 rounded-2xl border border-amber-100">
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-slate-800 truncate">{product.name}</p>
-                      <p className="text-[10px] text-amber-700 font-semibold mt-0.5">
-                        Biến thể: {lowVariants.map((v: any) => `${v.size || v.color} (${v.stock})`).join(', ')}
-                      </p>
+                  <div
+                    key={order.id}
+                    onClick={() => navigate('/orders')}
+                    className="p-4 bg-slate-50/60 hover:bg-teal-50/40 border border-slate-200/70 rounded-2xl transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-white border border-slate-200/80 flex items-center justify-center font-black text-xs text-[#0e6877] shrink-0 shadow-2xs group-hover:border-teal-300">
+                        📦
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-black text-slate-900 text-xs">#{order.id}</span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-100 text-slate-600 rounded-lg">
+                            {order.paymentMethod || 'COD'}
+                          </span>
+                        </div>
+                        <div className="text-xs font-bold text-slate-800 mt-0.5">
+                          {customerName} • <span className="text-slate-500 font-normal">{customerPhone}</span>
+                        </div>
+                        <div className="text-[11px] text-slate-400 mt-0.5">
+                          {itemsCount} sản phẩm • {new Date(order.createdAt).toLocaleString('vi-VN')}
+                        </div>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => navigate('/inventory')}
-                      className="text-[10px] font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-xl transition-all border-none cursor-pointer flex-shrink-0"
-                    >
-                      Nhập kho
-                    </button>
+
+                    <div className="flex sm:flex-col items-center sm:items-end justify-between border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-200/60">
+                      <span className="text-sm font-black text-[#0e6877]">
+                        {formatPrice(order.totalAmount || order.total || 0)}
+                      </span>
+                      <div className="mt-1">{getStatusBadge(order.status, order.paymentMethod)}</div>
+                    </div>
                   </div>
                 );
               })
             ) : (
-              <div className="text-center py-12 text-slate-400 text-xs">
-                Không có sản phẩm nào sắp hết hàng. Kho hàng an toàn!
+              <div className="py-12 text-center text-slate-400 text-xs font-medium">
+                Chưa có đơn hàng nào phát sinh. Hệ thống đang sẵn sàng!
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Low Stock Warning Panel */}
+        <div className="bg-white border border-slate-200/90 rounded-3xl p-6 space-y-4 shadow-xs flex flex-col justify-between">
+          <div>
+            <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+              <div>
+                <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <AlertTriangle size={17} className="text-amber-500" /> Cảnh Báo Tồn Kho
+                </h3>
+                <p className="text-slate-400 text-xs mt-0.5 font-medium">Sản phẩm có biến thể &lt; 5 sản phẩm</p>
+              </div>
+              <span className="text-[10px] font-black px-2.5 py-1 bg-amber-50 text-amber-700 rounded-full border border-amber-200">
+                {stats.lowStockProducts.length} SP
+              </span>
+            </div>
+
+            <div className="space-y-3 mt-4">
+              {stats.lowStockProducts.length > 0 ? (
+                stats.lowStockProducts.map((product, index) => {
+                  const lowVariants = product.variants.filter((v: any) => v.stock < 5);
+                  return (
+                    <div key={index} className="p-3.5 bg-amber-50/40 rounded-2xl border border-amber-200/60 flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-slate-900 truncate">{product.name}</p>
+                        <p className="text-[10.5px] text-amber-800 font-semibold mt-0.5">
+                          Tồn kho: {lowVariants.map((v: any) => `${v.size || v.color}: ${v.stock}`).join(', ')}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => navigate('/inventory')}
+                        className="text-[10px] font-black text-amber-800 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-xl transition-all border-none cursor-pointer shrink-0 shadow-2xs"
+                      >
+                        Nhập kho
+                      </button>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-12 text-slate-400 text-xs font-medium space-y-2">
+                  <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-base">
+                    ✓
+                  </div>
+                  <p>Kho hàng đang ở trạng thái an toàn!</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-slate-100">
+            <button
+              onClick={() => navigate('/inventory')}
+              className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-2xl transition-all border-none cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              Quản lý toàn bộ kho hàng <ArrowRight size={13} />
+            </button>
           </div>
         </div>
       </div>
