@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useCart } from "../../App";
-import { apiRequest, safeParseImages } from "../../utils";
+import { apiRequest, safeParseImages, useTranslation } from "../../utils";
 import { EmptyStateComponent } from "../../components";
 import { ICartProps } from "./cart.type";
 
 export const Cart: React.FC<ICartProps> = (_props) => {
+  const { t } = useTranslation();
   const {
     cart,
     updateQuantity,
@@ -50,10 +51,10 @@ export const Cart: React.FC<ICartProps> = (_props) => {
     setSelectedVoucher(voucher);
     if (voucher) {
       localStorage.setItem("selected_voucher_code", voucher.code);
-      showToast(`Đã áp dụng mã ${voucher.code}!`, "success");
+      showToast(`${t("cart.applied")} ${voucher.code}!`, "success");
     } else {
       localStorage.removeItem("selected_voucher_code");
-      showToast("Đã bỏ chọn voucher", "info");
+      showToast(t("cart.removed"), "info");
     }
     setIsVoucherModalOpen(false);
   };
@@ -141,7 +142,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
 
   const handleProceedCheckout = () => {
     if (selectedItems.length === 0) {
-      showToast("Vui lòng chọn ít nhất 1 sản phẩm để thanh toán!", "warning");
+      showToast(t("cart.selectItem"), "warning");
       return;
     }
     // Save selected checkout items & freeship status to localStorage
@@ -160,9 +161,9 @@ export const Cart: React.FC<ICartProps> = (_props) => {
       <div className="flex-1 flex flex-col overflow-y-auto px-6 py-5.5 pb-28">
         {cart.length === 0 ? (
           <EmptyStateComponent
-            title="Giỏ hàng trống"
-            description="Có vẻ như bạn chưa thêm bất kỳ sản phẩm nào vào giỏ hàng. Hãy cùng khám phá các sản phẩm tối giản của chúng tôi!"
-            actionText="Bắt đầu mua sắm"
+            title={t("cart.empty")}
+            description="You haven't added any products yet. Let's explore our minimalist products!"
+            actionText="Start Shopping"
             onAction={() => {
               setIsCartOpen(false);
               setActiveTab("home");
@@ -176,15 +177,15 @@ export const Cart: React.FC<ICartProps> = (_props) => {
               <div className="flex justify-between items-center text-xs">
                 {isFreeshipEligible ? (
                   <span className="font-bold text-teal-700">
-                    Đơn hàng của bạn đã được FREESHIP!
+                    Your order is FREESHIP!
                   </span>
                 ) : (
                   <span className="font-medium text-[#526069]">
-                    Mua thêm{" "}
+                    Buy{" "}
                     <span className="font-bold text-teal-600">
                       {remainingForFreeship.toLocaleString("vi-VN")} đ
                     </span>{" "}
-                    để được Freeship (Mốc {freeshipThreshold >= 1000 ? `${(freeshipThreshold / 1000).toFixed(0)}K` : `${freeshipThreshold}đ`})
+                    more for Freeship (Target {freeshipThreshold >= 1000 ? `${(freeshipThreshold / 1000).toFixed(0)}K` : `${freeshipThreshold}đ`})
                   </span>
                 )}
                 <span className="text-[10px] text-teal-600 font-extrabold">
@@ -208,7 +209,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                 onChange={toggleCheckAll}
               />
               <span className="text-xs text-textColor-variant font-bold">
-                Chọn tất cả ({cart.length} sản phẩm)
+                Select All ({cart.length})
               </span>
             </div>
 
@@ -279,7 +280,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                                             e.target.value,
                                           );
                                           showToast(
-                                            `Đã đổi sang Màu: ${e.target.value}`,
+                                            `Changed to Color: ${e.target.value}`,
                                             "success",
                                           );
                                         }}
@@ -297,12 +298,12 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                                           )
                                           .map((c: string) => (
                                             <option key={c} value={c}>
-                                              Màu: {c}
+                                              Color: {c}
                                             </option>
                                           ))}
                                         {item.color === "DEFAULT" && (
                                           <option value="DEFAULT">
-                                            Màu: Mặc định
+                                            Color: Default
                                           </option>
                                         )}
                                       </select>
@@ -322,7 +323,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                                             item.color,
                                           );
                                           showToast(
-                                            `Đã đổi sang Size: ${e.target.value}`,
+                                            `Changed to Size: ${e.target.value}`,
                                             "success",
                                           );
                                         }}
@@ -342,7 +343,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                                           ))}
                                         {item.size === "DEFAULT" && (
                                           <option value="DEFAULT">
-                                            Size: Mặc định
+                                            Size: Default
                                           </option>
                                         )}
                                       </select>
@@ -403,7 +404,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                             )
                           }
                           className="text-red-400 hover:text-red-600 p-1.5 rounded-full hover:bg-red-50 transition-colors border-none bg-transparent cursor-pointer"
-                          title="Xóa"
+                          title="Delete"
                         >
                           <svg
                             className="w-4.5 h-4.5"
@@ -434,13 +435,13 @@ export const Cart: React.FC<ICartProps> = (_props) => {
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="text-lg shrink-0">🎟️</span>
               <div className="text-left min-w-0">
-                <p className="text-[10px] font-extrabold text-[#526069]/80 uppercase tracking-wider">Voucher Của Shop</p>
+                <p className="text-[10px] font-extrabold text-[#526069]/80 uppercase tracking-wider">Shop Voucher</p>
                 {selectedVoucher ? (
                   <p className="text-xs font-black text-[#0e6877] truncate mt-0.5">
-                    ✅ {selectedVoucher.code} ({selectedVoucher.type === 'PERCENT' ? `Giảm ${selectedVoucher.value}%` : `Giảm ${selectedVoucher.value.toLocaleString('vi-VN')}đ`})
+                    ✅ {selectedVoucher.code} ({selectedVoucher.type === 'PERCENT' ? `Save ${selectedVoucher.value}%` : `Save ${selectedVoucher.value.toLocaleString('vi-VN')}đ`})
                   </p>
                 ) : (
-                  <p className="text-xs font-bold text-textColor-variant truncate mt-0.5">Chưa áp dụng mã giảm giá</p>
+                  <p className="text-xs font-bold text-textColor-variant truncate mt-0.5">No voucher applied</p>
                 )}
               </div>
             </div>
@@ -448,7 +449,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
               onClick={() => setIsVoucherModalOpen(true)}
               className="text-[10px] font-extrabold bg-[#0e6877]/10 text-[#0e6877] hover:bg-[#0e6877] hover:text-white px-3 py-1.5 rounded-full border-none cursor-pointer transition-all shrink-0 active:scale-95"
             >
-              {selectedVoucher ? "Đổi mã" : "Chọn mã ➔"}
+              {selectedVoucher ? "Change" : "Select ➔"}
             </button>
           </div>
         )}
@@ -457,20 +458,20 @@ export const Cart: React.FC<ICartProps> = (_props) => {
         {selectedItems.length > 0 && (
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 space-y-3.5 shadow-xs mt-3">
             <h3 className="text-[10px] font-bold uppercase text-[#526069]/70 tracking-widest text-left">
-              Tóm tắt đơn hàng
+              Order Summary
             </h3>
 
             <div className="space-y-2.5 text-xs">
               <div className="flex justify-between text-textColor-variant font-medium">
-                <span>Tạm tính ({selectedItems.length} món)</span>
+                <span>Subtotal ({selectedItems.length})</span>
                 <span>{subtotal.toLocaleString("vi-VN")} đ</span>
               </div>
               <div className="flex justify-between text-textColor-variant font-medium">
-                <span>Phí vận chuyển</span>
+                <span>Shipping</span>
                 <span>
                   {shipping === 0 && subtotal > 0 ? (
                     <span className="text-teal-600 font-bold">
-                      Miễn phí (Freeship)
+                      Free (Freeship)
                     </span>
                   ) : (
                     `${shipping.toLocaleString("vi-VN")} đ`
@@ -479,13 +480,13 @@ export const Cart: React.FC<ICartProps> = (_props) => {
               </div>
               {voucherDiscount > 0 && (
                 <div className="flex justify-between text-[#0e6877] font-bold">
-                  <span>Giảm giá Voucher ({selectedVoucher?.code})</span>
+                  <span>Voucher Discount ({selectedVoucher?.code})</span>
                   <span>−{voucherDiscount.toLocaleString("vi-VN")} đ</span>
                 </div>
               )}
               <hr className="border-[#f0edeb] my-1" />
               <div className="flex justify-between font-bold text-textColor text-sm">
-                <span>Tổng cộng</span>
+                <span>Total</span>
                 <span className="text-primary">
                   {total.toLocaleString("vi-VN")} đ
                 </span>
@@ -502,7 +503,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
             onClick={handleProceedCheckout}
             className="w-full h-12 rounded-full text-xs font-bold uppercase tracking-widest bg-primary text-white hover:bg-primary-dark active:scale-[0.98] transition-all shadow-md flex items-center justify-center border-none"
           >
-            Tiến hành đặt hàng ({selectedItems.length})
+            {t("cart.checkout")} ({selectedItems.length})
           </button>
         </div>
       )}
@@ -513,7 +514,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
           <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up max-h-[70vh] flex flex-col">
             <div className="flex items-center justify-between shrink-0 pb-2 border-b border-[#f5f3f0]">
               <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">
-                🎟️ Chọn Mã Giảm Giá
+                🎟️ Select Voucher
               </h3>
               <button
                 onClick={() => setIsVoucherModalOpen(false)}
@@ -525,7 +526,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
 
             <div className="overflow-y-auto flex-1 space-y-2.5 pr-1">
               {vouchersList.length === 0 ? (
-                <div className="text-center py-6 text-xs text-textColor-variant">Chưa có mã giảm giá khả dụng</div>
+                <div className="text-center py-6 text-xs text-textColor-variant">No vouchers available</div>
               ) : (
                 vouchersList.map((v: any) => {
                   const isSelected = selectedVoucher?.code === v.code;
@@ -542,11 +543,11 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                       <div>
                         <span className="font-black text-xs text-[#0e6877] tracking-wider font-mono">{v.code}</span>
                         <p className="text-[10.5px] font-bold text-textColor mt-0.5">
-                          {v.type === 'PERCENT' ? `Giảm ${v.value}%` : `Giảm ${v.value.toLocaleString('vi-VN')}đ`}
+                          {v.type === 'PERCENT' ? `Save ${v.value}%` : `Save ${v.value.toLocaleString('vi-VN')}đ`}
                         </p>
                       </div>
                       <span className={`text-xs font-bold px-3 py-1 rounded-full ${isSelected ? "bg-[#0e6877] text-white" : "bg-neutral-100 text-[#526069]"}`}>
-                        {isSelected ? "Đã chọn ✓" : "Áp dụng"}
+                        {isSelected ? "Selected ✓" : "Apply"}
                       </span>
                     </div>
                   );
