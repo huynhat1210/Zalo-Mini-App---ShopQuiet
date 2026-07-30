@@ -214,26 +214,30 @@ export default function App() {
 
   // Register Service Worker (Only on standard web browser, not inside Zalo App WebView)
   useEffect(() => {
-    const isRealZaloEnv =
-      typeof window !== "undefined" &&
-      (window.navigator.userAgent.toLowerCase().includes("zalo") ||
-        !!(window as any).ZaloMiniApp);
+    try {
+      const isRealZaloEnv =
+        typeof window !== "undefined" &&
+        (window.navigator.userAgent.toLowerCase().includes("zalo") ||
+          !!(window as any).ZaloMiniApp);
 
-    if (
-      "serviceWorker" in navigator &&
-      typeof window !== "undefined" &&
-      !isRealZaloEnv
-    ) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker
-          .register("/service-worker.js")
-          .then(() => {
-            console.log("ServiceWorker registration successful");
-          })
-          .catch((error) => {
-            console.log("ServiceWorker registration failed:", error);
-          });
-      });
+      if (
+        "serviceWorker" in navigator &&
+        typeof window !== "undefined" &&
+        !isRealZaloEnv
+      ) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/service-worker.js")
+            .then(() => {
+              console.log("ServiceWorker registration successful");
+            })
+            .catch((error) => {
+              console.log("ServiceWorker registration failed:", error);
+            });
+        });
+      }
+    } catch (error) {
+      console.warn("[App] Service worker initialization error:", error);
     }
   }, []);
 
@@ -254,11 +258,19 @@ export default function App() {
   };
 
   useEffect(() => {
-    syncUserFromStorage();
+    try {
+      syncUserFromStorage();
+    } catch (error) {
+      console.warn("[App] syncUserFromStorage error:", error);
+    }
   }, [syncUserFromStorage]);
 
   useEffect(() => {
-    fetchFavorites();
+    try {
+      fetchFavorites();
+    } catch (error) {
+      console.warn("[App] fetchFavorites error:", error);
+    }
   }, [fetchFavorites, zaloUser?.id]);
 
   useEffect(() => {
@@ -278,19 +290,27 @@ export default function App() {
   }, [notificationsData, showToast]);
 
   useEffect(() => {
-    fetchCart();
+    try {
+      fetchCart();
+    } catch (error) {
+      console.warn("[App] fetchCart error:", error);
+    }
   }, [fetchCart, zaloUser?.id]);
 
   // Fetch unread CSKH chat count for current user
   useEffect(() => {
-    if (!zaloUser?.id) return;
-    apiRequest<{ unreadCount: number }>(`/chat/user-unread-count?zaloUserId=${zaloUser.id}`)
-      .then((res) => {
-        if (res && typeof res.unreadCount === "number") {
-          setUnreadChatCount(res.unreadCount);
-        }
-      })
-      .catch(() => {});
+    try {
+      if (!zaloUser?.id) return;
+      apiRequest<{ unreadCount: number }>(`/chat/user-unread-count?zaloUserId=${zaloUser.id}`)
+        .then((res) => {
+          if (res && typeof res.unreadCount === "number") {
+            setUnreadChatCount(res.unreadCount);
+          }
+        })
+        .catch(() => {});
+    } catch (error) {
+      console.warn("[App] fetch chat count error:", error);
+    }
   }, [zaloUser?.id, setUnreadChatCount]);
 
   // Deep Link handling: Open product detail if URL has query parameters

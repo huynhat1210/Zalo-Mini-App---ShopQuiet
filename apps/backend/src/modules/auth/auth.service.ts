@@ -65,13 +65,16 @@ export class AuthService {
 
       const data = await response.json();
       if (data && data.error === -501) {
-        console.warn(
-          '[Zalo Auth] Server IP is outside Vietnam (Error -501). Zalo blocked profile retrieval. Bypassing validation for demo.',
-        );
+        // Only log in development environment to avoid noise in production
+        if (process.env.NODE_ENV !== 'production') {
+          this.logger.debug(
+            '[Zalo Auth] Server IP is outside Vietnam (Error -501). Zalo blocked profile retrieval. Bypassing validation for demo.',
+          );
+        }
         return null;
       }
       if (!data || !data.id) {
-        console.error('[Zalo Auth] Invalid Zalo profile response:', data);
+        this.logger.error('[Zalo Auth] Invalid Zalo profile response:', data);
         throw new Error(
           data?.message || 'Zalo API returned invalid profile data',
         );
@@ -83,7 +86,7 @@ export class AuthService {
         avatar: data.picture?.data?.url || '',
       };
     } catch (error) {
-      console.error('[Zalo Auth] Failed to verify Zalo access token:', error);
+      this.logger.error('[Zalo Auth] Failed to verify Zalo access token:', error);
       // Fallback for local development
       if (process.env.NODE_ENV !== 'production') {
         return {
@@ -124,10 +127,13 @@ export class AuthService {
           targetAvatar = avatar;
         }
       } catch (err) {
-        console.warn(
-          '[Zalo Auth] validateZaloAccessToken failed (likely -501 server IP geolocation block). Falling back to client-provided parameters:',
-          err,
-        );
+        // Only log in development environment to avoid noise in production
+        if (process.env.NODE_ENV !== 'production') {
+          this.logger.debug(
+            '[Zalo Auth] validateZaloAccessToken failed (likely -501 server IP geolocation block). Falling back to client-provided parameters:',
+            err,
+          );
+        }
         // Always fallback to client-provided parameters — do NOT throw in production
         // The -501 error occurs because Render.com servers are outside Vietnam.
         // The Zalo Mini App SDK itself has already verified the user client-side.
@@ -264,7 +270,7 @@ export class AuthService {
         refresh_token: new_refresh_token,
       };
     } catch (error) {
-      console.error('[AuthService] Refresh token error:', error);
+      this.logger.error('[AuthService] Refresh token error:', error);
       throw new UnauthorizedException('Invalid refresh token');
     }
   }

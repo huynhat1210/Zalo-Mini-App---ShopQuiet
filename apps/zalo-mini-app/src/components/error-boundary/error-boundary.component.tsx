@@ -20,10 +20,19 @@ export class ErrorBoundaryComponent extends Component<
   public static getDerivedStateFromError(
     error: Error,
   ): IErrorBoundaryComponentState {
+    // Suppress Zalo SDK cross-origin "Script error" messages
+    if (error.message === "Script error" || error.message === "Script error. null") {
+      return { hasError: false, error: null, errorInfo: null };
+    }
     return { hasError: true, error, errorInfo: null };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Suppress Zalo SDK cross-origin errors
+    if (error.message === "Script error" || error.message === "Script error. null" || error.message === null) {
+      console.warn("[ErrorBoundary] Suppressed Zalo SDK error:", error.message);
+      return;
+    }
     this.setState({ errorInfo });
     console.error("Uncaught error:", error, errorInfo);
   }

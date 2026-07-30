@@ -15,11 +15,22 @@ if (typeof window !== "undefined") {
   // Log errors for debugging but do NOT return true here —
   // returning true would prevent React's ErrorBoundary from catching them.
   window.addEventListener("error", (e) => {
+    // Suppress Zalo SDK cross-origin "Script error" messages
+    if (e.message === "Script error" || e.message === "Script error. null" || e.message === null) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      return;
+    }
     console.warn("[ShopQuiet] addEventListener error:", e.message, e.error);
     // Do NOT call e.preventDefault() or e.stopImmediatePropagation() here
     // so that React ErrorBoundary can still catch component-level errors.
   }, false);
   window.addEventListener("unhandledrejection", (e) => {
+    // Suppress Zalo SDK cross-origin "Script error" messages in promise rejections
+    if (e.reason && (e.reason.message === "Script error" || e.reason.message === "Script error. null" || e.reason.message === null)) {
+      e.preventDefault();
+      return;
+    }
     console.warn("[ShopQuiet] Unhandled promise rejection:", e.reason);
     // Only prevent the Zalo SDK from showing the ugly red popup for promise rejections
     e.preventDefault();
