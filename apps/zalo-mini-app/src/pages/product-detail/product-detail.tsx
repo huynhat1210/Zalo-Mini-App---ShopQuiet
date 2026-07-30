@@ -7,6 +7,7 @@ import {
   ChevronLeftIcon,
   ShareIcon,
   ShoppingBagIcon,
+  ShoppingCartIcon,
   HeartIcon as HeartOutline,
   ChatBubbleOvalLeftEllipsisIcon,
   MagnifyingGlassPlusIcon,
