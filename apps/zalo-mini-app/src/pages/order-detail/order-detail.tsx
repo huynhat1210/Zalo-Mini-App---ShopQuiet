@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Page } from "zmp-ui";
 import { useCart, IOrderItem } from "../../App";
-import { apiRequest, apiUploadRequest, API_BASE_URL } from "../../utils/api";
+import { apiRequest, apiUploadRequest, API_BASE_URL, useTranslation } from "../../utils/api";
 import { IOrderDetailProps } from "./order-detail.type";
 import api, { Payment } from "zmp-sdk";
 import {
@@ -12,15 +12,15 @@ import {
 const PageCast = Page as any;
 
 const STATUS_LABEL: Record<string, string> = {
-  PENDING: "Chờ thanh toán",
-  PROCESSING: "Đang xử lý (Đã thanh toán)",
-  SHIPPED: "Đang giao",
-  DELIVERED: "Hoàn thành",
-  COMPLETED: "Hoàn thành",
-  CANCELLED: "Đã hủy",
-  PENDING_PAYMENT: "Chờ thanh toán",
-  RETURN_REQUESTED: "Chờ hoàn trả",
-  RETURNED: "Đã hoàn trả",
+  PENDING: "order.statusProcessing",
+  PROCESSING: "order.statusProcessing",
+  SHIPPED: "order.statusShipped",
+  DELIVERED: "order.statusCompleted",
+  COMPLETED: "order.statusCompleted",
+  CANCELLED: "order.statusCancelled",
+  PENDING_PAYMENT: "order.statusProcessing",
+  RETURN_REQUESTED: "order.statusProcessing",
+  RETURNED: "order.statusCancelled",
 };
 
 const STATUS_CLASS: Record<string, string> = {
@@ -36,6 +36,7 @@ const STATUS_CLASS: Record<string, string> = {
 };
 
 export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
+  const { t } = useTranslation();
   const {
     selectedOrder,
     setSelectedOrder,
@@ -235,8 +236,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
     }
   };
 
-  const statusLabel =
-    STATUS_LABEL[selectedOrder.status] || selectedOrder.status;
+  const statusLabel = t(STATUS_LABEL[selectedOrder.status] || "order.statusProcessing");
   const statusClass =
     STATUS_CLASS[selectedOrder.status] ||
     "bg-neutral-100 text-textColor-variant";
@@ -271,7 +271,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
           </svg>
         </button>
         <span className="text-xs font-bold uppercase tracking-widest text-textColor">
-          Chi tiết đơn hàng
+          {t("orderDetail.title")}
         </span>
         <div className="w-8"></div>
       </div>
@@ -282,14 +282,14 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
         {isPendingPayment && (
           <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4.5 space-y-1.5 animate-fade-in text-left">
             <p className="font-bold text-orange-700 text-xs">
-              Chờ thanh toán (
+              {t("order.statusProcessing")} (
               {selectedOrder.paymentMethod === "COD"
-                ? "Thanh toán khi nhận hàng (COD)"
-                : "Chuyển khoản Ngân hàng"}
+                ? "COD"
+                : "Bank Transfer"}
               )
             </p>
             <p className="text-orange-600/80 text-[10px] leading-relaxed">
-              Đơn hàng đã được tạo nhưng chưa thanh toán. Vui lòng bấm "TIẾP TỤC THANH TOÁN" bên dưới để hoàn tất.
+              {t("checkout.paymentMethod")}
             </p>
           </div>
         )}
@@ -299,7 +299,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
           <div className="flex justify-between items-center pb-2.5 border-b border-[#f0edeb]">
             <div>
               <span className="text-xs font-bold text-textColor">
-                Mã đơn #{selectedOrder.id}
+                {t("orderDetail.orderId")} #{selectedOrder.id}
               </span>
               <span className="text-[10px] text-textColor-variant block mt-0.5 font-medium">
                 {new Date(selectedOrder.createdAt).toLocaleString("vi-VN")}
@@ -317,7 +317,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
             <div className="pt-1.5 space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-[10px] font-extrabold text-[#526069]/80 uppercase tracking-widest">
-                  Lịch trình giao hàng (Timeline)
+                  {t("orderDetail.track")}
                 </span>
                 {selectedOrder.trackingNumber && (
                   <span className="text-[9.5px] font-mono font-bold bg-[#0e6877]/10 text-[#0e6877] px-2.5 py-0.5 rounded-full">
@@ -329,10 +329,10 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
               {/* Horizontal Step Progress Bar */}
               <div className="grid grid-cols-4 gap-1 py-3 px-2 bg-[#fbf9f7] rounded-2xl border border-[#f0edeb]">
                 {[
-                  { key: "PROCESSING", label: "Đã nhận", stepNum: 1 },
-                  { key: "CONFIRMED", label: "Đóng gói", stepNum: 2 },
-                  { key: "SHIPPED", label: "Đang giao", stepNum: 3 },
-                  { key: "DELIVERED", label: "Hoàn thành", stepNum: 4 },
+                  { key: "PROCESSING", label: t("order.statusProcessing"), stepNum: 1 },
+                  { key: "CONFIRMED", label: "Packed", stepNum: 2 },
+                  { key: "SHIPPED", label: t("order.statusShipped"), stepNum: 3 },
+                  { key: "DELIVERED", label: t("order.statusCompleted"), stepNum: 4 },
                 ].map((st, idx) => {
                   const statusOrder = ["PROCESSING", "CONFIRMED", "SHIPPED", "DELIVERED", "COMPLETED"];
                   const currentIdx = Math.max(0, statusOrder.indexOf(selectedOrder.status));
@@ -369,28 +369,28 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                 {(selectedOrder.status === "CANCELLED"
                   ? [
                       {
-                        label: "Đã nhận đơn hàng",
-                        desc: "Hệ thống đã ghi nhận đơn thành công",
+                        label: t("order.statusProcessing"),
+                        desc: "Order received",
                         active: true,
                         isCancelled: false,
                       },
                       {
-                        label: "Đơn hàng đã hủy",
-                        desc: "Đơn hàng đã bị hủy bỏ",
+                        label: t("order.statusCancelled"),
+                        desc: "Order cancelled",
                         active: true,
                         isCancelled: true,
                       },
                     ]
                   : [
                       {
-                        label: "Đã nhận đơn hàng",
-                        desc: "Hệ thống đã ghi nhận đơn thành công",
+                        label: t("order.statusProcessing"),
+                        desc: "Order received",
                         active: true,
                         isCancelled: false,
                       },
                       {
-                        label: "Đang chuẩn bị hàng",
-                        desc: "Kho hàng đang kiểm kê và đóng gói sản phẩm",
+                        label: "Preparing",
+                        desc: "Warehouse checking and packing",
                         active: [
                           "PROCESSING",
                           "SHIPPED",
@@ -400,18 +400,18 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                         isCancelled: false,
                       },
                       {
-                        label: "Đang giao hàng (Shipper)",
+                        label: t("order.statusShipped"),
                         desc: selectedOrder.trackingNumber
-                          ? `Bàn giao GHN. Mã vận đơn: ${selectedOrder.trackingNumber}`
-                          : "Đang được đơn vị vận chuyển giao tới địa chỉ của bạn",
+                          ? `GHN Tracking: ${selectedOrder.trackingNumber}`
+                          : "Shipping to your address",
                         active: ["SHIPPED", "DELIVERED", "COMPLETED"].includes(
                           selectedOrder.status,
                         ),
                         isCancelled: false,
                       },
                       {
-                        label: "Giao nhận hoàn thành",
-                        desc: "Đơn hàng đã được giao nhận thành công. Cảm ơn bạn!",
+                        label: t("order.statusCompleted"),
+                        desc: "Delivered successfully. Thank you!",
                         active: ["DELIVERED", "COMPLETED"].includes(
                           selectedOrder.status,
                         ),
@@ -451,12 +451,12 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
         {/* Delivery address info */}
         <div className="space-y-2.5">
           <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">
-            Thông tin giao hàng
+            {t("orderDetail.shippingInfo")}
           </h2>
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 shadow-xs space-y-2">
             {selectedOrder.trackingNumber && (
               <div className="flex justify-between items-center pb-2 border-b border-[#f5f3f0]">
-                <span className="text-textColor-variant font-medium">Mã vận đơn (GHN):</span>
+                <span className="text-textColor-variant font-medium">Tracking (GHN):</span>
                 <span className="font-bold text-teal-700 bg-teal-50 px-2.5 py-1 rounded-md text-[11px] font-mono select-all">
                   {selectedOrder.trackingNumber}
                 </span>
@@ -464,7 +464,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
             )}
             {selectedOrder.estimatedDeliveryDate && (
               <div className="flex justify-between items-center pb-2 border-b border-[#f5f3f0]">
-                <span className="text-textColor-variant">Dự kiến giao:</span>
+                <span className="text-textColor-variant">{t("order.estimatedDelivery")}:</span>
                 <div className="text-right">
                   <span className="font-bold text-primary">
                     {new Date(
@@ -482,21 +482,21 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-textColor-variant">Người nhận:</span>
+              <span className="text-textColor-variant">{t("order.recipient")}:</span>
               <span className="font-bold text-textColor">
                 {selectedOrder.shippingName}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-textColor-variant">Số điện thoại:</span>
+              <span className="text-textColor-variant">{t("order.phone")}:</span>
               <span className="font-bold text-textColor">
                 {selectedOrder.shippingPhone}
               </span>
             </div>
             <div className="flex flex-col mt-1 pt-1.5 border-t border-[#f5f3f0]">
-              <span className="text-textColor-variant">Địa chỉ nhận:</span>
+              <span className="text-textColor-variant">{t("order.address")}:</span>
               <span className="font-semibold text-textColor mt-0.5 leading-relaxed">
-                {selectedOrder.shippingAddress || "Chưa cung cấp"}
+                {selectedOrder.shippingAddress || "Not provided"}
               </span>
             </div>
           </div>
@@ -505,7 +505,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
         {/* Purchased products list */}
         <div className="space-y-2.5">
           <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">
-            Danh sách sản phẩm
+            {t("order.productList")}
           </h2>
           <div className="bg-white rounded-2xl border border-[#f0edeb] divide-y divide-[#f0edeb] shadow-xs overflow-hidden">
             {selectedOrder.items?.map((item: IOrderItem, idx: number) => (
@@ -516,16 +516,16 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                   </span>
                   <div className="flex items-center gap-1.5 text-[10px] flex-wrap">
                     <span className="text-textColor-variant">
-                      SL: x{item.quantity}
+                      {t("order.quantity")}: x{item.quantity}
                     </span>
                     {item.color && item.color !== "DEFAULT" && (
                       <span className="bg-[#fcf8f5] border border-orange-200/50 text-orange-700 px-1.5 py-0.5 rounded font-medium text-[8px]">
-                        Màu: {item.color}
+                        {t("product.color")}: {item.color}
                       </span>
                     )}
                     {item.size && item.size !== "DEFAULT" && (
                       <span className="bg-neutral-100 text-[#526069] px-1.5 py-0.5 rounded font-medium uppercase text-[8px]">
-                        Size: {item.size}
+                        {t("product.size")}: {item.size}
                       </span>
                     )}
                   </div>
@@ -541,15 +541,15 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
         {/* Payment recap */}
         <div className="space-y-2.5">
           <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">
-            Chi tiết thanh toán
+            {t("order.paymentDetails")}
           </h2>
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 shadow-xs space-y-2">
             <div className="flex justify-between">
-              <span className="text-textColor-variant">Phương thức:</span>
+              <span className="text-textColor-variant">{t("order.paymentMethod")}:</span>
               <span className="font-bold text-textColor">
                 {selectedOrder.paymentMethod === "COD"
-                  ? "COD (Thanh toán khi nhận hàng)"
-                  : "Chuyển khoản Ngân hàng"}
+                  ? t("order.cod")
+                  : t("order.bankTransfer")}
               </span>
             </div>
             {selectedOrder.voucherCode && (
@@ -561,7 +561,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
               </div>
             )}
             <div className="flex justify-between font-extrabold text-textColor pt-2.5 border-t border-dashed border-[#f0edeb] text-sm">
-              <span>Tổng thanh toán:</span>
+              <span>{t("order.totalPayment")}:</span>
               <span className="text-primary">
                 {selectedOrder.totalAmount.toLocaleString("vi-VN")} đ
               </span>
@@ -577,7 +577,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
               onClick={handleContinuePayment}
               className="w-full h-11 bg-primary hover:bg-primary-dark text-white font-bold text-xs uppercase tracking-widest rounded-2xl cursor-pointer shadow-md active:scale-[0.98] transition-all flex items-center justify-center gap-2 mb-2.5 disabled:bg-neutral-300 disabled:cursor-not-allowed border-none"
             >
-              {paying ? "Đang khởi tạo..." : "TIẾP TỤC THANH TOÁN"}
+              {paying ? t("common.loading") : t("checkout.placeOrder")}
             </button>
           )}
 
@@ -588,7 +588,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
             onClick={() => setConfirmCancel(true)}
             className="w-full h-11 border border-red-200 bg-red-50 text-red-600 font-bold text-xs uppercase tracking-widest rounded-2xl cursor-pointer hover:bg-red-100 transition-all active:scale-[0.98] disabled:opacity-60"
           >
-            ✕ Hủy đơn hàng
+            ✕ {t("orderDetail.cancel")}
           </button>
         )}
 
@@ -596,10 +596,10 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
         {isCancellable && confirmCancel && (
           <div className="bg-red-50 border border-red-200 rounded-2xl p-4 space-y-3 animate-fade-in">
             <p className="text-xs font-bold text-red-700 text-center">
-              Bạn có chắc muốn hủy đơn hàng này?
+              {t("common.confirm")} {t("orderDetail.cancel")}?
             </p>
             <p className="text-[10px] text-red-600/70 text-center">
-              Hành động này không thể hoàn tác.
+              {t("common.warning")}
             </p>
             <div className="flex gap-2">
               <button
@@ -607,13 +607,13 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                 onClick={handleCancelOrder}
                 className="flex-1 h-10 bg-red-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer active:scale-95 transition-all disabled:opacity-60"
               >
-                {cancelling ? "Đang hủy..." : "Xác nhận hủy"}
+                {cancelling ? t("common.loading") : t("common.confirm")}
               </button>
               <button
                 onClick={() => setConfirmCancel(false)}
                 className="flex-1 h-10 bg-neutral-100 text-textColor font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-neutral-200 transition-all"
               >
-                Không
+                {t("common.cancel")}
               </button>
             </div>
           </div>
@@ -626,7 +626,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
             onClick={handleConfirmReceived}
             className="w-full h-11 bg-[#0e6877] text-white font-bold text-xs uppercase tracking-wider rounded-2xl border-none cursor-pointer hover:bg-[#0c5966] active:scale-[0.98] transition-all shadow-md mt-4"
           >
-            {completing ? "Đang cập nhật..." : "✓ Đã nhận được hàng"}
+            {completing ? t("common.loading") : `✓ ${t("order.statusCompleted")}`}
           </button>
         )}
 
@@ -637,7 +637,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
               onClick={handleReorder}
               className="flex-1 h-11 bg-primary text-white font-bold text-xs uppercase tracking-wider rounded-2xl border-none cursor-pointer hover:bg-primary-dark active:scale-[0.98] transition-all shadow-md"
             >
-              Mua lại đơn này
+              {t("orderDetail.reorder")}
             </button>
             <button
               onClick={() => {
@@ -648,7 +648,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
               }}
               className="flex-1 h-11 border border-indigo-250 bg-indigo-50 text-indigo-700 font-bold text-xs uppercase tracking-wider rounded-2xl cursor-pointer hover:bg-indigo-100 active:scale-[0.98] transition-all"
             >
-              Trả hàng / Hoàn tiền
+              Return / Refund
             </button>
           </div>
         )}
@@ -658,18 +658,18 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
           <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4.5 space-y-2 text-left mt-4">
             <p className="font-bold text-indigo-800 text-xs">
               {selectedOrder.status === "RETURNED"
-                ? "✓ Đơn hàng đã được hoàn trả thành công"
-                : "⏳ Yêu cầu Trả hàng / Hoàn tiền đang chờ duyệt"}
+                ? "✓ Return completed"
+                : "⏳ Return request pending"}
             </p>
             <p className="text-indigo-750 font-medium text-[10.5px] mt-1">
-              Lý do:{" "}
+              Reason:{" "}
               <span className="font-bold text-textColor">
                 {selectedOrder.returnReason}
               </span>
             </p>
             {selectedOrder.returnDescription && (
               <p className="text-indigo-750 font-medium text-[10.5px]">
-                Chi tiết:{" "}
+                Details:{" "}
                 <span className="text-textColor">
                   {selectedOrder.returnDescription}
                 </span>
