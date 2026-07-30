@@ -8,6 +8,7 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { JwtService } from '@nestjs/jwt';
 import { ChatService } from './chat.service';
 
 @WebSocketGateway({
@@ -19,7 +20,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   handleConnection(client: Socket) {
     console.log(`Socket client connected: ${client.id}`);
@@ -38,10 +42,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     
     // Security Guard: Prevent unauthorized clients from joining admin room
     if (data.roomId === 'admin') {
-      const authHeader = client.handshake.headers?.authorization || client.handshake.auth?.token || data.token;
-      if (!authHeader) {
-        console.warn(`Unauthorized attempt to join admin room from client ${client.id}`);
-        client.emit('error', { message: 'Unauthorized room join' });
+      const rawToken = client.handshake.headers?.authorization || client.handshake.auth?.token || data.token;
+      if (!rawToken) {
+        console.warn(`Unauthorized attempt to join admin room without token from client ${client.id}`);
+        client.emit('error', { message: 'Unauthorized: Admin token required' });
+        return;
+      }
+
+      const token = rawToken.replace(/^Bearer\s+/i, '');
+      try {
+        const payload = this.jwtService.verify(token, {
+          secret: process.env.JWT_SECRET || 'your-secret-key',
+        });
+        if (!payload || (payload.role && payload.role !== 'ADMIN')) {
+          console.warn(`Non-admin client ${client.id} attempted to join admin room`);
+          client.emit('error', { message: 'Forbidden: Admin access required' });
+          return;
+        }
+      } catch (err) {
+        console.warn(`Invalid JWT token attempt to join admin room from client ${client.id}`);
+        client.emit('error', { message: 'Unauthorized: Invalid or expired token' });
         return;
       }
     }
@@ -49,6 +69,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client.join(data.roomId);
     console.log(`Client ${client.id} joined room: ${data.roomId}`);
   }
+
 
   @SubscribeMessage('send_message')
   async handleMessage(

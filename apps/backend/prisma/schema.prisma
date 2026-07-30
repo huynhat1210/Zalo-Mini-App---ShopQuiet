@@ -47,6 +47,8 @@ model Product {
   @@index([name])
   @@index([createdAt])
   @@index([price])
+  @@index([isFlashSale])
+  @@index([soldCount])
 }
 
 
@@ -84,6 +86,7 @@ model User {
   @@index([role])
   @@index([createdAt])
   @@index([email])
+  @@index([phone])
 }
 
 model CartItem {
@@ -346,6 +349,7 @@ model AnalyticsEvent {
   @@index([zaloUserId])
   @@index([eventType])
   @@index([productId])
+  @@index([eventType, productId])
   @@index([createdAt])
 }
 

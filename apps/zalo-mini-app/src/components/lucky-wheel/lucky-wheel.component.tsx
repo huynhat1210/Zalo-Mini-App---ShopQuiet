@@ -191,8 +191,7 @@ export const LuckyWheel: React.FC<ILuckyWheelProps> = (props) => {
     setSpinning(true);
     // Random select prize index
     const prizeIndex = Math.floor(Math.random() * prizes.length);
-    const selected = prizes[prizeIndex];
-
+    let selected = prizes[prizeIndex];
     let finalPrizeCode = selected.code;
 
     // Call backend API FIRST to generate unique voucher before starting wheel animation
@@ -209,11 +208,19 @@ export const LuckyWheel: React.FC<ILuckyWheelProps> = (props) => {
         );
         if (res && res.code) {
           finalPrizeCode = res.code;
+        } else {
+          // Fallback to non-prize if backend voucher creation fails
+          selected = prizes.find((p) => p.type === "LUCKY") || selected;
+          finalPrizeCode = "LUCKYNEXT";
         }
       } catch (e) {
         console.error("Failed to generate backend voucher:", e);
+        // Fallback to non-prize on network failure
+        selected = prizes.find((p) => p.type === "LUCKY") || selected;
+        finalPrizeCode = "LUCKYNEXT";
       }
     }
+
 
     const sliceAngle = 360 / prizes.length;
     // Calculate stop degree (stop inside the sliced arc)
