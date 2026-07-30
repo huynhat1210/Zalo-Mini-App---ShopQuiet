@@ -20,6 +20,7 @@ import {
   OrderHistory,
   LuckyWheel,
   VoucherExchangeModal,
+  AuthModal,
 } from "../../components";
 
 const PageCast = Page as any;
@@ -75,6 +76,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
   const [isLuckyWheelOpen, setIsLuckyWheelOpen] = useState(false);
   const [isVoucherExchangeOpen, setIsVoucherExchangeOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const [userVouchersCount, setUserVouchersCount] = useState(0);
   const [usersList, setUsersList] = useState<any[]>([]);
@@ -300,6 +302,13 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               ) : (
                 <MoonIcon className="w-5 h-5 text-teal-100" strokeWidth={2.2} />
               )}
+            </button>
+            <button
+              onClick={() => setIsAuthModalOpen(true)}
+              className="px-3 py-1 bg-white/20 hover:bg-white/30 active:scale-95 rounded-full transition-all border-none text-white text-xs font-bold flex items-center gap-1 cursor-pointer shadow-xs"
+              title="Đăng nhập / Đăng ký tài khoản"
+            >
+              <span>🔑</span> Auth
             </button>
             <button
               onClick={() => setIsEditProfileOpen(true)}
@@ -1223,6 +1232,11 @@ export const Profile: React.FC<IProfileProps> = (props) => {
         gamificationData={gamificationData}
         exchangeVoucher={exchangeVoucher}
         onExchangeSuccess={fetchOrdersAndProducts}
+      />
+      {/* Auth Modal (Login / Register / Forgot Password) */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
       />
     </PageCast>
   );

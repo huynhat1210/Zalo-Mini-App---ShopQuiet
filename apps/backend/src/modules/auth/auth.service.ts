@@ -347,5 +347,178 @@ export class AuthService {
       };
     }
   }
+
+  private async buildUserTokensResponse(user: any) {
+    const payload = {
+      sub: user.zaloId,
+      zaloId: user.zaloId,
+      role: user.role || 'user',
+    };
+
+    const access_token = this.jwtService.sign(payload, { expiresIn: '15m' });
+    const refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' });
+
+    const refreshTokenExpiresAt = new Date();
+    refreshTokenExpiresAt.setDate(refreshTokenExpiresAt.getDate() + 7);
+
+    await this.prisma.user.update({
+      where: { zaloId: user.zaloId },
+      data: {
+        refreshToken: refresh_token,
+        refreshTokenExpiresAt: refreshTokenExpiresAt,
+      },
+    });
+
+    return {
+      tokens: {
+        access_token,
+        refresh_token,
+      },
+      user: {
+        zaloId: user.zaloId,
+        name: user.name,
+        avatar: user.avatar,
+        role: user.role || 'user',
+        phone: user.phone || '',
+        email: user.email || '',
+        birthday: user.birthday || '',
+        totalSpent: user.totalSpent || 0,
+        membershipTier: user.membershipTier || 'Đồng',
+      },
+    };
+  }
+
+  async register(data: { emailOrPhone: string; name: string; password: string; avatar?: string }) {
+    const { emailOrPhone, name, password, avatar } = data;
+    const isEmail = emailOrPhone.includes('@');
+    
+    // Check existing user
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: isEmail ? emailOrPhone : undefined },
+          { phone: !isEmail ? emailOrPhone : undefined },
+        ],
+      },
+    });
+
+    if (existingUser) {
+      throw new UnauthorizedException('Email hoặc số điện thoại này đã được đăng ký');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const generatedZaloId = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
+    const user = await this.prisma.user.create({
+      data: {
+        zaloId: generatedZaloId,
+        name: name || 'Thành viên mới',
+        avatar: avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+        email: isEmail ? emailOrPhone : null,
+        phone: !isEmail ? emailOrPhone : null,
+        password: hashedPassword,
+        role: 'user',
+      },
+    });
+
+    return this.buildUserTokensResponse(user);
+  }
+
+  async loginWithPassword(data: { emailOrPhone: string; password: string }) {
+    const { emailOrPhone, password } = data;
+    const isEmail = emailOrPhone.includes('@');
+
+    const user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: isEmail ? emailOrPhone : undefined },
+          { phone: !isEmail ? emailOrPhone : undefined },
+          { zaloId: emailOrPhone },
+        ],
+      },
+    });
+
+    if (!user || !user.password) {
+      throw new UnauthorizedException('Email/Số điện thoại hoặc mật khẩu không chính xác');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Email/Số điện thoại hoặc mật khẩu không chính xác');
+    }
+
+    return this.buildUserTokensResponse(user);
+  }
+
+  async forgotPassword(emailOrPhone: string) {
+    const isEmail = emailOrPhone.includes('@');
+    const user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: isEmail ? emailOrPhone : undefined },
+          { phone: !isEmail ? emailOrPhone : undefined },
+        ],
+      },
+    });
+
+    if (!user) {
+      return { success: true, message: 'Nếu tài khoản tồn tại, mã OTP đặt lại mật khẩu đã được gửi.' };
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    await this.prisma.user.update({
+      where: { zaloId: user.zaloId },
+      data: {
+        resetOtp: otp,
+        resetOtpExpiresAt: otpExpires,
+      },
+    });
+
+    this.logger.log(`[FORGOT PASSWORD] Generated OTP for user ${user.zaloId}: ${otp}`);
+
+    return {
+      success: true,
+      message: 'Mã OTP đặt lại mật khẩu đã được gửi (Mã thử nghiệm: ' + otp + ')',
+      otp: process.env.NODE_ENV !== 'production' ? otp : undefined,
+    };
+  }
+
+  async resetPassword(data: { emailOrPhone: string; otp: string; newPassword: string }) {
+    const { emailOrPhone, otp, newPassword } = data;
+    const isEmail = emailOrPhone.includes('@');
+
+    const user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: isEmail ? emailOrPhone : undefined },
+          { phone: !isEmail ? emailOrPhone : undefined },
+        ],
+      },
+    });
+
+    if (!user || !user.resetOtp || !user.resetOtpExpiresAt) {
+      throw new UnauthorizedException('Mã OTP không hợp lệ hoặc đã hết hạn');
+    }
+
+    if (user.resetOtp !== otp || new Date() > user.resetOtpExpiresAt) {
+      throw new UnauthorizedException('Mã OTP không đúng hoặc đã hết hạn');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await this.prisma.user.update({
+      where: { zaloId: user.zaloId },
+      data: {
+        password: hashedPassword,
+        resetOtp: null,
+        resetOtpExpiresAt: null,
+      },
+    });
+
+    return { success: true, message: 'Đổi mật khẩu thành công. Vui lòng đăng nhập lại!' };
+  }
 }
 // end of file

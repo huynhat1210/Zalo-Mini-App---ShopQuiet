@@ -807,6 +807,82 @@ export const useAppStore = create<IAppState>()(
         const next = current === "dark" ? "light" : "dark";
         get().setTheme(next);
       },
+      loginWithPassword: async (emailOrPhone: string, password: string) => {
+        try {
+          const authData: any = await apiRequest("/auth/login-password", "POST", {
+            emailOrPhone,
+            password,
+          });
+          if (authData && authData.tokens) {
+            tokenStorage.setTokens({
+              access_token: authData.tokens.access_token,
+              refresh_token: authData.tokens.refresh_token,
+            });
+            const mappedUser = {
+              id: authData.user.zaloId || authData.user.id,
+              name: authData.user.name,
+              avatar: authData.user.avatar,
+              role: authData.user.role,
+              phone: authData.user.phone || "",
+              email: authData.user.email || "",
+              totalSpent: 0,
+              membershipTier: "Đồng",
+            };
+            set({ zaloUser: mappedUser });
+            localStorage.setItem(
+              "zalo_profile_custom",
+              JSON.stringify(mappedUser),
+            );
+            get().fetchCart().catch(console.error);
+            get().fetchFavorites().catch(console.error);
+            get().showToast(`Chào mừng ${mappedUser.name} trở lại!`, "success");
+            return true;
+          }
+          return false;
+        } catch (e: any) {
+          get().showToast(e?.message || "Đăng nhập không thành công", "warning");
+          return false;
+        }
+      },
+      registerWithPassword: async (emailOrPhone: string, name: string, password: string, avatar?: string) => {
+        try {
+          const authData: any = await apiRequest("/auth/register", "POST", {
+            emailOrPhone,
+            name,
+            password,
+            avatar,
+          });
+          if (authData && authData.tokens) {
+            tokenStorage.setTokens({
+              access_token: authData.tokens.access_token,
+              refresh_token: authData.tokens.refresh_token,
+            });
+            const mappedUser = {
+              id: authData.user.zaloId || authData.user.id,
+              name: authData.user.name,
+              avatar: authData.user.avatar,
+              role: authData.user.role,
+              phone: authData.user.phone || "",
+              email: authData.user.email || "",
+              totalSpent: 0,
+              membershipTier: "Đồng",
+            };
+            set({ zaloUser: mappedUser });
+            localStorage.setItem(
+              "zalo_profile_custom",
+              JSON.stringify(mappedUser),
+            );
+            get().fetchCart().catch(console.error);
+            get().fetchFavorites().catch(console.error);
+            get().showToast("Đăng ký tài khoản thành công!", "success");
+            return true;
+          }
+          return false;
+        } catch (e: any) {
+          get().showToast(e?.message || "Đăng ký không thành công", "warning");
+          return false;
+        }
+      },
     }),
     {
       name: "shopquiet_app_store",

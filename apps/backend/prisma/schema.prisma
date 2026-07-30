@@ -73,6 +73,9 @@ model User {
   shoeSize          String?
   refreshToken      String?        @unique
   refreshTokenExpiresAt DateTime?
+  password          String?
+  resetOtp          String?
+  resetOtpExpiresAt DateTime?
   cartItems     CartItem[]
   comments      Comment[]
   favorites     Favorite[]

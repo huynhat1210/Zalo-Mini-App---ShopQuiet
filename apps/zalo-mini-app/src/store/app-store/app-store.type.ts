@@ -78,4 +78,6 @@ export interface IAppState {
   theme: "light" | "dark";
   setTheme: (theme: "light" | "dark") => void;
   toggleTheme: () => void;
+  loginWithPassword: (emailOrPhone: string, password: string) => Promise<boolean>;
+  registerWithPassword: (emailOrPhone: string, name: string, password: string, avatar?: string) => Promise<boolean>;
 }

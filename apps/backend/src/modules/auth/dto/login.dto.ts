@@ -37,3 +37,43 @@ export class DecryptPhoneDto {
   @IsString()
   zaloId: string;
 }
+
+export class RegisterDto {
+  @IsString()
+  emailOrPhone: string;
+
+  @IsString()
+  name: string;
+
+  @IsString()
+  password: string;
+
+  @IsOptional()
+  @IsString()
+  avatar?: string;
+}
+
+export class LoginPasswordDto {
+  @IsString()
+  emailOrPhone: string;
+
+  @IsString()
+  password: string;
+}
+
+export class ForgotPasswordDto {
+  @IsString()
+  emailOrPhone: string;
+}
+
+export class ResetPasswordDto {
+  @IsString()
+  emailOrPhone: string;
+
+  @IsString()
+  otp: string;
+
+  @IsString()
+  newPassword: string;
+}
+

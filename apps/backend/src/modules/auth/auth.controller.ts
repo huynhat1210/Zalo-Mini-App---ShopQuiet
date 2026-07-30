@@ -23,6 +23,10 @@ import {
   VerifyTokenDto,
   RefreshTokenDto,
   DecryptPhoneDto,
+  RegisterDto,
+  LoginPasswordDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
 } from './dto/login.dto';
 import {
   SuccessResponseDto,
@@ -63,6 +67,34 @@ export class AuthController {
       body.password,
       body.accessToken,
     );
+  }
+
+  @Post('register')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiOperation({ summary: 'Register with Email/Phone and Password' })
+  async register(@Body() body: RegisterDto) {
+    return this.authService.register(body);
+  }
+
+  @Post('login-password')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ApiOperation({ summary: 'Login with Email/Phone and Password' })
+  async loginWithPassword(@Body() body: LoginPasswordDto) {
+    return this.authService.loginWithPassword(body);
+  }
+
+  @Post('forgot-password')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiOperation({ summary: 'Request password reset OTP' })
+  async forgotPassword(@Body() body: ForgotPasswordDto) {
+    return this.authService.forgotPassword(body.emailOrPhone);
+  }
+
+  @Post('reset-password')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiOperation({ summary: 'Reset password with OTP' })
+  async resetPassword(@Body() body: ResetPasswordDto) {
+    return this.authService.resetPassword(body);
   }
 
   @Post('refresh')
