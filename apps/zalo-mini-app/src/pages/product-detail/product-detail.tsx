@@ -370,7 +370,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   return (
-    <PageCast className="bg-surface dark:bg-slate-950 text-slate-900 dark:text-slate-100 fixed inset-0 z-[100] h-full overflow-y-auto pb-[80px] animate-fade-in scrollbar-none relative">
+    <PageCast className="bg-surface  text-slate-900  fixed inset-0 z-[100] h-full overflow-y-auto pb-[80px] animate-fade-in scrollbar-none relative">
       {/* Contextual Top Nav (Fixed at top of screen) */}
       <div className="fixed top-4 left-4 right-4 flex justify-between items-center z-30 pointer-events-none">
         <button
@@ -448,9 +448,9 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
       </div>
 
       {/* Product Image Gallery & Carousel */}
-      <div className="relative w-full bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
+      <div className="relative w-full bg-white  border-b border-slate-100 ">
         {/* Main Photo Display */}
-        <div className="relative w-full aspect-[4/3] sm:aspect-square flex items-center justify-center p-2 bg-white dark:bg-slate-900">
+        <div className="relative w-full aspect-[4/3] sm:aspect-square flex items-center justify-center p-2 bg-white ">
           <img
             src={images[activeImageIndex] || images[0]}
             alt={`${product.name} ${activeImageIndex + 1}`}
@@ -475,7 +475,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
 
           {/* Pagination Dots Indicator */}
           {images.length > 1 && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xs px-3 py-1.5 rounded-full border border-slate-200/60 dark:border-slate-700 shadow-2xs">
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 bg-white/80 /80 backdrop-blur-xs px-3 py-1.5 rounded-full border border-slate-200/60  shadow-2xs">
               {images.map((_, idx) => (
                 <button
                   key={idx}
@@ -483,7 +483,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                   className={`h-2 rounded-full transition-all duration-300 border-none cursor-pointer p-0 ${
                     activeImageIndex === idx
                       ? "w-6 bg-[#0e6877] shadow-xs"
-                      : "w-2 bg-slate-300 dark:bg-slate-600 hover:bg-slate-400"
+                      : "w-2 bg-slate-300  hover:bg-slate-400"
                   }`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />
@@ -494,15 +494,15 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
 
         {/* Thumbnail Selector Bar (Show when > 1 image) */}
         {images.length > 1 && (
-          <div className="flex gap-2.5 px-4 py-2.5 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 overflow-x-auto scrollbar-none">
+          <div className="flex gap-2.5 px-4 py-2.5 bg-white  border-t border-slate-100  overflow-x-auto scrollbar-none">
             {images.map((img, idx) => (
               <button
                 key={idx}
                 onClick={() => setActiveImageIndex(idx)}
-                className={`relative shrink-0 w-14 h-14 rounded-xl overflow-hidden border-2 transition-all cursor-pointer p-0 bg-slate-50 dark:bg-slate-800 ${
+                className={`relative shrink-0 w-14 h-14 rounded-xl overflow-hidden border-2 transition-all cursor-pointer p-0 bg-slate-50  ${
                   activeImageIndex === idx
                     ? "border-[#0e6877] shadow-md scale-105"
-                    : "border-slate-200/80 dark:border-slate-700 opacity-60 hover:opacity-100"
+                    : "border-slate-200/80  opacity-60 hover:opacity-100"
                 }`}
               >
                 <img
@@ -520,16 +520,16 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
       </div>
 
       {/* Details Content */}
-      <BoxCast className="bg-white dark:bg-slate-900 -mt-4 relative z-10 space-y-2 shadow-sm">
+      <BoxCast className="bg-white  -mt-4 relative z-10 space-y-2 shadow-sm">
         {/* Price & Name Section */}
-        <div className="px-4 py-4 space-y-2 text-left bg-white dark:bg-slate-900 rounded-t-2xl">
+        <div className="px-4 py-4 space-y-2 text-left bg-white  rounded-t-2xl">
           <div className="flex items-end justify-between">
-            <span className="text-xl font-extrabold text-primary dark:text-teal-400">
+            <span className="text-xl font-extrabold text-primary ">
               {product.price.toLocaleString("vi-VN")} đ
             </span>
           </div>
 
-          <h1 className="text-base font-medium text-textColor dark:text-slate-100 leading-tight">
+          <h1 className="text-base font-medium text-textColor  leading-tight">
             {product.name}
           </h1>
 
@@ -995,7 +995,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Drag handle */}
-            <div className="w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-3 shrink-0" />
+            <div className="w-10 h-1 bg-slate-200  rounded-full mx-auto mb-3 shrink-0" />
 
             {/* Modal Header */}
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">

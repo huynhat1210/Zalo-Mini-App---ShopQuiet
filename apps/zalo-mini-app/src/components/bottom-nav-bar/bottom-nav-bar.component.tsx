@@ -34,7 +34,7 @@ export const BottomNavBarComponent: React.FC<IBottomNavBarComponentProps> = (
   const unreadCount = (notifications || []).filter((n) => !n.read).length;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-[68px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-[#f0edeb] dark:border-slate-800 flex justify-around items-center px-2 z-50 shadow-lg">
+    <div className="fixed bottom-0 left-0 right-0 h-[68px] bg-white/95 /95 backdrop-blur-md border-t border-[#f0edeb]  flex justify-around items-center px-2 z-50 shadow-lg">
       {/* Trang Chủ Tab */}
       <button
         onClick={() => {
@@ -50,7 +50,7 @@ export const BottomNavBarComponent: React.FC<IBottomNavBarComponentProps> = (
         )}
         <span
           className={`text-[10px] mt-1 font-extrabold tracking-tight transition-colors ${
-            activeTab === "home" ? "text-primary dark:text-teal-400" : "text-[#526069]/70 dark:text-slate-400"
+            activeTab === "home" ? "text-primary " : "text-[#526069]/70 "
           }`}
         >
           {t("tab.home")}
@@ -72,7 +72,7 @@ export const BottomNavBarComponent: React.FC<IBottomNavBarComponentProps> = (
         )}
         <span
           className={`text-[10px] mt-1 font-extrabold tracking-tight transition-colors ${
-            activeTab === "orders" ? "text-primary dark:text-teal-400" : "text-[#526069]/70 dark:text-slate-400"
+            activeTab === "orders" ? "text-primary " : "text-[#526069]/70 "
           }`}
         >
           {t("tab.orders")}
@@ -102,7 +102,7 @@ export const BottomNavBarComponent: React.FC<IBottomNavBarComponentProps> = (
         </div>
         <span
           className={`text-[10px] mt-1 font-extrabold tracking-tight transition-colors ${
-            activeTab === "chat" ? "text-primary dark:text-teal-400" : "text-[#526069]/70 dark:text-slate-400"
+            activeTab === "chat" ? "text-primary " : "text-[#526069]/70 "
           }`}
         >
           CSKH
@@ -131,7 +131,7 @@ export const BottomNavBarComponent: React.FC<IBottomNavBarComponentProps> = (
         </div>
         <span
           className={`text-[10px] mt-1 font-extrabold tracking-tight transition-colors ${
-            activeTab === "notifications" ? "text-primary dark:text-teal-400" : "text-[#526069]/70 dark:text-slate-400"
+            activeTab === "notifications" ? "text-primary " : "text-[#526069]/70 "
           }`}
         >
           {t("tab.notifications")}
@@ -153,7 +153,7 @@ export const BottomNavBarComponent: React.FC<IBottomNavBarComponentProps> = (
         )}
         <span
           className={`text-[10px] mt-1 font-extrabold tracking-tight transition-colors ${
-            activeTab === "profile" ? "text-primary dark:text-teal-400" : "text-[#526069]/70 dark:text-slate-400"
+            activeTab === "profile" ? "text-primary " : "text-[#526069]/70 "
           }`}
         >
           {t("tab.profile")}

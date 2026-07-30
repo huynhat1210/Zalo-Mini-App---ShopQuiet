@@ -139,26 +139,26 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-center justify-center p-6 animate-fade-in">
-      <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] dark:border-slate-800 shadow-2xl space-y-4 animate-scale-up">
-        <h3 className="text-xs font-bold text-textColor dark:text-slate-100 uppercase tracking-wider text-left">
+      <div className="bg-white  text-slate-900  w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb]  shadow-2xl space-y-4 animate-scale-up">
+        <h3 className="text-xs font-bold text-textColor  uppercase tracking-wider text-left">
           Chỉnh sửa thông tin
         </h3>
 
         <div className="space-y-3 text-left">
           <div>
-            <label className="text-[9px] font-extrabold text-textColor-variant dark:text-slate-400 uppercase tracking-wider block mb-1">
+            <label className="text-[9px] font-extrabold text-textColor-variant  uppercase tracking-wider block mb-1">
               Họ tên
             </label>
             <input
               type="text"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              className="w-full bg-neutral-50 dark:bg-slate-800 border border-neutral-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor dark:text-slate-100"
+              className="w-full bg-neutral-50  border border-neutral-200  rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor "
             />
           </div>
 
           <div>
-            <label className="text-[9px] font-extrabold text-textColor-variant dark:text-slate-400 uppercase tracking-wider block mb-1">
+            <label className="text-[9px] font-extrabold text-textColor-variant  uppercase tracking-wider block mb-1">
               Số điện thoại
             </label>
             <div className="flex gap-2">
@@ -167,7 +167,7 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
                 value={editPhone}
                 onChange={(e) => setEditPhone(e.target.value)}
                 placeholder="Chưa cập nhật SĐT"
-                className="flex-1 bg-neutral-50 dark:bg-slate-800 border border-neutral-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor dark:text-slate-100 placeholder-slate-400"
+                className="flex-1 bg-neutral-50  border border-neutral-200  rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor  placeholder-slate-400"
               />
               {!editPhone && (
                 <button

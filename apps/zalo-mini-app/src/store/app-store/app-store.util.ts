@@ -765,40 +765,6 @@ export const useAppStore = create<IAppState>()(
           return false;
         }
       },
-      theme: (() => {
-        if (typeof window === "undefined") return "light";
-        const saved = localStorage.getItem("shopquiet_theme");
-        if (saved === "dark" || saved === "light") {
-          if (saved === "dark") {
-            document.documentElement.classList.add("dark");
-            document.body?.classList.add("dark");
-          } else {
-            document.documentElement.classList.remove("dark");
-            document.body?.classList.remove("dark");
-          }
-          return saved as "light" | "dark";
-        }
-        const isDark = document.documentElement.classList.contains("dark");
-        return isDark ? "dark" : "light";
-      })(),
-      setTheme: (newTheme: "light" | "dark") => {
-        set({ theme: newTheme });
-        if (typeof window !== "undefined") {
-          localStorage.setItem("shopquiet_theme", newTheme);
-          if (newTheme === "dark") {
-            document.documentElement.classList.add("dark");
-            document.body?.classList.add("dark");
-          } else {
-            document.documentElement.classList.remove("dark");
-            document.body?.classList.remove("dark");
-          }
-        }
-      },
-      toggleTheme: () => {
-        const current = typeof document !== "undefined" && document.documentElement.classList.contains("dark") ? "dark" : get().theme;
-        const next = current === "dark" ? "light" : "dark";
-        get().setTheme(next);
-      },
       loginWithPassword: async (emailOrPhone: string, password: string) => {
         try {
           const authData: any = await apiRequest("/auth/login-password", "POST", {
@@ -882,7 +848,6 @@ export const useAppStore = create<IAppState>()(
         cart: state.cart,
         savedItems: state.savedItems,
         viewedProducts: state.viewedProducts,
-        theme: state.theme,
       }),
     },
   ),

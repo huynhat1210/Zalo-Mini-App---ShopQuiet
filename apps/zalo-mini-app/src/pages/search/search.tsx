@@ -202,12 +202,12 @@ export const Search: React.FC<ISearchProps> = (_props) => {
   });
 
   return (
-    <PageCast className="bg-surface dark:bg-slate-950 text-slate-900 dark:text-slate-100 relative flex flex-col w-full h-full overscroll-none scrollbar-none animate-fade-in">
+    <PageCast className="bg-surface  text-slate-900  relative flex flex-col w-full h-full overscroll-none scrollbar-none animate-fade-in">
       {/* Header Search Input */}
-      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-6 py-4 flex items-center gap-3 border-b border-[#f0edeb] dark:border-slate-800 sticky top-0 z-30 shadow-xs">
-        <div className="flex-1 relative flex items-center bg-neutral-50 dark:bg-slate-800 border border-[#eae8e6] dark:border-slate-700 rounded-full px-5 py-2.5 transition-all focus-within:border-primary focus-within:bg-white dark:focus-within:bg-slate-800 focus-within:shadow-xs">
+      <div className="bg-white/95 /95 backdrop-blur-md px-6 py-4 flex items-center gap-3 border-b border-[#f0edeb]  sticky top-0 z-30 shadow-xs">
+        <div className="flex-1 relative flex items-center bg-neutral-50  border border-[#eae8e6]  rounded-full px-5 py-2.5 transition-all focus-within:border-primary focus-within:bg-white :bg-slate-800 focus-within:shadow-xs">
           <svg
-            className="w-4.5 h-4.5 text-textColor-variant dark:text-slate-400 mr-3 flex-shrink-0"
+            className="w-4.5 h-4.5 text-textColor-variant  mr-3 flex-shrink-0"
             fill="none"
             stroke="currentColor"
             strokeWidth="2.5"
@@ -222,7 +222,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
           <input
             type="text"
             placeholder={t("search.placeholder")}
-            className="bg-transparent w-full text-xs outline-none text-textColor dark:text-slate-100 placeholder-[#747873] dark:placeholder-slate-400"
+            className="bg-transparent w-full text-xs outline-none text-textColor  placeholder-[#747873] "
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => {

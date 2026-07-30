@@ -217,15 +217,15 @@ export const Home: React.FC<IHomeProps> = (_props) => {
     <PageCast
       pullToRefresh
       onRefresh={handleRefresh}
-      className="bg-surface dark:bg-slate-950 text-slate-900 dark:text-slate-100 relative flex flex-col w-full h-full overscroll-none scrollbar-none animate-fade-in"
+      className="bg-surface  text-slate-900  relative flex flex-col w-full h-full overscroll-none scrollbar-none animate-fade-in"
     >
       {/* Top Header App Bar */}
-      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-[#f0edeb] dark:border-slate-800 sticky top-0 z-30 shadow-xs">
+      <div className="bg-white/95 /95 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-[#f0edeb]  sticky top-0 z-30 shadow-xs">
         <button
           onClick={() => setIsMenuOpen(true)}
-          className="p-2 -ml-2 hover:bg-neutral-100 dark:hover:bg-slate-800 rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer"
+          className="p-2 -ml-2 hover:bg-neutral-100 :bg-slate-800 rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer"
         >
-          <Bars3Icon className="w-5.5 h-5.5 text-textColor dark:text-slate-100" strokeWidth={2} />
+          <Bars3Icon className="w-5.5 h-5.5 text-textColor " strokeWidth={2} />
         </button>
 
         <div className="flex items-center gap-1.5 justify-center">
@@ -234,17 +234,17 @@ export const Home: React.FC<IHomeProps> = (_props) => {
             className="w-6.5 h-6.5 object-contain rounded-xl shadow-xs"
             alt="Logo"
           />
-          <span className="text-[11px] font-black uppercase tracking-[0.2em] text-textColor dark:text-slate-100 font-sans">
+          <span className="text-[11px] font-black uppercase tracking-[0.2em] text-textColor  font-sans">
             {brandName}
           </span>
         </div>
 
         <button
           onClick={() => setIsCartOpen(true)}
-          className="p-2 -mr-2 hover:bg-neutral-100 dark:hover:bg-slate-800 rounded-full transition-colors relative active:scale-95 border-none bg-transparent cursor-pointer"
+          className="p-2 -mr-2 hover:bg-neutral-100 :bg-slate-800 rounded-full transition-colors relative active:scale-95 border-none bg-transparent cursor-pointer"
         >
           <ShoppingCartIcon
-            className={`w-5.5 h-5.5 text-textColor dark:text-slate-100 ${isCartBouncing ? "animate-cart-bounce" : ""}`}
+            className={`w-5.5 h-5.5 text-textColor  ${isCartBouncing ? "animate-cart-bounce" : ""}`}
             strokeWidth={2}
           />
           {cart.length > 0 && (
@@ -256,12 +256,12 @@ export const Home: React.FC<IHomeProps> = (_props) => {
       </div>
 
       {/* Search Input Bar Trigger */}
-      <div className="px-6 pt-3 pb-1 bg-white dark:bg-slate-900">
+      <div className="px-6 pt-3 pb-1 bg-white ">
         <div
           onClick={() => setIsLiveSearchOpen(true)}
-          className="bg-[#f6f4f2] dark:bg-slate-800 hover:bg-[#eeebe8] dark:hover:bg-slate-700 transition-colors rounded-2xl px-4 py-2.5 flex items-center gap-2.5 text-xs text-[#526069]/70 dark:text-slate-300 cursor-pointer border border-[#ece9e6] dark:border-slate-700 shadow-2xs"
+          className="bg-[#f6f4f2]  hover:bg-[#eeebe8] :bg-slate-700 transition-colors rounded-2xl px-4 py-2.5 flex items-center gap-2.5 text-xs text-[#526069]/70  cursor-pointer border border-[#ece9e6]  shadow-2xs"
         >
-          <svg className="w-4 h-4 text-[#0e6877] dark:text-teal-400 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 text-[#0e6877]  shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
           <span className="font-medium truncate flex-1">{t("home.searchPlaceholder")}</span>
@@ -418,7 +418,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
         {/* Categories Section - Clean horizontal capsule scrolling */}
         <BoxCast className="my-6">
           <div className="flex justify-between items-center px-6 mb-3">
-            <TextCast className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/80 dark:text-slate-400">
+            <TextCast className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/80 ">
               {t("home.categories")}
             </TextCast>
           </div>
@@ -432,7 +432,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
                 className={`px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider border transition-all whitespace-nowrap ${
                   selectedCategory === null
                     ? "border-primary bg-primary text-white shadow-xs"
-                    : "border-[#f0edeb] dark:border-slate-800 bg-white dark:bg-slate-900 text-textColor-variant dark:text-slate-300 hover:bg-neutral-50 dark:hover:bg-slate-800"
+                    : "border-[#f0edeb]  bg-white  text-textColor-variant  hover:bg-neutral-50 :bg-slate-800"
                 }`}
               >
                 {t("home.all")}
@@ -448,7 +448,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
                     className={`px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider border transition-all whitespace-nowrap ${
                       isActive
                         ? "border-primary bg-primary text-white shadow-xs"
-                        : "border-[#f0edeb] dark:border-slate-800 bg-white dark:bg-slate-900 text-textColor-variant dark:text-slate-300 hover:bg-neutral-50 dark:hover:bg-slate-800"
+                        : "border-[#f0edeb]  bg-white  text-textColor-variant  hover:bg-neutral-50 :bg-slate-800"
                     }`}
                   >
                     <span className="mr-1.5">{cat.icon}</span>
@@ -463,7 +463,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
         {/* Featured Products - High-fidelity borderless grid cards */}
         <BoxCast className="my-6">
           <div className="px-6 mb-4">
-            <TextCast className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/80 dark:text-slate-400">
+            <TextCast className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/80 ">
               {t("home.featured")}
             </TextCast>
           </div>

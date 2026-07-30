@@ -844,7 +844,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   };
 
   return (
-    <PageCast className="bg-surface dark:bg-slate-950 text-slate-900 dark:text-slate-100 relative flex flex-col w-full h-full overscroll-none scrollbar-none animate-fade-in">
+    <PageCast className="bg-surface  text-slate-900  relative flex flex-col w-full h-full overscroll-none scrollbar-none animate-fade-in">
       {/* Header */}
       <div className="bg-white/95 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-[#f0edeb] sticky top-0 z-30 shadow-xs">
         <button

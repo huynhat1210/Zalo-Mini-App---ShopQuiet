@@ -166,19 +166,6 @@ export default function App() {
     (state) => state.fetchRecommendations,
   );
   const exchangeVoucher = useAppStore((state) => state.exchangeVoucher);
-  const theme = useAppStore((state) => state.theme);
-  const setTheme = useAppStore((state) => state.setTheme);
-  const toggleTheme = useAppStore((state) => state.toggleTheme);
-
-  // Synchronize HTML dark class on initial mount & system preference change
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("shopquiet_theme") as "light" | "dark" | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-    } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setTheme("dark");
-    }
-  }, [setTheme]);
 
   // TanStack React Query for Notifications
   const { data: notificationsData, refetch: fetchNotifications } =
@@ -379,9 +366,6 @@ export default function App() {
               recommendations,
               fetchRecommendations,
               exchangeVoucher,
-              theme,
-              setTheme,
-              toggleTheme,
             }}
           >
             <ZMPRouterCast>
@@ -396,7 +380,7 @@ export default function App() {
                 ].includes(activeTab);
                 return (
                   <div
-                    className={`flex flex-col h-screen overflow-hidden bg-surface dark:bg-slate-950 text-textColor dark:text-slate-100 transition-colors duration-200 overscroll-none relative ${showNavbar ? "pb-[72px]" : "pb-0"}`}
+                    className={`flex flex-col h-screen overflow-hidden bg-surface text-textColor transition-colors duration-200 overscroll-none relative ${showNavbar ? "pb-[72px]" : "pb-0"}`}
                   >
                     {/* Custom Premium Top Toast Notification */}
                     <ToastComponent />

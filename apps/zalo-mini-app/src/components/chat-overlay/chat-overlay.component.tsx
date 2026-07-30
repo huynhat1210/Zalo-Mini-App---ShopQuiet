@@ -188,8 +188,8 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
       const url = content.substring("[IMAGE_ATTACHMENT]".length).trim();
       return (
         <div className="space-y-1">
-          <span className="text-[10px] text-teal-800 dark:text-teal-300 font-bold block">📷 Ảnh đính kèm:</span>
-          <img src={url} alt="Attached" className="max-w-[200px] max-h-[200px] rounded-xl object-cover border border-slate-200 dark:border-slate-700" />
+          <span className="text-[10px] text-teal-800  font-bold block">📷 Ảnh đính kèm:</span>
+          <img src={url} alt="Attached" className="max-w-[200px] max-h-[200px] rounded-xl object-cover border border-slate-200 " />
         </div>
       );
     }
@@ -215,13 +215,13 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
               onClose();
               setSelectedProductDetail(prod);
             }}
-            className="bg-teal-50 dark:bg-teal-950/50 border border-teal-150 dark:border-teal-800 p-2.5 rounded-2xl flex gap-3 cursor-pointer hover:bg-teal-100 dark:hover:bg-teal-900 transition-colors text-left max-w-xs shadow-xs"
+            className="bg-teal-50 /50 border border-teal-150  p-2.5 rounded-2xl flex gap-3 cursor-pointer hover:bg-teal-100 :bg-teal-900 transition-colors text-left max-w-xs shadow-xs"
           >
             <img src={fullImg} alt={prod.name} className="w-12 h-12 object-cover rounded-xl border border-teal-200 shrink-0" />
             <div className="flex-1 min-w-0">
               <span className="text-[8px] bg-[#0e6877] text-white px-1.5 py-0.5 rounded font-black uppercase tracking-wider">Đang xem</span>
-              <h4 className="text-xs font-bold text-teal-950 dark:text-teal-100 truncate mt-1 leading-snug">{prod.name}</h4>
-              <p className="text-[10px] text-teal-800 dark:text-teal-300 font-extrabold mt-0.5">{prod.price?.toLocaleString("vi-VN")} đ</p>
+              <h4 className="text-xs font-bold text-teal-950  truncate mt-1 leading-snug">{prod.name}</h4>
+              <p className="text-[10px] text-teal-800  font-extrabold mt-0.5">{prod.price?.toLocaleString("vi-VN")} đ</p>
             </div>
           </div>
         );
@@ -252,7 +252,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
 
   return (
     <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-xs flex flex-col justify-end animate-fadeIn">
-      <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-t-3xl h-[88vh] flex flex-col overflow-hidden shadow-2xl border-t border-white/20">
+      <div className="bg-white  text-slate-900  rounded-t-3xl h-[88vh] flex flex-col overflow-hidden shadow-2xl border-t border-white/20">
 
         {/* ── Top Header with Feature 3: Online Status ── */}
         <div className="bg-gradient-to-r from-[#0e6877] to-[#168a9e] text-white p-4 flex justify-between items-center shadow-sm">
@@ -298,10 +298,10 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
 
         {/* ── Feature 2: Order Attachment Context Banner ── */}
         {latestOrder && !chatContextProduct && (
-          <div className="bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-800/60 p-2.5 px-4 flex items-center justify-between gap-2 text-xs">
+          <div className="bg-amber-50 /40 border-b border-amber-200 /60 p-2.5 px-4 flex items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-[9px] bg-amber-600 text-white px-2 py-0.5 rounded font-black uppercase tracking-wider shrink-0">Đơn mới nhất</span>
-              <p className="text-xs font-bold text-amber-950 dark:text-amber-200 truncate">
+              <p className="text-xs font-bold text-amber-950  truncate">
                 #{latestOrder.id} - {latestOrder.totalAmount?.toLocaleString("vi-VN")} đ
               </p>
             </div>
@@ -319,10 +319,10 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
 
         {/* ── Context Product Preview (if opened from product page) ── */}
         {chatContextProduct && (
-          <div className="bg-teal-50 dark:bg-teal-950/50 border-b border-teal-150 dark:border-teal-800 p-2.5 flex items-center justify-between gap-2 px-4 animate-slide-down">
+          <div className="bg-teal-50 /50 border-b border-teal-150  p-2.5 flex items-center justify-between gap-2 px-4 animate-slide-down">
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-[9px] bg-[#0e6877] text-white px-2 py-0.5 rounded font-black uppercase tracking-wider shrink-0">Hỏi về</span>
-              <p className="text-xs font-bold text-teal-950 dark:text-teal-100 truncate">{chatContextProduct.name}</p>
+              <p className="text-xs font-bold text-teal-950  truncate">{chatContextProduct.name}</p>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               <button
@@ -351,7 +351,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
         )}
 
         {/* ── Messages List ── */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-slate-50 dark:bg-slate-950">
+        <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-slate-50 ">
           {loading ? (
             <div className="text-center py-8 text-slate-400 text-xs font-medium">Đang tải lịch sử trò chuyện...</div>
           ) : messages.length === 0 ? (
@@ -376,7 +376,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
                       className={`p-3 rounded-2xl ${
                         isUser
                           ? `bg-[#0e6877] text-white rounded-br-2xs shadow-xs${isOptimistic ? " opacity-70" : ""}`
-                          : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200/90 dark:border-slate-700 rounded-bl-2xs shadow-2xs"
+                          : "bg-white  text-slate-800  border border-slate-200/90  rounded-bl-2xs shadow-2xs"
                       }`}
                     >
                       {renderMessageContent(msg.content)}
@@ -397,12 +397,12 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
         </div>
 
         {/* ── Quick Templates Bar ── */}
-        <div className="px-4 py-2 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex gap-2 overflow-x-auto scrollbar-none">
+        <div className="px-4 py-2 bg-white  border-t border-slate-100  flex gap-2 overflow-x-auto scrollbar-none">
           {quickTemplates.map((template, i) => (
             <button
               key={i}
               onClick={() => handleQuickActionClick(template)}
-              className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10.5px] font-bold rounded-full whitespace-nowrap border-none cursor-pointer active:scale-95 transition-transform shrink-0 shadow-2xs"
+              className="px-3 py-1.5 bg-slate-100  hover:bg-slate-200 :bg-slate-700 text-slate-700  text-[10.5px] font-bold rounded-full whitespace-nowrap border-none cursor-pointer active:scale-95 transition-transform shrink-0 shadow-2xs"
             >
               {template}
             </button>
@@ -410,10 +410,10 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
         </div>
 
         {/* ── Message Input Bar + Feature 4: Camera / Image Button ── */}
-        <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2">
+        <div className="p-3 bg-white  border-t border-slate-200  flex items-center gap-2">
           <button
             onClick={handleChooseImage}
-            className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold border-none cursor-pointer active:scale-90 transition-transform shrink-0"
+            className="w-10 h-10 rounded-2xl bg-slate-100  hover:bg-slate-200 :bg-slate-700 text-slate-600  flex items-center justify-center font-bold border-none cursor-pointer active:scale-90 transition-transform shrink-0"
             title="Gửi hình ảnh"
           >
             📷
@@ -424,7 +424,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-            className="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-[#0e6877] focus:bg-white dark:focus:bg-slate-800 rounded-2xl px-4 py-2.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none transition-all shadow-2xs font-medium"
+            className="flex-1 bg-slate-100  border border-slate-200  focus:border-[#0e6877] focus:bg-white :bg-slate-800 rounded-2xl px-4 py-2.5 text-xs text-slate-800  placeholder-slate-400 focus:outline-none transition-all shadow-2xs font-medium"
           />
           <button
             onClick={() => handleSendMessage()}

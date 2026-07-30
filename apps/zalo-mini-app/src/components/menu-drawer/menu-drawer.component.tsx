@@ -136,14 +136,14 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
 
   return (
     <div className="fixed inset-0 z-[100] flex bg-black/45 backdrop-blur-xs animate-fade-in">
-      <div className="w-[80%] max-w-[320px] h-full bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xl flex flex-col border-r border-[#f0edeb] dark:border-slate-800 animate-slide-right">
-        <div className="px-6 py-5 flex items-center justify-between border-b border-[#f0edeb] dark:border-slate-800">
-          <span className="text-xs font-bold uppercase tracking-[0.3em] text-textColor dark:text-slate-100">
+      <div className="w-[80%] max-w-[320px] h-full bg-white  text-slate-900  shadow-2xl flex flex-col border-r border-[#f0edeb]  animate-slide-right">
+        <div className="px-6 py-5 flex items-center justify-between border-b border-[#f0edeb] ">
+          <span className="text-xs font-bold uppercase tracking-[0.3em] text-textColor ">
             {brandName}
           </span>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-[#f0edeb] dark:hover:bg-slate-800 rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer text-slate-500 dark:text-slate-400"
+            className="p-1.5 hover:bg-[#f0edeb] :bg-slate-800 rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer text-slate-500 "
           >
             <svg
               className="w-5 h-5"
@@ -163,7 +163,7 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
 
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
           <div className="space-y-3">
-            <h3 className="text-[10px] font-extrabold text-[#526069]/50 dark:text-slate-400 uppercase tracking-widest">
+            <h3 className="text-[10px] font-extrabold text-[#526069]/50  uppercase tracking-widest">
               Bộ sưu tập độc quyền
             </h3>
             <div className="space-y-2">
@@ -171,13 +171,13 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
                 <button
                   key={item.id}
                   onClick={() => handleMenuClick(item)}
-                  className="w-full text-left py-2.5 px-3 bg-[#fbf9f7] dark:bg-slate-800 rounded-xl hover:bg-[#f0edeb] dark:hover:bg-slate-700 transition-all flex items-center justify-between group border-none cursor-pointer"
+                  className="w-full text-left py-2.5 px-3 bg-[#fbf9f7]  rounded-xl hover:bg-[#f0edeb] :bg-slate-700 transition-all flex items-center justify-between group border-none cursor-pointer"
                 >
-                  <span className="text-xs font-bold text-textColor dark:text-slate-100 group-hover:text-primary dark:group-hover:text-teal-400 transition-colors">
+                  <span className="text-xs font-bold text-textColor  group-hover:text-primary :text-teal-400 transition-colors">
                     {item.label}
                   </span>
                   <svg
-                    className="w-3.5 h-3.5 text-[#526069]/40 dark:text-slate-400 group-hover:text-primary dark:group-hover:text-teal-400 transition-colors"
+                    className="w-3.5 h-3.5 text-[#526069]/40  group-hover:text-primary :text-teal-400 transition-colors"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2.5"
@@ -195,7 +195,7 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-[10px] font-extrabold text-[#526069]/50 dark:text-slate-400 uppercase tracking-widest">
+            <h3 className="text-[10px] font-extrabold text-[#526069]/50  uppercase tracking-widest">
               Chất liệu tự nhiên
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -203,7 +203,7 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
                 <button
                   key={item.id}
                   onClick={() => handleMenuClick(item)}
-                  className="text-[10.5px] font-medium text-textColor-variant dark:text-slate-300 bg-white dark:bg-slate-800 border border-[#eae8e6] dark:border-slate-700 px-3 py-1.5 rounded-full hover:border-primary hover:text-primary dark:hover:text-teal-300 hover:bg-primary-light/10 transition-all active:scale-95 cursor-pointer"
+                  className="text-[10.5px] font-medium text-textColor-variant  bg-white  border border-[#eae8e6]  px-3 py-1.5 rounded-full hover:border-primary hover:text-primary :text-teal-300 hover:bg-primary-light/10 transition-all active:scale-95 cursor-pointer"
                 >
                   {item.label}
                 </button>
@@ -212,23 +212,23 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
           </div>
 
           <div className="space-y-2 pt-2">
-            <h3 className="text-[10px] font-extrabold text-[#526069]/50 dark:text-slate-400 uppercase tracking-widest">
+            <h3 className="text-[10px] font-extrabold text-[#526069]/50  uppercase tracking-widest">
               {storyTitle}
             </h3>
-            <div className="bg-[#fbf9f7] dark:bg-slate-800 rounded-2xl p-4.5 border border-[#f0edeb] dark:border-slate-700 space-y-2.5">
-              <p className="text-[10.5px] italic text-[#526069] dark:text-slate-300 leading-relaxed">
+            <div className="bg-[#fbf9f7]  rounded-2xl p-4.5 border border-[#f0edeb]  space-y-2.5">
+              <p className="text-[10.5px] italic text-[#526069]  leading-relaxed">
                 "{storyContent}"
               </p>
               <img
                 src={storyImageUrl}
                 alt="Brand mood"
-                className="w-full h-24 rounded-xl object-cover border border-[#f0edeb]/50 dark:border-slate-700"
+                className="w-full h-24 rounded-xl object-cover border border-[#f0edeb]/50 "
               />
             </div>
           </div>
 
           <div className="pt-2">
-            <div className="flex justify-between items-center text-[10px] text-[#526069]/60 dark:text-slate-400 font-semibold px-1">
+            <div className="flex justify-between items-center text-[10px] text-[#526069]/60  font-semibold px-1">
               <span>{returnPolicy}</span>
               <span>•</span>
               <span>Hotline: {hotline}</span>
