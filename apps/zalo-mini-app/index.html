@@ -14,8 +14,27 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <script>
+      (function() {
+        try {
+          var t = localStorage.getItem("shopquiet_theme");
+          if (!t) {
+            var store = localStorage.getItem("shopquiet_app_store");
+            if (store) {
+              var parsed = JSON.parse(store);
+              t = parsed && parsed.state && parsed.state.theme;
+            }
+          }
+          if (t === "dark" || (!t && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+            document.documentElement.classList.add("dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
-  <body class="bg-surface">
+  <body class="bg-surface dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
     <div id="app"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

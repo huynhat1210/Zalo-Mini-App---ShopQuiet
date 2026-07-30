@@ -790,7 +790,25 @@ export const useAppStore = create<IAppState>()(
           return false;
         }
       },
-      theme: (typeof window !== "undefined" && (localStorage.getItem("shopquiet_theme") as "light" | "dark")) || "light",
+      theme: (() => {
+        if (typeof window === "undefined") return "light";
+        const saved = localStorage.getItem("shopquiet_theme");
+        if (saved === "dark" || saved === "light") {
+          if (saved === "dark") {
+            document.documentElement.classList.add("dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+          }
+          return saved as "light" | "dark";
+        }
+        const prefersDark =
+          window.matchMedia &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches;
+        if (prefersDark) {
+          document.documentElement.classList.add("dark");
+        }
+        return prefersDark ? "dark" : "light";
+      })(),
       setTheme: (newTheme: "light" | "dark") => {
         set({ theme: newTheme });
         if (typeof window !== "undefined") {
