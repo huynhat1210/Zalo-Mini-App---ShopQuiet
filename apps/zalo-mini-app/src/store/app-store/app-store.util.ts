@@ -486,142 +486,107 @@ export const useAppStore = create<IAppState>()(
           }
         };
 
-        const apiAny = api as any;
-        if (typeof window !== "undefined" && apiAny && apiAny.getUserInfo) {
-          const doUserInfo = () => {
-            apiAny.getUserInfo({
-              autoRequestPermission: true,
-              success: async (data: any) => {
-                const info = data?.userInfo || data;
-                const zaloId =
-                  info?.id ||
-                  info?.zaloId ||
-                  data?.id ||
-                  data?.zaloId ||
-                  data?.userInfo?.id;
-                if (zaloId) {
-                  const name =
-                    info?.name || data?.userInfo?.name || "Người dùng Zalo";
-                  const avatar =
-                    info?.avatar ||
-                    data?.userInfo?.avatar ||
-                    "https://zalo-api.zdn.vn/api/emoticon/avatar";
-                  try {
-                    let zaloToken = "";
-                    if (
-                      typeof window !== "undefined" &&
-                      apiAny &&
-                      apiAny.getAccessToken
-                    ) {
-                      try {
-                        const token = await apiAny.getAccessToken();
-                        zaloToken = token || "";
-                      } catch (e) {
-                        console.error("Failed to get Zalo access token:", e);
-                      }
-                    }
-                    if (!zaloToken) {
-                      zaloToken = `mock_zalo_token_${zaloId}`;
-                    }
+        const isRealZaloEnv =
+          typeof window !== "undefined" &&
+          (window.navigator.userAgent.toLowerCase().includes("zalo") ||
+            !!(window as any).ZaloMiniApp);
 
-                    const authData: any = await apiRequest(
-                      "/auth/login",
-                      "POST",
-                      {
-                        zaloId: String(zaloId),
-                        name: String(name || "Người dùng Zalo"),
-                        avatar: String(avatar || ""),
-                        accessToken: zaloToken,
-                      },
-                    );
-                    tokenStorage.setTokens({
-                      access_token: authData.access_token,
-                      refresh_token: authData.refresh_token,
-                    });
-                    const mappedUser = {
-                      id: authData.user.zaloId || authData.user.id,
-                      name: authData.user.name,
-                      avatar: authData.user.avatar,
-                      role: authData.user.role,
-                      phone: authData.user.phone || "",
-                      email: authData.user.email || "",
-                      birthday: authData.user.birthday || "",
-                      gender: authData.user.gender || "",
-                      totalSpent: authData.user.totalSpent || 0,
-                      membershipTier: authData.user.membershipTier || "Đồng",
-                    };
-                    set({ zaloUser: mappedUser });
-                    localStorage.setItem(
-                      "zalo_profile_custom",
-                      JSON.stringify(mappedUser),
-                    );
-                    get().fetchCart().catch(console.error);
-                    get().fetchFavorites().catch(console.error);
-                  } catch (error) {
-                    console.error("Login failed:", error);
-                    // Fallback to old sync method
-                    const user = {
-                      name: name,
-                      avatar: avatar,
-                      id: zaloId,
-                      phone: "",
-                      email: "",
-                      birthday: "",
-                      gender: "",
-                    };
-                    set({ zaloUser: user });
-                    localStorage.setItem(
-                      "zalo_profile_custom",
-                      JSON.stringify(user),
-                    );
-                    apiRequest("/users/sync", "POST", {
-                      zaloId: user.id,
-                      name: user.name,
-                      avatar: user.avatar,
-                    }).catch(console.error);
-                  }
-                } else {
-                  console.warn(
-                    "getUserInfo success but no zaloId found in data:",
-                    data,
-                  );
-                  fallbackMockUser();
-                }
-              },
-              fail: (err: any) => {
-                console.warn("getUserInfo failed:", err);
-                fallbackMockUser();
-              },
-            });
-          };
-
-          const requestPermissionAndFetch = () => {
-            if (apiAny.authorize) {
-              apiAny.authorize({
-                scopes: ["scope.userInfo"],
-                success: () => {
-                  doUserInfo();
-                },
-                fail: (err: any) => {
-                  console.warn("authorize scope.userInfo failed:", err);
-                  doUserInfo();
-                },
-              });
-            } else {
-              doUserInfo();
+        if (typeof window !== "undefined" && isRealZaloEnv) {
+          try {
+            const apiAny = api as any;
+            let data: any = null;
+            if (apiAny && apiAny.getUserInfo) {
+              data = await apiAny.getUserInfo({ autoRequestPermission: true });
             }
-          };
+            const info = data?.userInfo || data;
+            const zaloId =
+              info?.id ||
+              info?.zaloId ||
+              data?.id ||
+              data?.zaloId ||
+              data?.userInfo?.id;
 
-          if (apiAny.login) {
-            apiAny.login({
-              success: requestPermissionAndFetch,
-              fail: (err: any) => {
-                console.warn("login failed:", err);
-                fallbackMockUser();
-              },
-            });
-          } else {
-            requestPermissionAndFetch();
+            if (zaloId) {
+              const name = info?.name || data?.userInfo?.name || "Người dùng Zalo";
+              const avatar =
+                info?.avatar ||
+                data?.userInfo?.avatar ||
+                "https://zalo-api.zdn.vn/api/emoticon/avatar";
+
+              let zaloToken = "";
+              if (apiAny && apiAny.getAccessToken) {
+                try {
+                  zaloToken = (await apiAny.getAccessToken()) || "";
+                } catch (e) {
+                  console.warn("Failed to get Zalo access token:", e);
+                }
+              }
+              if (!zaloToken) {
+                zaloToken = `mock_zalo_token_${zaloId}`;
+              }
+
+              try {
+                const authData: any = await apiRequest(
+                  "/auth/login",
+                  "POST",
+                  {
+                    zaloId: String(zaloId),
+                    name: String(name || "Người dùng Zalo"),
+                    avatar: String(avatar || ""),
+                    accessToken: zaloToken,
+                  },
+                );
+                tokenStorage.setTokens({
+                  access_token: authData.access_token,
+                  refresh_token: authData.refresh_token,
+                });
+                const mappedUser = {
+                  id: authData.user.zaloId || authData.user.id,
+                  name: authData.user.name,
+                  avatar: authData.user.avatar,
+                  role: authData.user.role,
+                  phone: authData.user.phone || "",
+                  email: authData.user.email || "",
+                  birthday: authData.user.birthday || "",
+                  gender: authData.user.gender || "",
+                  totalSpent: authData.user.totalSpent || 0,
+                  membershipTier: authData.user.membershipTier || "Đồng",
+                };
+                set({ zaloUser: mappedUser });
+                localStorage.setItem(
+                  "zalo_profile_custom",
+                  JSON.stringify(mappedUser),
+                );
+                get().fetchCart().catch(console.error);
+                get().fetchFavorites().catch(console.error);
+              } catch (error) {
+                console.error("Login failed:", error);
+                const user = {
+                  name,
+                  avatar,
+                  id: zaloId,
+                  phone: "",
+                  email: "",
+                  birthday: "",
+                  gender: "",
+                };
+                set({ zaloUser: user });
+                localStorage.setItem(
+                  "zalo_profile_custom",
+                  JSON.stringify(user),
+                );
+                apiRequest("/users/sync", "POST", {
+                  zaloId: user.id,
+                  name: user.name,
+                  avatar: user.avatar,
+                }).catch(console.error);
+              }
+            } else {
+              fallbackMockUser();
+            }
+          } catch (sdkErr) {
+            console.warn("Zalo SDK getUserInfo failed:", sdkErr);
+            fallbackMockUser();
           }
         } else {
           fallbackMockUser();
