@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useCart } from "../../App";
 import { LazyImageComponent } from "../../components/lazy-image";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import { apiRequest } from "../../utils/api";
+import { apiRequest, safeParseImages } from "../../utils";
 
 export const FlashSaleList = () => {
   const { setActiveTab, setSelectedProductDetail, addToCart, showToast } =
@@ -126,12 +126,7 @@ export const FlashSaleList = () => {
         ) : (
           <div className="grid grid-cols-2 gap-3.5 pb-8">
             {products.map((product) => {
-              let img =
-                "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80";
-              try {
-                const parsed = JSON.parse(product.images);
-                if (parsed && parsed.length > 0) img = parsed[0];
-              } catch (e) {}
+              const img = safeParseImages(product.images)[0];
 
               const discountPercent = product.originalPrice
                 ? Math.round(

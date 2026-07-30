@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useCart } from "../../App";
-import { apiRequest } from "../../utils/api";
+import { apiRequest, safeParseImages } from "../../utils";
 import { EmptyStateComponent } from "../../components";
 import { ICartProps } from "./cart.type";
 
@@ -215,12 +215,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
             <div className="space-y-3.5">
               {cart.map((item) => {
                 const itemKey = getItemKey(item);
-                let img =
-                  "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=100&q=80";
-                try {
-                  const parsed = JSON.parse(item.product.images);
-                  if (parsed && parsed.length > 0) img = parsed[0];
-                } catch (e) {}
+                const img = safeParseImages(item.product.images)[0];
 
                 return (
                   <div

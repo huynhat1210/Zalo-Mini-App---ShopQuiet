@@ -34,7 +34,8 @@ export class ErrorBoundaryComponent extends Component<
 
   private handleGoHome = () => {
     try {
-      localStorage.removeItem("shopquiet-app-storage");
+      localStorage.removeItem("shopquiet_app_store");
+      localStorage.removeItem("zalo_profile_custom");
     } catch (e) {}
     window.location.href = window.location.origin + window.location.pathname;
   };

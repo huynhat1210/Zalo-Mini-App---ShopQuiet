@@ -230,3 +230,24 @@ export async function apiUploadRequest(
   }
   throw new Error("Không nhận được đường dẫn ảnh sau khi tải lên");
 }
+
+export function safeParseImages(imagesInput: any, fallback?: string): string[] {
+  const defaultImg =
+    fallback ||
+    "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80";
+  if (!imagesInput) return [defaultImg];
+  if (Array.isArray(imagesInput)) {
+    return imagesInput.length > 0 ? imagesInput.map(String) : [defaultImg];
+  }
+  if (typeof imagesInput === "string" && imagesInput.trim()) {
+    try {
+      const parsed = JSON.parse(imagesInput);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed.map(String);
+      if (typeof parsed === "string" && parsed.trim()) return [parsed.trim()];
+    } catch (e) {
+      return [imagesInput.trim()];
+    }
+  }
+  return [defaultImg];
+}
+

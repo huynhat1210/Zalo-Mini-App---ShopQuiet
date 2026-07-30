@@ -363,12 +363,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
 
             <div className="flex gap-3.5 overflow-x-auto pb-2 -mx-6 px-6 scrollbar-none">
               {recommendations.map((prod: any) => {
-                let img =
-                  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80";
-                try {
-                  const parsed = JSON.parse(prod.images);
-                  if (parsed && parsed.length > 0) img = parsed[0];
-                } catch (e) {}
+                const img = safeParseImages(prod.images)[0];
                 const isLiked = isSavedItem(prod.id);
                 return (
                   <div
@@ -478,13 +473,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
           ) : (
             <div className="grid grid-cols-2 gap-x-5 gap-y-7 px-6">
               {filteredProducts.map((prod) => {
-                let img =
-                  "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80";
-                try {
-                  const parsed = JSON.parse(prod.images);
-                  if (parsed && parsed.length > 0) img = parsed[0];
-                } catch (e) {}
-
+                const img = safeParseImages(prod.images)[0];
                 const isLiked = isSavedItem(prod.id);
 
                 return (

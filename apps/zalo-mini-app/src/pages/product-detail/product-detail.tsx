@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Page, Box } from "zmp-ui";
 import { IProduct, useCart } from "../../App";
 import api from "zmp-sdk";
-import { apiRequest, API_BASE_URL, trackAnalyticsEvent } from "../../utils";
+import { apiRequest, API_BASE_URL, trackAnalyticsEvent, safeParseImages } from "../../utils";
 import {
   ChevronLeftIcon,
   ShareIcon,
@@ -35,14 +35,14 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
     zaloUser,
   } = useCart();
   const [quantity, setQuantity] = useState(1);
-  const [likeCount, setLikeCount] = useState(product.likeCount || 0);
+  const [likeCount, setLikeCount] = useState(product?.likeCount || 0);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
 
   useEffect(() => {
-    setLikeCount(product.likeCount || 0);
+    setLikeCount(product?.likeCount || 0);
     setActiveImageIndex(0);
-  }, [product.id, product.likeCount]);
+  }, [product?.id, product?.likeCount]);
 
   // Scroll to top when product ID changes
   useEffect(() => {
@@ -52,7 +52,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
     overlays.forEach((el) => {
       el.scrollTop = 0;
     });
-  }, [product.id]);
+  }, [product?.id]);
 
   // Accordion toggle states
   const [expandedSection, setExpandedSection] = useState<string | null>(
@@ -213,21 +213,12 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
 
     fetchDetails();
     fetchRelated();
-  }, [product.id, product.category?.id]);
+  }, [product?.id, product?.category?.id]);
+
+  if (!product) return null;
 
   const isLiked = isSavedItem(product.id);
-
-  let images: string[] = [
-    "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80",
-  ];
-  try {
-    const parsed = JSON.parse(product.images);
-    if (parsed && Array.isArray(parsed) && parsed.length > 0) images = parsed;
-  } catch (e) {
-    if (typeof product.images === "string" && product.images) {
-      images = [product.images];
-    }
-  }
+  const images = safeParseImages(product.images);
 
   // Auto-slide image carousel every 3.5 seconds
   const totalImages = images.length;
@@ -957,12 +948,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
           </h3>
           <div className="grid grid-cols-2 gap-3">
             {relatedProducts.map((prod) => {
-              let imgUrl =
-                "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80";
-              try {
-                const parsed = JSON.parse(prod.images);
-                if (parsed && parsed.length > 0) imgUrl = parsed[0];
-              } catch (e) {}
+              const imgUrl = safeParseImages(prod.images)[0];
 
               return (
                 <div

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { apiRequest } from "../../utils/api";
+import { apiRequest, safeParseImages } from "../../utils";
 import { trackAnalyticsEvent } from "../../utils/analytics/analytics.util";
 import { IProduct, useCart } from "../../App";
 
@@ -308,12 +308,7 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
             </div>
             <div className="grid grid-cols-2 gap-3">
               {suggestedProducts.map((prod) => {
-                let img =
-                  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80";
-                try {
-                  const parsed = JSON.parse(prod.images);
-                  if (parsed && parsed.length > 0) img = parsed[0];
-                } catch (e) {}
+                const img = safeParseImages(prod.images)[0];
 
                 return (
                   <div
@@ -373,12 +368,7 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
               </div>
               <div className="divide-y divide-[#f5f3f0]">
                 {results.map((product) => {
-                  let img =
-                    "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80";
-                  try {
-                    const parsed = JSON.parse(product.images);
-                    if (parsed && parsed.length > 0) img = parsed[0];
-                  } catch (e) {}
+                  const img = safeParseImages(product.images)[0];
 
                   return (
                     <div

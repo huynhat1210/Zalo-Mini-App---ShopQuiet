@@ -47,22 +47,22 @@ export const VoucherWallet: React.FC<IVoucherWalletProps> = (props) => {
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-center justify-center p-6 animate-fade-in">
-      <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up max-h-[75vh] flex flex-col text-left">
-        <div className="flex items-center justify-between shrink-0 pb-2 border-b border-[#f5f3f0]">
+      <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] dark:border-slate-800 shadow-2xl space-y-4 animate-scale-up max-h-[75vh] flex flex-col text-left">
+        <div className="flex items-center justify-between shrink-0 pb-2 border-b border-[#f5f3f0] dark:border-slate-800">
           <div className="flex items-center gap-2">
-            <TicketIcon className="w-6 h-6 text-[#0e6877]" />
+            <TicketIcon className="w-6 h-6 text-[#0e6877] dark:text-teal-400" />
             <div>
-              <h3 className="text-xs font-bold text-textColor tracking-wide">
+              <h3 className="text-xs font-bold text-textColor dark:text-slate-100 tracking-wide">
                 Ví Voucher Của Tôi
               </h3>
-              <p className="text-[10px] text-textColor-variant">Mã ưu đãi đã nhận & đổi điểm</p>
+              <p className="text-[10px] text-textColor-variant dark:text-slate-400">Mã ưu đãi đã nhận & đổi điểm</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 bg-neutral-100 hover:bg-neutral-200 rounded-full transition-colors border-none cursor-pointer flex items-center justify-center"
+            className="p-1.5 bg-neutral-100 dark:bg-slate-800 hover:bg-neutral-200 dark:hover:bg-slate-700 rounded-full transition-colors border-none cursor-pointer flex items-center justify-center text-slate-500 dark:text-slate-400"
           >
-            <XMarkIcon className="w-4 h-4 text-textColor" />
+            <XMarkIcon className="w-4 h-4" />
           </button>
         </div>
 
@@ -73,8 +73,8 @@ export const VoucherWallet: React.FC<IVoucherWalletProps> = (props) => {
             </div>
           ) : userVouchers.length === 0 ? (
             <div className="text-center py-8 space-y-2">
-              <SparklesIcon className="w-10 h-10 text-neutral-300 mx-auto" />
-              <p className="text-xs text-textColor-variant font-medium">
+              <SparklesIcon className="w-10 h-10 text-neutral-300 dark:text-slate-600 mx-auto" />
+              <p className="text-xs text-textColor-variant dark:text-slate-400 font-medium">
                 Chưa có voucher khả dụng
                 <br />
                 Hãy tham gia Vòng Quay May Mắn để đổi điểm nhận thêm!
@@ -84,7 +84,7 @@ export const VoucherWallet: React.FC<IVoucherWalletProps> = (props) => {
             userVouchers.map((v: any) => (
               <div
                 key={v.code}
-                className="border border-dashed border-[#0e6877]/30 rounded-2xl overflow-hidden flex bg-[#fcfbfa] shadow-2xs hover:shadow-xs transition-shadow"
+                className="border border-dashed border-[#0e6877]/30 dark:border-teal-700/50 rounded-2xl overflow-hidden flex bg-[#fcfbfa] dark:bg-slate-800 shadow-2xs hover:shadow-xs transition-shadow"
               >
                 <div className="bg-gradient-to-br from-[#0e6877] to-[#168a9e] text-white px-3 py-3 flex flex-col items-center justify-center min-w-[76px] gap-0.5 shrink-0">
                   <span className="text-[11px] font-black uppercase tracking-wider">
@@ -101,11 +101,11 @@ export const VoucherWallet: React.FC<IVoucherWalletProps> = (props) => {
                 <div className="flex-1 px-3 py-2.5 flex flex-col justify-between text-left gap-1">
                   <div>
                     <div className="flex items-center justify-between gap-1">
-                      <span className="font-black text-xs text-[#0e6877] tracking-widest font-mono">
+                      <span className="font-black text-xs text-[#0e6877] dark:text-teal-300 tracking-widest font-mono">
                         {v.code}
                       </span>
                     </div>
-                    <p className="text-[10.5px] text-textColor font-bold mt-0.5">
+                    <p className="text-[10.5px] text-textColor dark:text-slate-100 font-bold mt-0.5">
                       {v.type === "PERCENT"
                         ? `Giảm trực tiếp ${v.value}%`
                         : v.type === "FIXED"

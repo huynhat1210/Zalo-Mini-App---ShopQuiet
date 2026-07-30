@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { IFlashSaleProps } from "./flash-sale.type";
 import { LazyImageComponent } from "../lazy-image";
 import { useCart } from "../../App";
+import { safeParseImages } from "../../utils";
 
 export const FlashSale: React.FC<IFlashSaleProps> = ({ endTime, products }) => {
   const { setActiveTab, setSelectedProductDetail } = useCart();
@@ -74,12 +75,7 @@ export const FlashSale: React.FC<IFlashSaleProps> = ({ endTime, products }) => {
 
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
         {products.map((product) => {
-          let img =
-            "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80";
-          try {
-            const parsed = JSON.parse(product.images);
-            if (parsed && parsed.length > 0) img = parsed[0];
-          } catch (e) {}
+          const img = safeParseImages(product.images)[0];
 
           const discountPercent = product.originalPrice
             ? Math.round(

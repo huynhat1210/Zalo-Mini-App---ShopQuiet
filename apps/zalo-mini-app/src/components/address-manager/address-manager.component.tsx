@@ -224,9 +224,9 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-center justify-center p-6 animate-fade-in">
-      <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up">
+      <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] dark:border-slate-800 shadow-2xl space-y-4 animate-scale-up">
         <div className="flex justify-between items-center pb-1">
-          <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">
+          <h3 className="text-xs font-bold text-textColor dark:text-slate-100 uppercase tracking-wider">
             Sổ địa chỉ giao hàng
           </h3>
           <button
@@ -240,7 +240,7 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
         {/* Addresses list */}
         <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
           {addresses.length === 0 ? (
-            <div className="text-center py-6 text-[10px] text-textColor-variant">
+            <div className="text-center py-6 text-[10px] text-textColor-variant dark:text-slate-400">
               Chưa có địa chỉ nào. Vui lòng thêm mới!
             </div>
           ) : (
@@ -250,13 +250,13 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
                 onClick={() => handleSelectAddress(addr.id)}
                 className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex justify-between items-start text-left ${
                   activeAddressId === addr.id.toString()
-                    ? "border-primary bg-primary/5"
-                    : "border-[#f0edeb] bg-white hover:bg-neutral-50"
+                    ? "border-primary bg-primary/5 dark:bg-teal-950/40"
+                    : "border-[#f0edeb] dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-neutral-50 dark:hover:bg-slate-700"
                 }`}
               >
                 <div className="text-xs space-y-1.5 flex-1 pr-3">
                   <div className="flex items-center gap-2">
-                    <span className="font-extrabold text-textColor">
+                    <span className="font-extrabold text-textColor dark:text-slate-100">
                       {addr.label}
                     </span>
                     {addr.isDefault && (

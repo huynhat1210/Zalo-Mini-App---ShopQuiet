@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Page } from "zmp-ui";
 import { useCart } from "../../App";
+import { safeParseImages } from "../../utils";
 import { ISuccessOrder, IOrderSuccessProps } from "./order-success.type";
 
 const PageCast = Page as any;
@@ -145,12 +146,7 @@ export const OrderSuccess: React.FC<IOrderSuccessProps> = (_props) => {
 
           <div className="px-4.5 py-2 divide-y divide-[#f0edeb]">
             {activeOrder.items.map((item, idx) => {
-              let img =
-                "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=100&q=80";
-              try {
-                const parsed = JSON.parse(item.images);
-                if (parsed && parsed.length > 0) img = parsed[0];
-              } catch (e) {}
+              const img = safeParseImages(item.images)[0];
 
               return (
                 <div

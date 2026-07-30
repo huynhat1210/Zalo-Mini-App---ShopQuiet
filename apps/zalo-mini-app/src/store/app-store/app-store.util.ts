@@ -361,13 +361,22 @@ export const useAppStore = create<IAppState>()(
         }
 
         const cached = localStorage.getItem("zalo_profile_custom");
-        const isRealZaloEnv =
-          typeof window !== "undefined" &&
-          (window.navigator.userAgent.toLowerCase().includes("zalo") ||
-            !!(window as any).ZaloMiniApp);
 
         if (cached) {
-          const parsed = JSON.parse(cached);
+          let parsed: any = null;
+          try {
+            parsed = JSON.parse(cached);
+          } catch (e) {
+            // Corrupted cache — clear it so it doesn't crash on next launch
+            console.warn("Corrupted zalo_profile_custom in localStorage, clearing:", e);
+            localStorage.removeItem("zalo_profile_custom");
+          }
+
+          if (parsed) {
+          const isRealZaloEnv =
+            typeof window !== "undefined" &&
+            (window.navigator.userAgent.toLowerCase().includes("zalo") ||
+              !!(window as any).ZaloMiniApp);
           const isMockId =
             parsed?.id === "cust-zalo-id-1" ||
             (parsed?.id && String(parsed.id).startsWith("mock_"));
@@ -435,6 +444,7 @@ export const useAppStore = create<IAppState>()(
             return;
           } else {
             localStorage.removeItem("zalo_profile_custom");
+          }
           }
         }
 
@@ -796,18 +806,15 @@ export const useAppStore = create<IAppState>()(
         if (saved === "dark" || saved === "light") {
           if (saved === "dark") {
             document.documentElement.classList.add("dark");
+            document.body?.classList.add("dark");
           } else {
             document.documentElement.classList.remove("dark");
+            document.body?.classList.remove("dark");
           }
           return saved as "light" | "dark";
         }
-        const prefersDark =
-          window.matchMedia &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches;
-        if (prefersDark) {
-          document.documentElement.classList.add("dark");
-        }
-        return prefersDark ? "dark" : "light";
+        const isDark = document.documentElement.classList.contains("dark");
+        return isDark ? "dark" : "light";
       })(),
       setTheme: (newTheme: "light" | "dark") => {
         set({ theme: newTheme });
@@ -815,13 +822,15 @@ export const useAppStore = create<IAppState>()(
           localStorage.setItem("shopquiet_theme", newTheme);
           if (newTheme === "dark") {
             document.documentElement.classList.add("dark");
+            document.body?.classList.add("dark");
           } else {
             document.documentElement.classList.remove("dark");
+            document.body?.classList.remove("dark");
           }
         }
       },
       toggleTheme: () => {
-        const current = get().theme;
+        const current = typeof document !== "undefined" && document.documentElement.classList.contains("dark") ? "dark" : get().theme;
         const next = current === "dark" ? "light" : "dark";
         get().setTheme(next);
       },

@@ -9,6 +9,7 @@ import {
   calculateEstimatedDeliveryDate,
   trackAnalyticsEvent,
   useTranslation,
+  safeParseImages,
 } from "../../utils";
 import {
   getProvinces,
@@ -843,7 +844,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   };
 
   return (
-    <PageCast className="bg-surface relative flex flex-col w-full h-full overscroll-none scrollbar-none animate-fade-in">
+    <PageCast className="bg-surface dark:bg-slate-950 text-slate-900 dark:text-slate-100 relative flex flex-col w-full h-full overscroll-none scrollbar-none animate-fade-in">
       {/* Header */}
       <div className="bg-white/95 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-[#f0edeb] sticky top-0 z-30 shadow-xs">
         <button
@@ -1370,12 +1371,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 shadow-xs divide-y divide-[#f0edeb] space-y-3">
             <div className="space-y-3.5">
               {checkoutItems.map((item: any) => {
-                let img =
-                  "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=100&q=80";
-                try {
-                  const parsed = JSON.parse(item.product.images);
-                  if (parsed && parsed.length > 0) img = parsed[0];
-                } catch (e) {}
+                const img = safeParseImages(item.product.images)[0];
 
                 const selectedSize =
                   item.size && item.size !== "DEFAULT" ? item.size : null;

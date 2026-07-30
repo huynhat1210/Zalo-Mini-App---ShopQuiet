@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Page } from "zmp-ui";
 import { useCart } from "../../App";
+import { safeParseImages } from "../../utils";
 import { EmptyStateComponent, LazyImageComponent } from "../../components";
 import { ISavedItemsProps } from "./saved-items.type";
 import {
@@ -173,12 +174,7 @@ export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
           /* Saved items list */
           <div className="grid grid-cols-2 gap-x-5 gap-y-7">
             {savedItems.map((prod) => {
-              let img =
-                "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80";
-              try {
-                const parsed = JSON.parse(prod.images);
-                if (parsed && parsed.length > 0) img = parsed[0];
-              } catch (e) {}
+              const img = safeParseImages(prod.images)[0];
 
               return (
                 <div

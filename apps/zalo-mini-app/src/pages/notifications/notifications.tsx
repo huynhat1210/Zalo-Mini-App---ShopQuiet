@@ -43,10 +43,10 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
 
   if (!zaloUser) {
     return (
-      <PageCast className="bg-[#f7f7f7] relative flex flex-col w-full h-full overscroll-none scrollbar-none items-center justify-center">
+      <PageCast className="bg-surface dark:bg-slate-950 relative flex flex-col w-full h-full overscroll-none scrollbar-none items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-          <span className="text-[10px] font-bold text-textColor-variant tracking-wider uppercase">
+          <span className="text-[10px] font-bold text-textColor-variant dark:text-slate-400 tracking-wider uppercase">
             Đang tải thông báo...
           </span>
         </div>
@@ -100,16 +100,13 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
     const titleText = title || "";
     const contentText = content || "";
 
-    // Match SQ-XXXXX format
     const matchSq = titleText.match(/SQ-\d+/) || contentText.match(/SQ-\d+/);
     if (matchSq) return matchSq[0];
 
-    // Match #123 format
     const matchHashNum =
       titleText.match(/#(\d+)/) || contentText.match(/#(\d+)/);
     if (matchHashNum) return matchHashNum[1];
 
-    // Match "đơn hàng 123" or "đơn hàng số 123" format
     const matchOrderNum =
       titleText.match(
         /(?:đơn hàng|Mã đơn|mã đơn|Đơn hàng)\s+(?:số\s+)?(\d+)/i,
@@ -124,7 +121,6 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
 
   const getDiscountCode = (content: string) => {
     const contentText = content || "";
-    // Common discount codes in DB or distributed format
     const match = contentText.match(/[A-Z0-9]{5,15}/);
     return match ? match[0] : undefined;
   };
@@ -150,15 +146,15 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
   });
 
   return (
-    <PageCast className="bg-surface relative flex flex-col w-full h-full overscroll-none scrollbar-none animate-fade-in">
+    <PageCast className="bg-surface dark:bg-slate-950 text-slate-900 dark:text-slate-100 relative flex flex-col w-full h-full overscroll-none scrollbar-none animate-fade-in">
       {/* Header */}
-      <div className="bg-white/95 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-[#f0edeb] sticky top-0 z-30 shadow-xs">
+      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-[#f0edeb] dark:border-slate-800 sticky top-0 z-30 shadow-xs">
         <button
           onClick={() => setActiveTab("home")}
-          className="p-1.5 -ml-1.5 hover:bg-[#f0edeb] rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer"
+          className="p-1.5 -ml-1.5 hover:bg-[#f0edeb] dark:hover:bg-slate-800 rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer"
         >
           <svg
-            className="w-5.5 h-5.5 text-textColor"
+            className="w-5.5 h-5.5 text-textColor dark:text-slate-100"
             fill="none"
             stroke="currentColor"
             strokeWidth="2.2"
@@ -171,13 +167,13 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
             />
           </svg>
         </button>
-        <span className="text-xs font-bold uppercase tracking-widest text-textColor">
+        <span className="text-xs font-bold uppercase tracking-widest text-textColor dark:text-slate-100">
           Thông báo ({notifications.length})
         </span>
         <div className="flex items-center gap-1">
           <button
             onClick={handleMarkAllRead}
-            className="p-1.5 hover:bg-[#f0edeb] rounded-full transition-colors active:scale-95 text-textColor-variant hover:text-textColor border-none bg-transparent cursor-pointer"
+            className="p-1.5 hover:bg-[#f0edeb] dark:hover:bg-slate-800 rounded-full transition-colors active:scale-95 text-textColor-variant dark:text-slate-400 hover:text-textColor border-none bg-transparent cursor-pointer"
             title="Đánh dấu đã đọc tất cả"
           >
             <svg
@@ -196,7 +192,7 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
           </button>
           <button
             onClick={handleDeleteAllNotifications}
-            className="p-1.5 hover:bg-red-50 text-red-500 rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer"
+            className="p-1.5 hover:bg-red-50 dark:hover:bg-red-950/30 text-red-500 rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer"
             title="Xóa tất cả thông báo"
           >
             <svg
@@ -217,14 +213,14 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
       </div>
 
       {/* Category Tabs */}
-      <div className="bg-white/95 backdrop-blur-md px-6 py-2.5 flex border-b border-[#f0edeb] sticky top-[53px] z-20 shadow-xs">
-        <div className="flex bg-[#f5f3f0] p-1 w-full rounded-xl border border-[#eae8e6] gap-1">
+      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-6 py-2.5 flex border-b border-[#f0edeb] dark:border-slate-800 sticky top-[53px] z-20 shadow-xs">
+        <div className="flex bg-[#f5f3f0] dark:bg-slate-800 p-1 w-full rounded-xl border border-[#eae8e6] dark:border-slate-700 gap-1">
           <button
             onClick={() => setActiveCategory("order")}
             className={`flex-1 py-1.5 text-[9px] font-extrabold uppercase tracking-wider rounded-lg border-none transition-all cursor-pointer ${
               activeCategory === "order"
-                ? "bg-white text-primary shadow-xs"
-                : "bg-transparent text-textColor-variant hover:text-textColor"
+                ? "bg-white dark:bg-slate-700 text-primary dark:text-teal-300 shadow-xs"
+                : "bg-transparent text-textColor-variant dark:text-slate-400 hover:text-textColor"
             }`}
           >
             Đơn hàng
@@ -233,8 +229,8 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
             onClick={() => setActiveCategory("promo")}
             className={`flex-1 py-1.5 text-[9px] font-extrabold uppercase tracking-wider rounded-lg border-none transition-all cursor-pointer ${
               activeCategory === "promo"
-                ? "bg-white text-primary shadow-xs"
-                : "bg-transparent text-textColor-variant hover:text-textColor"
+                ? "bg-white dark:bg-slate-700 text-primary dark:text-teal-300 shadow-xs"
+                : "bg-transparent text-textColor-variant dark:text-slate-400 hover:text-textColor"
             }`}
           >
             Khuyến mãi
@@ -243,8 +239,8 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
             onClick={() => setActiveCategory("system")}
             className={`flex-1 py-1.5 text-[9px] font-extrabold uppercase tracking-wider rounded-lg border-none transition-all cursor-pointer ${
               activeCategory === "system"
-                ? "bg-white text-primary shadow-xs"
-                : "bg-transparent text-textColor-variant hover:text-textColor"
+                ? "bg-white dark:bg-slate-700 text-primary dark:text-teal-300 shadow-xs"
+                : "bg-transparent text-textColor-variant dark:text-slate-400 hover:text-textColor"
             }`}
           >
             Hệ thống
@@ -288,21 +284,23 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
                       handleViewOrder(orderId);
                     }
                   }}
-                  className={`p-4 bg-white rounded-2xl border border-[#f0edeb] shadow-xs flex gap-4 transition-all duration-300 relative cursor-pointer hover:border-primary/25 ${
-                    !item.read ? "border-primary/20 bg-primary-light/10" : ""
+                  className={`p-4 bg-white dark:bg-slate-900 rounded-2xl border border-[#f0edeb] dark:border-slate-800 shadow-xs flex gap-4 transition-all duration-300 relative cursor-pointer hover:border-primary/25 ${
+                    !item.read
+                      ? "border-primary/20 bg-primary-light/10 dark:bg-teal-950/40"
+                      : ""
                   }`}
                 >
                   {/* Unread dot indicator */}
                   {!item.read && (
-                    <span className="absolute top-4 right-4 w-2 h-2 rounded-full bg-primary animate-pulse" />
+                    <span className="absolute top-4 right-4 w-2 h-2 rounded-full bg-primary dark:bg-teal-400 animate-pulse" />
                   )}
 
                   {/* Left Side Icon */}
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                       activeCategory === "promo"
-                        ? "bg-amber-50 text-amber-700"
-                        : "bg-primary-light text-primary"
+                        ? "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300"
+                        : "bg-primary-light dark:bg-teal-950/50 text-primary dark:text-teal-300"
                     }`}
                   >
                     {activeCategory === "promo" ? (
@@ -338,10 +336,10 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
 
                   {/* Right Side Content Details */}
                   <div className="flex-1 space-y-1">
-                    <h4 className="text-xs font-bold text-textColor leading-snug pr-3">
+                    <h4 className="text-xs font-bold text-textColor dark:text-slate-100 leading-snug pr-3">
                       {item.title}
                     </h4>
-                    <p className="text-[11px] text-textColor-variant leading-relaxed font-medium">
+                    <p className="text-[11px] text-textColor-variant dark:text-slate-300 leading-relaxed font-medium">
                       {item.content}
                     </p>
 
@@ -351,12 +349,12 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
                         className="flex items-center gap-2 pt-2.5"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <span className="text-[10px] font-mono font-bold bg-[#f0edeb] text-textColor px-3 py-1 rounded border border-[#eae8e6]">
+                        <span className="text-[10px] font-mono font-bold bg-[#f0edeb] dark:bg-slate-800 text-textColor dark:text-slate-200 px-3 py-1 rounded border border-[#eae8e6] dark:border-slate-700">
                           {discountCode}
                         </span>
                         <button
                           onClick={() => handleCopyCode(discountCode)}
-                          className="text-[10px] font-bold text-primary hover:underline uppercase tracking-wider border-none bg-transparent cursor-pointer"
+                          className="text-[10px] font-bold text-primary dark:text-teal-400 hover:underline uppercase tracking-wider border-none bg-transparent cursor-pointer"
                         >
                           Copy Mã
                         </button>
@@ -370,13 +368,13 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
                           handleMarkSingleRead(item.id);
                           handleViewOrder(orderId);
                         }}
-                        className="text-[10px] font-bold text-primary hover:underline uppercase tracking-wider pt-2 block border-none bg-transparent cursor-pointer"
+                        className="text-[10px] font-bold text-primary dark:text-teal-400 hover:underline uppercase tracking-wider pt-2 block border-none bg-transparent cursor-pointer"
                       >
                         Xem hành trình đơn hàng
                       </button>
                     )}
 
-                    <p className="text-[9px] text-[#526069]/55 font-medium pt-1.5">
+                    <p className="text-[9px] text-[#526069]/55 dark:text-slate-400 font-medium pt-1.5">
                       {item.date}
                     </p>
                   </div>

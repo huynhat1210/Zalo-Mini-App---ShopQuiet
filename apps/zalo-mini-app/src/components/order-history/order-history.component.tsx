@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Page } from "zmp-ui";
-import { apiRequest, API_BASE_URL } from "../../utils/api";
+import { apiRequest, API_BASE_URL, safeParseImages } from "../../utils";
 import { EmptyStateComponent } from "../empty-state";
 import { ReviewModal } from "../review-modal";
 import { IOrderHistoryProps } from "./order-history.type";
@@ -109,15 +109,15 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
           : [];
 
   return (
-    <PageCast className="bg-[#f7f7f7] relative flex flex-col w-full h-full overscroll-none scrollbar-none">
-      {/* Header - ShopeeFood inspired layout */}
-      <div className="bg-white px-6 py-4 flex items-center justify-between border-b border-[#f0edeb] sticky top-0 z-30 shadow-xs">
+    <PageCast className="bg-[#f7f7f7] dark:bg-slate-950 text-slate-900 dark:text-slate-100 relative flex flex-col w-full h-full overscroll-none scrollbar-none">
+      {/* Header */}
+      <div className="bg-white dark:bg-slate-900 px-6 py-4 flex items-center justify-between border-b border-[#f0edeb] dark:border-slate-800 sticky top-0 z-30 shadow-xs">
         <button
           onClick={() => setActiveTab("profile")}
-          className="p-1.5 -ml-1.5 hover:bg-[#f0edeb] rounded-full transition-colors border-none bg-transparent cursor-pointer"
+          className="p-1.5 -ml-1.5 hover:bg-[#f0edeb] dark:hover:bg-slate-800 rounded-full transition-colors border-none bg-transparent cursor-pointer"
         >
           <svg
-            className="w-5.5 h-5.5 text-textColor"
+            className="w-5.5 h-5.5 text-textColor dark:text-slate-100"
             fill="none"
             stroke="currentColor"
             strokeWidth="2.2"
@@ -130,14 +130,14 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
             />
           </svg>
         </button>
-        <span className="text-xs font-bold uppercase tracking-widest text-textColor">
+        <span className="text-xs font-bold uppercase tracking-widest text-textColor dark:text-slate-100">
           Đơn hàng
         </span>
-        <div className="w-5.5 h-5.5" /> {/* Empty div for balance */}
+        <div className="w-5.5 h-5.5" />
       </div>
 
-      {/* Top Tab Bar - ShopeeFood style */}
-      <div className="bg-white flex border-b border-[#f0edeb] px-2 overflow-x-auto scrollbar-none sticky top-[53px] z-20">
+      {/* Top Tab Bar */}
+      <div className="bg-white dark:bg-slate-900 flex border-b border-[#f0edeb] dark:border-slate-800 px-2 overflow-x-auto scrollbar-none sticky top-[53px] z-20">
         {[
           { id: "active", label: "Đang đến" },
           { id: "history", label: "Lịch sử" },
@@ -149,12 +149,12 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
               key={tab.id}
               onClick={() => setOrdersTab(tab.id as any)}
               className={`flex-1 py-3.5 text-xs text-center font-bold tracking-wide relative whitespace-nowrap min-w-[80px] transition-all border-none bg-transparent cursor-pointer ${
-                isTabActive ? "text-primary" : "text-[#526069]"
+                isTabActive ? "text-primary dark:text-teal-400" : "text-[#526069] dark:text-slate-400"
               }`}
             >
               {tab.label}
               {isTabActive && (
-                <div className="absolute bottom-0 left-4 right-4 h-[2.5px] bg-primary rounded-full animate-fade-in"></div>
+                <div className="absolute bottom-0 left-4 right-4 h-[2.5px] bg-primary dark:bg-teal-400 rounded-full animate-fade-in"></div>
               )}
             </button>
           );
@@ -165,9 +165,9 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
       <div className="flex-1 overflow-y-auto px-6 py-5.5 space-y-7 pb-28 text-left">
         {/* Main Display List */}
         {ordersTab === "reviews" ? (
-          /* REVIEWS TAB - show user's submitted reviews */
+          /* REVIEWS TAB */
           loadingReviews ? (
-            <div className="text-center py-10 text-textColor-variant text-xs font-medium">
+            <div className="text-center py-10 text-textColor-variant dark:text-slate-400 text-xs font-medium">
               Đang tải đánh giá...
             </div>
           ) : userReviews.length === 0 ? (
@@ -180,12 +180,7 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
           ) : (
             <div className="space-y-4 animate-fade-in">
               {userReviews.map((review) => {
-                let img =
-                  "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=300&q=80";
-                try {
-                  const parsed = JSON.parse(review.product?.images || "[]");
-                  if (parsed && parsed.length > 0) img = parsed[0];
-                } catch (e) {}
+                const img = safeParseImages(review.product?.images)[0];
                 return (
                   <div
                     key={review.id}
@@ -193,11 +188,11 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                       if (review.product)
                         setSelectedProductDetail(review.product as any);
                     }}
-                    className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 space-y-3 shadow-xs hover:border-primary/30 transition-all cursor-pointer"
+                    className="bg-white dark:bg-slate-900 rounded-2xl border border-[#f0edeb] dark:border-slate-800 p-4.5 space-y-3 shadow-xs hover:border-primary/30 transition-all cursor-pointer"
                   >
                     {/* Product row */}
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl overflow-hidden border border-[#f0edeb] bg-neutral-50 flex-shrink-0">
+                      <div className="w-12 h-12 rounded-xl overflow-hidden border border-[#f0edeb] dark:border-slate-800 bg-neutral-50 dark:bg-slate-800 flex-shrink-0">
                         <img
                           src={img}
                           alt={review.product?.name}
@@ -205,10 +200,10 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                         />
                       </div>
                       <div className="flex-1">
-                        <p className="text-xs font-semibold text-textColor line-clamp-1">
+                        <p className="text-xs font-semibold text-textColor dark:text-slate-100 line-clamp-1">
                           {review.product?.name || "Sản phẩm"}
                         </p>
-                        <p className="text-[10px] text-textColor-variant mt-0.5">
+                        <p className="text-[10px] text-textColor-variant dark:text-slate-400 mt-0.5">
                           {new Date(review.createdAt).toLocaleDateString(
                             "vi-VN",
                             { year: "numeric", month: "short", day: "numeric" },
@@ -220,7 +215,7 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                         {[1, 2, 3, 4, 5].map((star) => (
                           <svg
                             key={star}
-                            className={`w-3.5 h-3.5 ${star <= (review.rating || 5) ? "text-amber-400" : "text-neutral-200"}`}
+                            className={`w-3.5 h-3.5 ${star <= (review.rating || 5) ? "text-amber-400" : "text-neutral-200 dark:text-slate-700"}`}
                             viewBox="0 0 20 20"
                             fill="currentColor"
                           >
@@ -230,8 +225,8 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                       </div>
                     </div>
                     {/* Review content */}
-                    <div className="bg-neutral-50 rounded-xl px-4 py-3 space-y-3">
-                      <p className="text-xs text-textColor leading-relaxed">
+                    <div className="bg-neutral-50 dark:bg-slate-800 rounded-xl px-4 py-3 space-y-3">
+                      <p className="text-xs text-textColor dark:text-slate-100 leading-relaxed">
                         {review.content}
                       </p>
                       {(() => {
@@ -248,7 +243,7 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                                 {parsedImages.map((u: string, i: number) => (
                                   <div
                                     key={i}
-                                    className="w-14 h-14 rounded-lg border border-neutral-250/60 overflow-hidden bg-white flex-shrink-0"
+                                    className="w-14 h-14 rounded-lg border border-neutral-250/60 dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900 flex-shrink-0"
                                   >
                                     <img
                                       src={
@@ -274,7 +269,7 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
             </div>
           )
         ) : loading ? (
-          <div className="text-center py-10 text-textColor-variant text-xs font-medium">
+          <div className="text-center py-10 text-textColor-variant dark:text-slate-400 text-xs font-medium">
             Đang tải đơn hàng...
           </div>
         ) : displayedOrders.length === 0 ? (
@@ -302,14 +297,14 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                   setSelectedOrder(order);
                   setActiveTab("order-detail");
                 }}
-                className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 space-y-3.5 shadow-xs hover:border-primary/40 transition-all cursor-pointer"
+                className="bg-white dark:bg-slate-900 rounded-2xl border border-[#f0edeb] dark:border-slate-800 p-4.5 space-y-3.5 shadow-xs hover:border-primary/40 transition-all cursor-pointer"
               >
-                <div className="flex justify-between items-center pb-2.5 border-b border-[#f0edeb]">
+                <div className="flex justify-between items-center pb-2.5 border-b border-[#f0edeb] dark:border-slate-800">
                   <div>
-                    <span className="text-xs font-bold text-textColor">
+                    <span className="text-xs font-bold text-textColor dark:text-slate-100">
                       Mã đơn #{order.id}
                     </span>
-                    <span className="text-[10px] text-textColor-variant block mt-0.5 font-medium">
+                    <span className="text-[10px] text-textColor-variant dark:text-slate-400 block mt-0.5 font-medium">
                       {new Date(order.createdAt).toLocaleDateString("vi-VN", {
                         year: "numeric",
                         month: "short",
@@ -321,14 +316,14 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                     className={`text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
                       order.status === "DELIVERED" ||
                       order.status === "COMPLETED"
-                        ? "bg-green-50 text-green-700"
+                        ? "bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-300"
                         : order.status === "SHIPPED"
-                          ? "bg-blue-50 text-blue-700"
+                          ? "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300"
                           : order.status === "CANCELLED"
-                            ? "bg-red-50 text-red-600"
+                            ? "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-300"
                             : order.status === "PENDING_PAYMENT"
-                              ? "bg-orange-50 text-orange-600"
-                              : "bg-yellow-50 text-yellow-700"
+                              ? "bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-300"
+                              : "bg-yellow-50 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-300"
                     }`}
                   >
                     {order.status === "DELIVERED" ||
@@ -350,21 +345,21 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                   {order.items?.map((item, idx) => (
                     <div
                       key={idx}
-                      className="flex justify-between items-center text-xs text-textColor-variant"
+                      className="flex justify-between items-center text-xs text-textColor-variant dark:text-slate-300"
                     >
                       <span className="line-clamp-1 max-w-[180px] text-left">
                         {item.product?.name}
                         {item.size && item.size !== "DEFAULT" && (
-                          <span className="ml-1.5 text-[9px] bg-neutral-100 text-[#526069] px-1 py-0.5 rounded font-bold uppercase">
+                          <span className="ml-1.5 text-[9px] bg-neutral-100 dark:bg-slate-800 text-[#526069] dark:text-slate-300 px-1 py-0.5 rounded font-bold uppercase">
                             {item.size}
                           </span>
                         )}
-                        <span className="font-semibold text-textColor ml-1">
+                        <span className="font-semibold text-textColor dark:text-slate-100 ml-1">
                           x{item.quantity}
                         </span>
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-textColor">
+                        <span className="font-semibold text-textColor dark:text-slate-100">
                           {(item.price * item.quantity).toLocaleString("vi-VN")}{" "}
                           đ
                         </span>
@@ -387,7 +382,7 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                             }}
                             className={`px-2 py-1 rounded-lg text-[9px] font-bold border transition-all cursor-pointer ${
                               item.isReviewed
-                                ? "bg-neutral-100 text-neutral-450 border-neutral-200"
+                                ? "bg-neutral-100 dark:bg-slate-800 text-neutral-450 dark:text-slate-500 border-neutral-200 dark:border-slate-700"
                                 : "bg-primary text-white border-primary active:scale-95"
                             }`}
                           >
@@ -401,14 +396,14 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
 
                 {/* Order tracking status timeline */}
                 {order.status === "PENDING_PAYMENT" ? (
-                  <div className="pt-3 border-t border-[#f0edeb] space-y-2.5">
-                    <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 flex items-start gap-2.5">
+                  <div className="pt-3 border-t border-[#f0edeb] dark:border-slate-800 space-y-2.5">
+                    <div className="bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-900/60 rounded-xl p-3 flex items-start gap-2.5">
                       <span className="text-orange-500 text-lg mt-0.5">•</span>
                       <div className="text-xs">
-                        <p className="font-bold text-orange-700">
+                        <p className="font-bold text-orange-700 dark:text-orange-300">
                           Chờ thanh toán ({order.paymentMethod === "COD" ? "Thanh toán khi nhận hàng" : "Chuyển khoản Ngân hàng"})
                         </p>
-                        <p className="text-orange-600/80 text-[10px] mt-0.5 leading-relaxed">
+                        <p className="text-orange-600/80 dark:text-orange-200/80 text-[10px] mt-0.5 leading-relaxed">
                           Đơn hàng này chưa được thanh toán thành công. Bạn có
                           thể thử lại hoặc hủy đơn này.
                         </p>
@@ -428,12 +423,12 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                     </div>
                   </div>
                 ) : (
-                  <div className="pt-3 border-t border-[#f0edeb] space-y-3">
-                    <div className="text-[9px] font-extrabold text-[#526069]/65 uppercase tracking-widest text-left">
+                  <div className="pt-3 border-t border-[#f0edeb] dark:border-slate-800 space-y-3">
+                    <div className="text-[9px] font-extrabold text-[#526069]/65 dark:text-slate-400 uppercase tracking-widest text-left">
                       Lịch trình đơn hàng
                     </div>
 
-                    <div className="flex flex-col gap-3 pl-2.5 relative border-l-2 border-neutral-100 mt-1.5 text-left">
+                    <div className="flex flex-col gap-3 pl-2.5 relative border-l-2 border-neutral-100 dark:border-slate-800 mt-1.5 text-left">
                       {(order.status === "CANCELLED"
                         ? [
                             {
@@ -493,7 +488,7 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                                 ? step.isCancelled
                                   ? "bg-red-500 border-red-500 shadow-xs scale-105"
                                   : "bg-primary border-primary shadow-xs scale-105"
-                                : "bg-white border-neutral-300"
+                                : "bg-white dark:bg-slate-800 border-neutral-300 dark:border-slate-700"
                             }`}
                           />
 
@@ -502,9 +497,9 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                               className={`font-bold ${
                                 step.active
                                   ? step.isCancelled
-                                    ? "text-red-600"
-                                    : "text-textColor"
-                                  : "text-textColor-variant/50"
+                                    ? "text-red-600 dark:text-red-400"
+                                    : "text-textColor dark:text-slate-100"
+                                  : "text-textColor-variant/50 dark:text-slate-500"
                               }`}
                             >
                               {step.label}
@@ -513,9 +508,9 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                               className={`text-[10px] ${
                                 step.active
                                   ? step.isCancelled
-                                    ? "text-red-500/80"
-                                    : "text-textColor-variant"
-                                  : "text-textColor-variant/40"
+                                    ? "text-red-500/80 dark:text-red-400/80"
+                                    : "text-textColor-variant dark:text-slate-400"
+                                  : "text-textColor-variant/40 dark:text-slate-600"
                               }`}
                             >
                               {step.desc}
@@ -527,9 +522,9 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                   </div>
                 )}
 
-                <div className="flex justify-between items-center pt-2.5 border-t border-[#f0edeb] text-xs font-bold text-textColor">
+                <div className="flex justify-between items-center pt-2.5 border-t border-[#f0edeb] dark:border-slate-800 text-xs font-bold text-textColor dark:text-slate-100">
                   <span>Tổng tiền</span>
-                  <span className="text-primary">
+                  <span className="text-primary dark:text-teal-400">
                     {order.totalAmount.toLocaleString("vi-VN")} đ
                   </span>
                 </div>
@@ -541,67 +536,62 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
         {/* Recommendation Divider Section */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-[1px] bg-neutral-200"></div>
-            <span className="text-[9px] font-extrabold text-[#526069]/65 uppercase tracking-widest">
+            <div className="flex-1 h-[1px] bg-neutral-200 dark:bg-slate-800"></div>
+            <span className="text-[9px] font-extrabold text-[#526069]/65 dark:text-slate-400 uppercase tracking-widest">
               Có thể bạn cũng thích
             </span>
-            <div className="flex-1 h-[1px] bg-neutral-200"></div>
+            <div className="flex-1 h-[1px] bg-neutral-200 dark:bg-slate-800"></div>
           </div>
 
           {/* Vertical Recommended list */}
           <div className="space-y-3.5">
             {recommendationProducts.map((prod) => {
-              let img =
-                "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=200&q=80";
-              try {
-                const parsed = JSON.parse(prod.images);
-                if (parsed && parsed.length > 0) img = parsed[0];
-              } catch (e) {}
+              const img = safeParseImages(prod.images)[0];
 
               return (
                 <div
                   key={prod.id}
                   onClick={() => setSelectedProductDetail(prod)}
-                  className="bg-white rounded-2xl border border-[#f0edeb] p-3 flex gap-4 shadow-xs hover:shadow-sm transition-all duration-300 cursor-pointer"
+                  className="bg-white dark:bg-slate-900 rounded-2xl border border-[#f0edeb] dark:border-slate-800 p-3 flex gap-4 shadow-xs hover:shadow-sm transition-all duration-300 cursor-pointer"
                 >
                   {/* Thumbnail Image Left */}
                   <img
                     src={img}
                     alt={prod.name}
-                    className="w-16 h-16 rounded-xl object-cover flex-shrink-0 border border-[#f0edeb]"
+                    className="w-16 h-16 rounded-xl object-cover flex-shrink-0 border border-[#f0edeb] dark:border-slate-800"
                   />
 
                   {/* Details Info Right */}
                   <div className="flex-1 flex flex-col justify-between py-0.5">
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="w-3.5 h-3.5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[7px] font-extrabold">
+                        <span className="w-3.5 h-3.5 rounded-full bg-primary/10 text-primary dark:text-teal-400 flex items-center justify-center text-[7px] font-extrabold">
                           ✓
                         </span>
-                        <h4 className="text-xs font-bold text-textColor line-clamp-1">
+                        <h4 className="text-xs font-bold text-textColor dark:text-slate-100 line-clamp-1">
                           {prod.name}
                         </h4>
                       </div>
-                      <div className="flex items-center gap-2 text-[9.5px] text-[#526069]/65 mt-0.5 font-medium">
+                      <div className="flex items-center gap-2 text-[9.5px] text-[#526069]/65 dark:text-slate-400 mt-0.5 font-medium">
                         <span>★ 4.8</span>
                         <span>•</span>
                         <span>{prod.category?.name}</span>
                         <span>•</span>
-                        <span className="text-green-600">Còn hàng</span>
+                        <span className="text-green-600 dark:text-green-400">Còn hàng</span>
                       </div>
                     </div>
 
                     {/* Promo Tags and Price */}
                     <div className="flex justify-between items-end mt-2">
                       <div className="flex gap-1.5">
-                        <span className="text-[8px] font-bold text-primary bg-primary-light px-2 py-0.5 rounded-md">
+                        <span className="text-[8px] font-bold text-primary dark:text-teal-300 bg-primary-light dark:bg-teal-950/50 px-2 py-0.5 rounded-md">
                           Freeship
                         </span>
-                        <span className="text-[8px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
+                        <span className="text-[8px] font-bold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-md">
                           Giảm 10%
                         </span>
                       </div>
-                      <span className="text-xs font-extrabold text-textColor">
+                      <span className="text-xs font-extrabold text-textColor dark:text-slate-100">
                         {prod.price.toLocaleString("vi-VN")} đ
                       </span>
                     </div>
