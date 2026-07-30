@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Page, Box, Text } from "zmp-ui";
 import { useCart, IProduct } from "../../App";
-import { apiRequest, trackAnalyticsEvent, useTranslation } from "../../utils";
+import { apiRequest, trackAnalyticsEvent, useTranslation, safeParseImages } from "../../utils";
 import { useInfiniteProducts, useCategories, useBanners } from "../../hooks";
 import { Bars3Icon, ShoppingCartIcon } from "@heroicons/react/24/outline";
 // @ts-ignore
