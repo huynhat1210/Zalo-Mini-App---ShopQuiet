@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { Page } from "zmp-ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCart, IOrder } from "../../App";
-import { apiRequest } from "../../utils/api";
+import { apiRequest, useTranslation } from "../../utils";
 import { EmptyStateComponent } from "../../components";
 import { INotificationsProps } from "./notifications.type";
 
 const PageCast = Page as any;
 
 export const Notifications: React.FC<INotificationsProps> = (_props) => {
+  const { t } = useTranslation();
   const {
     setActiveTab,
     showToast,
@@ -25,13 +26,13 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
 
   const handleViewOrder = async (orderId: string) => {
     try {
-      showToast("Đang tải chi tiết đơn hàng...", "info");
+      showToast(t("notification.loading"), "info");
       const order = await apiRequest<IOrder>(`/orders/${orderId}`);
       setSelectedOrder(order);
       setActiveTab("order-detail");
     } catch (e) {
       console.error(e);
-      showToast("Không thể tải thông tin đơn hàng này!", "warning");
+      showToast(t("toast.serverError"), "warning");
     }
   };
 
@@ -47,7 +48,7 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
           <span className="text-[10px] font-bold text-textColor-variant  tracking-wider uppercase">
-            Đang tải thông báo...
+            {t("common.loading")}
           </span>
         </div>
       </PageCast>
@@ -59,10 +60,10 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
       await apiRequest("/notifications/mark-all-read", "PATCH");
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      showToast("Đã đánh dấu đọc tất cả thông báo!", "success");
+      showToast(t("notification.markAllRead"), "success");
     } catch (err) {
       console.error(err);
-      showToast("Thao tác thất bại!", "warning");
+      showToast(t("toast.error"), "warning");
     }
   };
 
@@ -72,10 +73,10 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
       await apiRequest("/notifications/delete-all", "DELETE");
       setNotifications([]);
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      showToast("Đã xóa tất cả thông báo thành công!", "success");
+      showToast(t("toast.success"), "success");
     } catch (err) {
       console.error(err);
-      showToast("Không thể xóa thông báo!", "warning");
+      showToast(t("toast.error"), "warning");
     }
   };
 
@@ -93,7 +94,7 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
 
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code);
-    showToast(`Đã sao chép mã: ${code}`, "success");
+    showToast(t("toast.copied"), "success");
   };
 
   const getOrderId = (title: string, content: string) => {
@@ -168,13 +169,13 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
           </svg>
         </button>
         <span className="text-xs font-bold uppercase tracking-widest text-textColor ">
-          Thông báo ({notifications.length})
+          {t("notification.title")} ({notifications.length})
         </span>
         <div className="flex items-center gap-1">
           <button
             onClick={handleMarkAllRead}
             className="p-1.5 hover:bg-[#f0edeb] :bg-slate-800 rounded-full transition-colors active:scale-95 text-textColor-variant  hover:text-textColor border-none bg-transparent cursor-pointer"
-            title="Đánh dấu đã đọc tất cả"
+            title={t("notification.markAllRead")}
           >
             <svg
               className="w-5 h-5"
@@ -193,7 +194,7 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
           <button
             onClick={handleDeleteAllNotifications}
             className="p-1.5 hover:bg-red-50 :bg-red-950/30 text-red-500 rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer"
-            title="Xóa tất cả thông báo"
+            title={t("common.delete")}
           >
             <svg
               className="w-5 h-5"
@@ -223,7 +224,7 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
                 : "bg-transparent text-textColor-variant  hover:text-textColor"
             }`}
           >
-            Đơn hàng
+            {t("notification.order")}
           </button>
           <button
             onClick={() => setActiveCategory("promo")}
@@ -233,7 +234,7 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
                 : "bg-transparent text-textColor-variant  hover:text-textColor"
             }`}
           >
-            Khuyến mãi
+            {t("notification.promo")}
           </button>
           <button
             onClick={() => setActiveCategory("system")}
@@ -243,7 +244,7 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
                 : "bg-transparent text-textColor-variant  hover:text-textColor"
             }`}
           >
-            Hệ thống
+            {t("notification.system")}
           </button>
         </div>
       </div>
@@ -252,19 +253,13 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 pb-28 text-left animate-fade-in">
         {filteredNotifications.length === 0 ? (
           <EmptyStateComponent
-            title={
-              activeCategory === "order"
-                ? "Không có thông báo đơn hàng"
-                : activeCategory === "promo"
-                  ? "Không có khuyến mãi mới"
-                  : "Không có thông báo hệ thống"
-            }
+            title={t("notification.empty")}
             description={
               activeCategory === "order"
-                ? "Bạn chưa nhận được thông báo nào về đơn hàng."
+                ? t("notification.order")
                 : activeCategory === "promo"
-                  ? "Voucher và tin tức khuyến mãi sẽ hiển thị tại đây."
-                  : "Bạn chưa nhận được thông báo hệ thống nào."
+                  ? t("notification.promo")
+                  : t("notification.system")
             }
           />
         ) : (

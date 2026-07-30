@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Page, Box } from "zmp-ui";
 import { IProduct, useCart } from "../../App";
 import api from "zmp-sdk";
-import { apiRequest, API_BASE_URL, trackAnalyticsEvent, safeParseImages } from "../../utils";
+import { apiRequest, API_BASE_URL, trackAnalyticsEvent, safeParseImages, useTranslation } from "../../utils";
 import {
   ChevronLeftIcon,
   ShareIcon,
@@ -21,6 +21,7 @@ const PageCast = Page as any;
 const BoxCast = Box as any;
 
 export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
+  const { t } = useTranslation();
   const { product, onClose, onAddToCart } = props;
   const {
     toggleSavedItem,
@@ -660,7 +661,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
             <div className="text-left">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-semibold text-textColor">
-                  Kích Cỡ: {selectedSize}
+                  {t("product.size")}: {selectedSize}
                 </h3>
                 {/* Show Size Guide button ONLY for clothing or shoes */}
                 {sizeGuideType && (
@@ -672,7 +673,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
                     </svg>
-                    {sizeGuideType === "shoes" ? "Tư vấn chọn Size giày" : "Tư vấn chọn Size"}
+                    {sizeGuideType === "shoes" ? t("product.selectSize") : t("product.selectSize")}
                   </button>
                 )}
               </div>
@@ -707,7 +708,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
 
           {/* Quantity & Stock Status */}
           <div className="flex justify-between items-center pt-2">
-            <h3 className="text-xs font-semibold text-textColor">Số lượng</h3>
+            <h3 className="text-xs font-semibold text-textColor">{t("product.quantity")}</h3>
             <div className="flex items-center gap-2">
               <div className="flex items-center border border-neutral-200 rounded">
                 <button
@@ -731,7 +732,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
             </div>
           </div>
           <div className="text-right text-[10px] text-textColor-variant pt-1">
-            {stockCount > 0 ? `Còn ${stockCount} sản phẩm` : "Đã hết hàng"}
+            {stockCount > 0 ? `${t("product.inStock")} ${stockCount} ${t("product.quantity")}` : t("product.outOfStock")}
           </div>
         </div>
       )}
@@ -748,7 +749,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
             }
             className="w-full px-4 py-4 flex items-center justify-between text-sm font-medium text-textColor transition-colors hover:bg-neutral-50 border-none text-left bg-transparent"
           >
-            <span>Chất liệu & Cách bảo quản</span>
+            <span>{t("product.description")}</span>
             <ChevronLeftIcon
               className={`w-4 h-4 text-textColor-variant transition-transform duration-200 ${expandedSection === "materials" ? "rotate-90" : "-rotate-90"}`}
             />
@@ -771,7 +772,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
             }
             className="w-full px-4 py-4 flex items-center justify-between text-sm font-medium text-textColor transition-colors hover:bg-neutral-50 border-none text-left bg-transparent"
           >
-            <span>Vận chuyển & Đổi trả</span>
+            <span>{t("checkout.shippingMethod")}</span>
             <ChevronLeftIcon
               className={`w-4 h-4 text-textColor-variant transition-transform duration-200 ${expandedSection === "shipping" ? "rotate-90" : "-rotate-90"}`}
             />
@@ -789,10 +790,10 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
       <div className="mt-2 bg-white px-4 py-4">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-sm font-medium text-textColor">
-            Đánh giá sản phẩm ({comments.length})
+            {t("product.reviews")} ({comments.length})
           </h3>
           <div className="flex items-center text-xs text-primary">
-            <span>Xem tất cả</span>
+            <span>{t("common.search")}</span>
             <ChevronLeftIcon className="w-3 h-3 ml-1 rotate-180" />
           </div>
         </div>
@@ -800,7 +801,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
         <div className="divide-y divide-neutral-100 space-y-4">
           {comments.length === 0 ? (
             <div className="text-center py-6 text-xs text-textColor-variant">
-              Chưa có đánh giá nào cho sản phẩm này.
+              {t("home.noReview")}
             </div>
           ) : (
             comments.map((rev) => (
@@ -819,7 +820,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                       </div>
                     )}
                     <span className="text-xs text-textColor">
-                      {rev.user?.name || "Khách hàng"}
+                      {rev.user?.name || "Customer"}
                     </span>
                   </div>
                 </div>
@@ -833,8 +834,8 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                   {rev.content}
                 </p>
                 <div className="text-[10px] text-textColor-variant">
-                  {formatDate(rev.createdAt)} | Phân loại:{" "}
-                  {rev.color || "Mặc định"}, Size: {rev.size || "Mặc định"}
+                  {formatDate(rev.createdAt)} | {t("product.color")}:{" "}
+                  {rev.color || "Default"}, {t("product.size")}: {rev.size || "Default"}
                 </div>
 
                 {/* Helpful voting */}
@@ -856,7 +857,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                         d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"
                       />
                     </svg>
-                    <span>Hữu ích ({rev.helpfulCount || 0})</span>
+                    <span>Helpful ({rev.helpfulCount || 0})</span>
                   </button>
                   <button
                     onClick={() => handleVoteReview(rev.id, "unhelpful")}
@@ -875,7 +876,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                         d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v5a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"
                       />
                     </svg>
-                    <span>Không hữu ích ({rev.unhelpfulCount || 0})</span>
+                    <span>Not helpful ({rev.unhelpfulCount || 0})</span>
                   </button>
                 </div>
 
@@ -945,7 +946,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
       {relatedProducts.length > 0 && (
         <div className="mt-2 bg-white px-4 py-4 space-y-4">
           <h3 className="text-sm font-medium text-textColor mb-2 text-left">
-            Sản Phẩm Gợi Ý
+            {t("home.featured")}
           </h3>
           <div className="grid grid-cols-2 gap-3">
             {relatedProducts.map((prod) => {
@@ -974,7 +975,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                       </span>
                     </div>
                     <div className="text-[9px] text-textColor-variant">
-                      Đã bán {prod.soldCount || 0}
+                      {t("flashSale.sold")} {prod.soldCount || 0}
                     </div>
                   </div>
                 </div>
@@ -1000,7 +1001,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
             {/* Modal Header */}
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
               <h3 className="text-sm font-extrabold text-[#0e6877] uppercase tracking-wider">
-                {sizeGuideType === "shoes" ? "Bảng Size Giày & Tư Vấn" : "Bảng Size Quần Áo & Tư Vấn"}
+                {sizeGuideType === "shoes" ? t("product.size") : t("product.size")}
               </h3>
               <button
                 onClick={() => setIsSizeGuideOpen(false)}
@@ -1019,8 +1020,8 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                     <table className="w-full text-xs">
                       <thead className="bg-[#0e6877] text-white font-extrabold uppercase text-[10px] tracking-wider">
                         <tr>
-                          <th className="py-2.5 px-3 text-center">Size EU</th>
-                          <th className="py-2.5 px-3 text-center">Dài bàn chân (cm)</th>
+                          <th className="py-2.5 px-3 text-center">{t("product.size")} EU</th>
+                          <th className="py-2.5 px-3 text-center">Foot Length (cm)</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 bg-white text-slate-800">
@@ -1030,7 +1031,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                             <tr key={row.size || row.euSize} className={isMatched ? "bg-teal-50 font-bold text-[#0e6877]" : ""}>
                               <td className="py-2.5 px-3 text-center font-bold">
                                 {row.size || row.euSize}
-                                {isMatched && <span className="ml-2 px-2 py-0.5 text-[9px] bg-[#0e6877] text-white rounded-full font-bold">Gợi ý</span>}
+                                {isMatched && <span className="ml-2 px-2 py-0.5 text-[9px] bg-[#0e6877] text-white rounded-full font-bold">{t("home.featured")}</span>}
                               </td>
                               <td className="py-2.5 px-3 text-center font-medium">{row.footLength} cm</td>
                             </tr>
@@ -1044,12 +1045,12 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                 {/* Shoes Calculator */}
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
                   <label className="text-xs font-bold text-slate-700 block">
-                    Độ dài bàn chân (cm)
+                    Foot Length (cm)
                   </label>
                   <input
                     type="number"
                     step="0.5"
-                    placeholder="Ví dụ: 24.5"
+                    placeholder="Example: 24.5"
                     value={footLengthCm}
                     onChange={(e) => { setFootLengthCm(e.target.value); setRecommendedSize(null); }}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-900 focus:outline-none focus:border-[#0e6877]"
@@ -1059,7 +1060,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                     onClick={calcRecommendedSize}
                     className="w-full py-2.5 bg-[#0e6877] hover:bg-[#0b5460] text-white text-xs font-bold rounded-xl border-none cursor-pointer active:scale-98 transition-all shadow-xs"
                   >
-                    Gợi Ý Size Phù Hợp
+                    {t("product.selectSize")}
                   </button>
                 </div>
               </>
@@ -1072,9 +1073,9 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                     <table className="w-full text-xs">
                       <thead className="bg-[#0e6877] text-white font-extrabold uppercase text-[10px] tracking-wider">
                         <tr>
-                          <th className="py-2.5 px-2 text-center">Size</th>
-                          <th className="py-2.5 px-2 text-center">Chiều cao</th>
-                          <th className="py-2.5 px-2 text-center">Cân nặng</th>
+                          <th className="py-2.5 px-2 text-center">{t("product.size")}</th>
+                          <th className="py-2.5 px-2 text-center">Height</th>
+                          <th className="py-2.5 px-2 text-center">Weight</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 bg-white text-slate-800">
@@ -1084,7 +1085,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                             <tr key={row.size} className={isMatched ? "bg-teal-50 font-bold text-[#0e6877]" : ""}>
                               <td className="py-2.5 px-2 text-center font-bold">
                                 {row.size}
-                                {isMatched && <span className="ml-1.5 px-2 py-0.5 text-[9px] bg-[#0e6877] text-white rounded-full font-bold">Gợi ý</span>}
+                                {isMatched && <span className="ml-1.5 px-2 py-0.5 text-[9px] bg-[#0e6877] text-white rounded-full font-bold">{t("home.featured")}</span>}
                               </td>
                               <td className="py-2.5 px-2 text-center font-medium">{row.height} cm</td>
                               <td className="py-2.5 px-2 text-center font-medium">{row.weight} kg</td>
@@ -1100,7 +1101,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
                   <div className="grid grid-cols-2 gap-2.5">
                     <div>
-                      <label className="text-xs font-bold text-slate-700 block mb-1">Chiều cao (cm)</label>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Height (cm)</label>
                       <input
                         type="number"
                         placeholder="165"
@@ -1110,7 +1111,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-bold text-slate-700 block mb-1">Cân nặng (kg)</label>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Weight (kg)</label>
                       <input
                         type="number"
                         placeholder="58"
@@ -1126,7 +1127,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                     onClick={calcRecommendedSize}
                     className="w-full py-2.5 bg-[#0e6877] hover:bg-[#0b5460] text-white text-xs font-bold rounded-xl border-none cursor-pointer active:scale-98 transition-all shadow-xs"
                   >
-                    Gợi Ý Size Phù Hợp
+                    {t("product.selectSize")}
                   </button>
                 </div>
               </>
@@ -1150,7 +1151,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
             strokeWidth={2}
           />
           <span className="text-[9px] text-teal-700 font-medium">
-            Chat ngay
+            {t("product.chat")}
           </span>
         </button>
 
@@ -1161,7 +1162,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
           className="flex-[1.2] flex flex-col items-center justify-center bg-amber-50 hover:bg-amber-100 text-amber-600 active:bg-amber-200 transition-colors border-none cursor-pointer disabled:opacity-50 disabled:bg-neutral-100 disabled:text-neutral-400"
         >
           <ShoppingBagIcon className="w-5 h-5 mb-0.5" strokeWidth={2} />
-          <span className="text-[9px] font-medium">Thêm vào giỏ</span>
+          <span className="text-[9px] font-medium">{t("product.addToCart")}</span>
         </button>
 
         {/* Buy Now Button */}
@@ -1170,7 +1171,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
           onClick={handleBuyNow}
           className="flex-[1.8] bg-primary hover:bg-primary-dark text-white font-semibold text-[13px] flex items-center justify-center active:bg-primary-darker transition-colors border-none cursor-pointer disabled:bg-neutral-400"
         >
-          {(hasColors || hasSizes) && stockCount <= 0 ? "Hết hàng" : "Mua ngay"}
+          {(hasColors || hasSizes) && stockCount <= 0 ? t("product.outOfStock") : t("product.buyNow")}
         </button>
       </div>
 
