@@ -4,6 +4,7 @@ import api from "zmp-sdk";
 import { useCart } from "../../App";
 import { useAppStore } from "../../store";
 import { apiRequest, API_BASE_URL } from "../../utils/api";
+import { useTranslation } from "../../utils/i18n/i18n.util";
 
 interface Message {
   id: number | string;
@@ -19,6 +20,7 @@ interface ChatOverlayProps {
 }
 
 export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlayProps) => {
+  const { t } = useTranslation();
   const {
     zaloUser,
     chatContextProduct,
@@ -98,7 +100,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
       });
 
       if (msg.sender === "ADMIN") {
-        showToast("CSKH ShopQuiet vừa phản hồi!");
+        showToast(t("chat.online"));
       }
     });
 
@@ -176,7 +178,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
           },
         });
       } else {
-        showToast("Tính năng chọn ảnh khả dụng trên ứng dụng Zalo Mobile", "info");
+        showToast(t("chat.templates"), "info");
       }
     } catch (e) {
       console.error("Image pick error:", e);
@@ -188,7 +190,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
       const url = content.substring("[IMAGE_ATTACHMENT]".length).trim();
       return (
         <div className="space-y-1">
-          <span className="text-[10px] text-teal-800  font-bold block">📷 Ảnh đính kèm:</span>
+          <span className="text-[10px] text-teal-800  font-bold block">📷 {t("chat.templates")}:</span>
           <img src={url} alt="Attached" className="max-w-[200px] max-h-[200px] rounded-xl object-cover border border-slate-200 " />
         </div>
       );
@@ -219,14 +221,14 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
           >
             <img src={fullImg} alt={prod.name} className="w-12 h-12 object-cover rounded-xl border border-teal-200 shrink-0" />
             <div className="flex-1 min-w-0">
-              <span className="text-[8px] bg-[#0e6877] text-white px-1.5 py-0.5 rounded font-black uppercase tracking-wider">Đang xem</span>
+              <span className="text-[8px] bg-[#0e6877] text-white px-1.5 py-0.5 rounded font-black uppercase tracking-wider">Viewing</span>
               <h4 className="text-xs font-bold text-teal-950  truncate mt-1 leading-snug">{prod.name}</h4>
               <p className="text-[10px] text-teal-800  font-extrabold mt-0.5">{prod.price?.toLocaleString("vi-VN")} đ</p>
             </div>
           </div>
         );
       } catch (e) {
-        return <span className="italic text-xs">Không thể xem sản phẩm</span>;
+        return <span className="italic text-xs">{t("chat.offline")}</span>;
       }
     }
 
@@ -235,15 +237,15 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
 
   // Feature 1: Smart Quick Actions Bar
   const quickTemplates = [
-    "🚚 Kiểm tra hành trình đơn hàng",
-    "🎟️ Xin mã giảm giá đơn tiếp theo",
-    "📞 Yêu cầu tư vấn viên gọi lại",
-    "Shop có chính sách đổi trả thế nào?",
+    "🚚 Track order",
+    "🎟️ Get discount code",
+    "📞 Request callback",
+    "Return policy?",
   ];
 
   const handleQuickActionClick = (template: string) => {
-    if (template.includes("Kiểm tra hành trình") && latestOrder) {
-      const msg = `Hỏi CSKH: Tôi muốn kiểm tra hành trình Đơn hàng #${latestOrder.id} (Trạng thái: ${latestOrder.status})`;
+    if (template.includes("Track order") && latestOrder) {
+      const msg = `Check order #${latestOrder.id} (Status: ${latestOrder.status})`;
       handleSendMessage(msg);
       return;
     }
@@ -269,7 +271,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-extrabold text-sm tracking-tight">Tư Vấn CSKH ShopQuiet</h3>
+                <h3 className="font-extrabold text-sm tracking-tight">{t("chat.title")}</h3>
                 <span
                   className={`text-[9px] px-2 py-0.2 rounded-full font-black uppercase tracking-wider ${
                     shopStatus === "ONLINE"
@@ -277,13 +279,13 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
                       : "bg-slate-500/40 text-slate-200"
                   }`}
                 >
-                  {shopStatus === "ONLINE" ? "Online 24/7" : "Offline (Chờ phản hồi)"}
+                  {shopStatus === "ONLINE" ? t("chat.online") : t("chat.offline")}
                 </span>
               </div>
               <p className="text-[10px] text-teal-100/90 font-medium mt-0.5">
                 {shopStatus === "ONLINE"
-                  ? "Sẵn sàng hỗ trợ tư vấn & chốt đơn ngay"
-                  : "Vui lòng để lại tin nhắn, CSKH sẽ hồi đáp sớm nhất"}
+                  ? "Ready to help"
+                  : "Leave a message, we'll reply soon"}
               </p>
             </div>
           </div>
@@ -300,19 +302,19 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
         {latestOrder && !chatContextProduct && (
           <div className="bg-amber-50 /40 border-b border-amber-200 /60 p-2.5 px-4 flex items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-[9px] bg-amber-600 text-white px-2 py-0.5 rounded font-black uppercase tracking-wider shrink-0">Đơn mới nhất</span>
+              <span className="text-[9px] bg-amber-600 text-white px-2 py-0.5 rounded font-black uppercase tracking-wider shrink-0">Latest Order</span>
               <p className="text-xs font-bold text-amber-950  truncate">
                 #{latestOrder.id} - {latestOrder.totalAmount?.toLocaleString("vi-VN")} đ
               </p>
             </div>
             <button
               onClick={() => {
-                const text = `Tôi cần hỗ trợ về Đơn hàng #${latestOrder.id} (${latestOrder.totalAmount?.toLocaleString("vi-VN")} đ, trạng thái: ${latestOrder.status})`;
+                const text = `Help with order #${latestOrder.id} (${latestOrder.totalAmount?.toLocaleString("vi-VN")} đ, status: ${latestOrder.status})`;
                 handleSendMessage(text);
               }}
               className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[10px] font-bold border-none cursor-pointer active:scale-95 shrink-0 shadow-2xs"
             >
-              Hỏi về đơn này
+              Ask about this
             </button>
           </div>
         )}
@@ -321,7 +323,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
         {chatContextProduct && (
           <div className="bg-teal-50 /50 border-b border-teal-150  p-2.5 flex items-center justify-between gap-2 px-4 animate-slide-down">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-[9px] bg-[#0e6877] text-white px-2 py-0.5 rounded font-black uppercase tracking-wider shrink-0">Hỏi về</span>
+              <span className="text-[9px] bg-[#0e6877] text-white px-2 py-0.5 rounded font-black uppercase tracking-wider shrink-0">Ask about</span>
               <p className="text-xs font-bold text-teal-950  truncate">{chatContextProduct.name}</p>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
@@ -338,7 +340,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
                 }}
                 className="px-2.5 py-1 bg-[#0e6877] text-white rounded-lg text-[10px] font-bold border-none cursor-pointer active:scale-95 shadow-2xs"
               >
-                Gửi ngay
+                {t("chat.send")}
               </button>
               <button
                 onClick={() => setChatContextProduct(null)}
@@ -353,11 +355,11 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
         {/* ── Messages List ── */}
         <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-slate-50 ">
           {loading ? (
-            <div className="text-center py-8 text-slate-400 text-xs font-medium">Đang tải lịch sử trò chuyện...</div>
+            <div className="text-center py-8 text-slate-400 text-xs font-medium">{t("common.loading")}</div>
           ) : messages.length === 0 ? (
             <div className="text-center py-12 text-slate-400 space-y-2">
-              <p className="text-xs font-semibold">Chưa có tin nhắn nào với tư vấn viên.</p>
-              <p className="text-[10px] text-slate-400">Hãy chọn câu hỏi bên dưới hoặc nhập tin nhắn để được hỗ trợ ngay!</p>
+              <p className="text-xs font-semibold">{t("chat.offline")}</p>
+              <p className="text-[10px] text-slate-400">Choose a question below or type a message to get help!</p>
             </div>
           ) : (
             messages.map((msg) => {
@@ -385,7 +387,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
 
                   <span className="text-[9px] text-slate-400 px-1 font-medium">
                     {isOptimistic
-                      ? "Đang gửi..."
+                      ? t("chat.typing")
                       : new Date(msg.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </div>
@@ -414,13 +416,13 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
           <button
             onClick={handleChooseImage}
             className="w-10 h-10 rounded-2xl bg-slate-100  hover:bg-slate-200 :bg-slate-700 text-slate-600  flex items-center justify-center font-bold border-none cursor-pointer active:scale-90 transition-transform shrink-0"
-            title="Gửi hình ảnh"
+            title={t("chat.templates")}
           >
             📷
           </button>
           <input
             type="text"
-            placeholder="Nhập tin nhắn tư vấn..."
+            placeholder={t("chat.placeholder")}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
