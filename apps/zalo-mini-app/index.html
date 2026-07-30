@@ -59,7 +59,20 @@
     </script>
   </head>
   <body class="bg-surface dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
-    <div id="app"></div>
+    <div id="app">
+      <!-- Loading fallback to prevent blank screen -->
+      <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: #f9fafb;">
+        <div style="text-align: center;">
+          <div style="width: 40px; height: 40px; border: 3px solid #e5e7eb; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+          <p style="margin-top: 16px; color: #6b7280; font-size: 14px;">Đang tải...</p>
+        </div>
+      </div>
+      <style>
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      </style>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
