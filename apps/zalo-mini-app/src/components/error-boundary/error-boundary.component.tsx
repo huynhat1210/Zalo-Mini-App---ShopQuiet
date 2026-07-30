@@ -1,11 +1,17 @@
 import { Component, ErrorInfo } from "react";
-import { Page } from "zmp-ui";
 import {
   IErrorBoundaryComponentProps,
   IErrorBoundaryComponentState,
 } from "./error-boundary.type";
 
-const PageCast = Page as any;
+function isScriptError(msg: any): boolean {
+  if (!msg) return true;
+  if (typeof msg === "string") {
+    const lower = msg.toLowerCase();
+    return lower.includes("script error") || lower.includes("script error.");
+  }
+  return false;
+}
 
 export class ErrorBoundaryComponent extends Component<
   IErrorBoundaryComponentProps,
@@ -20,17 +26,17 @@ export class ErrorBoundaryComponent extends Component<
   public static getDerivedStateFromError(
     error: Error,
   ): IErrorBoundaryComponentState {
-    // Suppress Zalo SDK cross-origin "Script error" messages
-    if (error.message === "Script error" || error.message === "Script error. null") {
+    const msg = error?.message || String(error);
+    if (isScriptError(msg)) {
       return { hasError: false, error: null, errorInfo: null };
     }
     return { hasError: true, error, errorInfo: null };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Suppress Zalo SDK cross-origin errors
-    if (error.message === "Script error" || error.message === "Script error. null" || error.message === null) {
-      console.warn("[ErrorBoundary] Suppressed Zalo SDK error:", error.message);
+    const msg = error?.message || String(error);
+    if (isScriptError(msg)) {
+      console.warn("[ErrorBoundary] Suppressed Zalo SDK script error:", msg);
       return;
     }
     this.setState({ errorInfo });
@@ -55,7 +61,7 @@ export class ErrorBoundaryComponent extends Component<
 
     if (hasError) {
       return (
-        <PageCast className="bg-surface flex flex-col items-center justify-center min-h-screen p-6 text-center">
+        <div className="bg-surface flex flex-col items-center justify-center min-h-screen p-6 text-center">
           <div className="bg-white rounded-3xl border border-[#f0edeb] p-8 max-w-sm w-full shadow-md space-y-6 animate-scale-up">
             {/* Warning Icon */}
             <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto shadow-inner">
@@ -111,7 +117,7 @@ export class ErrorBoundaryComponent extends Component<
               </button>
             </div>
           </div>
-        </PageCast>
+        </div>
       );
     }
 
