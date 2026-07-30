@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Page } from "zmp-ui";
 import { useCart } from "../../App";
-import { safeParseImages } from "../../utils";
+import { safeParseImages, useTranslation } from "../../utils";
 import { EmptyStateComponent, LazyImageComponent } from "../../components";
 import { ISavedItemsProps } from "./saved-items.type";
 import {
@@ -23,6 +23,7 @@ const WISHLIST_FOLDERS = [
 ];
 
 export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
+  const { t } = useTranslation();
   const {
     savedItems,
     toggleSavedItem,
@@ -45,7 +46,7 @@ export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
 
     if (hasColors || hasSizes) {
       setSelectedProductDetail(product);
-      showToast("Vui lòng chọn phân loại sản phẩm!", "info");
+      showToast(t("product.selectSize"), "info");
     } else {
       addToCart(product);
       showToast(`Đã thêm ${product.name} vào giỏ hàng!`, "success");
@@ -59,12 +60,12 @@ export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
       addToCart(p);
       count++;
     });
-    showToast(`Đã chuyển toàn bộ ${count} sản phẩm vào giỏ hàng!`, "success");
+    showToast(`${t("saved.moveToCart")} ${count} ${t("saved.title")}!`, "success");
   };
 
   const handleShareWishlist = () => {
     if (savedItems.length === 0) {
-      showToast("Wishlist trống, không thể chia sẻ!", "warning");
+      showToast(t("saved.empty"), "warning");
       return;
     }
 
@@ -75,13 +76,13 @@ export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
       )
       .join("\n");
 
-    const shareContent = `Danh sách yêu thích của tôi (${savedItems.length} sản phẩm):\n\n${wishlistText}\n\nXem thêm tại ShopQuiet!`;
+    const shareContent = `${t("saved.title")} (${savedItems.length}):\n\n${wishlistText}\n\nXem thêm tại ShopQuiet!`;
 
     // Try Web Share API first
     if (navigator.share) {
       navigator
         .share({
-          title: "Wishlist của tôi",
+          title: t("saved.title"),
           text: shareContent,
         })
         .catch((error: any) => {
@@ -99,10 +100,10 @@ export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
     navigator.clipboard
       .writeText(text)
       .then(() => {
-        showToast("Đã copy wishlist vào clipboard!", "success");
+        showToast(t("toast.copied"), "success");
       })
       .catch(() => {
-        showToast("Không thể copy. Vui lòng thử lại!", "warning");
+        showToast(t("toast.error"), "warning");
       });
   };
 
@@ -117,12 +118,12 @@ export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
           <ChevronLeftIcon className="w-5.5 h-5.5 text-textColor" strokeWidth={2.2} />
         </button>
         <span className="text-xs font-bold uppercase tracking-widest text-textColor">
-          Wishlist Yêu Thích ({savedItems.length})
+          {t("saved.title")} ({savedItems.length})
         </span>
         <button
           onClick={handleShareWishlist}
           className="p-1.5 hover:bg-[#f0edeb] rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer"
-          title="Chia sẻ Wishlist"
+          title={t("product.share")}
         >
           <ShareIcon className="w-5.5 h-5.5 text-textColor" strokeWidth={2.2} />
         </button>
@@ -150,14 +151,14 @@ export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
       {savedItems.length > 0 && (
         <div className="px-6 pt-3 flex justify-between items-center">
           <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
-            Danh sách ({savedItems.length} món)
+            {t("saved.title")} ({savedItems.length})
           </span>
           <button
             onClick={handleMoveAllToCart}
             className="text-[10px] font-bold text-primary hover:text-primary-dark uppercase tracking-wider flex items-center gap-1 border-none bg-transparent cursor-pointer active:scale-95"
           >
             <ShoppingBagIcon className="w-4 h-4" />
-            Chuyển tất cả vào giỏ
+            {t("saved.moveToCart")}
           </button>
         </div>
       )}
@@ -165,9 +166,9 @@ export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
       <div className="flex-1 px-6 py-5.5 space-y-4 pb-28">
         {savedItems.length === 0 ? (
           <EmptyStateComponent
-            title="Chưa lưu sản phẩm nào"
-            description="Nhấn vào biểu tượng trái tim trên sản phẩm để lưu lại tại đây."
-            actionText="Khám phá ngay"
+            title={t("saved.empty")}
+            description="Tap heart icon on products to save them here."
+            actionText="Explore"
             onAction={() => setActiveTab("home")}
           />
         ) : (
@@ -236,7 +237,7 @@ export const SavedItems: React.FC<ISavedItemsProps> = (_props) => {
                         }}
                         className="text-[9px] font-bold uppercase tracking-wider text-primary hover:text-primary-dark active:scale-95 transition-transform"
                       >
-                        Thêm vào giỏ
+                        {t("product.addToCart")}
                       </button>
                     </div>
                   </div>
