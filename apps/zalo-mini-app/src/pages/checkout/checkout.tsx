@@ -38,13 +38,13 @@ type CmsPaymentMethod = {
 };
 
 const checkoutAddressSchema = z.object({
-  name: z.string().trim().min(2, "Vui lòng nhập họ và tên người nhận"),
+  name: z.string().trim().min(2, "Please enter recipient name"),
   phone: z
     .string()
     .trim()
-    .min(9, "Số điện thoại không hợp lệ")
-    .regex(/^[0-9]{9,11}$/, "Số điện thoại không hợp lệ"),
-  houseNumber: z.string().trim().min(2, "Vui lòng nhập số nhà, tên đường"),
+    .min(9, "Invalid phone number")
+    .regex(/^[0-9]{9,11}$/, "Invalid phone number"),
+  houseNumber: z.string().trim().min(2, "Please enter house number and street"),
 });
 
 type CheckoutAddressFormValues = z.infer<typeof checkoutAddressSchema>;
@@ -97,29 +97,29 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   const [shippingMethods, setShippingMethods] = useState<CmsShippingMethod[]>([
     {
       code: "standard",
-      name: "Giao hàng tiêu chuẩn",
-      description: "Nhận hàng trong 3-5 ngày làm việc",
+      name: "Standard Delivery",
+      description: "Receive in 3-5 business days",
       price: 0,
     },
     {
       code: "express",
-      name: "Giao hàng hỏa tốc",
-      description: "Nhận hàng trong 1-2 ngày làm việc",
+      name: "Express Delivery",
+      description: "Receive in 1-2 business days",
       price: 5,
     },
   ]);
   const [paymentMethods, setPaymentMethods] = useState<CmsPaymentMethod[]>([
     {
       code: "pay2s",
-      name: "Chuyển khoản Ngân hàng",
-      description: "Thanh toán an toàn qua mã QR Ngân hàng (Tự động xác nhận)",
+      name: "Bank Transfer",
+      description: "Secure payment via Bank QR (Auto-confirmed)",
       provider: "PAY2S",
-      badge: "KHUYÊN DÙNG",
+      badge: "RECOMMENDED",
     },
     {
       code: "cod",
-      name: "Thanh toán khi nhận hàng (COD)",
-      description: "Nhận hàng, kiểm tra hàng trước khi thanh toán cho shipper",
+      name: "Cash on Delivery (COD)",
+      description: "Pay when receiving goods after inspection",
       provider: "COD",
     },
   ]);
@@ -172,7 +172,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
             order.status === "SHIPPED")
         ) {
           setVietQrModalData(null);
-          showToast(" Ngân hàng đã xác nhận thanh toán thành công!", "success");
+          showToast("Bank confirmed payment successfully!", "success");
           setActiveTab("orders");
         }
       } catch (e) {}
@@ -334,11 +334,11 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
             try {
               const ok = await handleDecrypt(token);
               if (!ok && !silentFail)
-                showToast("Giải mã số điện thoại thất bại.", "warning");
+                showToast("Failed to decrypt phone number.", "warning");
             } catch (err) {
               console.error(err);
               if (!silentFail)
-                showToast("Lỗi giải mã số điện thoại.", "warning");
+                showToast("Error decrypting phone number.", "warning");
             }
           }
         },
@@ -347,7 +347,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           console.error("getPhoneNumber fail", error);
           if (!silentFail)
             showToast(
-              "Không thể lấy SĐT từ Zalo. Vui lòng nhập thủ công.",
+              "Cannot get phone from Zalo. Please enter manually.",
               "warning",
             );
         },
@@ -399,10 +399,10 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           ...watchedAddress,
           houseNumber: street || watchedAddress.houseNumber,
         });
-        showToast("Đã điền địa chỉ từ vị trí hiện tại!", "success");
+        showToast("Address filled from current location!", "success");
       } catch (err) {
         console.error(err);
-        showToast("Không thể lấy địa chỉ từ toạ độ.", "warning");
+        showToast("Cannot get address from coordinates.", "warning");
       } finally {
         setIsLoadingLocation(false);
       }
@@ -420,17 +420,17 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                 if (lat != null && lng != null) {
                   processCoords(Number(lat), Number(lng));
                 } else {
-                  showToast("Không nhận được toạ độ vị trí.", "warning");
+                  showToast("Cannot get location coordinates.", "warning");
                   setIsLoadingLocation(false);
                 }
               },
               fail: () => {
-                showToast("Vui lòng bật định vị GPS trên thiết bị.", "warning");
+                showToast("Please enable GPS on your device.", "warning");
                 setIsLoadingLocation(false);
               },
             });
           } else {
-            showToast("Không thể lấy vị trí từ trình duyệt.", "warning");
+            showToast("Cannot get location from browser.", "warning");
             setIsLoadingLocation(false);
           }
         },
@@ -444,17 +444,17 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           if (lat != null && lng != null) {
             processCoords(Number(lat), Number(lng));
           } else {
-            showToast("Không nhận được toạ độ vị trí.", "warning");
+            showToast("Cannot get location coordinates.", "warning");
             setIsLoadingLocation(false);
           }
         },
         fail: () => {
-          showToast("Vui lòng bật định vị GPS trên thiết bị.", "warning");
+          showToast("Please enable GPS on your device.", "warning");
           setIsLoadingLocation(false);
         },
       });
     } else {
-      showToast("Thiết bị không hỗ trợ lấy vị trí.", "warning");
+      showToast("Device does not support location.", "warning");
       setIsLoadingLocation(false);
     }
   };
@@ -629,11 +629,11 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       if (res && res.code) {
         let desc = "";
         if (res.type === "PERCENT") {
-          desc = `Giảm ${res.value}% tổng đơn`;
+          desc = `Save ${res.value}% on total`;
         } else if (res.type === "FIXED") {
-          desc = `Giảm ${res.value.toLocaleString("vi-VN")} đ`;
+          desc = `Save ${res.value.toLocaleString("vi-VN")} đ`;
         } else if (res.type === "FREESHIP") {
-          desc = "Miễn phí vận chuyển";
+          desc = "Free shipping";
         }
         setAppliedPromo({
           code: res.code,
@@ -641,17 +641,17 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           value: res.value,
           desc,
         });
-        showToast(`Đã áp dụng mã ${res.code} thành công!`, "success");
+        showToast(`Applied code ${res.code} successfully!`, "success");
       }
     } catch (err: any) {
-      const msg = err?.message || "Mã khuyến mãi không hợp lệ!";
+      const msg = err?.message || "Invalid promo code!";
       showToast(msg, "warning");
     }
   };
 
   const handleApplyPromo = () => {
     if (!promoInput) {
-      showToast("Vui lòng nhập mã khuyến mãi!", "warning");
+      showToast("Please enter promo code!", "warning");
       return;
     }
     applyPromoCode(promoInput);
@@ -660,12 +660,12 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   const handleRemovePromo = () => {
     setAppliedPromo(null);
     setPromoInput("");
-    showToast("Đã gỡ bỏ mã khuyến mãi!", "info");
+    showToast("Removed promo code!", "info");
   };
 
   const handlePlaceOrder = async () => {
     if (checkoutItems.length === 0) {
-      showToast("Giỏ hàng trống!", "warning");
+      showToast("Cart is empty!", "warning");
       return;
     }
 
@@ -675,7 +675,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       !address.street.trim() ||
       !address.city.trim()
     ) {
-      showToast("Vui lòng điền đầy đủ thông tin giao hàng!", "warning");
+      showToast("Please fill in delivery information!", "warning");
       return;
     }
 
@@ -684,7 +684,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       if (addresses.length === 0 || isEnteringCustomAddress) {
         try {
           await apiRequest("/addresses", "POST", {
-            label: addresses.length === 0 ? "Địa chỉ mặc định" : "Địa chỉ mới",
+            label: addresses.length === 0 ? "Default Address" : "New Address",
             phone: address.phone.trim(),
             street: address.street.trim(),
             city: address.city.trim(),
@@ -732,7 +732,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
         // 2. Fetch Pay2S payment URL from backend
         try {
-          showToast("Đang kết nối cổng thanh toán...", "info");
+          showToast("Connecting payment gateway...", "info");
           const pay2sRes = await apiRequest<any>(
             `/orders/${createdDbOrder.id}/pay2s`,
             "POST",
@@ -831,14 +831,14 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
       // Clear only what was ordered
       clearPurchasedItems();
-      showToast(`Đặt hàng #${orderNumber} thành công!`, "success");
+      showToast(`Order #${orderNumber} placed successfully!`, "success");
       if (fetchNotifications) {
         fetchNotifications();
       }
       setActiveTab("order-success");
     } catch (error: any) {
       console.error(error);
-      const msg = error?.message || "Đặt hàng thất bại, vui lòng thử lại!";
+      const msg = error?.message || "Order failed, please try again!";
       showToast(msg, "warning");
     }
   };
@@ -878,21 +878,21 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
             <span className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center text-[9px]">
               1
             </span>
-            <span>Vận chuyển</span>
+            <span>Shipping</span>
           </div>
           <div className="w-8 h-[1px] bg-[#f0edeb]"></div>
           <div className="flex items-center gap-2 text-textColor/35">
             <span className="w-5 h-5 rounded-full bg-[#f0edeb] text-textColor/35 flex items-center justify-center text-[9px]">
               2
             </span>
-            <span>Thanh toán</span>
+            <span>Payment</span>
           </div>
           <div className="w-8 h-[1px] bg-[#f0edeb]"></div>
           <div className="flex items-center gap-2 text-textColor/35">
             <span className="w-5 h-5 rounded-full bg-[#f0edeb] text-textColor/35 flex items-center justify-center text-[9px]">
               3
             </span>
-            <span>Xác nhận</span>
+            <span>Confirm</span>
           </div>
         </div>
 
@@ -915,7 +915,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                 }}
                 className="text-[10px] text-primary font-bold hover:underline bg-transparent border-none cursor-pointer"
               >
-                + Thêm địa chỉ mới
+                + Add New Address
               </button>
             )}
           </div>
@@ -924,7 +924,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
               <div className="flex justify-between items-start animate-fade-in">
                 <div className="text-xs text-textColor space-y-1.5">
                   <p className="font-semibold">
-                    {formatAddressText(address.name, "Người nhận")}
+                    {formatAddressText(address.name, "Recipient")}
                   </p>
                   <p className="text-textColor-variant leading-relaxed">
                     {formatAddressText(address.street, "")}
@@ -933,7 +933,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                     {formatAddressText(address.city, "")}
                   </p>
                   <p className="text-textColor-variant/80 font-bold">
-                    SĐT: {formatAddressText(address.phone, "")}
+                    Phone: {formatAddressText(address.phone, "")}
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
@@ -941,7 +941,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                     onClick={() => setIsSelectorOpen(true)}
                     className="text-xs text-primary font-bold hover:underline border-none bg-transparent cursor-pointer"
                   >
-                    Thay đổi
+                    Change
                   </button>
                   <button
                     onClick={() => {
@@ -961,7 +961,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                     }}
                     className="text-xs text-[#526069] font-bold hover:underline border-none bg-transparent cursor-pointer"
                   >
-                    Chỉnh sửa
+                    Edit
                   </button>
                 </div>
               </div>
@@ -969,7 +969,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
               <div className="space-y-3 animate-fade-in text-left">
                 <div className="flex justify-between items-center mb-1">
                   <p className="text-[9px] text-red-500 font-bold uppercase tracking-wider">
-                    Vui lòng chọn địa chỉ giao hàng:
+                    Please select delivery address:
                   </p>
                   {addresses.length > 0 && (
                     <button
@@ -986,18 +986,18 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                       }}
                       className="text-[9px] text-[#526069] font-bold hover:underline bg-transparent border-none cursor-pointer"
                     >
-                      Hủy / Chọn địa chỉ đã lưu
+                      Cancel / Select Saved Address
                     </button>
                   )}
                 </div>
                 <div className="space-y-2.5">
                   <div>
                     <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
-                      Họ và tên người nhận
+                      Recipient Name
                     </label>
                     <input
                       type="text"
-                      placeholder="Họ và tên người nhận"
+                      placeholder="Recipient Name"
                       {...register("name")}
                       onChange={(e) => {
                         register("name").onChange(e);
@@ -1014,11 +1014,11 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
                   <div>
                     <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
-                      Số điện thoại liên lạc
+                      Phone Number
                     </label>
                     <input
                       type="text"
-                      placeholder="Số điện thoại liên lạc"
+                      placeholder="Phone Number"
                       {...register("phone")}
                       onChange={(e) => {
                         register("phone").onChange(e);
@@ -1037,7 +1037,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                   <div className="space-y-2">
                     <div>
                       <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
-                        Tỉnh / Thành phố
+                        Province / City
                       </label>
                       <select
                         value={selectedProvince}
@@ -1070,7 +1070,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
                     <div>
                       <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
-                        Quận / Huyện
+                        District
                       </label>
                       <select
                         value={selectedDistrict}
@@ -1100,7 +1100,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
                     <div>
                       <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
-                        Phường / Xã
+                        Ward
                       </label>
                       <select
                         value={selectedWard}
@@ -1127,12 +1127,12 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
                   <div>
                     <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
-                      Số nhà, tên đường
+                      House Number, Street
                     </label>
                     <div className="relative">
                       <input
                         type="text"
-                        placeholder="VD: 123 Nguyễn Trãi"
+                        placeholder="e.g., 123 Nguyen Trai"
                         {...register("houseNumber")}
                         onChange={(e) => {
                           register("houseNumber").onChange(e);
@@ -1166,7 +1166,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                             <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
                           </svg>
                         )}
-                        Vị trí
+                        Location
                       </button>
                     </div>
                     {errors.houseNumber && (
@@ -1184,7 +1184,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
         {/* Shipping Method Section */}
         <div className="space-y-2.5">
           <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">
-            Phương thức vận chuyển
+            Shipping Method
           </h2>
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-1 shadow-xs divide-y divide-[#f0edeb]">
             {shippingMethods.map((method, index) => {
@@ -1210,7 +1210,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                         {method.name}
                       </p>
                       <p className="text-[10px] text-primary font-medium mt-0.5">
-                        Dự kiến: {deliveryRange.displayText}
+                        Estimated: {deliveryRange.displayText}
                       </p>
                       {method.description && (
                         <p className="text-[10px] text-textColor-variant mt-0.5">
@@ -1222,7 +1222,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                   <span className="text-xs font-bold text-textColor">
                     {method.price > 0
                       ? `${method.price.toLocaleString("vi-VN")} đ`
-                      : "Miễn phí"}
+                      : "Free"}
                   </span>
                 </label>
               );
@@ -1233,7 +1233,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
         {/* Payment Method Section */}
         <div className="space-y-2.5">
           <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">
-            Phương thức thanh toán
+            Payment Method
           </h2>
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-1 shadow-xs divide-y divide-[#f0edeb]">
             {paymentMethods.map((method, index) => (
@@ -1271,13 +1271,13 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
         {/* Promo Code Section */}
         <div className="space-y-2.5">
           <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">
-            Mã Khuyến Mãi (Promo Code)
+            Promo Code
           </h2>
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 shadow-xs space-y-3.5">
             <div className="flex gap-2.5">
               <input
                 type="text"
-                placeholder="Nhập mã ví dụ: WELCOME10, FREESHIP"
+                placeholder="Enter code: WELCOME10, FREESHIP"
                 value={promoInput}
                 onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
                 className="flex-1 text-xs px-4 py-2.5 bg-neutral-50 rounded-xl border border-[#eae8e6] text-textColor focus:outline-none focus:border-primary focus:bg-white transition-all uppercase"
@@ -1286,20 +1286,20 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                 onClick={handleApplyPromo}
                 className="h-10 px-5 bg-primary text-white font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer active:scale-95 hover:bg-primary-dark transition-all"
               >
-                Áp dụng
+                Apply
               </button>
             </div>
 
             {appliedPromo && (
               <div className="flex justify-between items-center bg-[#e8f5e9] text-[#2e7d32] px-3.5 py-2.5 rounded-xl text-xs font-bold animate-scale-up">
                 <span className="truncate mr-2">
-                  Mã: {appliedPromo.code} ({appliedPromo.desc})
+                  Code: {appliedPromo.code} ({appliedPromo.desc})
                 </span>
                 <button
                   onClick={handleRemovePromo}
                   className="text-red-500 hover:text-red-700 bg-transparent border-none font-bold text-xs cursor-pointer flex-shrink-0 whitespace-nowrap ml-1"
                 >
-                  Gỡ bỏ
+                  Remove
                 </button>
               </div>
             )}
@@ -1322,7 +1322,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                     d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-12h1.5m-1.5 3h1.5m-1.5 3h1.5m-1.5 3h1.5M3 6.75A.75.75 0 013.75 6h16.5a.75.75 0 01.75.75v10.5a.75.75 0 01-.75.75H3.75a.75.75 0 01-.75-.75V6.75z"
                   />
                 </svg>
-                Chọn Voucher Từ Kho
+                Select Voucher From Store
               </button>
             </div>
           </div>
@@ -1331,7 +1331,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
         {/* Use Xu Coins Payment Section (1 Xu = 1 VNĐ) */}
         <div className="space-y-2.5">
           <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1 flex items-center justify-between">
-            <span>Dùng Xu Tích Lũy</span>
+            <span>Use Accumulated Xu</span>
             <span className="text-amber-600 font-black">1 Xu = 1 VNĐ</span>
           </h2>
           <div className="bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-amber-500/10 rounded-2xl border border-amber-200 p-4 shadow-xs flex items-center justify-between">
@@ -1341,12 +1341,12 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
               </div>
               <div>
                 <p className="text-xs font-extrabold text-textColor">
-                  Ví Xu Hiện Có: <span className="text-amber-600 font-black">{userCoins.toLocaleString("vi-VN")} Xu</span>
+                  Current Xu Balance: <span className="text-amber-600 font-black">{userCoins.toLocaleString("vi-VN")} Xu</span>
                 </p>
                 <p className="text-[10px] text-[#526069] font-medium mt-0.5">
                   {userCoins > 0
-                    ? `Dùng Xu để giảm ${Math.min(userCoins, amountBeforeCoins).toLocaleString("vi-VN")}đ tiền đơn hàng`
-                    : "Bạn chưa có xu tích lũy trong ví"}
+                    ? `Use Xu to save ${Math.min(userCoins, amountBeforeCoins).toLocaleString("vi-VN")}đ on order`
+                    : "You have no accumulated Xu in wallet"}
                 </p>
               </div>
             </div>
@@ -1394,7 +1394,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                           {item.product.name}
                         </p>
                         <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-textColor-variant flex-wrap">
-                          <span>SL: {item.quantity}</span>
+                          <span>Qty: {item.quantity}</span>
                           {selectedSize && (
                             <>
                               <span className="text-[#d8d2ce]">|</span>
@@ -1407,7 +1407,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                             <>
                               <span className="text-[#d8d2ce]">|</span>
                               <span className="font-bold text-[#526069]">
-                                Màu: {selectedColor}
+                                Color: {selectedColor}
                               </span>
                             </>
                           )}
@@ -1436,20 +1436,20 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                 <span>
                   {shippingCost > 0
                     ? `${shippingCost.toLocaleString("vi-VN")} đ`
-                    : "Miễn phí"}
+                    : "Free"}
                 </span>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-[#2e7d32] font-semibold animate-fade-in">
                   <span>
-                    Giảm giá {appliedPromo ? `(${appliedPromo.code})` : ""}
+                    Discount {appliedPromo ? `(${appliedPromo.code})` : ""}
                   </span>
                   <span>-{discount.toLocaleString("vi-VN")} đ</span>
                 </div>
               )}
               {coinDiscount > 0 && (
                 <div className="flex justify-between text-amber-600 font-bold animate-fade-in">
-                  <span>Trừ Xu tích lũy ({coinDiscount.toLocaleString("vi-VN")} Xu)</span>
+                  <span>Xu Deduction ({coinDiscount.toLocaleString("vi-VN")} Xu)</span>
                   <span>-{coinDiscount.toLocaleString("vi-VN")} đ</span>
                 </div>
               )}
@@ -1488,7 +1488,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
         <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-center justify-center p-6">
           <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up">
             <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">
-              Chọn địa chỉ giao hàng
+              Select Delivery Address
             </h3>
 
             <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
@@ -1520,7 +1520,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                         addr.id.toString(),
                       );
                       setIsSelectorOpen(false);
-                      showToast("Đã chọn địa chỉ giao hàng!", "success");
+                      showToast("Delivery address selected!", "success");
                     }}
                     className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex justify-between items-start text-left ${
                       isSelected
@@ -1530,14 +1530,14 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                   >
                     <div className="text-xs space-y-1">
                       <span className="font-extrabold text-textColor">
-                        {formatAddressText(addr.label, "Địa chỉ")}
+                        {formatAddressText(addr.label, "Address")}
                       </span>
                       <p className="text-textColor-variant leading-relaxed">
-                        {formatAddressText(addr.street, "Địa chỉ không hợp lệ")}
+                        {formatAddressText(addr.street, "Invalid address")}
                         , {formatAddressText(addr.city, "")}
                       </p>
                       <p className="text-textColor-variant/80 font-bold mt-0.5">
-                        SĐT: {formatAddressText(addr.phone, "Không rõ")}
+                        Phone: {formatAddressText(addr.phone, "Unknown")}
                       </p>
                     </div>
                   </div>
@@ -1550,17 +1550,17 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                 onClick={() => {
                   setIsSelectorOpen(false);
                   setActiveTab("profile");
-                  showToast("Đang chuyển tới trang quản lý địa chỉ...", "info");
+                  showToast("Navigating to address management...", "info");
                 }}
                 className="flex-1 h-10 border border-dashed border-primary/40 text-primary font-bold text-xs uppercase tracking-wider rounded-xl bg-transparent cursor-pointer hover:bg-primary/5 transition-all"
               >
-                + Quản lý địa chỉ
+                + Manage Addresses
               </button>
               <button
                 onClick={() => setIsSelectorOpen(false)}
                 className="h-10 px-4 bg-neutral-100 text-textColor font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-neutral-200"
               >
-                Đóng
+                Close
               </button>
             </div>
           </div>
@@ -1573,7 +1573,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up flex flex-col max-h-[80vh]">
             <div className="flex justify-between items-center pb-2 border-b border-[#f0edeb]">
               <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">
-                Kho Voucher Của Bạn
+                Your Voucher Store
               </h3>
               <button
                 onClick={() => setIsVoucherModalOpen(false)}
@@ -1596,11 +1596,11 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
                 let voucherDesc = "";
                 if (voucher.type === "PERCENT") {
-                  voucherDesc = `Giảm ${voucher.value}% tổng đơn hàng`;
+                  voucherDesc = `Save ${voucher.value}% on total order`;
                 } else if (voucher.type === "FIXED") {
-                  voucherDesc = `Giảm ${voucher.value.toLocaleString("vi-VN")} đ`;
+                  voucherDesc = `Save ${voucher.value.toLocaleString("vi-VN")} đ`;
                 } else if (voucher.type === "FREESHIP") {
-                  voucherDesc = `Miễn phí vận chuyển (Trị giá tối đa ${voucher.value.toLocaleString("vi-VN")} đ)`;
+                  voucherDesc = `Free shipping (Max value ${voucher.value.toLocaleString("vi-VN")} đ)`;
                 }
 
                 return (
@@ -1650,17 +1650,17 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                         </span>
                         {isOutOfStock && (
                           <span className="text-[7.5px] font-extrabold bg-red-50 text-red-600 border border-red-100 px-1 py-0.5 rounded">
-                            Hết lượt
+                            Out of Stock
                           </span>
                         )}
                         {isExpired && (
                           <span className="text-[7.5px] font-extrabold bg-amber-50 text-amber-600 border border-amber-100 px-1 py-0.5 rounded">
-                            Hết hạn
+                            Expired
                           </span>
                         )}
                         {isBelowMinVal && !isExpired && !isOutOfStock && (
                           <span className="text-[7.5px] font-extrabold bg-[#eae8e6] text-[#8e8580] px-1 py-0.5 rounded">
-                            Đơn tối thiểu ${voucher.minOrderVal.toFixed(0)}
+                            Min Order ${voucher.minOrderVal.toFixed(0)}
                           </span>
                         )}
                       </div>
@@ -1671,10 +1671,10 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                       </p>
 
                       <div className="flex justify-between items-center mt-2 text-[8.5px] text-textColor-variant">
-                        <span>Lượt còn lại: {voucher.stock}</span>
+                        <span>Remaining uses: {voucher.stock}</span>
                         {voucher.expiresAt && (
                           <span>
-                            HSD:{" "}
+                            Exp:{" "}
                             {new Date(voucher.expiresAt).toLocaleDateString(
                               "vi-VN",
                             )}
@@ -1688,7 +1688,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
               {vouchers.length === 0 && (
                 <div className="text-center py-8 text-xs text-textColor-variant">
-                  Hiện chưa có mã giảm giá nào khả dụng.
+                  No vouchers available currently.
                 </div>
               )}
             </div>
@@ -1697,7 +1697,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
               onClick={() => setIsVoucherModalOpen(false)}
               className="w-full h-10 bg-neutral-100 text-textColor font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-neutral-200 mt-2 flex-shrink-0"
             >
-              Đóng
+              Close
             </button>
           </div>
         </div>
