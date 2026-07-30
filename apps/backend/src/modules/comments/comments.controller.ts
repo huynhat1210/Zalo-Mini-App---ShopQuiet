@@ -13,21 +13,24 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import * as path from 'path';
+import { memoryStorage } from 'multer';
 import { Comment } from '@prisma/client';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/comment.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CloudinaryService } from '../media/cloudinary.service';
 
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('Comments & Reviews')
 @Controller('products/:productId/comments')
 export class CommentsController {
-  constructor(private readonly commentsService: CommentsService) {}
+  constructor(
+    private readonly commentsService: CommentsService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Get()
   async getComments(
@@ -56,57 +59,32 @@ export class CommentsController {
 
   @Post('upload-image')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+      fileFilter: (_req: any, file: any, cb: any) => {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+          return cb(new Error('Chỉ chấp nhận các file ảnh!'), false);
+        }
+        cb(null, true);
+      },
+    }),
+  )
   async uploadReviewImage(@UploadedFile() file: any) {
     if (!file) return { success: false, message: 'No file uploaded' };
 
-    if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-      return { success: false, message: 'Chỉ chấp nhận các file ảnh!' };
-    }
-
     try {
-      const formData = new FormData();
-      formData.append('reqtype', 'fileupload');
-
-      const blob = new Blob([file.buffer], { type: file.mimetype });
-      formData.append('fileToUpload', blob, file.originalname);
-
-      const res = await fetch('https://catbox.moe/user/api.php', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!res.ok) {
-        throw new Error(`Catbox error: ${res.statusText}`);
-      }
-
-      const fileUrl = await res.text();
-      if (!fileUrl || !fileUrl.startsWith('http')) {
-        throw new Error(`Invalid Catbox response: ${fileUrl}`);
-      }
-
-      return { success: true, url: fileUrl };
-    } catch (error: any) {
-      console.error(
-        'Failed to upload image to Catbox, falling back to local file storage:',
-        error,
+      const url = await this.cloudinaryService.uploadBuffer(
+        file.buffer,
+        file.mimetype,
+        file.originalname,
+        'reviews',
       );
-
-      try {
-        const fs = require('fs');
-        const path = require('path');
-        const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-        if (!fs.existsSync(uploadsDir)) {
-          fs.mkdirSync(uploadsDir, { recursive: true });
-        }
-        const fileExtension = path.extname(file.originalname);
-        const fileName = `review-${Date.now()}-${Math.round(Math.random() * 1e9)}${fileExtension}`;
-        const filePath = path.join(uploadsDir, fileName);
-        fs.writeFileSync(filePath, file.buffer);
-        return { success: true, url: `/uploads/${fileName}` };
-      } catch (localError) {
-        return { success: false, message: 'Không thể lưu trữ hình ảnh!' };
-      }
+      return { success: true, url };
+    } catch (error: any) {
+      console.error('Cloudinary upload failed:', error.message);
+      return { success: false, message: error.message || 'Không thể tải ảnh lên!' };
     }
   }
 }

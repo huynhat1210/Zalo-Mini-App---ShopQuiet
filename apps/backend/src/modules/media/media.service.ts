@@ -1,54 +1,26 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import * as fs from 'fs';
-import * as path from 'path';
+import { Injectable } from '@nestjs/common';
 
+/**
+ * MediaService — manages metadata for uploaded media.
+ * Actual files are stored on Cloudinary (not local disk).
+ * findAll() returns empty since Cloudinary manages file listing.
+ * delete() is a no-op unless we add Cloudinary public_id tracking.
+ */
 @Injectable()
 export class MediaService {
-  private readonly uploadsDir = path.join(
-    __dirname,
-    '..',
-    '..',
-    '..',
-    'public',
-    'uploads',
-  );
-
-  constructor() {
-    // Ensure directory exists
-    if (!fs.existsSync(this.uploadsDir)) {
-      fs.mkdirSync(this.uploadsDir, { recursive: true });
-    }
-  }
-
+  /**
+   * Returns list of uploaded media.
+   * TODO: Store Cloudinary URLs in DB (Media table) and return them here.
+   */
   async findAll() {
-    try {
-      const files = fs.readdirSync(this.uploadsDir);
-      return files
-        .filter((file) => {
-          const stat = fs.statSync(path.join(this.uploadsDir, file));
-          return stat.isFile() && /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(file);
-        })
-        .map((file) => {
-          const stat = fs.statSync(path.join(this.uploadsDir, file));
-          return {
-            filename: file,
-            size: stat.size,
-            url: `/uploads/${file}`,
-            createdAt: stat.birthtime,
-          };
-        })
-        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-    } catch (e) {
-      return [];
-    }
+    return [];
   }
 
-  async delete(filename: string) {
-    const filePath = path.join(this.uploadsDir, filename);
-    if (!fs.existsSync(filePath)) {
-      throw new NotFoundException('Không tìm thấy file hình ảnh!');
-    }
-    fs.unlinkSync(filePath);
-    return { success: true };
+  /**
+   * Delete a media file.
+   * TODO: Track Cloudinary public_id in DB and call Cloudinary destroy API.
+   */
+  async delete(_filename: string) {
+    return { success: true, message: 'File deleted (no-op, using Cloudinary)' };
   }
 }

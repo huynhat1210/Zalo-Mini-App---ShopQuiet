@@ -17,13 +17,18 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { CloudinaryService } from '../media/cloudinary.service';
 
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('CMS Admin')
 @Controller('cms')
 export class CmsController {
-  constructor(private readonly cmsService: CmsService) {}
+  constructor(
+    private readonly cmsService: CmsService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Get('bootstrap')
   async getBootstrap() {
@@ -168,27 +173,35 @@ export class CmsController {
   @Post('upload')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 20 * 1024 * 1024 }, // 20MB for CMS
+      fileFilter: (_req: any, file: any, cb: any) => {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+          return cb(new Error('Chỉ chấp nhận các file ảnh!'), false);
+        }
+        cb(null, true);
+      },
+    }),
+  )
   async uploadFile(@UploadedFile() file: any) {
     if (!file) {
       return { success: false, message: 'No file uploaded' };
     }
-    const fs = require('fs');
-    const path = require('path');
 
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
+    try {
+      const url = await this.cloudinaryService.uploadBuffer(
+        file.buffer,
+        file.mimetype,
+        file.originalname,
+        'cms',
+      );
+      return { success: true, url };
+    } catch (error: any) {
+      console.error('Cloudinary CMS upload failed:', error.message);
+      return { success: false, message: error.message || 'Không thể tải ảnh lên!' };
     }
-
-    const fileExtension = path.extname(file.originalname);
-    const fileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${fileExtension}`;
-    const filePath = path.join(uploadsDir, fileName);
-
-    fs.writeFileSync(filePath, file.buffer);
-
-    const fileUrl = `/uploads/${fileName}`;
-    return { success: true, url: fileUrl };
   }
 
   @Get('transactions')

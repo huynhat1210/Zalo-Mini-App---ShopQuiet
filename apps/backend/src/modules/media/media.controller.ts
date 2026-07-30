@@ -9,9 +9,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import * as path from 'path';
+import { memoryStorage } from 'multer';
 import { MediaService } from './media.service';
+import { CloudinaryService } from './cloudinary.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -21,7 +21,10 @@ import { ApiTags } from '@nestjs/swagger';
 @ApiTags('Banners & Media')
 @Controller('media')
 export class MediaController {
-  constructor(private readonly mediaService: MediaService) {}
+  constructor(
+    private readonly mediaService: MediaService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -35,23 +38,9 @@ export class MediaController {
   @Roles('admin')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: path.join(
-          __dirname,
-          '..',
-          '..',
-          '..',
-          'public',
-          'uploads',
-        ),
-        filename: (req: any, file: any, cb: any) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = path.extname(file.originalname);
-          cb(null, `file-${uniqueSuffix}${ext}`);
-        },
-      }),
-      fileFilter: (req: any, file: any, cb: any) => {
+      storage: memoryStorage(),
+      limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
+      fileFilter: (_req: any, file: any, cb: any) => {
         if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
           return cb(new Error('Chỉ chấp nhận các file ảnh!'), false);
         }
@@ -60,11 +49,26 @@ export class MediaController {
     }),
   )
   async uploadFile(@UploadedFile() file: any) {
-    return {
-      filename: file.filename,
-      size: file.size,
-      url: `/uploads/${file.filename}`,
-    };
+    if (!file) {
+      return { success: false, message: 'No file uploaded' };
+    }
+
+    try {
+      const url = await this.cloudinaryService.uploadBuffer(
+        file.buffer,
+        file.mimetype,
+        file.originalname,
+        'media',
+      );
+      return {
+        filename: file.originalname,
+        size: file.size,
+        url,
+      };
+    } catch (error: any) {
+      console.error('Cloudinary media upload failed:', error.message);
+      return { success: false, message: error.message || 'Không thể tải ảnh lên!' };
+    }
   }
 
   @Delete(':filename')
