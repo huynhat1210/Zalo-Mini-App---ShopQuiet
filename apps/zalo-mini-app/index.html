@@ -16,6 +16,37 @@
     />
     <!-- Suppress Zalo SDK "Script error. null" popup — must be FIRST script -->
     <script>
+      // Override console methods to completely suppress Zalo SDK error logs
+      (function() {
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        const originalLog = console.log;
+
+        console.error = function(...args) {
+          const message = args[0];
+          if (message === "Script error" || message === "Script error. null" || message === null) {
+            return;
+          }
+          originalError.apply(console, args);
+        };
+
+        console.warn = function(...args) {
+          const message = args[0];
+          if (message === "Script error" || message === "Script error. null" || message === null) {
+            return;
+          }
+          originalWarn.apply(console, args);
+        };
+
+        console.log = function(...args) {
+          const message = args[0];
+          if (message === "Script error" || message === "Script error. null" || message === null) {
+            return;
+          }
+          originalLog.apply(console, args);
+        };
+      })();
+
       // Aggressive error suppression for Zalo Mini App environment
       window.onerror = function(message, source, lineno, colno, error) {
         // Suppress all Zalo SDK cross-origin errors
@@ -29,7 +60,7 @@
 
       // Also suppress unhandled promise rejections
       window.onunhandledrejection = function(event) {
-        if (event.reason && (event.reason.message === "Script error" || event.reason.message === "Script error. null")) {
+        if (event.reason && (event.reason.message === "Script error" || event.reason.message === "Script error. null" || event.reason.message === null)) {
           event.preventDefault();
           return true;
         }

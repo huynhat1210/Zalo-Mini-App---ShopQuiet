@@ -15,7 +15,7 @@ if (typeof window !== "undefined") {
   // Log errors for debugging but do NOT return true here —
   // returning true would prevent React's ErrorBoundary from catching them.
   window.addEventListener("error", (e) => {
-    // Suppress Zalo SDK cross-origin "Script error" messages completely
+    // Suppress Zalo SDK cross-origin "Script error" messages completely - no logging
     if (e.message === "Script error" || e.message === "Script error. null" || e.message === null) {
       e.preventDefault();
       e.stopImmediatePropagation();
@@ -27,7 +27,7 @@ if (typeof window !== "undefined") {
     // so that React ErrorBoundary can still catch component-level errors.
   }, false);
   window.addEventListener("unhandledrejection", (e) => {
-    // Suppress Zalo SDK cross-origin "Script error" messages in promise rejections
+    // Suppress Zalo SDK cross-origin "Script error" messages in promise rejections - no logging
     if (e.reason && (e.reason.message === "Script error" || e.reason.message === "Script error. null" || e.reason.message === null)) {
       e.preventDefault();
       return;
