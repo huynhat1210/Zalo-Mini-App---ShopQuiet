@@ -895,9 +895,13 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                         const parsed = JSON.parse(rev.images);
                         if (Array.isArray(parsed) && parsed.length > 0) {
                           return parsed.map((imgUrl: string, idx: number) => {
-                            const fullUrl = imgUrl.startsWith("http")
+                            const isAbsolute =
+                              imgUrl.startsWith("http") ||
+                              imgUrl.startsWith("data:") ||
+                              imgUrl.startsWith("blob:");
+                            const fullUrl = isAbsolute
                               ? imgUrl
-                              : `${API_BASE_URL.replace("/api/v1", "")}${imgUrl}`;
+                              : `${API_BASE_URL.replace("/api/v1", "")}${imgUrl.startsWith("/") ? "" : "/"}${imgUrl}`;
                             return (
                               <div
                                 key={idx}
@@ -917,9 +921,13 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                           typeof rev.images === "string" &&
                           rev.images.trim()
                         ) {
-                          const fullUrl = rev.images.startsWith("http")
+                          const isAbsolute =
+                            rev.images.startsWith("http") ||
+                            rev.images.startsWith("data:") ||
+                            rev.images.startsWith("blob:");
+                          const fullUrl = isAbsolute
                             ? rev.images
-                            : `${API_BASE_URL.replace("/api/v1", "")}${rev.images}`;
+                            : `${API_BASE_URL.replace("/api/v1", "")}${rev.images.startsWith("/") ? "" : "/"}${rev.images}`;
                           return (
                             <div className="w-16 h-16 rounded overflow-hidden border border-[#f0edeb] bg-neutral-50">
                               <img

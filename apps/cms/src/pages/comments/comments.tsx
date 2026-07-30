@@ -383,7 +383,13 @@ export const CommentsPage: React.FC = () => {
                             </span>
                             <div className="flex flex-wrap gap-1.5">
                               {reviewImgs.map((img, idx) => {
-                                const fullImg = img.startsWith('http') ? img : `${serverUrl}${img.startsWith('/') ? '' : '/'}${img}`;
+                                const isAbsolute =
+                                  img.startsWith('http') ||
+                                  img.startsWith('data:') ||
+                                  img.startsWith('blob:');
+                                const fullImg = isAbsolute
+                                  ? img
+                                  : `${serverUrl}${img.startsWith('/') ? '' : '/'}${img}`;
                                 return (
                                   <img
                                     key={idx}

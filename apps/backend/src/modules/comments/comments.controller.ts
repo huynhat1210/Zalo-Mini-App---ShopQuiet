@@ -40,7 +40,6 @@ export class CommentsController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard)
   async createComment(
     @Param('productId', ParseIntPipe) productId: number,
     @Body() body: CreateCommentDto,
@@ -58,7 +57,6 @@ export class CommentsController {
   }
 
   @Post('upload-image')
-  @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('file', {
       storage: memoryStorage(),

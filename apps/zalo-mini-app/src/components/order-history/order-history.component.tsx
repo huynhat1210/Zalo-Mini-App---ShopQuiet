@@ -252,9 +252,9 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                                   >
                                     <img
                                       src={
-                                        u.startsWith("http")
+                                        u.startsWith("http") || u.startsWith("data:") || u.startsWith("blob:")
                                           ? u
-                                          : `${API_BASE_URL.replace("/api/v1", "")}${u}`
+                                          : `${API_BASE_URL.replace("/api/v1", "")}${u.startsWith("/") ? "" : "/"}${u}`
                                       }
                                       alt="Đánh giá"
                                       className="w-full h-full object-cover"

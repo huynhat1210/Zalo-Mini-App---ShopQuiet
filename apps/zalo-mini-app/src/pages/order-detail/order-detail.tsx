@@ -683,9 +683,13 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                     return (
                       <div className="flex gap-2 mt-2">
                         {parsed.map((img: string, idx: number) => {
-                          const full = img.startsWith("http")
+                          const isAbs =
+                            img.startsWith("http") ||
+                            img.startsWith("data:") ||
+                            img.startsWith("blob:");
+                          const full = isAbs
                             ? img
-                            : `${API_BASE_URL.replace("/api/v1", "")}${img}`;
+                            : `${API_BASE_URL.replace("/api/v1", "")}${img.startsWith("/") ? "" : "/"}${img}`;
                           return (
                             <img
                               key={idx}
