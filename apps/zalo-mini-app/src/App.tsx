@@ -376,7 +376,7 @@ export default function App() {
                 ].includes(activeTab);
                 return (
                   <div
-                    className={`flex flex-col h-screen overflow-hidden bg-surface overscroll-none relative ${showNavbar ? "pb-[72px]" : "pb-0"}`}
+                    className={`flex flex-col h-screen overflow-hidden bg-surface dark:bg-slate-950 text-textColor dark:text-slate-100 transition-colors duration-200 overscroll-none relative ${showNavbar ? "pb-[72px]" : "pb-0"}`}
                   >
                     {/* Custom Premium Top Toast Notification */}
                     <ToastComponent />

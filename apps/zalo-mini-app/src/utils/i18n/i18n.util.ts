@@ -44,6 +44,20 @@ export const translations = {
     "profile.section.general": "Thông tin ứng dụng",
     "profile.helpCenter": "Trung tâm hỗ trợ",
     "profile.about": "Về ShopQuiet",
+    "profile.referralTitle": "Mời bạn bè nhận Xu",
+    "profile.referralSubtitle": "Nhận ngay +50 Xu khi bạn bè truy cập",
+    "profile.copyCode": "Sao chép",
+    "profile.shareBtn": "Chia sẻ ngay (+50 Xu)",
+
+    // Cart & Order
+    "cart.title": "Giỏ hàng của tôi",
+    "cart.empty": "Giỏ hàng đang trống",
+    "cart.checkout": "Tiến hành thanh toán",
+    "order.historyTitle": "Lịch sử đơn hàng",
+    "order.statusProcessing": "Đang xử lý",
+    "order.statusShipped": "Đang giao",
+    "order.statusCompleted": "Hoàn thành",
+    "order.statusCancelled": "Đã hủy",
 
     // Search Page
     "search.advanced": "Bộ lọc nâng cao",
@@ -117,6 +131,20 @@ export const translations = {
     "profile.section.general": "Application Info",
     "profile.helpCenter": "Help Center",
     "profile.about": "About ShopQuiet",
+    "profile.referralTitle": "Invite Friends & Get Coins",
+    "profile.referralSubtitle": "Get +50 Coins when friends join",
+    "profile.copyCode": "Copy",
+    "profile.shareBtn": "Share Now (+50 Coins)",
+
+    // Cart & Order
+    "cart.title": "My Cart",
+    "cart.empty": "Your cart is empty",
+    "cart.checkout": "Proceed to Checkout",
+    "order.historyTitle": "Order History",
+    "order.statusProcessing": "Processing",
+    "order.statusShipped": "Shipping",
+    "order.statusCompleted": "Completed",
+    "order.statusCancelled": "Cancelled",
 
     // Search Page
     "search.advanced": "Advanced Filter",

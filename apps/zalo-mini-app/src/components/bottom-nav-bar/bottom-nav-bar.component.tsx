@@ -1,5 +1,6 @@
 import { IBottomNavBarComponentProps } from "./bottom-nav-bar.type";
 import { useCart } from "../../App";
+import { useTranslation } from "../../utils";
 import {
   HomeIcon as HomeOutline,
   ClipboardDocumentListIcon as ClipboardOutline,
@@ -19,6 +20,7 @@ export const BottomNavBarComponent: React.FC<IBottomNavBarComponentProps> = (
   _props,
 ) => {
   const { activeTab, setActiveTab, setIsCartOpen, setIsChatOpen, setChatContextProduct, notifications, unreadChatCount } = useCart();
+  const { t } = useTranslation();
   const showNavbar = [
     "home",
     "orders",
@@ -32,7 +34,7 @@ export const BottomNavBarComponent: React.FC<IBottomNavBarComponentProps> = (
   const unreadCount = (notifications || []).filter((n) => !n.read).length;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-[68px] bg-white/95 backdrop-blur-md border-t border-[#f0edeb] flex justify-around items-center px-2 z-50 shadow-lg">
+    <div className="fixed bottom-0 left-0 right-0 h-[68px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-[#f0edeb] dark:border-slate-800 flex justify-around items-center px-2 z-50 shadow-lg">
       {/* Trang Chủ Tab */}
       <button
         onClick={() => {
@@ -48,10 +50,10 @@ export const BottomNavBarComponent: React.FC<IBottomNavBarComponentProps> = (
         )}
         <span
           className={`text-[10px] mt-1 font-extrabold tracking-tight transition-colors ${
-            activeTab === "home" ? "text-primary" : "text-[#526069]/70"
+            activeTab === "home" ? "text-primary dark:text-teal-400" : "text-[#526069]/70 dark:text-slate-400"
           }`}
         >
-          Trang chủ
+          {t("tab.home")}
         </span>
       </button>
 
@@ -70,17 +72,17 @@ export const BottomNavBarComponent: React.FC<IBottomNavBarComponentProps> = (
         )}
         <span
           className={`text-[10px] mt-1 font-extrabold tracking-tight transition-colors ${
-            activeTab === "orders" ? "text-primary" : "text-[#526069]/70"
+            activeTab === "orders" ? "text-primary dark:text-teal-400" : "text-[#526069]/70 dark:text-slate-400"
           }`}
         >
-          Đơn hàng
+          {t("tab.orders")}
         </span>
       </button>
 
-      {/* Tư Vấn CSKH Tab (MỚI - Độc lập, không kèm sản phẩm rác, có Unread Badge) */}
+      {/* Tư Vấn CSKH Tab */}
       <button
         onClick={() => {
-          setChatContextProduct(null); // Xóa bối cảnh sản phẩm rác để mở màn hình chat sạch sẽ
+          setChatContextProduct(null);
           setIsChatOpen(true);
           setIsCartOpen(false);
         }}
@@ -100,10 +102,10 @@ export const BottomNavBarComponent: React.FC<IBottomNavBarComponentProps> = (
         </div>
         <span
           className={`text-[10px] mt-1 font-extrabold tracking-tight transition-colors ${
-            activeTab === "chat" ? "text-primary" : "text-[#526069]/70"
+            activeTab === "chat" ? "text-primary dark:text-teal-400" : "text-[#526069]/70 dark:text-slate-400"
           }`}
         >
-          Tư vấn
+          CSKH
         </span>
       </button>
 
@@ -129,10 +131,10 @@ export const BottomNavBarComponent: React.FC<IBottomNavBarComponentProps> = (
         </div>
         <span
           className={`text-[10px] mt-1 font-extrabold tracking-tight transition-colors ${
-            activeTab === "notifications" ? "text-primary" : "text-[#526069]/70"
+            activeTab === "notifications" ? "text-primary dark:text-teal-400" : "text-[#526069]/70 dark:text-slate-400"
           }`}
         >
-          Thông báo
+          {t("tab.notifications")}
         </span>
       </button>
 
@@ -151,10 +153,10 @@ export const BottomNavBarComponent: React.FC<IBottomNavBarComponentProps> = (
         )}
         <span
           className={`text-[10px] mt-1 font-extrabold tracking-tight transition-colors ${
-            activeTab === "profile" ? "text-primary" : "text-[#526069]/70"
+            activeTab === "profile" ? "text-primary dark:text-teal-400" : "text-[#526069]/70 dark:text-slate-400"
           }`}
         >
-          Tài khoản
+          {t("tab.profile")}
         </span>
       </button>
     </div>
