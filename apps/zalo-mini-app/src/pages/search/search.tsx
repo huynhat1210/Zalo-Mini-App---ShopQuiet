@@ -2,7 +2,12 @@ import { useState, useEffect } from "react";
 import { Page } from "zmp-ui";
 import { useCart } from "../../App";
 import { useDebounce, trackAnalyticsEvent, useTranslation, safeParseImages } from "../../utils";
-import { useAllProducts, useCategories } from "../../hooks";
+import {
+  MagnifyingGlassIcon,
+  XMarkIcon,
+  AdjustmentsHorizontalIcon,
+  ClockIcon,
+} from "@heroicons/react/24/outline";
 import { ISearchProps } from "./search.type";
 import { LazyImageComponent, PriceSlider } from "../../components";
 
@@ -206,19 +211,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
       {/* Header Search Input */}
       <div className="bg-white/95 /95 backdrop-blur-md px-6 py-4 flex items-center gap-3 border-b border-[#f0edeb]  sticky top-0 z-30 shadow-xs">
         <div className="flex-1 relative flex items-center bg-neutral-50  border border-[#eae8e6]  rounded-full px-5 py-2.5 transition-all focus-within:border-primary focus-within:bg-white :bg-slate-800 focus-within:shadow-xs">
-          <svg
-            className="w-4.5 h-4.5 text-textColor-variant  mr-3 flex-shrink-0"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
+          <MagnifyingGlassIcon className="w-4.5 h-4.5 text-textColor-variant mr-3 flex-shrink-0" strokeWidth={2.5} />
           <input
             type="text"
             placeholder={t("search.placeholder")}
@@ -236,19 +229,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
               onClick={() => setSearchQuery("")}
               className="text-[#747873] hover:text-textColor transition-colors ml-2 border-none bg-transparent cursor-pointer"
             >
-              <svg
-                className="w-4.5 h-4.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <XMarkIcon className="w-4.5 h-4.5" strokeWidth={2.5} />
             </button>
           )}
 
@@ -304,19 +285,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
             onClick={() => setIsFilterModalOpen(true)}
             className="flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-[#eae8e6] bg-white text-xs font-bold text-textColor-variant active:scale-95 transition-all whitespace-nowrap shrink-0"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.59l-5.432 5.432a2.25 2.25 0 00-.659 1.59v3.414a2.25 2.25 0 01-.659 1.59l-1.87 1.87a.75.75 0 01-1.28-.53v-6.344a2.25 2.25 0 00-.659-1.59L3.659 7.408A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A50.06 50.06 0 0112 3z"
-              />
-            </svg>
+            <AdjustmentsHorizontalIcon className="w-4 h-4" strokeWidth={2.2} />
             <span>{t("search.advanced")}</span>
           </button>
 
@@ -392,19 +361,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
                     onClick={() => setSearchQuery(term)}
                     className="flex items-center gap-2 px-4 py-2 rounded-full border border-[#f0edeb] bg-white text-xs text-textColor-variant hover:text-textColor hover:bg-neutral-50 active:scale-95 transition-all shadow-xs border-none cursor-pointer"
                   >
-                    <svg
-                      className="w-4 h-4 text-textColor/35"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.2"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
+                    <ClockIcon className="w-4 h-4 text-textColor/35" strokeWidth={2.2} />
                     {term}
                   </button>
                 ))}
@@ -625,19 +582,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
                 onClick={() => setIsFilterModalOpen(false)}
                 className="text-textColor-variant hover:text-textColor border-none bg-transparent cursor-pointer"
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <XMarkIcon className="w-6 h-6" strokeWidth={2} />
               </button>
             </div>
 

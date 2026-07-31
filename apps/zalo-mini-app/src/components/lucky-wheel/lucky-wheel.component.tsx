@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { apiRequest } from "../../utils/api";
 import { ILuckyWheelProps } from "./lucky-wheel.type";
 
@@ -282,19 +283,7 @@ export const LuckyWheel: React.FC<ILuckyWheelProps> = (props) => {
           onClick={onClose}
           className="absolute top-4 right-4 p-2 bg-neutral-100 hover:bg-neutral-200 rounded-full transition-colors border-none cursor-pointer flex items-center justify-center"
         >
-          <svg
-            className="w-4 h-4 text-textColor"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          <XMarkIcon className="w-4 h-4 text-textColor" strokeWidth={2.5} />
         </button>
 
         <div className="text-center">

@@ -12,6 +12,10 @@ import {
   ChatBubbleOvalLeftEllipsisIcon,
   MagnifyingGlassPlusIcon,
   XMarkIcon,
+  CheckIcon,
+  PencilSquareIcon,
+  HandThumbUpIcon,
+  HandThumbDownIcon,
 } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
 import { IProductDetailProps } from "./product-detail.type";
@@ -634,19 +638,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
 
                       {isActive && (
                         <div className="absolute bottom-0 right-0 w-4 h-4 bg-primary text-white flex items-center justify-center rounded-tl-md">
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="3"
-                              d="M5 13l4 4L19 7"
-                            ></path>
-                          </svg>
+                          <CheckIcon className="w-3 h-3" strokeWidth={3} />
                         </div>
                       )}
                     </button>
@@ -670,9 +662,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                     onClick={() => { setRecommendedSize(null); setIsSizeGuideOpen(true); }}
                     className="flex items-center gap-1 text-[9.5px] font-extrabold text-[#0e6877] bg-[#0e6877]/10 px-2.5 py-1 rounded-full border-none cursor-pointer hover:bg-[#0e6877]/20 active:scale-95 transition-all"
                   >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
-                    </svg>
+                    <PencilSquareIcon className="w-3 h-3" strokeWidth={2} />
                     {sizeGuideType === "shoes" ? t("product.selectSize") : t("product.selectSize")}
                   </button>
                 )}
@@ -844,38 +834,14 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                     onClick={() => handleVoteReview(rev.id, "helpful")}
                     className="flex items-center gap-1 text-[10px] text-textColor-variant hover:text-primary transition-colors"
                   >
-                    <svg
-                      className="w-3.5 h-3.5"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"
-                      />
-                    </svg>
+                    <HandThumbUpIcon className="w-3.5 h-3.5" strokeWidth={2} />
                     <span>Helpful ({rev.helpfulCount || 0})</span>
                   </button>
                   <button
                     onClick={() => handleVoteReview(rev.id, "unhelpful")}
                     className="flex items-center gap-1 text-[10px] text-textColor-variant hover:text-red-500 transition-colors"
                   >
-                    <svg
-                      className="w-3.5 h-3.5"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v5a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"
-                      />
-                    </svg>
+                    <HandThumbDownIcon className="w-3.5 h-3.5" strokeWidth={2} />
                     <span>Not helpful ({rev.unhelpfulCount || 0})</span>
                   </button>
                 </div>

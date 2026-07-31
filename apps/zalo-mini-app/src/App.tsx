@@ -10,6 +10,7 @@ import {
 import { App as ZaloApp, ZMPRouter, SnackbarProvider } from "zmp-ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNotifications } from "./hooks";
+import { ChevronLeftIcon } from "@heroicons/react/24/outline";
 import {
   ToastComponent,
   BottomNavBarComponent,
@@ -453,19 +454,7 @@ export default function App() {
                                   onClick={() => setIsCartOpen(false)}
                                   className="p-1.5 -ml-1.5 hover:bg-[#f0edeb] rounded-full transition-colors active:scale-95"
                                 >
-                                  <svg
-                                    className="w-5.5 h-5.5 text-textColor"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2.2"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M15.75 19.5L8.25 12l7.5-7.5"
-                                    />
-                                  </svg>
+                                  <ChevronLeftIcon className="w-5.5 h-5.5 text-textColor" strokeWidth={2.2} />
                                 </button>
                                 <span className="text-xs font-bold uppercase tracking-widest text-textColor">
                                   Giỏ hàng của bạn
