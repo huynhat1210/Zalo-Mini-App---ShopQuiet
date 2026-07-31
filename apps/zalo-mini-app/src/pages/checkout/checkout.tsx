@@ -21,6 +21,7 @@ import { Payment } from "zmp-sdk/apis";
 import api from "zmp-sdk";
 const PageCast = Page as any;
 import { ICheckoutProps } from "./checkout.type";
+import { ChevronLeft, MapPin, Ticket } from "lucide-react";
 
 type CmsShippingMethod = {
   code: string;
@@ -830,21 +831,9 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       <div className="bg-white/95 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-[#f0edeb] sticky top-0 z-30 shadow-xs">
         <button
           onClick={() => setActiveTab("home")}
-          className="p-1.5 hover:bg-[#f0edeb] rounded-full transition-colors active:scale-95"
+          className="p-1.5 hover:bg-[#f0edeb] rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer"
         >
-          <svg
-            className="w-5.5 h-5.5 text-textColor"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15.75 19.5L8.25 12l7.5-7.5"
-            />
-          </svg>
+          <ChevronLeft className="w-5.5 h-5.5 text-textColor" />
         </button>
         <span className="text-xs font-bold uppercase tracking-widest text-textColor">
           {t("checkout.title")}
@@ -1135,17 +1124,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                         {isLoadingLocation ? (
                           <span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin inline-block" />
                         ) : (
-                          <svg
-                            width="10"
-                            height="10"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                          >
-                            <circle cx="12" cy="12" r="3" />
-                            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
-                          </svg>
+                          <MapPin className="w-2.5 h-2.5" />
                         )}
                         {t("checkout.locationBtn")}
                       </button>
@@ -1290,19 +1269,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                 onClick={() => setIsVoucherModalOpen(true)}
                 className="w-full h-10 bg-[#e0f2f1]/60 hover:bg-[#e0f2f1] text-primary font-bold text-xs uppercase tracking-wider rounded-xl border border-primary/20 cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-2"
               >
-                <svg
-                  className="w-4 h-4 text-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-12h1.5m-1.5 3h1.5m-1.5 3h1.5m-1.5 3h1.5M3 6.75A.75.75 0 013.75 6h16.5a.75.75 0 01.75.75v10.5a.75.75 0 01-.75.75H3.75a.75.75 0 01-.75-.75V6.75z"
-                  />
-                </svg>
+                <Ticket className="w-4 h-4 text-primary" />
                 {t("checkout.selectVoucherBtn")}
               </button>
             </div>

@@ -3,6 +3,7 @@ import { Page } from "zmp-ui";
 import { useCart } from "../../App";
 import { safeParseImages, useTranslation } from "../../utils";
 import { ISuccessOrder, IOrderSuccessProps } from "./order-success.type";
+import { X, Check, Truck, Zap } from "lucide-react";
 
 const PageCast = Page as any;
 
@@ -59,19 +60,7 @@ export const OrderSuccess: React.FC<IOrderSuccessProps> = (_props) => {
           onClick={() => setActiveTab("home")}
           className="p-1.5 hover:bg-[#f0edeb] rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer"
         >
-          <svg
-            className="w-5.5 h-5.5 text-textColor"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          <X className="w-5.5 h-5.5 text-textColor" />
         </button>
         <span className="text-xs font-bold uppercase tracking-widest text-textColor">
           {t("orderSuccess.confirmed")}
@@ -83,19 +72,7 @@ export const OrderSuccess: React.FC<IOrderSuccessProps> = (_props) => {
         {/* Success Indicator Card */}
         <div className="bg-white rounded-2xl border border-[#f0edeb] p-6 text-center space-y-3 shadow-xs">
           <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center text-primary mx-auto shadow-xs">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.8"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4.5 12.75l6 6 9-13.5"
-              />
-            </svg>
+            <Check className="w-6 h-6 stroke-[3]" />
           </div>
           <div className="space-y-1">
             <h2 className="text-base font-bold text-textColor leading-tight">
@@ -112,19 +89,11 @@ export const OrderSuccess: React.FC<IOrderSuccessProps> = (_props) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 bg-[#fbf9f7] rounded-full flex items-center justify-center text-primary border border-primary/5">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125a1.125 1.125 0 001.125-1.125V9.75M16.5 18.75h-2.25m0-11.25H3.375a1.125 1.125 0 00-1.125 1.125V18h1.5m10.125-9.75V9m3.75 3h1.5m-.75-3v7.5M12 9v1.5m-1.5-1.5H12"
-                  />
-                </svg>
+                {isExpress ? (
+                  <Zap className="w-5 h-5 text-amber-600" />
+                ) : (
+                  <Truck className="w-5 h-5 text-primary" />
+                )}
               </div>
               <div className="text-xs">
                 <p className="text-[#526069]/60 font-semibold uppercase tracking-wider text-[9px]">

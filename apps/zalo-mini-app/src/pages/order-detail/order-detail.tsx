@@ -5,6 +5,7 @@ import { apiRequest, apiUploadRequest, API_BASE_URL } from "../../utils/api";
 import { useTranslation } from "../../utils";
 import { IOrderDetailProps } from "./order-detail.type";
 import api, { Payment } from "zmp-sdk";
+import { ChevronLeft } from "lucide-react";
 import {
   getRemainingDays,
   getDeliveryStatusText,
@@ -257,19 +258,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
           }}
           className="p-1.5 -ml-1.5 hover:bg-[#f0edeb] rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer"
         >
-          <svg
-            className="w-5.5 h-5.5 text-textColor"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15.75 19.5L8.25 12l7.5-7.5"
-            />
-          </svg>
+          <ChevronLeft className="w-5.5 h-5.5 text-textColor" />
         </button>
         <span className="text-xs font-bold uppercase tracking-widest text-textColor">
           {t("orderDetail.title")}
