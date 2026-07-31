@@ -15,7 +15,8 @@ import {
   ChevronDown,
   ChevronUp,
   RefreshCw,
-  AlertTriangle
+  AlertTriangle,
+  Zap
 } from 'lucide-react';
 import type { IOrdersProps } from './orders.type';
 import { exportToExcel } from '../../utils/excel-export.util';
@@ -52,6 +53,7 @@ interface Order {
   discountAmount?: number;
   createdAt: string;
   paymentMethod?: string | null;
+  shippingMethodCode?: string | null;
   items: OrderItem[];
   trackingNumber?: string | null;
   returnReason?: string | null;
@@ -450,8 +452,17 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
                       </p>
                     </div>
 
-                    <div className="ml-0 lg:ml-2">
+                    <div className="ml-0 lg:ml-2 flex items-center gap-2">
                       {getStatusBadge(order.status)}
+                      {order.shippingMethodCode === 'express' ? (
+                        <span className="bg-amber-100 text-amber-900 border border-amber-300/60 px-2 py-0.5 rounded-full text-[10px] font-extrabold flex items-center gap-1 shadow-2xs">
+                          <Zap size={11} className="text-amber-600 fill-amber-500" /> Hỏa Tốc
+                        </span>
+                      ) : (
+                        <span className="bg-blue-50 text-blue-800 border border-blue-200/60 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1">
+                          <Truck size={11} className="text-blue-600" /> Tiêu chuẩn
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -603,9 +614,24 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
                         </div>
 
                         <div className="flex justify-between pt-2">
-                          <span className="text-slate-400">Phương thức:</span>
+                          <span className="text-slate-400">Thanh toán:</span>
                           <span className="font-bold text-[#0e6877] bg-teal-50 px-2.5 py-0.5 rounded-md text-[11px]">
                             {order.paymentMethod || 'COD'}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between items-center pt-2">
+                          <span className="text-slate-400">Vận chuyển:</span>
+                          <span className={`font-bold px-2.5 py-0.5 rounded-md text-[11px] flex items-center gap-1.5 ${
+                            order.shippingMethodCode === 'express' 
+                              ? 'bg-amber-100 text-amber-900 border border-amber-300/60' 
+                              : 'bg-blue-50 text-blue-800 border border-blue-200/60'
+                          }`}>
+                            {order.shippingMethodCode === 'express' ? (
+                              <><Zap size={12} className="text-amber-600 fill-amber-500" /> Giao hỏa tốc (1-2 ngày)</>
+                            ) : (
+                              <><Truck size={12} className="text-blue-600" /> Giao tiêu chuẩn (3-5 ngày)</>
+                            )}
                           </span>
                         </div>
 
