@@ -41,9 +41,25 @@ Dự án là hệ sinh thái **Thương mại điện tử Zalo Mini App** tri�
 ## 4. Work Rules & Best Practices
 
 1. **Context Efficiency:** Khi bắt đầu phiên làm việc mới, đọc file này (`.agents/AGENTS.md`) để khôi phục toàn bộ bối cảnh dự án nhanh chóng mà không cần scan lại toàn bộ file nguồn.
-2. **Module Pattern:** Tuân thủ cấu trúc thiết kế Module Pattern được quy định trong tài liệu dự án (`# PROMPT Áp dụng cấu trúc module patern.txt`).
-3. **API Tunneling:** Backend thường chạy qua Ngrok (`https://*.ngrok-free.dev`) để kết nối với Zalo Mini App Sandbox/Production.
+2. **Icon Library Standard (BẮT BUỘC KHÔNG VIẾT TAY ICON):**
+   - **CMS Admin (`apps/cms`)**: 100% sử dụng icon thư viện `lucide-react` (VD: `import { Megaphone, Plus, Trash2 } from 'lucide-react'`). Tuyệt đối không dùng thẻ `<svg>` tự viết hoặc emoji làm icon chính.
+   - **Zalo Mini App (`apps/zalo-mini-app`)**: Sử dụng thư viện `@heroicons/react/24/outline`, `@heroicons/react/24/solid` hoặc `lucide-react`.
+3. **Module Pattern Architecture Standard (CẤU TRÚC CHUẨN THỐNG NHẤT):**
+   - **Backend (`apps/backend/src/modules/[module-name]`)**:
+     - `[module-name].module.ts`
+     - `[module-name].controller.ts`
+     - `[module-name].service.ts`
+     - `dto/create-[module-name].dto.ts` (DTO validation)
+     - Đăng ký module trong `apps/backend/src/app.module.ts`.
+   - **CMS Pages (`apps/cms/src/pages/[page-name]`)**:
+     - `[page-name].tsx` (UI Component)
+     - `[page-name].type.ts` (Props/Types)
+     - Export trong `apps/cms/src/pages/index.ts`.
+     - Đăng ký Lazy Route trong `App.tsx` & thêm Menu Sidebar trong `sidebar.component.tsx`.
+   - **Mini App Pages (`apps/zalo-mini-app/src/pages/[page-name]`)**:
+     - `[page-name].tsx` (UI Component)
+     - `[page-name].type.ts` (Props/Types)
+     - Export trong `apps/zalo-mini-app/src/pages/index.ts`.
+4. **API Tunneling:** Backend thường chạy qua Ngrok (`https://*.ngrok-free.dev`) để kết nối với Zalo Mini App Sandbox/Production.
 
 ---
-
-

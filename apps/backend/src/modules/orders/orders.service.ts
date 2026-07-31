@@ -7,6 +7,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import * as crypto from 'crypto';
 import { calculateEstimatedDeliveryDate } from '../../utils/delivery-date.util';
 import { OrderTrackingGateway } from '../websocket/websocket.gateway';
+import { CampaignsService } from '../campaigns/campaigns.service';
 
 export interface CreateOrderItemDto {
   productId: number;
@@ -36,6 +37,7 @@ export class OrdersService {
   constructor(
     private prisma: PrismaService,
     private orderTrackingGateway: OrderTrackingGateway,
+    private campaignsService: CampaignsService,
   ) {}
 
 
@@ -406,6 +408,13 @@ export class OrdersService {
 
     if (order.zaloUserId) {
       await this.updateUserMembership(order.zaloUserId);
+
+      // Track campaign ROI & conversion
+      await this.campaignsService.recordConversion(
+        order.zaloUserId,
+        order.totalAmount,
+        dto.voucherCode,
+      );
 
       // Chỉ tích điểm khi đơn hàng ĐÃ THANH TOÁN (COD tính là đã xác nhận khi tạo)
       // Đơn PENDING_PAYMENT (chuyển khoản chưa thanh toán) sẽ được tích điểm khi webhook xác nhận thanh toán

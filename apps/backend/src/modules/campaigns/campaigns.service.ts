@@ -1,10 +1,58 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 
 @Injectable()
-export class CampaignsService {
+export class CampaignsService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(CampaignsService.name);
+  private schedulerInterval: NodeJS.Timeout | null = null;
+
   constructor(private readonly prisma: PrismaService) {}
+
+  onModuleInit() {
+    this.logger.log('Starting Campaign Scheduler Worker (checks every 30 seconds)...');
+    this.schedulerInterval = setInterval(() => {
+      this.checkAndExecuteScheduledCampaigns().catch((err) => {
+        this.logger.error('Error executing scheduled campaigns runner:', err);
+      });
+    }, 30_000);
+  }
+
+  onModuleDestroy() {
+    if (this.schedulerInterval) {
+      clearInterval(this.schedulerInterval);
+      this.schedulerInterval = null;
+    }
+  }
+
+  /**
+   * Background runner that automatically launches campaigns scheduled for execution.
+   */
+  async checkAndExecuteScheduledCampaigns() {
+    const now = new Date();
+    const dueCampaigns = await this.prisma.campaign.findMany({
+      where: {
+        status: 'SCHEDULED',
+        scheduledAt: { lte: now },
+      },
+    });
+
+    for (const campaign of dueCampaigns) {
+      this.logger.log(`[Auto-Scheduler] Auto-launching due campaign #${campaign.id}: "${campaign.title}"`);
+      try {
+        await this.launchCampaign(campaign.id);
+      } catch (err) {
+        this.logger.error(`[Auto-Scheduler] Failed to launch campaign #${campaign.id}:`, err);
+      }
+    }
+  }
 
   async create(dto: CreateCampaignDto) {
     const status = dto.scheduledAt ? 'SCHEDULED' : 'DRAFT';
@@ -89,7 +137,7 @@ export class CampaignsService {
 
     const targetedUsers = await this.prisma.user.findMany({
       where: userWhere,
-      select: { zaloId: true, name: true },
+      select: { zaloId: true, name: true, phone: true },
     });
 
     if (targetedUsers.length === 0) {
@@ -98,6 +146,8 @@ export class CampaignsService {
 
     // Process campaign rewards / notifications inside transaction
     await this.prisma.$transaction(async (tx) => {
+      const todayStr = new Date().toISOString().split('T')[0];
+
       // 1. Create CampaignUser records
       for (const u of targetedUsers) {
         await tx.campaignUser.upsert({
@@ -134,7 +184,6 @@ export class CampaignsService {
         }
 
         // 3. Create Notification for user
-        const todayStr = new Date().toISOString().split('T')[0];
         await tx.notification.create({
           data: {
             zaloUserId: u.zaloId,
@@ -158,11 +207,11 @@ export class CampaignsService {
       });
     });
 
+    this.logger.log(`Campaign #${id} "${campaign.title}" launched successfully to ${targetedUsers.length} users.`);
     return this.findOne(id);
   }
 
   async getActiveForUser(zaloUserId: string) {
-    // Find active campaigns targeted at user or recent campaign users
     const campaignUsers = await this.prisma.campaignUser.findMany({
       where: { zaloUserId },
       include: {
@@ -207,6 +256,46 @@ export class CampaignsService {
     }
 
     return { success: true };
+  }
+
+  /**
+   * Called by OrdersService when an order is created to track conversion & ROI.
+   */
+  async recordConversion(zaloUserId: string, totalAmount: number, voucherCode?: string) {
+    try {
+      // Find candidate campaign for this user or voucher
+      const campaignUser = await this.prisma.campaignUser.findFirst({
+        where: {
+          zaloUserId,
+          isConverted: false,
+          campaign: voucherCode
+            ? { voucherCode: voucherCode.trim().toUpperCase() }
+            : { status: 'COMPLETED' },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (campaignUser) {
+        await this.prisma.campaignUser.update({
+          where: { id: campaignUser.id },
+          data: { isConverted: true },
+        });
+
+        await this.prisma.campaign.update({
+          where: { id: campaignUser.campaignId },
+          data: {
+            totalConverted: { increment: 1 },
+            revenueGenerated: { increment: totalAmount },
+          },
+        });
+
+        this.logger.log(
+          `[ROI Tracking] Recorded conversion for Campaign #${campaignUser.campaignId}: +1 Order (${totalAmount} VND) from user ${zaloUserId}`,
+        );
+      }
+    } catch (err) {
+      this.logger.error('Failed to record campaign conversion:', err);
+    }
   }
 
   async remove(id: number) {

@@ -272,6 +272,7 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
                   <th className="py-3.5 px-4">Phân tập Khách</th>
                   <th className="py-3.5 px-4">Trạng thái</th>
                   <th className="py-3.5 px-4 text-center">Tiếp cận / Mở</th>
+                  <th className="py-3.5 px-4 text-center">Chuyển đổi ROI</th>
                   <th className="py-3.5 px-4 text-right">Hành động</th>
                 </tr>
               </thead>
@@ -313,7 +314,7 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
                         </span>
                       ) : c.status === 'SCHEDULED' ? (
                         <span className="bg-blue-100 text-blue-800 font-bold px-2.5 py-1 rounded-full text-[10px] inline-flex items-center gap-1">
-                          <Clock size={12} /> Hẹn giờ
+                          <Clock size={12} /> Hẹn giờ ngầm
                         </span>
                       ) : (
                         <span className="bg-slate-100 text-slate-600 font-bold px-2.5 py-1 rounded-full text-[10px]">
@@ -331,6 +332,15 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
                           {c.totalOpened} mở ({Math.round((c.totalOpened / c.totalTargeted) * 100)}%)
                         </div>
                       )}
+                    </td>
+
+                    <td className="py-4 px-4 text-center">
+                      <div className="font-extrabold text-emerald-700">
+                        {c.revenueGenerated ? `${c.revenueGenerated.toLocaleString('vi-VN')} đ` : '0 đ'}
+                      </div>
+                      <div className="text-[10px] text-slate-400 mt-0.5 font-bold">
+                        {c.totalConverted} đơn chốt
+                      </div>
                     </td>
 
                     <td className="py-4 px-4 text-right">
@@ -461,6 +471,18 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
                   />
                 </div>
               )}
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">
+                  ⏰ Hẹn Giờ Phát Tự Động (Bỏ trống nếu phát thủ công)
+                </label>
+                <input
+                  type="datetime-local"
+                  value={scheduledAt}
+                  onChange={(e) => setScheduledAt(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877]"
+                />
+              </div>
 
               <div className="pt-3 flex justify-end gap-2.5 border-t border-slate-100">
                 <button
