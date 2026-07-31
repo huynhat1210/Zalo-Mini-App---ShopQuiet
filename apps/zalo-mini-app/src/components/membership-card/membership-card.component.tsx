@@ -64,6 +64,8 @@ export const MembershipCard: React.FC<IMembershipCardProps> = (props) => {
     fetchTierBenefits();
   }, [zaloUser?.id]);
 
+  const rawTier = (currentTier || "Đồng").toString().trim().toLowerCase();
+
   let nextTier = "";
   let nextGoal = 0;
   let tierBadge = "ĐỒNG";
