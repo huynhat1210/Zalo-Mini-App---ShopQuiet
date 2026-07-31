@@ -17,6 +17,48 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 import { ApiTags } from '@nestjs/swagger';
 
+import { IsString, IsBoolean, IsOptional } from 'class-validator';
+
+export class CreateAddressDto {
+  @IsString()
+  label: string;
+
+  @IsString()
+  phone: string;
+
+  @IsString()
+  street: string;
+
+  @IsString()
+  city: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isDefault?: boolean;
+}
+
+export class UpdateAddressDto {
+  @IsOptional()
+  @IsString()
+  label?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  street?: string;
+
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isDefault?: boolean;
+}
+
 @ApiTags('Users & Addresses')
 @Controller('addresses')
 @UseGuards(JwtAuthGuard)
@@ -39,14 +81,7 @@ export class AddressesController {
   @Post()
   async createAddress(
     @Headers('x-zalo-user-id') zaloUserId: string,
-    @Body()
-    body: {
-      label: string;
-      phone: string;
-      street: string;
-      city: string;
-      isDefault?: boolean;
-    },
+    @Body() body: CreateAddressDto,
   ) {
     const userId = this.getRequiredZaloUserId(zaloUserId);
     return this.addressesService.create(userId, body);
@@ -56,14 +91,7 @@ export class AddressesController {
   async updateAddress(
     @Headers('x-zalo-user-id') zaloUserId: string,
     @Param('id', ParseIntPipe) id: number,
-    @Body()
-    body: {
-      label?: string;
-      phone?: string;
-      street?: string;
-      city?: string;
-      isDefault?: boolean;
-    },
+    @Body() body: UpdateAddressDto,
   ) {
     const userId = this.getRequiredZaloUserId(zaloUserId);
     return this.addressesService.update(id, userId, body);

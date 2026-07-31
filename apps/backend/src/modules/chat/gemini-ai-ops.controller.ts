@@ -5,27 +5,37 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
+import { IsString, IsOptional, IsObject } from 'class-validator';
+
 export class MarkAlertReadDto {
   @ApiProperty({ example: 'alert_123', required: false, description: 'ID của cảnh báo vận hành cần đánh dấu đọc' })
+  @IsOptional()
+  @IsString()
   alertId?: string;
 }
 
 export class ExecuteAiActionDto {
   @ApiProperty({ example: 'UPDATE_STOCK', description: 'Loại hành động tự động hóa AI' })
+  @IsString()
   actionType: string;
 
   @ApiProperty({ example: { productId: 1, stock: 50 }, description: 'Dữ liệu payload chi tiết' })
+  @IsObject()
   payload: any;
 
   @ApiProperty({ example: 'alert_123', required: false, description: 'ID cảnh báo liên quan' })
+  @IsOptional()
+  @IsString()
   alertId?: string;
 }
 
 export class AskGeminiDto {
   @ApiProperty({ example: 'Phân tích doanh thu 7 ngày qua và đưa ra gợi ý tối ưu', description: 'Câu hỏi / Yêu cầu gửi cho AI trợ lý' })
+  @IsString()
   prompt: string;
 
   @ApiProperty({ example: {}, required: false, description: 'Bối cảnh dữ liệu đính kèm' })
+  @IsOptional()
   contextData?: any;
 }
 

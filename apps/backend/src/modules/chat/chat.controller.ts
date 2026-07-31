@@ -6,22 +6,29 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+import { IsString } from 'class-validator';
+
 export class SendChatMessageDto {
   @ApiProperty({ example: 'zalo_user_12345', description: 'ID người dùng Zalo' })
+  @IsString()
   zaloUserId: string;
 
   @ApiProperty({ example: 'user', description: 'Người gửi (user hoặc admin)' })
+  @IsString()
   sender: string;
 
   @ApiProperty({ example: 'Xin chào Shop, tôi cần tư vấn kích thước áo!', description: 'Nội dung tin nhắn' })
+  @IsString()
   content: string;
 }
 
 export class MarkReadChatDto {
   @ApiProperty({ example: 'zalo_user_12345', description: 'ID người dùng Zalo' })
+  @IsString()
   zaloUserId: string;
 
   @ApiProperty({ example: 'admin', description: 'Đánh dấu đọc tin nhắn từ người gửi này' })
+  @IsString()
   sender: string;
 }
 
