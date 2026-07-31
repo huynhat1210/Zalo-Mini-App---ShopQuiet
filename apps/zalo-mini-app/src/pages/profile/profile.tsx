@@ -106,23 +106,25 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     useState("help-support");
 
   // Dynamic membership ranking badge settings
-  const currentTier = zaloUser?.membershipTier || "Bronze";
-  let tierBadge = "BRONZE";
-  let badgeColor = "bg-neutral-400 text-white";
+  const rawTier = (zaloUser?.membershipTier || "Đồng").toString().trim().toLowerCase();
+  let tierBadge = "ĐỒNG";
+  let badgeColor = "bg-amber-600 text-white";
 
-  if (currentTier === "Diamond") {
-    tierBadge = "DIAMOND";
+  if (rawTier.includes("kim") || rawTier.includes("diamond")) {
+    tierBadge = "KIM CƯƠNG";
     badgeColor = "bg-cyan-400 text-teal-950";
-  } else if (currentTier === "Gold") {
-    tierBadge = "GOLD";
+  } else if (rawTier.includes("vàng") || rawTier.includes("vang") || rawTier.includes("gold")) {
+    tierBadge = "VÀNG";
     badgeColor = "bg-yellow-400 text-teal-950";
-  } else if (currentTier === "Silver") {
-    tierBadge = "SILVER";
+  } else if (rawTier.includes("bạc") || rawTier.includes("bac") || rawTier.includes("silver")) {
+    tierBadge = "BẠC";
     badgeColor = "bg-slate-300 text-teal-950";
   } else {
-    tierBadge = "BRONZE";
+    tierBadge = "ĐỒNG";
     badgeColor = "bg-amber-600 text-white";
   }
+
+  const isUserLoggedIn = !!localStorage.getItem("token") || (!!zaloUser?.id && zaloUser.id !== "guest");
 
   const profile = {
     name: zaloUser?.name || "",
@@ -300,14 +302,16 @@ export const Profile: React.FC<IProfileProps> = (props) => {
             ShopQuiet ID
           </span>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsAuthModalOpen(true)}
-              className="px-3 py-1 bg-white/20 hover:bg-white/30 active:scale-95 rounded-full transition-all border-none text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
-              title="Auth"
-            >
-              <KeyIcon className="w-3.5 h-3.5 text-amber-300" strokeWidth={2.2} />
-              Auth
-            </button>
+            {!isUserLoggedIn && (
+              <button
+                onClick={() => setIsAuthModalOpen(true)}
+                className="px-3 py-1 bg-white/20 hover:bg-white/30 active:scale-95 rounded-full transition-all border-none text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                title="Auth"
+              >
+                <KeyIcon className="w-3.5 h-3.5 text-amber-300" strokeWidth={2.2} />
+                Auth
+              </button>
+            )}
             <button
               onClick={() => setIsEditProfileOpen(true)}
               className="p-2 -mr-2 bg-white/10 hover:bg-white/20 active:scale-95 rounded-full transition-colors border-none text-white cursor-pointer"
@@ -319,14 +323,14 @@ export const Profile: React.FC<IProfileProps> = (props) => {
 
         {/* User Card Row */}
         <div className="flex items-center gap-4.5">
-          <div className="relative">
+          <div className="relative shrink-0">
             <img
               src={profile.avatar}
               alt={profile.name}
               className="w-19 h-19 rounded-full object-cover border-3 border-white/90 shadow-md"
             />
-            <span className="absolute bottom-0 right-0 w-5 h-5 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-[9px] border-2 border-white shadow-xs">
-              <CheckBadgeIcon className="w-3.5 h-3.5 text-white" />
+            <span className="absolute bottom-0.5 right-0.5 w-5.5 h-5.5 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-[9px] border-2 border-white shadow-xs z-10">
+              <CheckBadgeIcon className="w-4 h-4 text-white" strokeWidth={2.2} />
             </span>
           </div>
 

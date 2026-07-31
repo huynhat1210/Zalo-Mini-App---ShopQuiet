@@ -69,15 +69,15 @@ export const MembershipCard: React.FC<IMembershipCardProps> = (props) => {
   let tierBadge = "ĐỒNG";
   let badgeColor = "bg-neutral-400 text-white"; // Bronze
 
-  if (currentTier === "Kim cương") {
+  if (rawTier.includes("kim") || rawTier.includes("diamond")) {
     tierBadge = "KIM CƯƠNG";
     badgeColor = "bg-cyan-400 text-teal-950";
-  } else if (currentTier === "Vàng") {
+  } else if (rawTier.includes("vàng") || rawTier.includes("vang") || rawTier.includes("gold")) {
     tierBadge = "VÀNG";
     badgeColor = "bg-yellow-400 text-teal-950";
     nextTier = "Kim cương";
     nextGoal = 50000000;
-  } else if (currentTier === "Bạc") {
+  } else if (rawTier.includes("bạc") || rawTier.includes("bac") || rawTier.includes("silver")) {
     tierBadge = "BẠC";
     badgeColor = "bg-slate-300 text-teal-950";
     nextTier = "Vàng";
