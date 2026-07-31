@@ -5,6 +5,16 @@ import { useCart } from "../../App";
 import { useAppStore } from "../../store";
 import { apiRequest, API_BASE_URL } from "../../utils/api";
 import { useTranslation } from "../../utils/i18n/i18n.util";
+import {
+  ChatBubbleLeftRightIcon,
+  XMarkIcon,
+  PhotoIcon,
+  PaperAirplaneIcon,
+  TruckIcon,
+  TicketIcon,
+  PhoneIcon,
+  ArrowPathIcon,
+} from "@heroicons/react/24/outline";
 
 interface Message {
   id: number | string;
@@ -107,7 +117,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
     return () => {
       socket.disconnect();
     };
-  }, [userId, serverUrl, showToast]);
+  }, [userId, serverUrl, showToast, t]);
 
   // Auto Scroll to Bottom
   useEffect(() => {
@@ -190,8 +200,11 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
       const url = content.substring("[IMAGE_ATTACHMENT]".length).trim();
       return (
         <div className="space-y-1">
-          <span className="text-[10px] text-teal-800  font-bold block">📷 {t("chat.templates")}:</span>
-          <img src={url} alt="Attached" className="max-w-[200px] max-h-[200px] rounded-xl object-cover border border-slate-200 " />
+          <span className="text-[10px] text-teal-800 font-bold block flex items-center gap-1">
+            <PhotoIcon className="w-3.5 h-3.5" />
+            {t("chat.attachImage")}:
+          </span>
+          <img src={url} alt="Attached" className="max-w-[200px] max-h-[200px] rounded-xl object-cover border border-slate-200" />
         </div>
       );
     }
@@ -217,13 +230,15 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
               onClose();
               setSelectedProductDetail(prod);
             }}
-            className="bg-teal-50 /50 border border-teal-150  p-2.5 rounded-2xl flex gap-3 cursor-pointer hover:bg-teal-100 :bg-teal-900 transition-colors text-left max-w-xs shadow-xs"
+            className="bg-teal-50/50 border border-teal-150 p-2.5 rounded-2xl flex gap-3 cursor-pointer hover:bg-teal-100 transition-colors text-left max-w-xs shadow-xs"
           >
             <img src={fullImg} alt={prod.name} className="w-12 h-12 object-cover rounded-xl border border-teal-200 shrink-0" />
             <div className="flex-1 min-w-0">
-              <span className="text-[8px] bg-[#0e6877] text-white px-1.5 py-0.5 rounded font-black uppercase tracking-wider">Viewing</span>
-              <h4 className="text-xs font-bold text-teal-950  truncate mt-1 leading-snug">{prod.name}</h4>
-              <p className="text-[10px] text-teal-800  font-extrabold mt-0.5">{prod.price?.toLocaleString("vi-VN")} đ</p>
+              <span className="text-[8px] bg-[#0e6877] text-white px-1.5 py-0.5 rounded font-black uppercase tracking-wider">
+                {t("chat.contextProduct")}
+              </span>
+              <h4 className="text-xs font-bold text-teal-950 truncate mt-1 leading-snug">{prod.name}</h4>
+              <p className="text-[10px] text-teal-800 font-extrabold mt-0.5">{prod.price?.toLocaleString("vi-VN")} đ</p>
             </div>
           </div>
         );
@@ -235,36 +250,36 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
     return <p className="text-xs leading-relaxed font-medium break-words whitespace-pre-wrap">{content}</p>;
   };
 
-  // Feature 1: Smart Quick Actions Bar
+  // Quick Action Buttons
   const quickTemplates = [
-    "🚚 Track order",
-    "🎟️ Get discount code",
-    "📞 Request callback",
-    "Return policy?",
+    { label: t("chat.trackOrder"), icon: TruckIcon, key: "track" },
+    { label: t("chat.getDiscount"), icon: TicketIcon, key: "discount" },
+    { label: t("chat.requestCallback"), icon: PhoneIcon, key: "callback" },
+    { label: t("chat.returnPolicy"), icon: ArrowPathIcon, key: "policy" },
   ];
 
-  const handleQuickActionClick = (template: string) => {
-    if (template.includes("Track order") && latestOrder) {
-      const msg = `Check order #${latestOrder.id} (Status: ${latestOrder.status})`;
+  const handleQuickActionClick = (template: { label: string; key: string }) => {
+    if (template.key === "track" && latestOrder) {
+      const msg = `Kiểm tra đơn hàng #${latestOrder.id} (Trạng thái: ${latestOrder.status})`;
       handleSendMessage(msg);
       return;
     }
-    handleSendMessage(template);
+    handleSendMessage(template.label);
   };
 
   return (
     <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-xs flex flex-col justify-end animate-fadeIn">
-      <div className="bg-white  text-slate-900  rounded-t-3xl h-[88vh] flex flex-col overflow-hidden shadow-2xl border-t border-white/20">
+      <div className="bg-white text-slate-900 rounded-t-3xl h-[88vh] flex flex-col overflow-hidden shadow-2xl border-t border-white/20">
 
-        {/* ── Top Header with Feature 3: Online Status ── */}
+        {/* Top Header with Online Status */}
         <div className="bg-gradient-to-r from-[#0e6877] to-[#168a9e] text-white p-4 flex justify-between items-center shadow-sm">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-lg font-black border border-white/30">
-                💬
+              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center border border-white/30">
+                <ChatBubbleLeftRightIcon className="w-5.5 h-5.5 text-white" strokeWidth={2} />
               </div>
               <span
-                className={`absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-teal-800 rounded-full ${
+                className={`absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-[#0e6877] rounded-full ${
                   shopStatus === "ONLINE" ? "bg-emerald-400 animate-pulse" : "bg-slate-400"
                 }`}
               ></span>
@@ -273,7 +288,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
               <div className="flex items-center gap-2">
                 <h3 className="font-extrabold text-sm tracking-tight">{t("chat.title")}</h3>
                 <span
-                  className={`text-[9px] px-2 py-0.2 rounded-full font-black uppercase tracking-wider ${
+                  className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider ${
                     shopStatus === "ONLINE"
                       ? "bg-emerald-500/30 text-emerald-100 border border-emerald-400/40"
                       : "bg-slate-500/40 text-slate-200"
@@ -283,9 +298,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
                 </span>
               </div>
               <p className="text-[10px] text-teal-100/90 font-medium mt-0.5">
-                {shopStatus === "ONLINE"
-                  ? "Ready to help"
-                  : "Leave a message, we'll reply soon"}
+                {shopStatus === "ONLINE" ? t("chat.onlineSub") : t("chat.offlineSub")}
               </p>
             </div>
           </div>
@@ -294,37 +307,41 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
             onClick={onClose}
             className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center border-none cursor-pointer active:scale-90 transition-transform"
           >
-            ✕
+            <XMarkIcon className="w-5 h-5 text-white" strokeWidth={2.2} />
           </button>
         </div>
 
-        {/* ── Feature 2: Order Attachment Context Banner ── */}
+        {/* Order Attachment Context Banner */}
         {latestOrder && !chatContextProduct && (
-          <div className="bg-amber-50 /40 border-b border-amber-200 /60 p-2.5 px-4 flex items-center justify-between gap-2 text-xs">
+          <div className="bg-amber-50 border-b border-amber-200 p-2.5 px-4 flex items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-[9px] bg-amber-600 text-white px-2 py-0.5 rounded font-black uppercase tracking-wider shrink-0">Latest Order</span>
-              <p className="text-xs font-bold text-amber-950  truncate">
+              <span className="text-[9px] bg-amber-600 text-white px-2 py-0.5 rounded font-black uppercase tracking-wider shrink-0">
+                {t("chat.latestOrder")}
+              </span>
+              <p className="text-xs font-bold text-amber-950 truncate">
                 #{latestOrder.id} - {latestOrder.totalAmount?.toLocaleString("vi-VN")} đ
               </p>
             </div>
             <button
               onClick={() => {
-                const text = `Help with order #${latestOrder.id} (${latestOrder.totalAmount?.toLocaleString("vi-VN")} đ, status: ${latestOrder.status})`;
+                const text = `Hỗ trợ đơn hàng #${latestOrder.id} (${latestOrder.totalAmount?.toLocaleString("vi-VN")} đ, trạng thái: ${latestOrder.status})`;
                 handleSendMessage(text);
               }}
               className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[10px] font-bold border-none cursor-pointer active:scale-95 shrink-0 shadow-2xs"
             >
-              Ask about this
+              {t("chat.askAboutOrder")}
             </button>
           </div>
         )}
 
-        {/* ── Context Product Preview (if opened from product page) ── */}
+        {/* Context Product Preview (if opened from product detail) */}
         {chatContextProduct && (
-          <div className="bg-teal-50 /50 border-b border-teal-150  p-2.5 flex items-center justify-between gap-2 px-4 animate-slide-down">
+          <div className="bg-teal-50 border-b border-teal-150 p-2.5 flex items-center justify-between gap-2 px-4 animate-slide-down">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-[9px] bg-[#0e6877] text-white px-2 py-0.5 rounded font-black uppercase tracking-wider shrink-0">Ask about</span>
-              <p className="text-xs font-bold text-teal-950  truncate">{chatContextProduct.name}</p>
+              <span className="text-[9px] bg-[#0e6877] text-white px-2 py-0.5 rounded font-black uppercase tracking-wider shrink-0">
+                {t("chat.askAboutProduct")}
+              </span>
+              <p className="text-xs font-bold text-teal-950 truncate">{chatContextProduct.name}</p>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               <button
@@ -346,20 +363,20 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
                 onClick={() => setChatContextProduct(null)}
                 className="text-slate-400 hover:text-slate-600 p-1 border-none bg-transparent cursor-pointer"
               >
-                ✕
+                <XMarkIcon className="w-4 h-4" strokeWidth={2.2} />
               </button>
             </div>
           </div>
         )}
 
-        {/* ── Messages List ── */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-slate-50 ">
+        {/* Messages List */}
+        <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-slate-50">
           {loading ? (
             <div className="text-center py-8 text-slate-400 text-xs font-medium">{t("common.loading")}</div>
           ) : messages.length === 0 ? (
             <div className="text-center py-12 text-slate-400 space-y-2">
-              <p className="text-xs font-semibold">{t("chat.offline")}</p>
-              <p className="text-[10px] text-slate-400">Choose a question below or type a message to get help!</p>
+              <p className="text-xs font-semibold">{t("chat.title")}</p>
+              <p className="text-[10px] text-slate-400 px-6">{t("chat.emptyMsg")}</p>
             </div>
           ) : (
             messages.map((msg) => {
@@ -369,7 +386,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
                 <div key={msg.id} className={`flex flex-col ${isUser ? "items-end" : "items-start"} space-y-1 animate-fadeIn`}>
                   <div className="flex items-end gap-1.5 max-w-[82%]">
                     {!isUser && (
-                      <div className="w-7 h-7 rounded-full bg-[#0e6877] text-white flex items-center justify-center text-xs font-bold shrink-0 mb-1">
+                      <div className="w-7 h-7 rounded-full bg-[#0e6877] text-white flex items-center justify-center text-[11px] font-bold shrink-0 mb-1">
                         CS
                       </div>
                     )}
@@ -378,7 +395,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
                       className={`p-3 rounded-2xl ${
                         isUser
                           ? `bg-[#0e6877] text-white rounded-br-2xs shadow-xs${isOptimistic ? " opacity-70" : ""}`
-                          : "bg-white  text-slate-800  border border-slate-200/90  rounded-bl-2xs shadow-2xs"
+                          : "bg-white text-slate-800 border border-slate-200/90 rounded-bl-2xs shadow-2xs"
                       }`}
                     >
                       {renderMessageContent(msg.content)}
@@ -398,27 +415,31 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
           <div ref={messagesEndRef} />
         </div>
 
-        {/* ── Quick Templates Bar ── */}
-        <div className="px-4 py-2 bg-white  border-t border-slate-100  flex gap-2 overflow-x-auto scrollbar-none">
-          {quickTemplates.map((template, i) => (
-            <button
-              key={i}
-              onClick={() => handleQuickActionClick(template)}
-              className="px-3 py-1.5 bg-slate-100  hover:bg-slate-200 :bg-slate-700 text-slate-700  text-[10.5px] font-bold rounded-full whitespace-nowrap border-none cursor-pointer active:scale-95 transition-transform shrink-0 shadow-2xs"
-            >
-              {template}
-            </button>
-          ))}
+        {/* Quick Templates Bar */}
+        <div className="px-4 py-2 bg-white border-t border-slate-100 flex gap-2 overflow-x-auto scrollbar-none">
+          {quickTemplates.map((template, i) => {
+            const IconComp = template.icon;
+            return (
+              <button
+                key={i}
+                onClick={() => handleQuickActionClick(template)}
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10.5px] font-bold rounded-full whitespace-nowrap border-none cursor-pointer active:scale-95 transition-transform shrink-0 shadow-2xs flex items-center gap-1.5"
+              >
+                <IconComp className="w-3.5 h-3.5 text-[#0e6877]" strokeWidth={2} />
+                <span>{template.label}</span>
+              </button>
+            );
+          })}
         </div>
 
-        {/* ── Message Input Bar + Feature 4: Camera / Image Button ── */}
-        <div className="p-3 bg-white  border-t border-slate-200  flex items-center gap-2">
+        {/* Message Input Bar + Camera / Image Button */}
+        <div className="p-3 bg-white border-t border-slate-200 flex items-center gap-2">
           <button
             onClick={handleChooseImage}
-            className="w-10 h-10 rounded-2xl bg-slate-100  hover:bg-slate-200 :bg-slate-700 text-slate-600  flex items-center justify-center font-bold border-none cursor-pointer active:scale-90 transition-transform shrink-0"
-            title={t("chat.templates")}
+            className="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold border-none cursor-pointer active:scale-90 transition-transform shrink-0"
+            title={t("chat.attachImage")}
           >
-            📷
+            <PhotoIcon className="w-5 h-5 text-slate-600" strokeWidth={2} />
           </button>
           <input
             type="text"
@@ -426,14 +447,14 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-            className="flex-1 bg-slate-100  border border-slate-200  focus:border-[#0e6877] focus:bg-white :bg-slate-800 rounded-2xl px-4 py-2.5 text-xs text-slate-800  placeholder-slate-400 focus:outline-none transition-all shadow-2xs font-medium"
+            className="flex-1 bg-slate-100 border border-slate-200 focus:border-[#0e6877] focus:bg-white rounded-2xl px-4 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none transition-all shadow-2xs font-medium"
           />
           <button
             onClick={() => handleSendMessage()}
             disabled={!inputValue.trim()}
             className="w-10 h-10 rounded-2xl bg-[#0e6877] disabled:bg-slate-300 text-white flex items-center justify-center font-bold border-none cursor-pointer active:scale-90 transition-transform shadow-xs shrink-0"
           >
-            ➔
+            <PaperAirplaneIcon className="w-4 h-4 text-white" strokeWidth={2.2} />
           </button>
         </div>
 
