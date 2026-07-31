@@ -2,6 +2,17 @@ import React, { useState } from "react";
 import { useAppStore } from "../../store/app-store/app-store.util";
 import { apiRequest } from "../../utils/api";
 import type { IAuthModalProps } from "./auth-modal.type";
+import {
+  XMarkIcon,
+  ShoppingBagIcon,
+  ArrowLeftIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  EnvelopeIcon,
+  LockClosedIcon,
+  UserIcon,
+  KeyIcon,
+} from "@heroicons/react/24/outline";
 
 export const AuthModal: React.FC<IAuthModalProps> = ({
   isOpen,
@@ -150,34 +161,34 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fade-in">
       <div
-        className="relative w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 animate-slide-up"
+        className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 animate-scale-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Bright & Light Header */}
-        <div className="relative bg-[#f4fbfb] p-6 text-center border-b border-teal-50">
+        <div className="relative bg-[#f4fbfb] dark:bg-slate-800/80 p-6 text-center border-b border-teal-50 dark:border-slate-800">
           <button
             onClick={() => {
               handleResetForm();
               onClose();
             }}
-            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-200/60 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-all cursor-pointer border-none font-bold text-xs"
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-200/70 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-300 transition-all cursor-pointer border-none active:scale-90"
           >
-            ✕
+            <XMarkIcon className="w-5 h-5" strokeWidth={2.2} />
           </button>
           
-          <div className="w-12 h-12 rounded-2xl bg-teal-100/70 flex items-center justify-center mx-auto mb-2 text-2xl shadow-inner">
-            🛍️
+          <div className="w-12 h-12 rounded-2xl bg-teal-100/70 dark:bg-teal-900/50 text-[#0e6877] dark:text-teal-300 flex items-center justify-center mx-auto mb-2 shadow-inner">
+            <ShoppingBagIcon className="w-6 h-6" strokeWidth={2} />
           </div>
-          <h3 className="text-lg font-extrabold text-[#0e6877] tracking-tight">
+          <h3 className="text-lg font-extrabold text-[#0e6877] dark:text-teal-300 tracking-tight">
             {isForgotView
               ? "Khôi Phục Mật Khẩu"
               : activeTab === "login"
               ? "Đăng Nhập Tài Khoản"
               : "Đăng Ký Thành Viên"}
           </h3>
-          <p className="text-xs text-slate-500 mt-1 font-medium">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
             {isForgotView
               ? "Nhập thông tin nhận mã xác minh OTP"
               : activeTab === "login"
@@ -185,15 +196,15 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
               : "Tạo tài khoản mới để nhận nhiều ưu đãi mua sắm"}
           </p>
 
-          {/* Clean 2-Tab Switcher (Hidden when in Forgot Password view) */}
+          {/* Clean 2-Tab Switcher */}
           {!isForgotView && (
-            <div className="flex bg-slate-200/60 p-1 rounded-2xl mt-4 gap-1">
+            <div className="flex bg-slate-200/60 dark:bg-slate-700/60 p-1 rounded-2xl mt-4 gap-1">
               <button
                 onClick={() => handleSwitchTab("login")}
                 className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all border-none cursor-pointer ${
                   activeTab === "login"
-                    ? "bg-white text-[#0e6877] shadow-sm"
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "bg-white dark:bg-slate-800 text-[#0e6877] dark:text-teal-300 shadow-xs"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                 }`}
               >
                 Đăng nhập
@@ -202,8 +213,8 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
                 onClick={() => handleSwitchTab("register")}
                 className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all border-none cursor-pointer ${
                   activeTab === "register"
-                    ? "bg-white text-[#0e6877] shadow-sm"
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "bg-white dark:bg-slate-800 text-[#0e6877] dark:text-teal-300 shadow-xs"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                 }`}
               >
                 Đăng ký
@@ -220,18 +231,20 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
               <button
                 type="button"
                 onClick={() => setIsForgotView(false)}
-                className="mb-4 text-xs font-bold text-[#0e6877] flex items-center gap-1 border-none bg-transparent cursor-pointer hover:underline"
+                className="mb-4 text-xs font-bold text-[#0e6877] dark:text-teal-300 flex items-center gap-1.5 border-none bg-transparent cursor-pointer hover:underline"
               >
-                ← Quay lại Đăng nhập
+                <ArrowLeftIcon className="w-4 h-4" strokeWidth={2.5} />
+                Quay lại Đăng nhập
               </button>
 
               {forgotStep === "request" ? (
                 <form onSubmit={handleForgotRequestSubmit} className="space-y-4">
-                  <p className="text-xs text-slate-500 leading-relaxed">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                     Nhập Email hoặc Số điện thoại đã đăng ký. Hệ thống sẽ gửi cho bạn mã xác minh OTP để đặt lại mật khẩu.
                   </p>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                      <EnvelopeIcon className="w-4 h-4 text-slate-400" />
                       Email hoặc Số điện thoại
                     </label>
                     <input
@@ -239,7 +252,7 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
                       value={emailOrPhone}
                       onChange={(e) => setEmailOrPhone(e.target.value)}
                       placeholder="Ví dụ: 0987654321 hoặc user@gmail.com"
-                      className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-[#0e6877] focus:bg-white transition-all text-slate-800"
+                      className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-[#0e6877] focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-800 dark:text-slate-100"
                       required
                     />
                   </div>
@@ -255,13 +268,14 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
               ) : (
                 <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
                   {demoOtpNotice && (
-                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-800 font-medium">
+                    <div className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-2xl text-xs text-amber-800 dark:text-amber-300 font-medium">
                       💡 {demoOtpNotice}
                     </div>
                   )}
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                      <KeyIcon className="w-4 h-4 text-slate-400" />
                       Mã xác minh OTP (6 chữ số)
                     </label>
                     <input
@@ -269,13 +283,14 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
                       placeholder="Nhập 6 chữ số OTP..."
-                      className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm text-center font-mono font-bold tracking-widest focus:outline-none focus:border-[#0e6877] focus:bg-white transition-all text-slate-800"
+                      className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-center font-mono font-bold tracking-widest focus:outline-none focus:border-[#0e6877] focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-800 dark:text-slate-100"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                      <LockClosedIcon className="w-4 h-4 text-slate-400" />
                       Mật khẩu mới
                     </label>
                     <input
@@ -283,7 +298,7 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Tạo mật khẩu mới..."
-                      className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-[#0e6877] focus:bg-white transition-all text-slate-800"
+                      className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-[#0e6877] focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-800 dark:text-slate-100"
                       required
                     />
                   </div>
@@ -302,7 +317,8 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
             /* TAB 1: LOGIN */
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                  <EnvelopeIcon className="w-4 h-4 text-slate-400" />
                   Email hoặc Số điện thoại
                 </label>
                 <input
@@ -310,20 +326,21 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
                   value={emailOrPhone}
                   onChange={(e) => setEmailOrPhone(e.target.value)}
                   placeholder="Ví dụ: 0987654321 hoặc user@gmail.com"
-                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-[#0e6877] focus:bg-white transition-all text-slate-800"
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-[#0e6877] focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-800 dark:text-slate-100"
                   required
                 />
               </div>
 
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs font-bold text-slate-700">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <LockClosedIcon className="w-4 h-4 text-slate-400" />
                     Mật khẩu
                   </label>
                   <button
                     type="button"
                     onClick={() => setIsForgotView(true)}
-                    className="text-[11px] font-bold text-[#0e6877] hover:underline border-none bg-transparent cursor-pointer"
+                    className="text-[11px] font-bold text-[#0e6877] dark:text-teal-300 hover:underline border-none bg-transparent cursor-pointer"
                   >
                     Quên mật khẩu?
                   </button>
@@ -334,15 +351,19 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Nhập mật khẩu..."
-                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-[#0e6877] focus:bg-white transition-all pr-10 text-slate-800"
+                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-[#0e6877] focus:bg-white dark:focus:bg-slate-800 transition-all pr-10 text-slate-800 dark:text-slate-100"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 border-none bg-transparent cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 border-none bg-transparent cursor-pointer p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700"
                   >
-                    {showPassword ? "🙈" : "👁️"}
+                    {showPassword ? (
+                      <EyeSlashIcon className="w-4 h-4 text-slate-400" />
+                    ) : (
+                      <EyeIcon className="w-4 h-4 text-slate-400" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -359,7 +380,8 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
             /* TAB 2: REGISTER */
             <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                  <UserIcon className="w-4 h-4 text-slate-400" />
                   Họ và tên
                 </label>
                 <input
@@ -367,13 +389,14 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Ví dụ: Nguyễn Văn A"
-                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-[#0e6877] focus:bg-white transition-all text-slate-800"
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-[#0e6877] focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-800 dark:text-slate-100"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                  <EnvelopeIcon className="w-4 h-4 text-slate-400" />
                   Email hoặc Số điện thoại
                 </label>
                 <input
@@ -381,13 +404,14 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
                   value={emailOrPhone}
                   onChange={(e) => setEmailOrPhone(e.target.value)}
                   placeholder="Nhập Email hoặc SĐT đăng ký..."
-                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-[#0e6877] focus:bg-white transition-all text-slate-800"
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-[#0e6877] focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-800 dark:text-slate-100"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                  <LockClosedIcon className="w-4 h-4 text-slate-400" />
                   Mật khẩu (tối thiểu 6 ký tự)
                 </label>
                 <input
@@ -395,13 +419,14 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Tạo mật khẩu..."
-                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-[#0e6877] focus:bg-white transition-all text-slate-800"
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-[#0e6877] focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-800 dark:text-slate-100"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                  <LockClosedIcon className="w-4 h-4 text-slate-400" />
                   Xác nhận mật khẩu
                 </label>
                 <input
@@ -409,7 +434,7 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Nhập lại mật khẩu..."
-                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm focus:outline-none focus:border-[#0e6877] focus:bg-white transition-all text-slate-800"
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-[#0e6877] focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-800 dark:text-slate-100"
                   required
                 />
               </div>
