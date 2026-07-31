@@ -170,7 +170,7 @@ export class OrdersService {
     }
 
     let shippingCost = shippingMethod.price;
-    if (subtotal >= freeShipThreshold) {
+    if (shippingMethodCode === 'standard' && subtotal >= freeShipThreshold) {
       shippingCost = 0;
     }
 
@@ -198,7 +198,9 @@ export class OrdersService {
       } else if (voucher.type.toUpperCase() === 'FIXED') {
         voucherDiscount = Math.min(voucher.value, subtotal);
       } else if (voucher.type.toUpperCase() === 'FREESHIP') {
-        voucherDiscount = shippingCost;
+        const maxFreeshipValue =
+          voucher.value && voucher.value > 0 ? voucher.value : shippingCost;
+        voucherDiscount = Math.min(shippingCost, maxFreeshipValue);
       }
     }
 

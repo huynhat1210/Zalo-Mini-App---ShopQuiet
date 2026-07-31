@@ -546,7 +546,8 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
   // Calculate discount and shipping based on tier benefits
   const freeShippingThreshold = tierBenefits?.freeShippingThreshold || 300000;
-  const isFreeshipEligible = subtotal >= freeShippingThreshold;
+  const isStandardShipping = shippingMethod === "standard";
+  const isFreeshipEligible = isStandardShipping && subtotal >= freeShippingThreshold;
   const selectedShippingMethod = shippingMethods.find(
     (item) => item.code === shippingMethod,
   );
@@ -584,8 +585,11 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
     } else if (appliedPromo.type === "fixed") {
       discount = appliedPromo.value;
     } else if (appliedPromo.type === "freeship") {
-      discount = shippingCost;
-      shippingCost = 0;
+      const maxFreeshipValue =
+        appliedPromo.value && appliedPromo.value > 0
+          ? appliedPromo.value
+          : shippingCost;
+      discount = Math.min(shippingCost, maxFreeshipValue);
     }
   }
 
