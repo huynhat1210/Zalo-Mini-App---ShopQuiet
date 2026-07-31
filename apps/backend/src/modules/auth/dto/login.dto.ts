@@ -18,6 +18,10 @@ export class LoginDto {
   @IsOptional()
   @IsString()
   accessToken?: string;
+
+  @IsOptional()
+  @IsString()
+  code?: string;
 }
 
 export class VerifyTokenDto {
@@ -36,6 +40,10 @@ export class DecryptPhoneDto {
 
   @IsString()
   zaloId: string;
+
+  @IsOptional()
+  @IsString()
+  code?: string;
 }
 
 export class RegisterDto {
