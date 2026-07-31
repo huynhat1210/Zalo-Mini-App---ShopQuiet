@@ -51,6 +51,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
   } = useCart();
   const [isLuckyWheelOpen, setIsLuckyWheelOpen] = useState(false);
   const [isLiveSearchOpen, setIsLiveSearchOpen] = useState(false);
+  const [activeCampaign, setActiveCampaign] = useState<any>(null);
 
   const {
     data: productsData,
@@ -150,6 +151,29 @@ export const Home: React.FC<IHomeProps> = (_props) => {
     fetchRecommendations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zaloUser?.id]);
+
+  // Fetch active campaigns for user
+  useEffect(() => {
+    async function loadCampaigns() {
+      try {
+        const res = await apiRequest<any[]>("/campaigns/user/active");
+        if (res && res.length > 0) {
+          const unopened = res.find((c: any) => !c.isOpened);
+          if (unopened) setActiveCampaign(unopened);
+        }
+      } catch (e) {}
+    }
+    if (zaloUser) loadCampaigns();
+  }, [zaloUser]);
+
+  const handleDismissCampaign = async () => {
+    if (activeCampaign) {
+      try {
+        await apiRequest(`/campaigns/${activeCampaign.id}/open`, 'POST');
+      } catch (e) {}
+      setActiveCampaign(null);
+    }
+  };
 
   const bannerSlides = banners
     .filter((banner) => banner.imageUrl)
@@ -609,6 +633,52 @@ export const Home: React.FC<IHomeProps> = (_props) => {
         onSelectProduct={(product) => setSelectedProductDetail(product)}
         showToast={showToast}
       />
+
+      {/* Active Campaign Modal */}
+      {activeCampaign && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-6 z-[999] animate-fadeIn">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl relative border border-amber-200 overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-28 h-28 bg-amber-400/20 rounded-full blur-xl pointer-events-none" />
+            <div className="w-14 h-14 bg-gradient-to-tr from-amber-500 to-amber-300 text-white rounded-full flex items-center justify-center mx-auto shadow-lg animate-bounce">
+              <SparklesIcon className="w-7 h-7" />
+            </div>
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest bg-amber-100 text-amber-900 px-3 py-1 rounded-full border border-amber-300/50">
+                🎁 Ưu Đãi Đặc Biệt
+              </span>
+              <h3 className="text-lg font-extrabold text-slate-900 mt-2.5 leading-snug">
+                {activeCampaign.title}
+              </h3>
+              <p className="text-xs text-slate-500 mt-1 line-clamp-3">
+                {activeCampaign.description || "Ưu đãi tuyệt vời dành riêng cho bạn!"}
+              </p>
+            </div>
+
+            {activeCampaign.type === 'VOUCHER' && activeCampaign.voucherCode && (
+              <div className="bg-amber-50 border border-dashed border-amber-300 rounded-2xl p-3 text-amber-950">
+                <span className="text-[10px] text-amber-800 font-bold block uppercase tracking-wider">Mã Giảm Giá</span>
+                <span className="font-mono text-base font-black text-amber-900">{activeCampaign.voucherCode}</span>
+              </div>
+            )}
+
+            {activeCampaign.type === 'BONUS_COINS' && activeCampaign.bonusCoins > 0 && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-emerald-900">
+                <span className="text-xs font-bold block">💰 Tặng {activeCampaign.bonusCoins} Xu Quà Tặng</span>
+                <span className="text-[10px] text-emerald-700">Đã cộng vào ví xu của bạn!</span>
+              </div>
+            )}
+
+            <div className="pt-2 flex flex-col gap-2">
+              <button
+                onClick={handleDismissCampaign}
+                className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold text-xs rounded-2xl shadow-md active:scale-95 transition-all border-none cursor-pointer"
+              >
+                Nhận Ưu Đãi Ngay ➔
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageCast>
   );
 };

@@ -29,6 +29,7 @@ import { RecommendationsModule } from './modules/recommendations/recommendations
 import { GamificationModule } from './modules/gamification/gamification.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { Pay2sModule } from './modules/pay2s/pay2s.module';
+import { CampaignsModule } from './modules/campaigns/campaigns.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -97,6 +98,7 @@ import { LoggerModule } from './common/logger/logger.module';
     GamificationModule,
     PaymentsModule,
     Pay2sModule,
+    CampaignsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

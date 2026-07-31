@@ -84,6 +84,7 @@ model User {
   addresses     UserAddress[]
   chatMessages  ChatMessage[]
   pointsHistory PointsHistory[]
+  campaignUsers CampaignUser[]
 
   @@index([name])
   @@index([role])
@@ -369,4 +370,47 @@ model PointsHistory {
 
   @@index([zaloUserId])
   @@index([createdAt])
+}
+
+model Campaign {
+  id              Int            @id @default(autoincrement())
+  title           String
+  description     String?
+  type            String         // 'VOUCHER', 'BONUS_COINS', 'BROADCAST', 'FLASH_SALE'
+  targetSegment   String         @default("ALL") // 'ALL', 'SILVER', 'GOLD', 'DIAMOND', 'INACTIVE_30_DAYS', 'VIP'
+  voucherCode     String?
+  bonusCoins      Int            @default(0)
+  discountPercent Int            @default(0)
+  status          String         @default("DRAFT") // 'DRAFT', 'SCHEDULED', 'RUNNING', 'COMPLETED', 'CANCELLED'
+  scheduledAt     DateTime?
+  startedAt       DateTime?
+  endedAt         DateTime?
+  totalTargeted   Int            @default(0)
+  totalOpened     Int            @default(0)
+  totalConverted  Int            @default(0)
+  revenueGenerated Float         @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @default(now()) @updatedAt
+  users           CampaignUser[]
+
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model CampaignUser {
+  id          Int      @id @default(autoincrement())
+  campaignId  Int
+  zaloUserId  String
+  isOpened    Boolean  @default(false)
+  isConverted Boolean  @default(false)
+  openedAt    DateTime?
+  createdAt   DateTime @default(now())
+
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+
+  @@unique([campaignId, zaloUserId])
+  @@index([zaloUserId])
+  @@index([campaignId])
 }
