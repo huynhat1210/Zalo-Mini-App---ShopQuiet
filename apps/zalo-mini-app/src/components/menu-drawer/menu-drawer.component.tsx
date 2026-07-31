@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useCart } from "../../App";
-import { apiRequest, useTranslation } from "../../utils";
+import { apiRequest } from "../../utils";
 import { IMenuDrawerComponentProps } from "./menu-drawer.type";
 import {
   XMarkIcon,
@@ -96,9 +96,7 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
     showToast,
     zaloUser,
     setActiveTab,
-    setIsAuthModalOpen,
   } = useCart();
-  const { t } = useTranslation();
   const [settings, setSettings] = useState(fallbackSettings);
   const [menuItems, setMenuItems] = useState<CmsMenuItem[]>(fallbackMenuItems);
 
@@ -175,8 +173,8 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
           </button>
         </div>
 
-        {/* Drawer Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5 scrollbar-none">
+        {/* Drawer Scrollable Content with pb-28 to avoid bottom nav bar overlap */}
+        <div className="flex-1 overflow-y-auto px-5 pt-5 pb-28 space-y-5 scrollbar-none">
           {/* User Profile Header Card */}
           <div className="bg-gradient-to-br from-teal-50 to-emerald-50/60 rounded-2xl p-4 border border-teal-100/80 shadow-xs relative overflow-hidden">
             <div className="flex items-center gap-3">
@@ -208,7 +206,7 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
                 <button
                   onClick={() => {
                     onClose();
-                    setIsAuthModalOpen(true);
+                    setActiveTab("profile");
                   }}
                   className="w-full py-2 bg-[#0e6877] hover:bg-[#0f766e] text-white text-[10px] font-extrabold uppercase tracking-wider rounded-xl border-none cursor-pointer active:scale-95 transition-all shadow-xs flex items-center justify-center gap-1.5"
                 >
