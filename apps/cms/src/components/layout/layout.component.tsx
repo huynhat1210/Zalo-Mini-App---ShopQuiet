@@ -1,20 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SidebarComponent } from '../sidebar';
 import { AiOpsChatbox } from '../ai-ops-chatbox';
-import { Bell, Menu, Check, Clock } from 'lucide-react';
+import {
+  Bell,
+  Menu,
+  Check,
+  Clock,
+  Zap,
+  ShoppingBag,
+  AlertTriangle,
+  RotateCcw,
+  Sparkles,
+  ChevronRight,
+} from 'lucide-react';
 import { apiRequest } from '../../utils/api';
-import { useLocation } from 'react-router-dom';
-
-
-
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface Notification {
-  id: number;
+  id: number | string;
   title: string;
   content: string;
   type: string;
   date: string;
   read: boolean;
+  link?: string;
 }
 
 import type { ILayoutComponentProps } from './layout.type';
@@ -22,6 +31,7 @@ import type { ILayoutComponentProps } from './layout.type';
 export const LayoutComponent: React.FC<ILayoutComponentProps> = (props) => {
   const { children, onLogout } = props;
   const location = useLocation();
+  const navigate = useNavigate();
   const isFullBleed = location.pathname === '/support';
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [adminUser, setAdminUser] = useState<any>(null);
@@ -55,8 +65,8 @@ export const LayoutComponent: React.FC<ILayoutComponentProps> = (props) => {
 
   useEffect(() => {
     fetchNotifications();
-    // Poll notifications every 60 seconds for real-time order alerts
-    const interval = setInterval(fetchNotifications, 60000);
+    // Poll notifications every 30 seconds for real-time Flash Sale & Order alerts
+    const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -154,28 +164,55 @@ export const LayoutComponent: React.FC<ILayoutComponentProps> = (props) => {
 
                   <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
                     {notifications.length > 0 ? (
-                      notifications.map((notif: any) => (
-                        <div 
-                          key={notif.id} 
-                          onClick={() => {
-                            if (notif.link) window.location.href = notif.link;
-                            setIsNotifDropdownOpen(false);
-                          }}
-                          className={`p-3.5 text-left transition-colors hover:bg-slate-50 cursor-pointer ${
-                            !notif.read ? 'bg-teal-50/40' : ''
-                          }`}
-                        >
-                          <h4 className="text-xs text-slate-900 font-extrabold line-clamp-1">{notif.title}</h4>
-                          <p className="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">{notif.content}</p>
-                          <div className="flex items-center justify-between text-[9.5px] text-slate-400 mt-2 font-semibold">
-                            <span className="flex items-center gap-1">
-                              <Clock size={10} />
-                              <span>{notif.date}</span>
-                            </span>
-                            <span className="text-[#0e6877] font-black hover:underline">Xử lý ngay ➔</span>
+                      notifications.map((notif: any) => {
+                        let icon = <Sparkles size={15} className="text-[#0e6877]" />;
+                        let badgeBg = 'bg-teal-50 text-[#0e6877] border-teal-200';
+
+                        if (notif.type === 'admin_flash_sale') {
+                          icon = <Zap size={15} className="text-amber-600 fill-amber-500" />;
+                          badgeBg = 'bg-amber-50 text-amber-900 border-amber-200';
+                        } else if (notif.type === 'admin_order') {
+                          icon = <ShoppingBag size={15} className="text-blue-600" />;
+                          badgeBg = 'bg-blue-50 text-blue-900 border-blue-200';
+                        } else if (notif.type === 'admin_stock') {
+                          icon = <AlertTriangle size={15} className="text-rose-600" />;
+                          badgeBg = 'bg-rose-50 text-rose-900 border-rose-200';
+                        } else if (notif.type === 'admin_return') {
+                          icon = <RotateCcw size={15} className="text-purple-600" />;
+                          badgeBg = 'bg-purple-50 text-purple-900 border-purple-200';
+                        }
+
+                        return (
+                          <div 
+                            key={notif.id} 
+                            onClick={() => {
+                              if (notif.link) navigate(notif.link);
+                              setIsNotifDropdownOpen(false);
+                            }}
+                            className={`p-3.5 text-left transition-colors hover:bg-slate-50 cursor-pointer flex items-start gap-3 ${
+                              !notif.read ? 'bg-teal-50/30' : ''
+                            }`}
+                          >
+                            <div className={`p-2 rounded-xl border shrink-0 ${badgeBg}`}>
+                              {icon}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-xs text-slate-900 font-extrabold line-clamp-1">{notif.title}</h4>
+                              <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">{notif.content}</p>
+                              <div className="flex items-center justify-between text-[9.5px] text-slate-400 mt-1.5 font-semibold">
+                                <span className="flex items-center gap-1">
+                                  <Clock size={10} />
+                                  <span>{notif.date}</span>
+                                </span>
+                                <span className="text-[#0e6877] font-black flex items-center gap-0.5 hover:underline">
+                                  <span>Xem chi tiết</span>
+                                  <ChevronRight size={11} />
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      ))
+                        );
+                      })
                     ) : (
                       <div className="p-8 text-center text-slate-400 text-xs font-medium">
                         Hệ thống vận hành trơn tru, không có thông báo mới.

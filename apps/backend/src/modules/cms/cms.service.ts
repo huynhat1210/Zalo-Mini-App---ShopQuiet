@@ -683,6 +683,43 @@ export class CmsService implements OnModuleInit {
     }> = [];
 
     try {
+      // 0. Check Flash Sale Campaign Expiration / Active Status
+      const flashSaleSetting = await this.prisma.siteSetting.findUnique({
+        where: { key: 'flash_sale_campaign' },
+      });
+
+      if (flashSaleSetting && flashSaleSetting.value) {
+        try {
+          const cfg = JSON.parse(flashSaleSetting.value);
+          if (cfg.endTime) {
+            const endMs = new Date(cfg.endTime).getTime();
+            const now = Date.now();
+
+            if (endMs <= now) {
+              adminNotifs.unshift({
+                id: 'admin-flash-sale-expired',
+                title: '⚡ Chiến dịch Flash Sale đã hết hạn',
+                content: `Đã kết thúc lúc ${new Date(cfg.endTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} ${new Date(cfg.endTime).toLocaleDateString('vi-VN')}. Tất cả sản phẩm ưu đãi đã quay về giá gốc.`,
+                type: 'admin_flash_sale',
+                date: new Date(cfg.endTime).toLocaleDateString('vi-VN'),
+                read: false,
+                link: '/flash-sale',
+              });
+            } else if (cfg.active) {
+              adminNotifs.unshift({
+                id: 'admin-flash-sale-active',
+                title: '🔥 Flash Sale đang diễn ra',
+                content: `Chiến dịch đếm ngược sẽ kết thúc vào lúc ${new Date(cfg.endTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} - ${new Date(cfg.endTime).toLocaleDateString('vi-VN')}.`,
+                type: 'admin_flash_sale',
+                date: 'Đang diễn ra',
+                read: false,
+                link: '/flash-sale',
+              });
+            }
+          }
+        } catch (e) {}
+      }
+
       // 1. Fetch Return Request Orders (High Priority Admin Alert)
       const returnOrders = await this.prisma.order.findMany({
         where: { status: 'RETURN_REQUESTED' },

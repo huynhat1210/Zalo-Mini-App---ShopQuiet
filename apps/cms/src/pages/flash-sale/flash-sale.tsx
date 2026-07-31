@@ -11,6 +11,10 @@ import {
   X,
   Clock,
   Sparkles,
+  AlertTriangle,
+  RotateCcw,
+  AlertOctagon,
+  XCircle,
 } from 'lucide-react';
 
 export const FlashSaleManagement: React.FC = () => {
@@ -42,6 +46,13 @@ export const FlashSaleManagement: React.FC = () => {
   const [rightSearch, setRightSearch] = useState('');
   const [rightCurrentPage, setRightCurrentPage] = useState(1);
   const [rightItemsPerPage, setRightItemsPerPage] = useState(8);
+
+  // Check if current set endTime is past current time
+  const isExpired = useMemo(() => {
+    if (!endTime) return false;
+    const endMs = new Date(endTime).getTime();
+    return !isNaN(endMs) && endMs <= Date.now();
+  }, [endTime]);
 
   const fetchData = async () => {
     try {
@@ -112,6 +123,22 @@ export const FlashSaleManagement: React.FC = () => {
     });
   };
 
+  const handleClearExpiredSales = () => {
+    setFlashSaleMap((prev) => {
+      const updated: Record<number, { isFlashSale: boolean; flashSalePrice: number | null; flashSaleDiscount: number }> = {};
+      Object.keys(prev).forEach((idStr) => {
+        const id = parseInt(idStr, 10);
+        updated[id] = {
+          ...prev[id],
+          isFlashSale: false,
+        };
+      });
+      return updated;
+    });
+    setIsActive(false);
+    success('Đã gỡ sản phẩm hết hạn', 'Tất cả sản phẩm Flash Sale cũ đã được chuyển lại kho chưa sale.');
+  };
+
   const handleUpdateDiscount = (productId: number, discount: number) => {
     const validDiscount = Math.min(99, Math.max(1, discount));
     setFlashSaleMap((prev) => {
@@ -152,21 +179,25 @@ export const FlashSaleManagement: React.FC = () => {
     try {
       setSaving(true);
 
+      // If expired, active will be automatically false unless user updated endTime
+      const activeState = isExpired ? false : isActive;
+
       const productSales = Object.entries(flashSaleMap).map(([idStr, val]) => ({
         productId: parseInt(idStr, 10),
-        isFlashSale: val.isFlashSale,
+        // If expired, clear isFlashSale for all items
+        isFlashSale: isExpired ? false : val.isFlashSale,
         flashSalePrice: val.flashSalePrice,
         flashSaleDiscount: val.flashSaleDiscount,
       }));
 
       await apiRequest('/products/flash-sale/admin', 'POST', {
-        active: isActive,
+        active: activeState,
         startTime: startTime ? new Date(startTime).toISOString() : null,
         endTime: endTime ? new Date(endTime).toISOString() : null,
         productSales,
       });
 
-      success('Lưu chiến dịch Flash Sale thành công', 'Cấu hình thời gian và sản phẩm sale đã được đồng bộ trực tiếp.');
+      success('Lưu chiến dịch Flash Sale thành công', 'Cấu hình thời gian và danh sách sản phẩm sale đã được đồng bộ trực tiếp.');
       fetchData();
     } catch (err: any) {
       toastError('Lưu thất bại', err.message || 'Lỗi khi lưu cấu hình Flash Sale');
@@ -175,10 +206,10 @@ export const FlashSaleManagement: React.FC = () => {
     }
   };
 
-  // Filter Left Table: ONLY products where isFlashSale === false
+  // Filter Left Table: ONLY products where isFlashSale === false (or all products if expired)
   const leftFilteredProducts = useMemo(() => {
     return products.filter((p) => {
-      const isSale = !!flashSaleMap[p.id]?.isFlashSale;
+      const isSale = isExpired ? false : !!flashSaleMap[p.id]?.isFlashSale;
       if (isSale) return false;
 
       const matchSearch =
@@ -188,10 +219,11 @@ export const FlashSaleManagement: React.FC = () => {
         leftCategory === 'all' || p.categoryId.toString() === leftCategory;
       return matchSearch && matchCat;
     });
-  }, [products, flashSaleMap, leftSearch, leftCategory]);
+  }, [products, flashSaleMap, leftSearch, leftCategory, isExpired]);
 
-  // Filter Right Table: ONLY products where isFlashSale === true
+  // Filter Right Table: ONLY products where isFlashSale === true (if campaign is NOT expired)
   const rightFilteredProducts = useMemo(() => {
+    if (isExpired) return []; // Products automatically disappear from Flash Sale table when campaign expires!
     return products.filter((p) => {
       const isSale = !!flashSaleMap[p.id]?.isFlashSale;
       if (!isSale) return false;
@@ -201,7 +233,7 @@ export const FlashSaleManagement: React.FC = () => {
         p.id.toString().includes(rightSearch);
       return matchSearch;
     });
-  }, [products, flashSaleMap, rightSearch]);
+  }, [products, flashSaleMap, rightSearch, isExpired]);
 
   if (loading) {
     return (
@@ -218,7 +250,7 @@ export const FlashSaleManagement: React.FC = () => {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="p-2.5 bg-amber-500 text-white rounded-2xl shadow-md shadow-amber-500/20">
+            <div className="p-2.5 bg-[#0e6877] text-white rounded-2xl shadow-md shadow-teal-900/20">
               <Zap size={22} className="fill-white" />
             </div>
             <div>
@@ -228,22 +260,51 @@ export const FlashSaleManagement: React.FC = () => {
           </div>
         </div>
 
-        <button
-          onClick={handleSaveCampaign}
-          disabled={saving}
-          className="px-6 py-3 bg-[#0e6877] hover:bg-[#0c5966] disabled:bg-slate-300 text-white text-xs font-black rounded-2xl transition-all flex items-center gap-2 border-none cursor-pointer shadow-md shadow-teal-900/20 active:scale-95"
-        >
-          <Save size={16} className={saving ? 'animate-spin' : ''} />
-          <span>{saving ? 'Đang Lưu...' : 'Lưu Cấu Hình Flash Sale'}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {isExpired && (
+            <button
+              onClick={handleClearExpiredSales}
+              className="px-4 py-3 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-2xl transition-all flex items-center gap-1.5 border border-amber-200 cursor-pointer active:scale-95"
+            >
+              <RotateCcw size={15} />
+              <span>Gỡ SP Hết Hạn</span>
+            </button>
+          )}
+          <button
+            onClick={handleSaveCampaign}
+            disabled={saving}
+            className="px-6 py-3 bg-[#0e6877] hover:bg-[#0c5966] disabled:bg-slate-300 text-white text-xs font-black rounded-2xl transition-all flex items-center gap-2 border-none cursor-pointer shadow-md shadow-teal-900/20 active:scale-95"
+          >
+            <Save size={16} className={saving ? 'animate-spin' : ''} />
+            <span>{saving ? 'Đang Lưu...' : 'Lưu Cấu Hình Flash Sale'}</span>
+          </button>
+        </div>
       </div>
+
+      {/* EXPIRED BANNER ALERT */}
+      {isExpired && (
+        <div className="bg-amber-50 border border-amber-200/80 p-4.5 rounded-3xl flex items-center gap-3.5 shadow-2xs">
+          <div className="p-2 bg-amber-500 text-white rounded-xl shrink-0">
+            <AlertTriangle size={20} />
+          </div>
+          <div className="flex-1 text-xs">
+            <h4 className="font-extrabold text-amber-950 uppercase tracking-wider flex items-center gap-1.5">
+              <Clock size={15} className="text-amber-700" />
+              <span>Chiến Dịch Flash Sale Đã Hết Thời Gian Đếm Ngược</span>
+            </h4>
+            <p className="text-amber-800/90 font-medium mt-0.5">
+              Đã hết hạn lúc {endTime ? new Date(endTime).toLocaleString('vi-VN') : 'Đã qua'}. Sản phẩm đã chọn tự động quay về kho chưa sale.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Campaign Settings Controls */}
       <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
           <div>
             <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-              <Sparkles size={16} className="text-amber-500" /> Trạng Thái Chiến Dịch
+              <Sparkles size={16} className="text-[#0e6877]" /> Trạng Thái Chiến Dịch
             </h3>
             <p className="text-slate-500 text-xs mt-1">Bật để kích hoạt đếm ngược & giá ưu đãi Flash Sale trên Zalo Mini App</p>
           </div>
@@ -251,13 +312,29 @@ export const FlashSaleManagement: React.FC = () => {
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              checked={isActive}
+              checked={isActive && !isExpired}
+              disabled={isExpired}
               onChange={(e) => setIsActive(e.target.checked)}
               className="sr-only peer"
             />
-            <div className="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-amber-500"></div>
-            <span className="ml-3 text-xs font-black uppercase tracking-wider text-slate-900">
-              {isActive ? '⚡ ĐANG BẬT (ACTIVE)' : '⚪ TẮT (INACTIVE)'}
+            <div className="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-[#0e6877]"></div>
+            <span className="ml-3 text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
+              {isExpired ? (
+                <>
+                  <AlertOctagon size={15} className="text-amber-600" />
+                  <span>HẾT HẠN (EXPIRED)</span>
+                </>
+              ) : isActive ? (
+                <>
+                  <Zap size={15} className="text-[#0e6877] fill-[#0e6877]" />
+                  <span>ĐANG BẬT (ACTIVE)</span>
+                </>
+              ) : (
+                <>
+                  <XCircle size={15} className="text-slate-400" />
+                  <span>TẮT (INACTIVE)</span>
+                </>
+              )}
             </span>
           </label>
         </div>
@@ -277,13 +354,15 @@ export const FlashSaleManagement: React.FC = () => {
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
-              <Clock size={14} className="text-amber-500" /> Thời gian KẾT THÚC (Đếm ngược)
+              <Clock size={14} className="text-[#0e6877]" /> Thời gian KẾT THÚC (Đếm ngược)
             </label>
             <input
               type="datetime-local"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:bg-white focus:border-[#0e6877] focus:outline-none transition-all"
+              className={`w-full px-4 py-2.5 rounded-xl border text-xs font-bold text-slate-800 bg-slate-50 focus:bg-white focus:outline-none transition-all ${
+                isExpired ? 'border-amber-400 bg-amber-50/30' : 'border-slate-200 focus:border-[#0e6877]'
+              }`}
             />
           </div>
         </div>
@@ -383,7 +462,11 @@ export const FlashSaleManagement: React.FC = () => {
                             <td className="py-2.5 px-3 text-center">
                               <button
                                 onClick={() => handleAddToFlashSale(p.id)}
-                                className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-black rounded-xl transition-all border-none cursor-pointer flex items-center justify-center gap-1 mx-auto shadow-2xs active:scale-95"
+                                disabled={isExpired}
+                                title={isExpired ? "Vui lòng chỉnh thời gian kết thúc trước khi thêm" : "Thêm vào Flash Sale"}
+                                className={`px-3 py-1.5 text-white text-[11px] font-black rounded-xl transition-all border-none cursor-pointer flex items-center justify-center gap-1 mx-auto shadow-2xs active:scale-95 ${
+                                  isExpired ? 'bg-slate-300 cursor-not-allowed' : 'bg-[#0e6877] hover:bg-[#0c5966]'
+                                }`}
                               >
                                 <span>Thêm</span>
                                 <Plus size={13} />
@@ -416,40 +499,45 @@ export const FlashSaleManagement: React.FC = () => {
           )}
         </div>
 
-        {/* ── RIGHT COLUMN: DANH SÁCH SẢN PHẨM ĐANG FLASH SALE ── */}
-        <div className="bg-amber-50/40 p-5 rounded-3xl border border-amber-200/80 shadow-xs space-y-4 flex flex-col min-h-[600px] justify-between">
+        {/* ── RIGHT COLUMN: DANH SÁCH SẢN PHẨM ĐANG FLASH SALE (Chủ đạo Teal Palette) ── */}
+        <div className="bg-teal-50/50 p-5 rounded-3xl border border-teal-200/80 shadow-xs space-y-4 flex flex-col min-h-[600px] justify-between">
           <div className="space-y-4">
             {/* Header & Filter */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-amber-200/60">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-teal-200/60">
               <div>
-                <h3 className="text-xs font-black text-amber-900 uppercase tracking-wider flex items-center gap-2">
-                  <Zap size={16} className="text-amber-500 fill-amber-500" />
+                <h3 className="text-xs font-black text-teal-950 uppercase tracking-wider flex items-center gap-2">
+                  <Zap size={16} className="text-[#0e6877] fill-[#0e6877]" />
                   <span>Đang Chọn Flash Sale ({rightFilteredProducts.length})</span>
                 </h3>
-                <p className="text-[11px] text-amber-700/80 font-medium mt-0.5">Tùy chỉnh mức giảm giá % hoặc gõ trực tiếp giá Sale cho từng sản phẩm</p>
+                <p className="text-[11px] text-teal-800/80 font-medium mt-0.5">
+                  {isExpired
+                    ? 'Chiến dịch đã hết hạn - tất cả sản phẩm đã tự động gỡ khỏi bảng sale'
+                    : 'Tùy chỉnh mức giảm giá % hoặc gõ trực tiếp giá Sale cho từng sản phẩm'}
+                </p>
               </div>
 
-              <span className="text-[11px] font-black bg-amber-500 text-white px-2.5 py-1 rounded-full shadow-2xs">
-                🔥 {rightFilteredProducts.length} SP
+              <span className="text-[11px] font-black bg-[#0e6877] text-white px-2.5 py-1 rounded-full shadow-2xs flex items-center gap-1">
+                <Zap size={13} className="fill-white" />
+                <span>{rightFilteredProducts.length} SP</span>
               </span>
             </div>
 
             {/* Search Right */}
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-2.5 text-amber-500/70" />
+              <Search size={14} className="absolute left-3 top-2.5 text-[#0e6877]/70" />
               <input
                 type="text"
                 placeholder="Tìm sản phẩm trong danh sách Flash Sale..."
                 value={rightSearch}
                 onChange={(e) => { setRightSearch(e.target.value); setRightCurrentPage(1); }}
-                className="w-full pl-8 pr-3 py-2 bg-white border border-amber-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-amber-500"
+                className="w-full pl-8 pr-3 py-2 bg-white border border-teal-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-[#0e6877]"
               />
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto rounded-2xl border border-amber-200/80 bg-white">
+            <div className="overflow-x-auto rounded-2xl border border-teal-200/80 bg-white">
               <table className="w-full text-left text-xs text-slate-700 border-collapse">
-                <thead className="bg-amber-100/60 text-[10px] font-extrabold uppercase text-amber-900 border-b border-amber-200">
+                <thead className="bg-teal-100/60 text-[10px] font-extrabold uppercase text-teal-950 border-b border-teal-200">
                   <tr>
                     <th className="py-3 px-3">Sản phẩm Sale</th>
                     <th className="py-3 px-3 text-center w-24">% Giảm</th>
@@ -457,11 +545,13 @@ export const FlashSaleManagement: React.FC = () => {
                     <th className="py-3 px-3 text-center w-16">Bỏ</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-amber-100 text-xs">
+                <tbody className="divide-y divide-teal-100 text-xs">
                   {rightFilteredProducts.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-12 text-center text-amber-800/60 text-xs font-medium">
-                        Chưa chọn sản phẩm nào vào Flash Sale. Hãy chọn sản phẩm từ kho bên trái!
+                      <td colSpan={4} className="py-12 text-center text-teal-900/60 text-xs font-medium">
+                        {isExpired
+                          ? '⏰ Chiến dịch Flash Sale đã hết hạn. Các sản phẩm chọn trước đó đã tự động gỡ khỏi bảng này.'
+                          : 'Chưa chọn sản phẩm nào vào Flash Sale. Hãy chọn sản phẩm từ kho bên trái!'}
                       </td>
                     </tr>
                   ) : (
@@ -482,7 +572,7 @@ export const FlashSaleManagement: React.FC = () => {
                         }
 
                         return (
-                          <tr key={p.id} className="hover:bg-amber-50/50 transition-colors">
+                          <tr key={p.id} className="hover:bg-teal-50/50 transition-colors">
                             {/* Product Info */}
                             <td className="py-2.5 px-3">
                               <div className="flex items-center gap-2.5">
@@ -490,9 +580,9 @@ export const FlashSaleManagement: React.FC = () => {
                                   <img
                                     src={imgUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30'}
                                     alt=""
-                                    className="w-9 h-9 object-cover rounded-lg border border-amber-200"
+                                    className="w-9 h-9 object-cover rounded-lg border border-teal-200"
                                   />
-                                  <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-[7.5px] font-black px-1 rounded-full">
+                                  <span className="absolute -top-1 -right-1 bg-[#0e6877] text-white text-[7.5px] font-black px-1 rounded-full">
                                     -{cfg.flashSaleDiscount}%
                                   </span>
                                 </div>
@@ -507,14 +597,14 @@ export const FlashSaleManagement: React.FC = () => {
 
                             {/* Discount Input */}
                             <td className="py-2.5 px-2 text-center">
-                              <div className="inline-flex items-center gap-0.5 border border-amber-300 rounded-xl px-1.5 py-1 bg-white shadow-2xs">
+                              <div className="inline-flex items-center gap-0.5 border border-teal-300 rounded-xl px-1.5 py-1 bg-white shadow-2xs">
                                 <input
                                   type="number"
                                   min="1"
                                   max="99"
                                   value={cfg.flashSaleDiscount}
                                   onChange={(e) => handleUpdateDiscount(p.id, parseInt(e.target.value, 10) || 0)}
-                                  className="w-8 text-center text-xs font-black text-amber-600 focus:outline-none"
+                                  className="w-8 text-center text-xs font-black text-[#0e6877] focus:outline-none"
                                 />
                                 <span className="text-[11px] font-bold text-slate-400">%</span>
                               </div>
@@ -522,7 +612,7 @@ export const FlashSaleManagement: React.FC = () => {
 
                             {/* Sale Price Input */}
                             <td className="py-2.5 px-2 text-right">
-                              <div className="inline-flex items-center gap-0.5 border border-amber-300 rounded-xl px-2 py-1 bg-white shadow-2xs">
+                              <div className="inline-flex items-center gap-0.5 border border-teal-300 rounded-xl px-2 py-1 bg-white shadow-2xs">
                                 <input
                                   type="number"
                                   step="1000"
@@ -555,7 +645,7 @@ export const FlashSaleManagement: React.FC = () => {
 
           {/* Pagination Right */}
           {rightFilteredProducts.length > 0 && (
-            <div className="pt-2 border-t border-amber-200/60">
+            <div className="pt-2 border-t border-teal-200/60">
               <PaginationComponent
                 currentPage={rightCurrentPage}
                 totalPages={Math.max(1, Math.ceil(rightFilteredProducts.length / rightItemsPerPage))}
