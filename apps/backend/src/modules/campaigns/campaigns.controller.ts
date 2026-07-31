@@ -22,6 +22,17 @@ export class CampaignsController {
     return this.campaignsService.create(dto);
   }
 
+  @Post('generate-ai')
+  generateAiContent(@Body() body: { topic?: string; targetSegment?: string }) {
+    return this.campaignsService.generateAiCampaignContent(body.topic || '', body.targetSegment || 'ALL');
+  }
+
+  @Post('referral/claim')
+  @UseGuards(JwtAuthGuard)
+  claimReferral(@Body() body: { inviterZaloId: string }, @CurrentUser() user: any) {
+    return this.campaignsService.processReferralReward(body.inviterZaloId, user.zaloId);
+  }
+
   @Get()
   findAll() {
     return this.campaignsService.findAll();

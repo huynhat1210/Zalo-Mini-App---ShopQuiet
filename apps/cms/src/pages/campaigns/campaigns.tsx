@@ -11,6 +11,7 @@ import {
   Search,
   Trash2,
   X,
+  Sparkles,
 } from 'lucide-react';
 import type { ICampaignsProps } from './campaigns.type';
 import { useToast } from '../../contexts';
@@ -55,6 +56,24 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
   const [discountPercent, setDiscountPercent] = useState<number>(10);
   const [scheduledAt, setScheduledAt] = useState('');
   const [vouchers, setVouchers] = useState<{ code: string; title?: string }[]>([]);
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+
+  const handleGenerateAi = async () => {
+    try {
+      setIsAiGenerating(true);
+      const res = await apiRequest<{ title: string; description: string }>('/campaigns/generate-ai', 'POST', {
+        topic: title || 'Khuyến mãi đặc biệt ShopQuiet',
+        targetSegment,
+      });
+      if (res?.title) setTitle(res.title);
+      if (res?.description) setDescription(res.description);
+      toastSuccess('Thành công', 'Gemini AI đã tạo nội dung chiến dịch tiếp thị!');
+    } catch (e) {
+      toastError('Lỗi', 'Không thể tạo nội dung bằng AI');
+    } finally {
+      setIsAiGenerating(false);
+    }
+  };
 
   const fetchCampaigns = async () => {
     try {
@@ -378,6 +397,15 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
               <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
                 <Megaphone size={18} className="text-[#0e6877]" /> Tạo Chiến Dịch Tiếp Thị Mới
               </h3>
+              <button
+                type="button"
+                onClick={handleGenerateAi}
+                disabled={isAiGenerating}
+                className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-[11px] rounded-xl border border-amber-300/60 flex items-center gap-1 cursor-pointer transition-all active:scale-95 disabled:opacity-50"
+              >
+                <Sparkles size={13} className="text-amber-600" />
+                {isAiGenerating ? 'AI đang viết...' : 'Gemini AI Viết Mẫu'}
+              </button>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600 border-none bg-transparent cursor-pointer p-1"

@@ -8,21 +8,38 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
+import { GeminiAiOpsService } from '../chat/gemini-ai-ops.service';
 
 @Injectable()
 export class CampaignsService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(CampaignsService.name);
   private schedulerInterval: NodeJS.Timeout | null = null;
+  private abandonedCartInterval: NodeJS.Timeout | null = null;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly geminiAiOpsService: GeminiAiOpsService,
+  ) {}
 
   onModuleInit() {
-    this.logger.log('Starting Campaign Scheduler Worker (checks every 30 seconds)...');
+    this.logger.log('Starting Campaign Scheduler & Automation Workers...');
+    
+    // Check scheduled campaigns every 30 seconds
     this.schedulerInterval = setInterval(() => {
       this.checkAndExecuteScheduledCampaigns().catch((err) => {
         this.logger.error('Error executing scheduled campaigns runner:', err);
       });
     }, 30_000);
+
+    // Check abandoned carts & birthdays every 5 minutes
+    this.abandonedCartInterval = setInterval(() => {
+      this.checkAbandonedCartCampaigns().catch((err) => {
+        this.logger.error('Error checking abandoned carts:', err);
+      });
+      this.checkBirthdayCampaigns().catch((err) => {
+        this.logger.error('Error checking birthday campaigns:', err);
+      });
+    }, 300_000);
   }
 
   onModuleDestroy() {
@@ -30,10 +47,41 @@ export class CampaignsService implements OnModuleInit, OnModuleDestroy {
       clearInterval(this.schedulerInterval);
       this.schedulerInterval = null;
     }
+    if (this.abandonedCartInterval) {
+      clearInterval(this.abandonedCartInterval);
+      this.abandonedCartInterval = null;
+    }
   }
 
   /**
-   * Background runner that automatically launches campaigns scheduled for execution.
+   * AI-Powered Campaign Content Generator using Gemini AI
+   */
+  async generateAiCampaignContent(topic: string, targetSegment: string) {
+    const prompt = `Viết tiêu đề chiến dịch tiếp thị và mô tả khuyến mãi ngắn gọn (dưới 40 từ) bằng tiếng Việt cho cửa hàng thời trang ShopQuiet Zalo Mini App. 
+Chủ đề: "${topic || 'Khuyến mãi đặc biệt'}". 
+Phân tập khách hàng: "${targetSegment || 'Tất cả'}". 
+Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "suggestedVoucherValue": "10%"} không bọc markdown.`;
+
+    try {
+      const rawResult = await this.geminiAiOpsService.askGemini(prompt, { topic, targetSegment });
+      let cleanJson = rawResult.trim();
+      if (cleanJson.startsWith('```json')) {
+        cleanJson = cleanJson.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+      } else if (cleanJson.startsWith('```')) {
+        cleanJson = cleanJson.replace(/^```\n?/, '').replace(/\n?```$/, '');
+      }
+      return JSON.parse(cleanJson);
+    } catch (e) {
+      return {
+        title: `🔥 UƯ ĐÃI ĐẶC BIỆT: ${topic || 'Siêu Sale ShopQuiet'}`,
+        description: `Dành riêng cho khách hàng ${targetSegment || 'thân thiết'}! Nhận ngay voucher giảm giá cực sốc hôm nay.`,
+        suggestedVoucherValue: '15%',
+      };
+    }
+  }
+
+  /**
+   * Automated Background Runner for Scheduled Campaigns
    */
   async checkAndExecuteScheduledCampaigns() {
     const now = new Date();
@@ -51,6 +99,153 @@ export class CampaignsService implements OnModuleInit, OnModuleDestroy {
       } catch (err) {
         this.logger.error(`[Auto-Scheduler] Failed to launch campaign #${campaign.id}:`, err);
       }
+    }
+  }
+
+  /**
+   * Automated Abandoned Cart Recovery Campaign Runner
+   */
+  async checkAbandonedCartCampaigns() {
+    const twoHoursAgo = new Date();
+    twoHoursAgo.setHours(twoHoursAgo.getHours() - 2);
+
+    const abandonedCarts = await this.prisma.cartItem.findMany({
+      where: {
+        createdAt: { lte: twoHoursAgo },
+      },
+      include: {
+        product: true,
+        user: true,
+      },
+      take: 20,
+    });
+
+    const userCartMap = new Map<string, any[]>();
+    for (const item of abandonedCarts) {
+      if (!userCartMap.has(item.zaloUserId)) {
+        userCartMap.set(item.zaloUserId, []);
+      }
+      userCartMap.get(item.zaloUserId)!.push(item);
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    for (const [zaloUserId, items] of userCartMap.entries()) {
+      const firstProduct = items[0]?.product?.name || 'Sản phẩm yêu thích';
+      const count = items.length;
+
+      // Check if user already got notified today
+      const existingNotif = await this.prisma.notification.findFirst({
+        where: {
+          zaloUserId,
+          type: 'ABANDONED_CART',
+          createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+        },
+      });
+
+      if (!existingNotif) {
+        await this.prisma.notification.create({
+          data: {
+            zaloUserId,
+            title: `🛒 Giỏ hàng của bạn đang chờ!`,
+            content: `Bạn có ${count} sản phẩm [${firstProduct}] trong giỏ hàng. Nhấn để chốt đơn ngay trước khi hết hàng!`,
+            type: 'ABANDONED_CART',
+            date: todayStr,
+          },
+        });
+        this.logger.log(`[Abandoned Cart] Sent reminder notification to user ${zaloUserId}`);
+      }
+    }
+  }
+
+  /**
+   * Automated Birthday Auto-Campaign Runner
+   */
+  async checkBirthdayCampaigns() {
+    const todayStr = new Date().toISOString().slice(5, 10); // MM-DD
+    const users = await this.prisma.user.findMany({
+      where: {
+        birthday: { contains: todayStr },
+      },
+    });
+
+    const todayFullStr = new Date().toISOString().split('T')[0];
+
+    for (const u of users) {
+      const existingBirthdayNotif = await this.prisma.notification.findFirst({
+        where: {
+          zaloUserId: u.zaloId,
+          type: 'BIRTHDAY',
+          createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+        },
+      });
+
+      if (!existingBirthdayNotif) {
+        // Award 100,000 Xu birthday bonus
+        await this.prisma.user.update({
+          where: { zaloId: u.zaloId },
+          data: { gamificationPoints: { increment: 100000 } },
+        });
+
+        await this.prisma.pointsHistory.create({
+          data: {
+            zaloUserId: u.zaloId,
+            points: 100000,
+            reason: `🎂 Quà tặng sinh nhật: +100.000 Xu từ ShopQuiet!`,
+            metadata: { type: 'BIRTHDAY_BONUS' },
+          },
+        });
+
+        await this.prisma.notification.create({
+          data: {
+            zaloUserId: u.zaloId,
+            title: `🎂 Chúc Mừng Sinh Nhật ${u.name}!`,
+            content: `ShopQuiet tặng bạn 100.000 Xu quà tặng mừng sinh nhật. Chúc bạn một ngày thật tuyệt vời!`,
+            type: 'BIRTHDAY',
+            date: todayFullStr,
+          },
+        });
+        this.logger.log(`[Birthday Campaign] Awarded 100k coins birthday bonus to ${u.name} (${u.zaloId})`);
+      }
+    }
+  }
+
+  /**
+   * Process Viral Referral Link Share Rewards
+   */
+  async processReferralReward(inviterZaloId: string, invitedZaloId: string) {
+    if (inviterZaloId === invitedZaloId) return { success: false, message: 'Cannot refer self' };
+
+    try {
+      // Reward 10,000 Xu to inviter
+      await this.prisma.user.update({
+        where: { zaloId: inviterZaloId },
+        data: { gamificationPoints: { increment: 10000 } },
+      });
+
+      await this.prisma.pointsHistory.create({
+        data: {
+          zaloUserId: inviterZaloId,
+          points: 10000,
+          reason: `🤝 Thưởng giới thiệu bạn bè tham gia Zalo Mini App: +10.000 Xu`,
+          metadata: { invitedZaloId },
+        },
+      });
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      await this.prisma.notification.create({
+        data: {
+          zaloUserId: inviterZaloId,
+          title: `🎁 Nhận 10.000 Xu giới thiệu thành công!`,
+          content: `Bạn bè của bạn đã tham gia ShopQuiet từ link chiến dịch của bạn. Bạn nhận được +10.000 Xu!`,
+          type: 'REFERRAL',
+          date: todayStr,
+        },
+      });
+
+      return { success: true, rewardPoints: 10000 };
+    } catch (e) {
+      return { success: false };
     }
   }
 
@@ -263,7 +458,6 @@ export class CampaignsService implements OnModuleInit, OnModuleDestroy {
    */
   async recordConversion(zaloUserId: string, totalAmount: number, voucherCode?: string) {
     try {
-      // Find candidate campaign for this user or voucher
       const campaignUser = await this.prisma.campaignUser.findFirst({
         where: {
           zaloUserId,
