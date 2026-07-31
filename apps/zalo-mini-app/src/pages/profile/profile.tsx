@@ -7,6 +7,30 @@ import {
   UserPlusIcon,
   ShareIcon,
   DocumentDuplicateIcon,
+  ChevronLeftIcon,
+  PencilSquareIcon,
+  CheckIcon,
+  SparklesIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  CalendarIcon,
+  UserIcon,
+  HeartIcon,
+  ShoppingBagIcon,
+  TrophyIcon,
+  MapPinIcon,
+  TicketIcon,
+  GiftIcon,
+  LanguageIcon,
+  BellIcon,
+  QuestionMarkCircleIcon,
+  InformationCircleIcon,
+  ChatBubbleLeftRightIcon,
+  ChevronRightIcon,
+  CalendarDaysIcon,
+  KeyIcon,
+  CheckBadgeIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 
 // Import sub-components from global components folder
@@ -270,19 +294,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
             onClick={() => setActiveTab("home")}
             className="p-2 -ml-2 bg-white/10 hover:bg-white/20 active:scale-95 rounded-full transition-colors border-none text-white cursor-pointer"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 19.5L8.25 12l7.5-7.5"
-              />
-            </svg>
+            <ChevronLeftIcon className="w-5 h-5" strokeWidth={2.5} />
           </button>
           <span className="text-xs font-black uppercase tracking-[0.2em] font-sans">
             ShopQuiet ID
@@ -290,28 +302,17 @@ export const Profile: React.FC<IProfileProps> = (props) => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsAuthModalOpen(true)}
-              className="px-3 py-1 bg-white/20 hover:bg-white/30 active:scale-95 rounded-full transition-all border-none text-white text-xs font-bold flex items-center gap-1 cursor-pointer shadow-xs"
-              title="Login / Register account"
+              className="px-3 py-1 bg-white/20 hover:bg-white/30 active:scale-95 rounded-full transition-all border-none text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+              title="Auth"
             >
-              <span>🔑</span> Auth
+              <KeyIcon className="w-3.5 h-3.5 text-amber-300" strokeWidth={2.2} />
+              Auth
             </button>
             <button
               onClick={() => setIsEditProfileOpen(true)}
               className="p-2 -mr-2 bg-white/10 hover:bg-white/20 active:scale-95 rounded-full transition-colors border-none text-white cursor-pointer"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"
-                />
-              </svg>
+              <PencilSquareIcon className="w-5 h-5" strokeWidth={2.2} />
             </button>
           </div>
         </div>
@@ -324,8 +325,8 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               alt={profile.name}
               className="w-19 h-19 rounded-full object-cover border-3 border-white/90 shadow-md"
             />
-            <span className="absolute bottom-0 right-0 w-5 h-5 bg-amber-400 text-teal-950 rounded-full flex items-center justify-center font-bold text-[9px] border-2 border-white shadow-xs">
-              ✓
+            <span className="absolute bottom-0 right-0 w-5 h-5 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-[9px] border-2 border-white shadow-xs">
+              <CheckBadgeIcon className="w-3.5 h-3.5 text-white" />
             </span>
           </div>
 
@@ -337,74 +338,27 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               <span
                 className={`${badgeColor} font-black tracking-widest text-[8px] uppercase px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs border border-white/20`}
               >
-                ★ {tierBadge} • {gamificationData?.points ? Math.round(gamificationData.points) : 0} Xu
+                <SparklesIcon className="w-3 h-3 text-amber-300" />
+                {tierBadge} • {gamificationData?.points ? Math.round(gamificationData.points) : 0} Xu
               </span>
             </div>
 
             <div className="space-y-0.5 text-[10.5px] text-white/80 font-medium">
               <p className="flex items-center gap-1.5">
-                <svg
-                  className="w-3.5 h-3.5 opacity-75"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.387a12.035 12.035 0 01-7.108-7.108c-.155-.44.01-1.03.387-1.312l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.318A2.25 2.25 0 002.1 4.5v2.25z"
-                  />
-                </svg>
-                <span>{profile.phone || "Phone not updated"}</span>
+                <PhoneIcon className="w-3.5 h-3.5 opacity-80" strokeWidth={2} />
+                <span>{profile.phone || t("profile.phoneNotUpdated")}</span>
               </p>
               <p className="flex items-center gap-1.5">
-                <svg
-                  className="w-3.5 h-3.5 opacity-75"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
-                  />
-                </svg>
-                <span>{profile.email || "Email not updated"}</span>
+                <EnvelopeIcon className="w-3.5 h-3.5 opacity-80" strokeWidth={2} />
+                <span>{profile.email || t("profile.emailNotUpdated")}</span>
               </p>
               <p className="flex items-center gap-1.5">
-                <svg
-                  className="w-3.5 h-3.5 opacity-75"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
-                  />
-                </svg>
-                <span>{profile.birthday || "Birthday not updated"}</span>
+                <CalendarIcon className="w-3.5 h-3.5 opacity-80" strokeWidth={2} />
+                <span>{profile.birthday || t("profile.birthdayNotUpdated")}</span>
               </p>
               <p className="flex items-center gap-1.5">
-                <svg
-                  className="w-3.5 h-3.5 opacity-75"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span>{profile.gender || "Gender not updated"}</span>
+                <UserIcon className="w-3.5 h-3.5 opacity-80" strokeWidth={2} />
+                <span>{profile.gender || t("profile.genderNotUpdated")}</span>
               </p>
             </div>
           </div>
@@ -476,13 +430,14 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               <div className="flex justify-between items-center">
                 <div>
                   <h4 className="text-xs font-bold text-textColor flex items-center gap-1.5">
-                    <span>📍</span> Daily Check-in for Xu
+                    <CalendarDaysIcon className="w-4 h-4 text-primary" strokeWidth={2.2} />
+                    {t("profile.dailyCheckin")}
                   </h4>
                   <p className="text-[10px] text-textColor-variant mt-0.5 font-semibold">
-                    Today{' '}
+                    Today{" "}
                     <span className="text-primary font-bold">
                       +{todayConfig.xu} Xu
-                    </span>{' '}• Balance:{' '}
+                    </span>{" "}• Balance:{" "}
                     <span className="text-amber-500 font-bold">
                       {gamificationData?.points || 0} Xu
                     </span>
@@ -491,13 +446,20 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                 <button
                   onClick={() => claimDailyReward()}
                   disabled={!!hasClaimed}
-                  className={`px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border-none transition-all active:scale-95 cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border-none transition-all active:scale-95 cursor-pointer flex items-center gap-1 ${
                     hasClaimed
                       ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
                       : 'bg-primary hover:bg-primary-dark text-white shadow-sm'
                   }`}
                 >
-                  {hasClaimed ? 'Claimed ✓' : `+${todayConfig.xu} Xu`}
+                  {hasClaimed ? (
+                    <>
+                      <CheckIcon className="w-3 h-3" strokeWidth={3} />
+                      {t("profile.claimed")}
+                    </>
+                  ) : (
+                    `+${todayConfig.xu} Xu`
+                  )}
                 </button>
               </div>
 
@@ -546,36 +508,12 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <svg
-                  className="w-5 h-5 text-textColor/60"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-                  />
-                </svg>
+                <ShoppingBagIcon className="w-5 h-5 text-textColor/70" strokeWidth={2} />
                 <span className="font-semibold text-textColor">
                   {t("profile.myOrders")}
                 </span>
               </div>
-              <svg
-                className="w-4 h-4 text-[#526069]/40"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                />
-              </svg>
+              <ChevronRightIcon className="w-4 h-4 text-[#526069]/40" strokeWidth={2.5} />
             </button>
 
             <button
@@ -583,36 +521,12 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <svg
-                  className="w-5 h-5 text-textColor/60"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
-                  />
-                </svg>
+                <HeartIcon className="w-5 h-5 text-[#0e6877]" strokeWidth={2} />
                 <span className="font-semibold text-textColor">
                   {t("profile.favorites")}
                 </span>
               </div>
-              <svg
-                className="w-4 h-4 text-[#526069]/40"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                />
-              </svg>
+              <ChevronRightIcon className="w-4 h-4 text-[#526069]/40" strokeWidth={2.5} />
             </button>
 
             <button
@@ -620,19 +534,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <svg
-                  className="w-5 h-5 text-amber-500"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0"
-                  />
-                </svg>
+                <TrophyIcon className="w-5 h-5 text-amber-500" strokeWidth={2} />
                 <span className="font-semibold text-textColor">
                   {t("profile.membership")}
                 </span>
@@ -643,22 +545,9 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                 >
                   ★ {tierBadge}
                 </span>
-                <svg
-                  className="w-4 h-4 text-[#526069]/40"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                  />
-                </svg>
+                <ChevronRightIcon className="w-4 h-4 text-[#526069]/40" strokeWidth={2.5} />
               </div>
             </button>
-
           </div>
         </div>
 
@@ -673,41 +562,12 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <svg
-                  className="w-5 h-5 text-textColor/60"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
-                  />
-                </svg>
+                <MapPinIcon className="w-5 h-5 text-textColor/70" strokeWidth={2} />
                 <span className="font-semibold text-textColor">
                   {t("profile.addresses")}
                 </span>
               </div>
-              <svg
-                className="w-4 h-4 text-[#526069]/40"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                />
-              </svg>
+              <ChevronRightIcon className="w-4 h-4 text-[#526069]/40" strokeWidth={2.5} />
             </button>
 
             <button
@@ -715,19 +575,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <svg
-                  className="w-5 h-5 text-textColor/60"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185zM9.75 9h.008v.008H9.75V9zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm4.125 4.5h.008v.008h-.008V13.5zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-                  />
-                </svg>
+                <TicketIcon className="w-5 h-5 text-purple-600" strokeWidth={2} />
                 <span className="font-semibold text-textColor">
                   {t("profile.myVouchers")}
                 </span>
@@ -736,19 +584,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                 <span className="bg-teal-50 text-teal-600 font-bold text-[10px] px-2 py-0.5 rounded-full">
                   {userVouchersCount > 0 ? `${userVouchersCount} codes` : ""}
                 </span>
-                <svg
-                  className="w-4 h-4 text-[#526069]/40"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                  />
-                </svg>
+                <ChevronRightIcon className="w-4 h-4 text-[#526069]/40" strokeWidth={2.5} />
               </div>
             </button>
 
@@ -757,24 +593,12 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <span className="text-lg leading-none">🎡</span>
+                <SparklesIcon className="w-5 h-5 text-amber-500" strokeWidth={2} />
                 <span className="font-semibold text-textColor">
                   {t("profile.luckyWheel")}
                 </span>
               </div>
-              <svg
-                className="w-4 h-4 text-[#526069]/40"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                />
-              </svg>
+              <ChevronRightIcon className="w-4 h-4 text-[#526069]/40" strokeWidth={2.5} />
             </button>
 
             <button
@@ -782,59 +606,35 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <span className="text-lg leading-none">🎁</span>
+                <GiftIcon className="w-5 h-5 text-rose-500" strokeWidth={2} />
                 <span className="font-semibold text-textColor">
                   {t("profile.exchangeVoucher")}
                 </span>
               </div>
-              <svg
-                className="w-4 h-4 text-[#526069]/40"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                />
-              </svg>
+              <ChevronRightIcon className="w-4 h-4 text-[#526069]/40" strokeWidth={2.5} />
             </button>
 
             {/* Language Switcher */}
-            <div className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor  hover:bg-neutral-50 :bg-slate-800 text-left border-none bg-transparent">
+            <div className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent">
               <div className="flex items-center gap-3">
-                <svg
-                  className="w-5 h-5 text-textColor/60 "
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-.778.099-1.533.284-2.253"
-                  />
-                </svg>
-                <span className="font-semibold text-textColor ">
+                <LanguageIcon className="w-5 h-5 text-[#0e6877]" strokeWidth={2} />
+                <span className="font-semibold text-textColor">
                   {t("lang.switch")}
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setLanguage(lang === "vi" ? "en" : "vi")}
-                  className="px-2.5 py-1 bg-primary/10 hover:bg-primary/20 text-primary  text-[10px] font-black uppercase tracking-wider rounded-lg border-none cursor-pointer active:scale-95 transition-all"
+                  className="px-3 py-1 bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-black uppercase tracking-wider rounded-lg border-none cursor-pointer active:scale-95 transition-all"
                 >
-                  {lang === "vi" ? "English" : "Tiếng Việt"}
+                  {lang === "vi" ? "🇻🇳 Tiếng Việt (➔ EN)" : "🇬🇧 English (➔ VI)"}
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Section 3: General */}
+        {/* Section 3: General & CSKH */}
         <div className="space-y-2.5">
           <h3 className="text-[10px] font-extrabold text-[#526069]/55 uppercase tracking-widest pl-2">
             {t("profile.section.general")}
@@ -845,75 +645,29 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <svg
-                  className="w-5 h-5 text-textColor/60"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M14.857 17.082a9.04 9.04 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0M3.124 7.5A8.969 8.969 0 015.292 3m13.416 0a8.969 8.969 0 012.168 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+                <BellIcon className="w-5 h-5 text-textColor/70" strokeWidth={2} />
                 <span className="font-semibold text-textColor">
                   {t("tab.notifications")}
                 </span>
               </div>
-              <svg
-                className="w-4 h-4 text-[#526069]/40"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                />
-              </svg>
+              <ChevronRightIcon className="w-4 h-4 text-[#526069]/40" strokeWidth={2.5} />
             </button>
 
+            {/* CSKH / Help Center Button */}
             <button
               onClick={() => {
-                setIsChatOpen(true);
+                setActiveStaticPageSlug("help-support");
+                setIsHelpModalOpen(true);
               }}
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <svg
-                  className="w-5 h-5 text-textColor/60"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"
-                  />
-                </svg>
+                <QuestionMarkCircleIcon className="w-5 h-5 text-[#0e6877]" strokeWidth={2} />
                 <span className="font-semibold text-textColor">
-                  {t("profile.helpCenter")}
+                  {t("help.title")}
                 </span>
               </div>
-              <svg
-                className="w-4 h-4 text-[#526069]/40"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                />
-              </svg>
+              <ChevronRightIcon className="w-4 h-4 text-[#526069]/40" strokeWidth={2.5} />
             </button>
 
             <button
@@ -924,36 +678,12 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <svg
-                  className="w-5 h-5 text-textColor/60"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M11.25 11.25l.041-.02a.75.75 0 111.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
-                  />
-                </svg>
+                <InformationCircleIcon className="w-5 h-5 text-textColor/70" strokeWidth={2} />
                 <span className="font-semibold text-textColor">
                   {t("profile.about")}
                 </span>
               </div>
-              <svg
-                className="w-4 h-4 text-[#526069]/40"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                />
-              </svg>
+              <ChevronRightIcon className="w-4 h-4 text-[#526069]/40" strokeWidth={2.5} />
             </button>
 
             {/* Follow Zalo Official Account */}
@@ -974,9 +704,9 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <span className="text-lg leading-none">💬</span>
+                <ChatBubbleLeftRightIcon className="w-5 h-5 text-blue-600" strokeWidth={2} />
                 <span className="font-semibold text-textColor">
-                  Quan tâm Zalo Official Account
+                  {t("help.zaloOa")}
                 </span>
               </div>
               <span className="text-[10px] font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
@@ -1003,52 +733,28 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor hover:bg-neutral-50 text-left border-none bg-transparent cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <svg
-                  className="w-5 h-5 text-teal-600"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0-12.814a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5zm0 12.814a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z"
-                  />
-                </svg>
+                <ShareIcon className="w-5 h-5 text-teal-600" strokeWidth={2} />
                 <span className="font-semibold text-textColor">
-                  Chia sẻ Mini App cho bạn bè
+                  {t("help.shareApp")}
                 </span>
               </div>
-              <svg
-                className="w-4 h-4 text-[#526069]/40"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                />
-              </svg>
+              <ChevronRightIcon className="w-4 h-4 text-[#526069]/40" strokeWidth={2.5} />
             </button>
           </div>
         </div>
 
         {/* Compact & Elegant Referral System Banner */}
-        <div className="bg-gradient-to-r from-teal-50 via-emerald-50 to-teal-50  /90  rounded-2xl p-3.5 border border-teal-200/70 /80 shadow-xs mt-4 mb-16 flex items-center justify-between gap-3">
+        <div className="bg-gradient-to-r from-teal-50 via-emerald-50 to-teal-50 rounded-2xl p-3.5 border border-teal-200/70 shadow-xs mt-4 mb-16 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-xl bg-[#0e6877] text-white flex items-center justify-center shrink-0 shadow-xs">
               <UserPlusIcon className="w-4 h-4" strokeWidth={2.2} />
             </div>
-            <div className="min-w-0">
-              <h4 className="text-xs font-bold text-slate-800  truncate">
-                {t("profile.referralTitle")} <span className="text-[#0e6877]  font-extrabold">+50 Xu</span>
+            <div className="min-w-0 text-left">
+              <h4 className="text-xs font-bold text-slate-800 truncate">
+                {t("profile.referralTitle")} <span className="text-[#0e6877] font-extrabold">+50 Xu</span>
               </h4>
-              <p className="text-[10px] text-slate-500  font-medium truncate">
-                Mã: <span className="font-mono font-bold text-[#0e6877]  underline">REF-{zaloUser?.id ? zaloUser.id.substring(0, 6) : "SHOP"}</span>
+              <p className="text-[10px] text-slate-500 font-medium truncate">
+                Mã: <span className="font-mono font-bold text-[#0e6877] underline">REF-{zaloUser?.id ? zaloUser.id.substring(0, 6) : "SHOP"}</span>
               </p>
             </div>
           </div>
@@ -1060,8 +766,8 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                 navigator.clipboard?.writeText(refCode).catch(() => {});
                 showToast(`Đã sao chép mã: ${refCode}`, "success");
               }}
-              className="p-2 bg-white  hover:bg-slate-100 :bg-slate-600 text-slate-600  rounded-xl border border-slate-200  active:scale-95 transition-all cursor-pointer shadow-xs"
-              title="Sao chép mã"
+              className="p-2 bg-white hover:bg-slate-100 text-slate-600 rounded-xl border border-slate-200 active:scale-95 transition-all cursor-pointer shadow-xs"
+              title={t("profile.copyCode")}
             >
               <DocumentDuplicateIcon className="w-4 h-4" />
             </button>
@@ -1078,7 +784,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               className="px-3 py-2 bg-[#0e6877] hover:bg-[#0f766e] text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-xs active:scale-95 transition-all border-none cursor-pointer"
             >
               <ShareIcon className="w-3.5 h-3.5" strokeWidth={2.5} />
-              <span>Chia sẻ</span>
+              <span>{t("profile.shareBtn")}</span>
             </button>
           </div>
         </div>
@@ -1111,45 +817,50 @@ export const Profile: React.FC<IProfileProps> = (props) => {
         }}
       />
 
-      {/* Static Info Page Modal */}
+      {/* Static Info Page / CSKH Help Modal */}
       {isHelpModalOpen && (
-        <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-center justify-center p-6 animate-fade-in">
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-xs flex items-center justify-center p-6 animate-fade-in">
           <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up text-left">
-            <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">
-              {activeStaticPage?.title || "Trợ giúp & Hỗ trợ"}
-            </h3>
+            <div className="flex items-center justify-between border-b border-[#f5f3f0] pb-3">
+              <h3 className="text-xs font-bold text-textColor uppercase tracking-wider flex items-center gap-2">
+                <QuestionMarkCircleIcon className="w-5 h-5 text-[#0e6877]" strokeWidth={2} />
+                {activeStaticPage?.title || t("help.title")}
+              </h3>
+              <button
+                onClick={() => setIsHelpModalOpen(false)}
+                className="p-1 bg-neutral-100 rounded-full border-none cursor-pointer text-slate-500 hover:bg-neutral-200"
+              >
+                <XMarkIcon className="w-4 h-4" strokeWidth={2.5} />
+              </button>
+            </div>
 
             <div className="space-y-3 text-xs leading-relaxed text-textColor-variant">
               {(
                 activeStaticPage?.content ||
-                "Chào mừng bạn đến với tổng đài hỗ trợ của ShopQuiet."
+                t("help.welcome")
               )
                 .split("\n")
                 .filter(Boolean)
                 .map((paragraph, index) => (
                   <p key={index}>{paragraph}</p>
                 ))}
-              <div className="bg-neutral-50 p-3 rounded-2xl border border-neutral-100 font-mono text-[11px] text-textColor space-y-1">
-                <p>
-                  📞 Hotline:{" "}
-                  {activeStaticPage?.contactPhone ||
-                    cmsSettings["support.hotline"] ||
-                    "1900 6000"}
+              <div className="bg-teal-50/70 p-3.5 rounded-2xl border border-teal-100 font-mono text-[11px] text-[#0e6877] space-y-1.5">
+                <p className="flex items-center gap-2 font-bold">
+                  <PhoneIcon className="w-4 h-4 text-emerald-600" strokeWidth={2} />
+                  <span>{t("help.hotline")}: {activeStaticPage?.contactPhone || cmsSettings["support.hotline"] || "1900 6868"}</span>
                 </p>
-                <p>
-                  📧 Email:{" "}
-                  {activeStaticPage?.contactEmail ||
-                    cmsSettings["support.email"] ||
-                    "support@shopquiet.vn"}
+                <p className="flex items-center gap-2 font-bold">
+                  <EnvelopeIcon className="w-4 h-4 text-blue-600" strokeWidth={2} />
+                  <span>{t("help.email")}: {activeStaticPage?.contactEmail || cmsSettings["support.email"] || "support@shopquiet.vn"}</span>
                 </p>
               </div>
             </div>
 
             <button
               onClick={() => setIsHelpModalOpen(false)}
-              className="w-full h-10 bg-neutral-100 text-textColor font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-neutral-200 mt-2"
+              className="w-full h-10 bg-[#0e6877] text-white font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-[#0f766e] active:scale-95 transition-all shadow-xs mt-2"
             >
-              Đóng
+              {t("help.close")}
             </button>
           </div>
         </div>

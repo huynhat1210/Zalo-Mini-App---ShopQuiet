@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Page } from "zmp-ui";
 import { IMembershipCardProps } from "./membership-card.type";
 import { apiRequest } from "../../utils/api";
+import { ChevronLeftIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 
 const PageCast = Page as any;
 
@@ -105,19 +106,7 @@ export const MembershipCard: React.FC<IMembershipCardProps> = (props) => {
           onClick={() => setActiveTab("profile")}
           className="p-1.5 -ml-1.5 hover:bg-[#f0edeb] rounded-full transition-colors border-none bg-transparent cursor-pointer"
         >
-          <svg
-            className="w-5.5 h-5.5 text-textColor"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15.75 19.5L8.25 12l7.5-7.5"
-            />
-          </svg>
+          <ChevronLeftIcon className="w-5.5 h-5.5 text-textColor" strokeWidth={2.2} />
         </button>
         <span className="text-xs font-bold uppercase tracking-widest text-textColor">
           Hạng thành viên
@@ -126,19 +115,7 @@ export const MembershipCard: React.FC<IMembershipCardProps> = (props) => {
           onClick={() => setShowRankingInfo(true)}
           className="p-1.5 -mr-1.5 hover:bg-[#f0edeb] rounded-full transition-colors border-none bg-transparent cursor-pointer relative"
         >
-          <svg
-            className="w-5.5 h-5.5 text-primary"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M11.25 11.25l.041-.02a.75.75 0 111.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
-            />
-          </svg>
+          <InformationCircleIcon className="w-5.5 h-5.5 text-primary" strokeWidth={2} />
         </button>
       </div>
 

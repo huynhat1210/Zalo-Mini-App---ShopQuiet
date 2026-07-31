@@ -55,6 +55,23 @@ export const translations = {
     "profile.referralSubtitle": "Nhận ngay +50 Xu khi bạn bè truy cập",
     "profile.copyCode": "Sao chép",
     "profile.shareBtn": "Chia sẻ ngay (+50 Xu)",
+    "profile.dailyCheckin": "Điểm danh nhận Xu hàng ngày",
+    "profile.claimReward": "Nhận ngay",
+    "profile.claimed": "Đã nhận ✓",
+    "profile.phoneNotUpdated": "Chưa cập nhật Số điện thoại",
+    "profile.emailNotUpdated": "Chưa cập nhật Email",
+    "profile.birthdayNotUpdated": "Chưa cập nhật Ngày sinh",
+    "profile.genderNotUpdated": "Chưa cập nhật Giới tính",
+
+    // CSKH / Help Center
+    "help.title": "Trợ giúp & Hỗ trợ CSKH",
+    "help.aboutTitle": "Về ShopQuiet",
+    "help.welcome": "Chào mừng bạn đến với trung tâm hỗ trợ khách hàng CSKH của ShopQuiet.",
+    "help.hotline": "Hotline CSKH 24/7",
+    "help.email": "Email liên hệ",
+    "help.close": "Đóng",
+    "help.zaloOa": "Quan tâm Zalo Official Account",
+    "help.shareApp": "Chia sẻ Mini App cho bạn bè",
 
     // Cart & Order
     "order.historyTitle": "Lịch sử đơn hàng",
@@ -301,6 +318,23 @@ export const translations = {
     "profile.referralSubtitle": "Get +50 Coins when friends join",
     "profile.copyCode": "Copy",
     "profile.shareBtn": "Share Now (+50 Coins)",
+    "profile.dailyCheckin": "Daily Check-in for Coins",
+    "profile.claimReward": "Claim Now",
+    "profile.claimed": "Claimed ✓",
+    "profile.phoneNotUpdated": "Phone not updated",
+    "profile.emailNotUpdated": "Email not updated",
+    "profile.birthdayNotUpdated": "Birthday not updated",
+    "profile.genderNotUpdated": "Gender not updated",
+
+    // CSKH / Help Center
+    "help.title": "CSKH Help & Support",
+    "help.aboutTitle": "About ShopQuiet",
+    "help.welcome": "Welcome to ShopQuiet CSKH Customer Support Center.",
+    "help.hotline": "24/7 CSKH Hotline",
+    "help.email": "Contact Email",
+    "help.close": "Close",
+    "help.zaloOa": "Follow Zalo Official Account",
+    "help.shareApp": "Share Mini App with Friends",
 
     // Cart & Order
     "order.historyTitle": "Order History",
