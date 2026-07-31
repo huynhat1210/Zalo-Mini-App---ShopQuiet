@@ -231,14 +231,14 @@ export class UsersService implements OnModuleInit {
     const count = await this.prisma.membershipPrivilege.count();
     if (count === 0) {
       const defaultPrivileges = [
-        { tier: 'Đồng', title: 'Tích điểm mua sắm', description: 'Tích lũy xu mỗi đơn hàng', icon: '🛒', sortOrder: 1 },
-        { tier: 'Đồng', title: 'Ưu đãi thành viên', description: 'Nhận thông báo ưu đãi', icon: '🎁', sortOrder: 2 },
-        { tier: 'Bạc', title: 'Giảm 5% đơn hàng', description: 'Giảm 5% cho tất cả đơn hàng', icon: '💰', sortOrder: 1 },
-        { tier: 'Bạc', title: 'Freeship đơn 150k', description: 'Miễn phí vận chuyển từ 150.000đ', icon: '🚚', sortOrder: 2 },
-        { tier: 'Vàng', title: 'Giảm 10% đơn hàng', description: 'Giảm 10% cho tất cả đơn hàng', icon: '💎', sortOrder: 1 },
-        { tier: 'Vàng', title: 'Freeship đơn 100k', description: 'Miễn phí vận chuyển từ 100.000đ', icon: '🚚', sortOrder: 2 },
-        { tier: 'Kim cương', title: 'Giảm 15% đơn hàng', description: 'Giảm 15% cho tất cả đơn hàng', icon: '👑', sortOrder: 1 },
-        { tier: 'Kim cương', title: 'Freeship 0đ', description: 'Miễn phí vận chuyển mọi đơn hàng', icon: '🚀', sortOrder: 2 },
+        { tier: 'Đồng', title: 'Tích điểm mua sắm', description: 'Tích lũy xu mỗi đơn hàng', sortOrder: 1 },
+        { tier: 'Đồng', title: 'Ưu đãi thành viên', description: 'Nhận thông báo ưu đãi', sortOrder: 2 },
+        { tier: 'Bạc', title: 'Giảm 5% đơn hàng', description: 'Giảm 5% cho tất cả đơn hàng', sortOrder: 1 },
+        { tier: 'Bạc', title: 'Freeship đơn 150k', description: 'Miễn phí vận chuyển từ 150.000đ', sortOrder: 2 },
+        { tier: 'Vàng', title: 'Giảm 10% đơn hàng', description: 'Giảm 10% cho tất cả đơn hàng', sortOrder: 1 },
+        { tier: 'Vàng', title: 'Freeship đơn 100k', description: 'Miễn phí vận chuyển từ 100.000đ', sortOrder: 2 },
+        { tier: 'Kim cương', title: 'Giảm 15% đơn hàng', description: 'Giảm 15% cho tất cả đơn hàng', sortOrder: 1 },
+        { tier: 'Kim cương', title: 'Freeship 0đ', description: 'Miễn phí vận chuyển mọi đơn hàng', sortOrder: 2 },
       ];
       await this.prisma.membershipPrivilege.createMany({
         data: defaultPrivileges,

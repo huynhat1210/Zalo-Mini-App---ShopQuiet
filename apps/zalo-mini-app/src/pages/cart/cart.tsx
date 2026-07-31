@@ -3,6 +3,16 @@ import { useCart } from "../../App";
 import { apiRequest, safeParseImages, useTranslation } from "../../utils";
 import { EmptyStateComponent } from "../../components";
 import { ICartProps } from "./cart.type";
+import {
+  ChevronLeftIcon,
+  TrashIcon,
+  TicketIcon,
+  CheckCircleIcon,
+  ShoppingBagIcon,
+  XMarkIcon,
+  TagIcon,
+  TruckIcon,
+} from "@heroicons/react/24/outline";
 
 export const Cart: React.FC<ICartProps> = (_props) => {
   const { t } = useTranslation();
@@ -14,7 +24,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
     setIsCartOpen,
     showToast,
   } = useCart();
-  const [estimatedShipping, setEstimatedShipping] = useState(5);
+  const [estimatedShipping, setEstimatedShipping] = useState(15000);
   const [checkedKeys, setCheckedKeys] = useState<string[]>([]);
   const [selectedVoucher, setSelectedVoucher] = useState<any>(null);
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
@@ -27,9 +37,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
           apiRequest<Array<{ price: number }>>("/cms/shipping-methods").catch(() => []),
           apiRequest<any[]>("/vouchers").catch(() => []),
         ]);
-        // Checkout selects the first CMS method by default, so mirror that
-        // selection here rather than choosing the first paid method.
-        setEstimatedShipping(methods[0]?.price ?? 0);
+        setEstimatedShipping(methods[0]?.price ?? 15000);
 
         if (Array.isArray(list)) {
           setVouchersList(list);
@@ -62,7 +70,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
   const getItemKey = (item: any) =>
     `${item.product.id}-${item.color || "DEFAULT"}-${item.size || "DEFAULT"}`;
 
-  // Automatically check all items initially or when new items are added
+  // Automatically check all items initially
   useEffect(() => {
     if (cart.length > 0) {
       setCheckedKeys((prev) => {
@@ -145,7 +153,6 @@ export const Cart: React.FC<ICartProps> = (_props) => {
       showToast(t("cart.selectItem"), "warning");
       return;
     }
-    // Save selected checkout items & freeship status to localStorage
     localStorage.setItem("checkout_items", JSON.stringify(selectedItems));
     localStorage.setItem(
       "checkout_freeship",
@@ -157,8 +164,24 @@ export const Cart: React.FC<ICartProps> = (_props) => {
 
   return (
     <div className="h-full flex flex-col bg-surface overflow-hidden">
+      {/* Top Header */}
+      <div className="bg-white/95 backdrop-blur-md px-6 py-4 flex items-center gap-3 border-b border-[#f0edeb] sticky top-0 z-30 shadow-xs">
+        <button
+          onClick={() => {
+            setIsCartOpen(false);
+            setActiveTab("home");
+          }}
+          className="p-1.5 -ml-1.5 hover:bg-[#f0edeb] rounded-full transition-colors active:scale-95 border-none bg-transparent cursor-pointer"
+        >
+          <ChevronLeftIcon className="w-5.5 h-5.5 text-textColor" strokeWidth={2.2} />
+        </button>
+        <span className="text-xs font-bold uppercase tracking-widest text-textColor">
+          {t("cart.title")} ({cart.length})
+        </span>
+      </div>
+
       {/* Scrollable Cart Content Area */}
-      <div className="flex-1 flex flex-col overflow-y-auto px-6 py-5.5 pb-28">
+      <div className="flex-1 flex flex-col overflow-y-auto px-6 py-5 space-y-4 pb-28 scrollbar-none">
         {cart.length === 0 ? (
           <EmptyStateComponent
             title={t("cart.empty")}
@@ -173,28 +196,30 @@ export const Cart: React.FC<ICartProps> = (_props) => {
           /* Cart items list */
           <div className="space-y-4">
             {/* Freeship Progress Bar */}
-            <div className="bg-teal-50 border border-teal-150 rounded-2xl p-4 mb-2 space-y-2 text-left">
+            <div className="bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200/80 rounded-2xl p-4 mb-2 space-y-2 text-left shadow-2xs">
               <div className="flex justify-between items-center text-xs">
                 {isFreeshipEligible ? (
-                  <span className="font-bold text-teal-700">
+                  <span className="font-extrabold text-[#0e6877] flex items-center gap-1.5">
+                    <TruckIcon className="w-4 h-4 text-emerald-600 shrink-0" strokeWidth={2} />
                     {t("cart.freeshipEligible")}
                   </span>
                 ) : (
-                  <span className="font-medium text-[#526069]">
+                  <span className="font-medium text-slate-700 flex items-center gap-1">
+                    <TruckIcon className="w-4 h-4 text-[#0e6877] shrink-0" strokeWidth={2} />
                     {t("cart.buyMoreFreeship")}{" "}
-                    <span className="font-bold text-teal-600">
+                    <span className="font-bold text-[#0e6877]">
                       {remainingForFreeship.toLocaleString("vi-VN")} đ
                     </span>{" "}
-                    {t("cart.forFreeship")} ({t("cart.target")} {freeshipThreshold >= 1000 ? `${(freeshipThreshold / 1000).toFixed(0)}K` : `${freeshipThreshold}đ`})
+                    {t("cart.forFreeship")}
                   </span>
                 )}
-                <span className="text-[10px] text-teal-600 font-extrabold">
+                <span className="text-[10px] text-[#0e6877] font-black">
                   {subtotal.toLocaleString("vi-VN")}đ / {freeshipThreshold.toLocaleString("vi-VN")}đ
                 </span>
               </div>
-              <div className="w-full h-2.5 bg-teal-100 rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-teal-100/80 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-teal-500 rounded-full transition-all duration-300"
+                  className="h-full bg-[#0e6877] rounded-full transition-all duration-500"
                   style={{ width: `${freeshipProgressPercent}%` }}
                 />
               </div>
@@ -204,16 +229,16 @@ export const Cart: React.FC<ICartProps> = (_props) => {
             <div className="flex items-center gap-3 pb-2 pl-1 border-b border-neutral-100 text-left">
               <input
                 type="checkbox"
-                className="w-4.5 h-4.5 text-primary accent-primary"
+                className="w-4.5 h-4.5 text-[#0e6877] accent-[#0e6877] cursor-pointer"
                 checked={checkedKeys.length === cart.length && cart.length > 0}
                 onChange={toggleCheckAll}
               />
-              <span className="text-xs text-textColor-variant font-bold">
+              <span className="text-xs text-textColor font-bold">
                 {t("cart.selectAll")} ({cart.length})
               </span>
             </div>
 
-            <div className="space-y-3.5">
+            <div className="space-y-3">
               {cart.map((item) => {
                 const itemKey = getItemKey(item);
                 const img = safeParseImages(item.product.images)[0];
@@ -221,12 +246,12 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                 return (
                   <div
                     key={itemKey}
-                    className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-[#f0edeb] shadow-xs relative hover:shadow-sm transition-all duration-300"
+                    className="flex items-center gap-3 p-3.5 bg-white rounded-2xl border border-[#f0edeb] shadow-xs relative hover:shadow-sm transition-all duration-300"
                   >
                     {/* Item Checkbox */}
                     <input
                       type="checkbox"
-                      className="w-4.5 h-4.5 text-primary accent-primary flex-shrink-0 cursor-pointer"
+                      className="w-4.5 h-4.5 text-[#0e6877] accent-[#0e6877] flex-shrink-0 cursor-pointer"
                       checked={checkedKeys.includes(itemKey)}
                       onChange={() => toggleCheckItem(itemKey)}
                     />
@@ -235,127 +260,27 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                     <img
                       src={img}
                       alt={item.product.name}
-                      className="w-18 h-18 flex-shrink-0 object-cover rounded-xl border border-[#f0edeb]"
+                      className="w-16 h-16 flex-shrink-0 object-cover rounded-xl border border-[#f0edeb]"
                     />
 
                     {/* Product details */}
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div className="text-left">
-                        <h4 className="text-xs font-semibold text-textColor line-clamp-1 pr-6 tracking-wide">
+                    <div className="flex-1 flex flex-col justify-between min-w-0 text-left">
+                      <div>
+                        <h4 className="text-xs font-bold text-textColor truncate pr-2">
                           {item.product.name}
                         </h4>
-                        <div className="flex flex-col mt-1 gap-1">
-                          <span className="text-xs font-bold text-primary">
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs font-extrabold text-[#0e6877]">
                             {item.product.price.toLocaleString("vi-VN")} đ
                           </span>
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            {(() => {
-                              // Check if product has real variants (non-DEFAULT size or color)
-                              const hasRealVariants =
-                                item.product.variants &&
-                                item.product.variants.length > 0 &&
-                                (item.product.variants.some(
-                                  (v: any) => v.color && v.color !== "DEFAULT",
-                                ) ||
-                                  item.product.variants.some(
-                                    (v: any) => v.size && v.size !== "DEFAULT",
-                                  ));
-
-                              if (hasRealVariants) {
-                                // Show dropdowns for products with variants
-                                return (
-                                  <>
-                                    {item.product.variants!.some(
-                                      (v: any) =>
-                                        v.color && v.color !== "DEFAULT",
-                                    ) && (
-                                      <select
-                                        value={item.color}
-                                        onChange={(e) => {
-                                          updateItemVariant(
-                                            item.product.id,
-                                            item.size,
-                                            item.size,
-                                            item.color,
-                                            e.target.value,
-                                          );
-                                          showToast(
-                                            `${t("cart.changedColor")}: ${e.target.value}`,
-                                            "success",
-                                          );
-                                        }}
-                                        className="text-[9px] bg-neutral-100 text-[#526069] font-bold px-1.5 py-0.5 rounded outline-none border border-transparent hover:border-neutral-300 focus:bg-white cursor-pointer uppercase tracking-wider"
-                                      >
-                                        {Array.from(
-                                          new Set(
-                                            item.product.variants!.map(
-                                              (v: any) => v.color,
-                                            ),
-                                          ),
-                                        )
-                                          .filter(
-                                            (c: string) => c && c !== "DEFAULT",
-                                          )
-                                          .map((c: string) => (
-                                            <option key={c} value={c}>
-                                              {t("cart.color")}: {c}
-                                            </option>
-                                          ))}
-                                        {item.color === "DEFAULT" && (
-                                          <option value="DEFAULT">
-                                            {t("cart.color")}: {t("cart.default")}
-                                          </option>
-                                        )}
-                                      </select>
-                                    )}
-                                    {item.product.variants!.some(
-                                      (v: any) =>
-                                        v.size && v.size !== "DEFAULT",
-                                    ) && (
-                                      <select
-                                        value={item.size}
-                                        onChange={(e) => {
-                                          updateItemVariant(
-                                            item.product.id,
-                                            item.size,
-                                            e.target.value,
-                                            item.color,
-                                            item.color,
-                                          );
-                                          showToast(
-                                            `${t("cart.changedSize")}: ${e.target.value}`,
-                                            "success",
-                                          );
-                                        }}
-                                        className="text-[9px] bg-neutral-100 text-[#526069] font-bold px-1.5 py-0.5 rounded outline-none border border-transparent hover:border-neutral-300 focus:bg-white cursor-pointer uppercase tracking-wider"
-                                      >
-                                        {item.product
-                                          .variants!.filter(
-                                            (v: any) =>
-                                              v.color === item.color &&
-                                              (v.stock > 0 ||
-                                                v.size === item.size),
-                                          )
-                                          .map((v: any) => (
-                                            <option key={v.size} value={v.size}>
-                                              {t("cart.size")}: {v.size}
-                                            </option>
-                                          ))}
-                                        {item.size === "DEFAULT" && (
-                                          <option value="DEFAULT">
-                                            {t("cart.size")}: {t("cart.default")}
-                                          </option>
-                                        )}
-                                      </select>
-                                    )}
-                                  </>
-                                );
-                              } else {
-                                // No variants - don't show any variant UI
-                                return null;
-                              }
-                            })()}
-                          </div>
+                          {/* Variant info if present */}
+                          {(item.color !== "DEFAULT" || item.size !== "DEFAULT") && (
+                            <span className="text-[9.5px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                              {[item.color !== "DEFAULT" && item.color, item.size !== "DEFAULT" && item.size]
+                                .filter(Boolean)
+                                .join(" / ")}
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -403,22 +328,10 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                               item.color,
                             )
                           }
-                          className="text-red-400 hover:text-red-600 p-1.5 rounded-full hover:bg-red-50 transition-colors border-none bg-transparent cursor-pointer"
-                          title="Delete"
+                          className="p-1.5 rounded-full hover:bg-red-50 transition-colors border-none bg-transparent cursor-pointer text-red-500"
+                          title="Xóa sản phẩm"
                         >
-                          <svg
-                            className="w-4.5 h-4.5"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
+                          <TrashIcon className="w-4 h-4" strokeWidth={2} />
                         </button>
                       </div>
                     </div>
@@ -429,25 +342,31 @@ export const Cart: React.FC<ICartProps> = (_props) => {
           </div>
         )}
 
-        {/* Shopee-style Voucher Section */}
+        {/* Shop Voucher Section */}
         {selectedItems.length > 0 && (
-          <div className="bg-white rounded-2xl border border-dashed border-[#0e6877]/30 p-3.5 mt-3 flex items-center justify-between shadow-2xs">
+          <div className="bg-white rounded-2xl border border-dashed border-[#0e6877]/40 p-3.5 flex items-center justify-between shadow-2xs">
             <div className="flex items-center gap-2.5 min-w-0">
-              <span className="text-lg shrink-0">🎟️</span>
+              <div className="p-2 rounded-xl bg-teal-50 text-[#0e6877] shrink-0">
+                <TicketIcon className="w-4.5 h-4.5" strokeWidth={2} />
+              </div>
               <div className="text-left min-w-0">
-                <p className="text-[10px] font-extrabold text-[#526069]/80 uppercase tracking-wider">{t("cart.shopVoucher")}</p>
+                <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{t("cart.shopVoucher")}</p>
                 {selectedVoucher ? (
-                  <p className="text-xs font-black text-[#0e6877] truncate mt-0.5">
-                    ✅ {selectedVoucher.code} ({selectedVoucher.type === 'PERCENT' ? `${t("cart.save")} ${selectedVoucher.value}%` : `${t("cart.save")} ${selectedVoucher.value.toLocaleString('vi-VN')}đ`})
+                  <p className="text-xs font-extrabold text-[#0e6877] truncate mt-0.5 flex items-center gap-1">
+                    <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" strokeWidth={2.5} />
+                    <span>{selectedVoucher.code}</span>
+                    <span className="text-[10px] text-slate-500 font-normal">
+                      ({selectedVoucher.type === 'PERCENT' ? `${t("cart.save")} ${selectedVoucher.value}%` : `${t("cart.save")} ${selectedVoucher.value.toLocaleString('vi-VN')}đ`})
+                    </span>
                   </p>
                 ) : (
-                  <p className="text-xs font-bold text-textColor-variant truncate mt-0.5">{t("cart.noVoucherApplied")}</p>
+                  <p className="text-xs font-semibold text-slate-500 truncate mt-0.5">{t("cart.noVoucherApplied")}</p>
                 )}
               </div>
             </div>
             <button
               onClick={() => setIsVoucherModalOpen(true)}
-              className="text-[10px] font-extrabold bg-[#0e6877]/10 text-[#0e6877] hover:bg-[#0e6877] hover:text-white px-3 py-1.5 rounded-full border-none cursor-pointer transition-all shrink-0 active:scale-95"
+              className="text-[10px] font-extrabold bg-teal-50 text-[#0e6877] hover:bg-[#0e6877] hover:text-white px-3.5 py-1.5 rounded-full border border-teal-100 cursor-pointer transition-all shrink-0 active:scale-95"
             >
               {selectedVoucher ? t("cart.change") : t("cart.select")}
             </button>
@@ -456,21 +375,21 @@ export const Cart: React.FC<ICartProps> = (_props) => {
 
         {/* Order Summary Section */}
         {selectedItems.length > 0 && (
-          <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 space-y-3.5 shadow-xs mt-3">
-            <h3 className="text-[10px] font-bold uppercase text-[#526069]/70 tracking-widest text-left">
+          <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 space-y-3 shadow-xs">
+            <h3 className="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest text-left">
               {t("cart.orderSummary")}
             </h3>
 
-            <div className="space-y-2.5 text-xs">
-              <div className="flex justify-between text-textColor-variant font-medium">
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between text-slate-600 font-medium">
                 <span>{t("cart.subtotal")} ({selectedItems.length})</span>
-                <span>{subtotal.toLocaleString("vi-VN")} đ</span>
+                <span className="font-bold text-slate-800">{subtotal.toLocaleString("vi-VN")} đ</span>
               </div>
-              <div className="flex justify-between text-textColor-variant font-medium">
+              <div className="flex justify-between text-slate-600 font-medium">
                 <span>{t("cart.shipping")}</span>
                 <span>
                   {shipping === 0 && subtotal > 0 ? (
-                    <span className="text-teal-600 font-bold">
+                    <span className="text-emerald-600 font-bold">
                       {t("cart.freeship")}
                     </span>
                   ) : (
@@ -485,9 +404,9 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                 </div>
               )}
               <hr className="border-[#f0edeb] my-1" />
-              <div className="flex justify-between font-bold text-textColor text-sm">
+              <div className="flex justify-between font-bold text-slate-900 text-sm">
                 <span>{t("cart.total")}</span>
-                <span className="text-primary">
+                <span className="text-[#0e6877] text-base font-extrabold">
                   {total.toLocaleString("vi-VN")} đ
                 </span>
               </div>
@@ -498,35 +417,37 @@ export const Cart: React.FC<ICartProps> = (_props) => {
 
       {/* Cart Summary & Action footer - Fixed at bottom */}
       {selectedItems.length > 0 && (
-        <div className="bg-white border-t border-[#f0edeb] px-4.5 py-4.5 flex-shrink-0 z-20 shadow-lg">
+        <div className="bg-white border-t border-[#f0edeb] px-5 py-4 flex-shrink-0 z-20 shadow-lg">
           <button
             onClick={handleProceedCheckout}
-            className="w-full h-12 rounded-full text-xs font-bold uppercase tracking-widest bg-primary text-white hover:bg-primary-dark active:scale-[0.98] transition-all shadow-md flex items-center justify-center border-none"
+            className="w-full h-12 rounded-full text-xs font-black uppercase tracking-widest bg-[#0e6877] text-white hover:bg-[#0c5966] active:scale-[0.98] transition-all shadow-md flex items-center justify-center gap-2 border-none cursor-pointer"
           >
-            {t("cart.checkout")} ({selectedItems.length})
+            <ShoppingBagIcon className="w-4 h-4" strokeWidth={2.2} />
+            <span>{t("cart.checkout")} ({selectedItems.length})</span>
           </button>
         </div>
       )}
 
       {/* Cart Voucher Modal */}
       {isVoucherModalOpen && (
-        <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-center justify-center p-6 animate-fade-in">
-          <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up max-h-[70vh] flex flex-col">
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-xs flex items-center justify-center p-6 animate-fade-in">
+          <div className="bg-white w-full max-w-sm rounded-3xl p-5 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up max-h-[70vh] flex flex-col">
             <div className="flex items-center justify-between shrink-0 pb-2 border-b border-[#f5f3f0]">
-              <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                <TagIcon className="w-4 h-4 text-[#0e6877]" strokeWidth={2} />
                 {t("cart.selectVoucherModal")}
               </h3>
               <button
                 onClick={() => setIsVoucherModalOpen(false)}
-                className="p-1 bg-neutral-100 rounded-full border-none cursor-pointer"
+                className="p-1.5 hover:bg-slate-100 rounded-full transition-colors border-none bg-transparent cursor-pointer text-slate-500"
               >
-                ✕
+                <XMarkIcon className="w-4.5 h-4.5" strokeWidth={2.2} />
               </button>
             </div>
 
-            <div className="overflow-y-auto flex-1 space-y-2.5 pr-1">
+            <div className="overflow-y-auto flex-1 space-y-2 pr-1 scrollbar-none">
               {vouchersList.length === 0 ? (
-                <div className="text-center py-6 text-xs text-textColor-variant">{t("cart.noVouchersAvailable")}</div>
+                <div className="text-center py-6 text-xs text-slate-500">{t("cart.noVouchersAvailable")}</div>
               ) : (
                 vouchersList.map((v: any) => {
                   const isSelected = selectedVoucher?.code === v.code;
@@ -534,19 +455,19 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                     <div
                       key={v.code}
                       onClick={() => handleSelectVoucher(isSelected ? null : v)}
-                      className={`p-3 rounded-2xl border text-left cursor-pointer transition-all flex items-center justify-between ${
+                      className={`p-3.5 rounded-2xl border text-left cursor-pointer transition-all flex items-center justify-between ${
                         isSelected
-                          ? "bg-[#0e6877]/10 border-[#0e6877]"
-                          : "bg-white border-[#eeebe8] hover:border-[#0e6877]/50"
+                          ? "bg-teal-50/80 border-[#0e6877]"
+                          : "bg-white border-[#eeebe8] hover:border-teal-200"
                       }`}
                     >
                       <div>
                         <span className="font-black text-xs text-[#0e6877] tracking-wider font-mono">{v.code}</span>
-                        <p className="text-[10.5px] font-bold text-textColor mt-0.5">
+                        <p className="text-[10.5px] font-bold text-slate-700 mt-0.5">
                           {v.type === 'PERCENT' ? `${t("cart.save")} ${v.value}%` : `${t("cart.save")} ${v.value.toLocaleString('vi-VN')}đ`}
                         </p>
                       </div>
-                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${isSelected ? "bg-[#0e6877] text-white" : "bg-neutral-100 text-[#526069]"}`}>
+                      <span className={`text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider ${isSelected ? "bg-[#0e6877] text-white" : "bg-slate-100 text-slate-600"}`}>
                         {isSelected ? t("cart.selected") : t("cart.apply")}
                       </span>
                     </div>
