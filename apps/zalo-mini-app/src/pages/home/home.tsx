@@ -3,7 +3,17 @@ import { Page, Box, Text } from "zmp-ui";
 import { useCart, IProduct } from "../../App";
 import { apiRequest, trackAnalyticsEvent, useTranslation, safeParseImages } from "../../utils";
 import { useInfiniteProducts, useCategories, useBanners } from "../../hooks";
-import { Bars3Icon, ShoppingCartIcon } from "@heroicons/react/24/outline";
+import {
+  Bars3Icon,
+  ShoppingCartIcon,
+  MagnifyingGlassIcon,
+  HeartIcon,
+  SparklesIcon,
+} from "@heroicons/react/24/outline";
+import {
+  HeartIcon as HeartSolidIcon,
+  StarIcon,
+} from "@heroicons/react/24/solid";
 // @ts-ignore
 import logoIcon from "../../assets/logo.png";
 import {
@@ -259,9 +269,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
           onClick={() => setIsLiveSearchOpen(true)}
           className="bg-[#f6f4f2]  hover:bg-[#eeebe8] :bg-slate-700 transition-colors rounded-2xl px-4 py-2.5 flex items-center gap-2.5 text-xs text-[#526069]/70  cursor-pointer border border-[#ece9e6]  shadow-2xs"
         >
-          <svg className="w-4 h-4 text-[#0e6877]  shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-          </svg>
+          <MagnifyingGlassIcon className="w-4 h-4 text-[#0e6877] shrink-0" strokeWidth={2.5} />
           <span className="font-medium truncate flex-1">{t("home.searchPlaceholder")}</span>
         </div>
       </div>
@@ -382,19 +390,11 @@ export const Home: React.FC<IHomeProps> = (_props) => {
                         }}
                         className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-white/90 backdrop-blur-xs flex items-center justify-center border-none cursor-pointer active:scale-90 transition-all shadow-2xs"
                       >
-                        <svg
-                          className={`w-3.5 h-3.5 ${isLiked ? "fill-red-500 text-red-500" : "text-slate-400"}`}
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.2"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                          />
-                        </svg>
+                        {isLiked ? (
+                          <HeartSolidIcon className="w-3.5 h-3.5 text-red-500" />
+                        ) : (
+                          <HeartIcon className="w-3.5 h-3.5 text-slate-400" strokeWidth={2.2} />
+                        )}
                       </button>
                     </div>
 
@@ -502,19 +502,11 @@ export const Home: React.FC<IHomeProps> = (_props) => {
                         }}
                         className="absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-md shadow-xs flex items-center justify-center text-textColor transition-all active:scale-90 hover:bg-white"
                       >
-                        <svg
-                          className={`w-4 h-4 transition-colors ${isLiked ? "fill-red-500 text-red-500" : "text-[#526069]"}`}
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.2"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                          />
-                        </svg>
+                        {isLiked ? (
+                          <HeartSolidIcon className="w-4 h-4 text-red-500" />
+                        ) : (
+                          <HeartIcon className="w-4 h-4 text-[#526069]" strokeWidth={2.2} />
+                        )}
                       </button>
 
                       {/* Floating Tag */}
@@ -536,7 +528,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
 
                       {/* Render rating stars and count */}
                       <div className="flex items-center gap-1 mt-1 text-[9.5px] font-bold text-amber-500">
-                        <span>⭐</span>
+                        <StarIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                         <span>
                           {prod.comments && prod.comments.length > 0
                             ? (
@@ -599,7 +591,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
         style={{ animationDuration: "3s" }}
         title="Vòng quay may mắn"
       >
-        <span className="text-xl">🎡</span>
+        <SparklesIcon className="w-6 h-6 text-white" strokeWidth={2} />
       </button>
 
       {/* Lucky Wheel Modal */}

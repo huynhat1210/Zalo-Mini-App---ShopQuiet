@@ -8,8 +8,6 @@ import {
   HeartIcon,
   GiftIcon,
   TicketIcon,
-  SunIcon,
-  MoonIcon,
   PhoneIcon,
   ChevronRightIcon,
   UserIcon,
@@ -99,8 +97,6 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
     zaloUser,
     setActiveTab,
     setIsAuthModalOpen,
-    theme,
-    toggleTheme,
   } = useCart();
   const { t } = useTranslation();
   const [settings, setSettings] = useState(fallbackSettings);
@@ -162,18 +158,18 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
 
   return (
     <div className="fixed inset-0 z-[100] flex bg-black/50 backdrop-blur-xs animate-fade-in">
-      <div className="w-[85%] max-w-[330px] h-full bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xl flex flex-col border-r border-[#f0edeb] dark:border-slate-800 animate-slide-right">
+      <div className="w-[85%] max-w-[330px] h-full bg-white text-slate-900 shadow-2xl flex flex-col border-r border-[#f0edeb] animate-slide-right">
         {/* Drawer Header */}
-        <div className="px-5 py-4 flex items-center justify-between border-b border-[#f0edeb] dark:border-slate-800 sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md z-10">
+        <div className="px-5 py-4 flex items-center justify-between border-b border-[#f0edeb] sticky top-0 bg-white/95 backdrop-blur-md z-10">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
-            <span className="text-xs font-black uppercase tracking-[0.25em] text-textColor dark:text-slate-100">
+            <span className="w-2 h-2 rounded-full bg-[#0e6877] animate-ping" />
+            <span className="text-xs font-black uppercase tracking-[0.25em] text-textColor">
               {brandName}
             </span>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-neutral-100 dark:hover:bg-slate-800 rounded-full transition-all active:scale-90 border-none bg-transparent cursor-pointer text-slate-500 dark:text-slate-400"
+            className="p-1.5 hover:bg-neutral-100 rounded-full transition-all active:scale-90 border-none bg-transparent cursor-pointer text-slate-500"
           >
             <XMarkIcon className="w-5 h-5" strokeWidth={2.2} />
           </button>
@@ -182,7 +178,7 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
         {/* Drawer Scrollable Content */}
         <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5 scrollbar-none">
           {/* User Profile Header Card */}
-          <div className="bg-gradient-to-br from-teal-50 to-emerald-50/60 dark:from-slate-800 dark:to-slate-800/60 rounded-2xl p-4 border border-teal-100/80 dark:border-slate-700/80 shadow-xs relative overflow-hidden">
+          <div className="bg-gradient-to-br from-teal-50 to-emerald-50/60 rounded-2xl p-4 border border-teal-100/80 shadow-xs relative overflow-hidden">
             <div className="flex items-center gap-3">
               <div className="relative">
                 <img
@@ -191,12 +187,12 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
                     "https://zalo-api.zdn.vn/api/emoticon/avatar"
                   }
                   alt={zaloUser?.name || "Avatar"}
-                  className="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-slate-700 shadow-sm"
+                  className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
                 />
-                <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-800 rounded-full" />
+                <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full" />
               </div>
               <div className="flex-1 min-w-0 text-left">
-                <h4 className="text-xs font-black text-slate-900 dark:text-slate-100 truncate">
+                <h4 className="text-xs font-black text-slate-900 truncate">
                   {zaloUser?.name || "Khách"}
                 </h4>
                 <div className="flex items-center gap-1.5 mt-0.5">
@@ -207,7 +203,7 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
               </div>
             </div>
 
-            <div className="mt-3 pt-3 border-t border-teal-100 dark:border-slate-700/60 flex justify-between items-center">
+            <div className="mt-3 pt-3 border-t border-teal-100 flex justify-between items-center">
               {isGuest ? (
                 <button
                   onClick={() => {
@@ -225,7 +221,7 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
                     onClose();
                     setActiveTab("profile");
                   }}
-                  className="w-full py-1.5 bg-white dark:bg-slate-700 text-[#0e6877] dark:text-teal-300 text-[10px] font-extrabold uppercase tracking-wider rounded-xl border border-teal-200 dark:border-slate-600 cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                  className="w-full py-1.5 bg-white text-[#0e6877] text-[10px] font-extrabold uppercase tracking-wider rounded-xl border border-teal-200 cursor-pointer active:scale-95 transition-all flex items-center justify-center gap-1.5"
                 >
                   <UserIcon className="w-3.5 h-3.5" strokeWidth={2.5} />
                   Trang cá nhân
@@ -236,7 +232,7 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
 
           {/* Quick Shortcuts */}
           <div className="space-y-2">
-            <h3 className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-left pl-1">
+            <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest text-left pl-1">
               Lối Tắt Mua Sắm
             </h3>
             <div className="grid grid-cols-2 gap-2">
@@ -245,12 +241,12 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
                   onClose();
                   setActiveTab("orders");
                 }}
-                className="p-3 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-2.5 transition-all cursor-pointer border-none text-left"
+                className="p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl border border-slate-100 flex items-center gap-2.5 transition-all cursor-pointer border-none text-left"
               >
-                <div className="p-1.5 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
+                <div className="p-1.5 rounded-xl bg-blue-50 text-blue-600">
                   <ShoppingBagIcon className="w-4 h-4" strokeWidth={2.2} />
                 </div>
-                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200">
+                <span className="text-[11px] font-bold text-slate-700">
                   Đơn hàng
                 </span>
               </button>
@@ -260,12 +256,12 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
                   onClose();
                   setActiveTab("saved-items");
                 }}
-                className="p-3 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-2.5 transition-all cursor-pointer border-none text-left"
+                className="p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl border border-slate-100 flex items-center gap-2.5 transition-all cursor-pointer border-none text-left"
               >
-                <div className="p-1.5 rounded-xl bg-rose-50 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400">
+                <div className="p-1.5 rounded-xl bg-rose-50 text-rose-600">
                   <HeartIcon className="w-4 h-4" strokeWidth={2.2} />
                 </div>
-                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200">
+                <span className="text-[11px] font-bold text-slate-700">
                   Yêu thích
                 </span>
               </button>
@@ -275,12 +271,12 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
                   onClose();
                   setActiveTab("profile");
                 }}
-                className="p-3 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-2.5 transition-all cursor-pointer border-none text-left"
+                className="p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl border border-slate-100 flex items-center gap-2.5 transition-all cursor-pointer border-none text-left"
               >
-                <div className="p-1.5 rounded-xl bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400">
+                <div className="p-1.5 rounded-xl bg-amber-50 text-amber-600">
                   <GiftIcon className="w-4 h-4" strokeWidth={2.2} />
                 </div>
-                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200">
+                <span className="text-[11px] font-bold text-slate-700">
                   Vòng quay
                 </span>
               </button>
@@ -290,12 +286,12 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
                   onClose();
                   setActiveTab("profile");
                 }}
-                className="p-3 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center gap-2.5 transition-all cursor-pointer border-none text-left"
+                className="p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl border border-slate-100 flex items-center gap-2.5 transition-all cursor-pointer border-none text-left"
               >
-                <div className="p-1.5 rounded-xl bg-purple-50 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400">
+                <div className="p-1.5 rounded-xl bg-purple-50 text-purple-600">
                   <TicketIcon className="w-4 h-4" strokeWidth={2.2} />
                 </div>
-                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200">
+                <span className="text-[11px] font-bold text-slate-700">
                   Voucher
                 </span>
               </button>
@@ -304,7 +300,7 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
 
           {/* Exclusive Collections */}
           <div className="space-y-2.5">
-            <h3 className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-left pl-1">
+            <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest text-left pl-1">
               Bộ Sưu Tập Độc Quyền
             </h3>
             <div className="space-y-1.5">
@@ -312,9 +308,9 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
                 <button
                   key={item.id}
                   onClick={() => handleMenuClick(item)}
-                  className="w-full text-left py-2.5 px-3.5 bg-slate-50/70 dark:bg-slate-800/60 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center justify-between group border-none cursor-pointer"
+                  className="w-full text-left py-2.5 px-3.5 bg-slate-50/70 rounded-xl hover:bg-slate-100 transition-all flex items-center justify-between group border-none cursor-pointer"
                 >
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors">
+                  <span className="text-xs font-bold text-slate-800 group-hover:text-primary transition-colors">
                     {item.label}
                   </span>
                   <ChevronRightIcon className="w-3.5 h-3.5 text-slate-400 group-hover:text-primary transition-colors" strokeWidth={2.5} />
@@ -325,7 +321,7 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
 
           {/* Natural Materials */}
           <div className="space-y-2.5">
-            <h3 className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-left pl-1">
+            <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest text-left pl-1">
               Chất Liệu Tự Nhiên
             </h3>
             <div className="flex flex-wrap gap-1.5">
@@ -333,7 +329,7 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
                 <button
                   key={item.id}
                   onClick={() => handleMenuClick(item)}
-                  className="text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-full hover:border-[#0e6877] hover:text-[#0e6877] transition-all active:scale-95 cursor-pointer shadow-2xs"
+                  className="text-[10px] font-bold text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-full hover:border-[#0e6877] hover:text-[#0e6877] transition-all active:scale-95 cursor-pointer shadow-2xs"
                 >
                   {item.label}
                 </button>
@@ -343,70 +339,50 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
 
           {/* Brand Story Card */}
           <div className="space-y-2">
-            <h3 className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-left pl-1 flex items-center gap-1">
+            <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest text-left pl-1 flex items-center gap-1">
               <SparklesIcon className="w-3 h-3 text-amber-500" />
               {storyTitle}
             </h3>
-            <div className="bg-gradient-to-b from-stone-50 to-amber-50/40 dark:from-slate-800 dark:to-slate-800/80 rounded-2xl p-4 border border-stone-200/60 dark:border-slate-700 space-y-2 text-left">
-              <p className="text-[10.5px] italic text-slate-600 dark:text-slate-300 leading-relaxed">
+            <div className="bg-gradient-to-b from-stone-50 to-amber-50/40 rounded-2xl p-4 border border-stone-200/60 space-y-2 text-left">
+              <p className="text-[10.5px] italic text-slate-600 leading-relaxed">
                 "{storyContent}"
               </p>
               <img
                 src={storyImageUrl}
                 alt="Brand mood"
-                className="w-full h-24 rounded-xl object-cover border border-stone-200 dark:border-slate-700"
+                className="w-full h-24 rounded-xl object-cover border border-stone-200"
               />
             </div>
           </div>
 
           {/* Shopping Guarantees */}
-          <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800 space-y-2 text-left">
-            <div className="flex items-center gap-2 text-[10.5px] font-semibold text-slate-600 dark:text-slate-300">
+          <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-100 space-y-2 text-left">
+            <div className="flex items-center gap-2 text-[10.5px] font-semibold text-slate-600">
               <TruckIcon className="w-4 h-4 text-emerald-500 shrink-0" strokeWidth={2} />
               <span>Freeship cho đơn hàng từ 500k</span>
             </div>
-            <div className="flex items-center gap-2 text-[10.5px] font-semibold text-slate-600 dark:text-slate-300">
+            <div className="flex items-center gap-2 text-[10.5px] font-semibold text-slate-600">
               <ArrowPathIcon className="w-4 h-4 text-blue-500 shrink-0" strokeWidth={2} />
               <span>{returnPolicy}</span>
             </div>
-            <div className="flex items-center gap-2 text-[10.5px] font-semibold text-slate-600 dark:text-slate-300">
+            <div className="flex items-center gap-2 text-[10.5px] font-semibold text-slate-600">
               <ShieldCheckIcon className="w-4 h-4 text-amber-500 shrink-0" strokeWidth={2} />
               <span>100% Sản phẩm chính hãng</span>
             </div>
-          </div>
-
-          {/* Theme Mode Toggle (Light/Dark) */}
-          <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-3 border border-slate-100 dark:border-slate-800 flex justify-between items-center">
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
-              {theme === "dark" ? (
-                <MoonIcon className="w-4 h-4 text-amber-400" strokeWidth={2.2} />
-              ) : (
-                <SunIcon className="w-4 h-4 text-amber-500" strokeWidth={2.2} />
-              )}
-              Giao diện {theme === "dark" ? "Ban Đêm" : "Ban Ngày"}
-            </span>
-            <button
-              onClick={toggleTheme}
-              className="px-3 py-1 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-[10px] font-black uppercase tracking-wider rounded-xl border-none cursor-pointer active:scale-95 transition-all"
-            >
-              {theme === "dark" ? "Chuyển Sáng" : "Chuyển Tối"}
-            </button>
           </div>
 
           {/* Support Hotline Footer */}
           <div className="pt-1 pb-2">
             <a
               href={`tel:${hotline}`}
-              className="w-full py-2.5 px-4 bg-teal-50 dark:bg-slate-800 border border-teal-100 dark:border-slate-700 rounded-2xl flex items-center justify-center gap-2 text-xs font-extrabold text-[#0e6877] dark:text-teal-300 no-underline hover:bg-teal-100/60 transition-all"
+              className="w-full py-2.5 px-4 bg-teal-50 border border-teal-100 rounded-2xl flex items-center justify-center gap-2 text-xs font-extrabold text-[#0e6877] no-underline hover:bg-teal-100/60 transition-all"
             >
-              <PhoneIcon className="w-4 h-4" strokeWidth={2.2} />
-              Hotline Hỗ Trợ: {hotline}
+              <PhoneIcon className="w-4 h-4" strokeWidth={2} />
+              <span>Hotline Hỗ Trợ: {hotline}</span>
             </a>
           </div>
         </div>
       </div>
-
-      <div className="flex-1" onClick={onClose}></div>
     </div>
   );
 };
