@@ -71,7 +71,7 @@ export const OrderSuccess: React.FC<IOrderSuccessProps> = (_props) => {
           </svg>
         </button>
         <span className="text-xs font-bold uppercase tracking-widest text-textColor">
-          Đã xác nhận đơn hàng
+          Order Confirmed
         </span>
         <div className="w-8"></div>
       </div>
@@ -96,14 +96,14 @@ export const OrderSuccess: React.FC<IOrderSuccessProps> = (_props) => {
           </div>
           <div className="space-y-1.5">
             <h2 className="text-base font-bold text-textColor leading-tight">
-              Cảm ơn bạn đã đặt hàng!
+              Thank you for your order!
             </h2>
             <p className="text-xs text-textColor-variant leading-relaxed max-w-[270px] mx-auto">
-              Đơn hàng{" "}
+              Your order{" "}
               <span className="font-semibold text-textColor">
                 #{activeOrder.orderNumber}
               </span>{" "}
-              của bạn đã được ghi nhận và đang chuẩn bị giao.
+              has been confirmed and is being prepared for delivery.
             </p>
           </div>
         </div>
@@ -128,10 +128,10 @@ export const OrderSuccess: React.FC<IOrderSuccessProps> = (_props) => {
             </div>
             <div className="text-xs">
               <p className="text-[#526069]/60 font-semibold uppercase tracking-wider text-[9px]">
-                Dự kiến giao hàng
+                Estimated Delivery
               </p>
               <p className="font-bold text-textColor mt-0.5">
-                {activeOrder.estimatedDeliveryDate || "3 - 5 ngày làm việc"}
+                {activeOrder.estimatedDeliveryDate || "3 - 5 business days"}
               </p>
             </div>
           </div>
@@ -140,8 +140,8 @@ export const OrderSuccess: React.FC<IOrderSuccessProps> = (_props) => {
         {/* IOrder Summary Bento Card */}
         <div className="bg-white rounded-2xl border border-[#f0edeb] overflow-hidden shadow-xs">
           <div className="px-4.5 py-4 bg-neutral-50 border-b border-[#f0edeb] flex justify-between items-center text-[9px] font-bold uppercase tracking-wider text-textColor-variant">
-            <span>Tóm tắt đơn hàng</span>
-            <span>{activeOrder.itemsCount} Sản phẩm</span>
+            <span>Order Summary</span>
+            <span>{activeOrder.itemsCount} Products</span>
           </div>
 
           <div className="px-4.5 py-2 divide-y divide-[#f0edeb]">
@@ -165,11 +165,11 @@ export const OrderSuccess: React.FC<IOrderSuccessProps> = (_props) => {
                       </p>
                       <div className="flex items-center gap-1.5 text-[10px] flex-wrap">
                         <span className="text-textColor-variant font-medium">
-                          SL: x{item.quantity}
+                          Qty: x{item.quantity}
                         </span>
                         {item.color && item.color !== "DEFAULT" && (
                           <span className="bg-[#fcf8f5] border border-orange-200/50 text-orange-700 px-1.5 py-0.2 rounded font-medium text-[8px]">
-                            Màu: {item.color}
+                            Color: {item.color}
                           </span>
                         )}
                         {item.size && item.size !== "DEFAULT" && (
@@ -190,7 +190,7 @@ export const OrderSuccess: React.FC<IOrderSuccessProps> = (_props) => {
 
           <div className="px-4.5 py-4 bg-neutral-50 border-t border-[#f0edeb] flex justify-between items-center text-xs font-bold text-textColor">
             <span className="uppercase tracking-wider text-[10px] text-textColor-variant font-extrabold">
-              Tổng thanh toán
+              Total Payment
             </span>
             <span className="text-base font-extrabold text-primary">
               {activeOrder.total.toLocaleString("vi-VN")} đ
@@ -204,14 +204,14 @@ export const OrderSuccess: React.FC<IOrderSuccessProps> = (_props) => {
             onClick={() => setActiveTab("orders")}
             className="w-full h-11.5 rounded-full text-xs font-bold uppercase tracking-wider bg-primary text-white hover:bg-primary-dark active:scale-[0.98] transition-all shadow-sm"
           >
-            Theo dõi đơn hàng
+            Track Order
           </button>
 
           <button
             onClick={() => setActiveTab("home")}
             className="w-full h-11.5 rounded-full text-xs font-bold uppercase tracking-wider border border-[#eae8e6] text-[#526069] bg-white hover:bg-neutral-50 active:scale-[0.98] transition-all"
           >
-            Tiếp tục mua sắm
+            Continue Shopping
           </button>
         </div>
       </div>

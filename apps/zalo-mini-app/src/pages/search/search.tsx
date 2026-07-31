@@ -53,11 +53,11 @@ export const Search: React.FC<ISearchProps> = (_props) => {
     if (hasColors || hasSizes) {
       // Product has variants - open product detail to select
       setSelectedProductDetail(product);
-      showToast("Vui lòng chọn phân loại sản phẩm!", "info");
+      showToast("Please select product variant!", "info");
     } else {
       // Product has no variants - add directly
       addToCart(product);
-      showToast(`Đã thêm ${product.name} vào giỏ hàng!`, "success");
+      showToast(`Added ${product.name} to cart!`, "success");
 
       // Track add_to_cart event
       if (zaloUser?.id) {
@@ -93,7 +93,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
       const cached = localStorage.getItem("search_history");
       if (cached) return JSON.parse(cached);
     }
-    return ["Vải lanh", "Giày bốt", "Áo khoác", "Gỗ óc chó"];
+    return ["Linen", "Boots", "Jackets", "Walnut wood"];
   });
 
   const saveSearchToHistory = (term: string) => {
@@ -410,7 +410,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
                 ))}
                 {history.length === 0 && (
                   <span className="text-[11px] text-textColor-variant/60 italic pl-1">
-                    Không có tìm kiếm gần đây
+                    No recent searches
                   </span>
                 )}
               </div>
@@ -421,7 +421,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
               <div className="space-y-3.5">
                 <div className="flex justify-between items-center px-1">
                   <h3 className="text-[10px] font-extrabold text-[#526069]/60 uppercase tracking-widest">
-                    Bạn đã xem
+                    You Viewed
                   </h3>
                 </div>
                 <div className="grid grid-cols-2 gap-x-5 gap-y-7">
@@ -475,7 +475,7 @@ export const Search: React.FC<ISearchProps> = (_props) => {
             {/* Categories */}
             <div className="space-y-3.5">
               <h3 className="text-[10px] font-extrabold text-[#526069]/60 uppercase tracking-widest px-1">
-                Danh mục
+                Categories
               </h3>
               <div className="grid grid-cols-2 gap-3.5">
                 {categories.map((cat) => (

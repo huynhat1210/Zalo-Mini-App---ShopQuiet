@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useCart } from "../../App";
-import { apiRequest } from "../../utils/api";
+import { apiRequest, useTranslation } from "../../utils";
 import { IMenuDrawerComponentProps } from "./menu-drawer.type";
 
 type CmsMenuItem = {
@@ -79,6 +79,7 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
 ) => {
   const { isOpen, onClose, setSelectedCategory } = props;
   const { showToast } = useCart();
+  const { t, lang, setLanguage } = useTranslation();
   const [settings, setSettings] = useState(fallbackSettings);
   const [menuItems, setMenuItems] = useState<CmsMenuItem[]>(fallbackMenuItems);
 
@@ -224,6 +225,21 @@ export const MenuDrawerComponent: React.FC<IMenuDrawerComponentProps> = (
                 alt="Brand mood"
                 className="w-full h-24 rounded-xl object-cover border border-[#f0edeb]/50 "
               />
+            </div>
+          </div>
+
+          {/* Language Switcher Card */}
+          <div className="pt-1">
+            <div className="bg-[#fbf9f7] rounded-2xl p-3 border border-[#f0edeb] flex justify-between items-center">
+              <span className="text-xs font-bold text-textColor flex items-center gap-1.5">
+                🌐 {t("lang.switch")}
+              </span>
+              <button
+                onClick={() => setLanguage(lang === "vi" ? "en" : "vi")}
+                className="px-3 py-1 bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-black uppercase tracking-wider rounded-lg border-none cursor-pointer active:scale-95 transition-all"
+              >
+                {lang === "vi" ? "🇻🇳 VI → 🇬🇧 EN" : "🇬🇧 EN → 🇻🇳 VI"}
+              </button>
             </div>
           </div>
 

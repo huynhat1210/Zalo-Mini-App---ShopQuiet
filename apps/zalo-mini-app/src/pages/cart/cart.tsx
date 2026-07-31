@@ -162,8 +162,8 @@ export const Cart: React.FC<ICartProps> = (_props) => {
         {cart.length === 0 ? (
           <EmptyStateComponent
             title={t("cart.empty")}
-            description="You haven't added any products yet. Let's explore our minimalist products!"
-            actionText="Start Shopping"
+            description={t("cart.emptyDesc")}
+            actionText={t("cart.startShopping")}
             onAction={() => {
               setIsCartOpen(false);
               setActiveTab("home");
@@ -177,15 +177,15 @@ export const Cart: React.FC<ICartProps> = (_props) => {
               <div className="flex justify-between items-center text-xs">
                 {isFreeshipEligible ? (
                   <span className="font-bold text-teal-700">
-                    Your order is FREESHIP!
+                    {t("cart.freeshipEligible")}
                   </span>
                 ) : (
                   <span className="font-medium text-[#526069]">
-                    Buy{" "}
+                    {t("cart.buyMoreFreeship")}{" "}
                     <span className="font-bold text-teal-600">
                       {remainingForFreeship.toLocaleString("vi-VN")} đ
                     </span>{" "}
-                    more for Freeship (Target {freeshipThreshold >= 1000 ? `${(freeshipThreshold / 1000).toFixed(0)}K` : `${freeshipThreshold}đ`})
+                    {t("cart.forFreeship")} ({t("cart.target")} {freeshipThreshold >= 1000 ? `${(freeshipThreshold / 1000).toFixed(0)}K` : `${freeshipThreshold}đ`})
                   </span>
                 )}
                 <span className="text-[10px] text-teal-600 font-extrabold">
@@ -209,7 +209,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                 onChange={toggleCheckAll}
               />
               <span className="text-xs text-textColor-variant font-bold">
-                Select All ({cart.length})
+                {t("cart.selectAll")} ({cart.length})
               </span>
             </div>
 
@@ -280,7 +280,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                                             e.target.value,
                                           );
                                           showToast(
-                                            `Changed to Color: ${e.target.value}`,
+                                            `${t("cart.changedColor")}: ${e.target.value}`,
                                             "success",
                                           );
                                         }}
@@ -298,12 +298,12 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                                           )
                                           .map((c: string) => (
                                             <option key={c} value={c}>
-                                              Color: {c}
+                                              {t("cart.color")}: {c}
                                             </option>
                                           ))}
                                         {item.color === "DEFAULT" && (
                                           <option value="DEFAULT">
-                                            Color: Default
+                                            {t("cart.color")}: {t("cart.default")}
                                           </option>
                                         )}
                                       </select>
@@ -323,7 +323,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                                             item.color,
                                           );
                                           showToast(
-                                            `Changed to Size: ${e.target.value}`,
+                                            `${t("cart.changedSize")}: ${e.target.value}`,
                                             "success",
                                           );
                                         }}
@@ -338,12 +338,12 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                                           )
                                           .map((v: any) => (
                                             <option key={v.size} value={v.size}>
-                                              Size: {v.size}
+                                              {t("cart.size")}: {v.size}
                                             </option>
                                           ))}
                                         {item.size === "DEFAULT" && (
                                           <option value="DEFAULT">
-                                            Size: Default
+                                            {t("cart.size")}: {t("cart.default")}
                                           </option>
                                         )}
                                       </select>
@@ -435,13 +435,13 @@ export const Cart: React.FC<ICartProps> = (_props) => {
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="text-lg shrink-0">🎟️</span>
               <div className="text-left min-w-0">
-                <p className="text-[10px] font-extrabold text-[#526069]/80 uppercase tracking-wider">Shop Voucher</p>
+                <p className="text-[10px] font-extrabold text-[#526069]/80 uppercase tracking-wider">{t("cart.shopVoucher")}</p>
                 {selectedVoucher ? (
                   <p className="text-xs font-black text-[#0e6877] truncate mt-0.5">
-                    ✅ {selectedVoucher.code} ({selectedVoucher.type === 'PERCENT' ? `Save ${selectedVoucher.value}%` : `Save ${selectedVoucher.value.toLocaleString('vi-VN')}đ`})
+                    ✅ {selectedVoucher.code} ({selectedVoucher.type === 'PERCENT' ? `${t("cart.save")} ${selectedVoucher.value}%` : `${t("cart.save")} ${selectedVoucher.value.toLocaleString('vi-VN')}đ`})
                   </p>
                 ) : (
-                  <p className="text-xs font-bold text-textColor-variant truncate mt-0.5">No voucher applied</p>
+                  <p className="text-xs font-bold text-textColor-variant truncate mt-0.5">{t("cart.noVoucherApplied")}</p>
                 )}
               </div>
             </div>
@@ -449,7 +449,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
               onClick={() => setIsVoucherModalOpen(true)}
               className="text-[10px] font-extrabold bg-[#0e6877]/10 text-[#0e6877] hover:bg-[#0e6877] hover:text-white px-3 py-1.5 rounded-full border-none cursor-pointer transition-all shrink-0 active:scale-95"
             >
-              {selectedVoucher ? "Change" : "Select ➔"}
+              {selectedVoucher ? t("cart.change") : t("cart.select")}
             </button>
           </div>
         )}
@@ -458,20 +458,20 @@ export const Cart: React.FC<ICartProps> = (_props) => {
         {selectedItems.length > 0 && (
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 space-y-3.5 shadow-xs mt-3">
             <h3 className="text-[10px] font-bold uppercase text-[#526069]/70 tracking-widest text-left">
-              Order Summary
+              {t("cart.orderSummary")}
             </h3>
 
             <div className="space-y-2.5 text-xs">
               <div className="flex justify-between text-textColor-variant font-medium">
-                <span>Subtotal ({selectedItems.length})</span>
+                <span>{t("cart.subtotal")} ({selectedItems.length})</span>
                 <span>{subtotal.toLocaleString("vi-VN")} đ</span>
               </div>
               <div className="flex justify-between text-textColor-variant font-medium">
-                <span>Shipping</span>
+                <span>{t("cart.shipping")}</span>
                 <span>
                   {shipping === 0 && subtotal > 0 ? (
                     <span className="text-teal-600 font-bold">
-                      Free (Freeship)
+                      {t("cart.freeship")}
                     </span>
                   ) : (
                     `${shipping.toLocaleString("vi-VN")} đ`
@@ -480,13 +480,13 @@ export const Cart: React.FC<ICartProps> = (_props) => {
               </div>
               {voucherDiscount > 0 && (
                 <div className="flex justify-between text-[#0e6877] font-bold">
-                  <span>Voucher Discount ({selectedVoucher?.code})</span>
+                  <span>{t("cart.voucherDiscount")} ({selectedVoucher?.code})</span>
                   <span>−{voucherDiscount.toLocaleString("vi-VN")} đ</span>
                 </div>
               )}
               <hr className="border-[#f0edeb] my-1" />
               <div className="flex justify-between font-bold text-textColor text-sm">
-                <span>Total</span>
+                <span>{t("cart.total")}</span>
                 <span className="text-primary">
                   {total.toLocaleString("vi-VN")} đ
                 </span>
@@ -514,7 +514,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
           <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up max-h-[70vh] flex flex-col">
             <div className="flex items-center justify-between shrink-0 pb-2 border-b border-[#f5f3f0]">
               <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">
-                🎟️ Select Voucher
+                {t("cart.selectVoucherModal")}
               </h3>
               <button
                 onClick={() => setIsVoucherModalOpen(false)}
@@ -526,7 +526,7 @@ export const Cart: React.FC<ICartProps> = (_props) => {
 
             <div className="overflow-y-auto flex-1 space-y-2.5 pr-1">
               {vouchersList.length === 0 ? (
-                <div className="text-center py-6 text-xs text-textColor-variant">No vouchers available</div>
+                <div className="text-center py-6 text-xs text-textColor-variant">{t("cart.noVouchersAvailable")}</div>
               ) : (
                 vouchersList.map((v: any) => {
                   const isSelected = selectedVoucher?.code === v.code;
@@ -543,11 +543,11 @@ export const Cart: React.FC<ICartProps> = (_props) => {
                       <div>
                         <span className="font-black text-xs text-[#0e6877] tracking-wider font-mono">{v.code}</span>
                         <p className="text-[10.5px] font-bold text-textColor mt-0.5">
-                          {v.type === 'PERCENT' ? `Save ${v.value}%` : `Save ${v.value.toLocaleString('vi-VN')}đ`}
+                          {v.type === 'PERCENT' ? `${t("cart.save")} ${v.value}%` : `${t("cart.save")} ${v.value.toLocaleString('vi-VN')}đ`}
                         </p>
                       </div>
                       <span className={`text-xs font-bold px-3 py-1 rounded-full ${isSelected ? "bg-[#0e6877] text-white" : "bg-neutral-100 text-[#526069]"}`}>
-                        {isSelected ? "Selected ✓" : "Apply"}
+                        {isSelected ? t("cart.selected") : t("cart.apply")}
                       </span>
                     </div>
                   );

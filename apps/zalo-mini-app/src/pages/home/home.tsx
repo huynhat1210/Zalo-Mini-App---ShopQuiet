@@ -145,12 +145,10 @@ export const Home: React.FC<IHomeProps> = (_props) => {
     .filter((banner) => banner.imageUrl)
     .map((banner) => ({
       id: banner.id,
-      tag: banner.tag || "Khuyến mãi",
-      title: banner.title || "Ưu đãi mới",
-      description:
-        banner.description ||
-        "Khám phá các ưu đãi đang được cập nhật tại ShopQuiet.",
-      cta: banner.cta || "Xem ngay",
+      tag: banner.tag || t("home.bannerTag"),
+      title: banner.title || t("home.bannerTitle"),
+      description: banner.description || t("home.bannerDesc"),
+      cta: banner.cta || t("home.bannerCta"),
       image: banner.imageUrl,
       category: banner.link || null,
     }));
@@ -184,11 +182,11 @@ export const Home: React.FC<IHomeProps> = (_props) => {
     if (hasColors || hasSizes) {
       // Product has variants - open product detail to select
       setSelectedProductDetail(product);
-      showToast("Vui lòng chọn phân loại sản phẩm!", "info");
+      showToast(t("home.selectVariant"), "info");
     } else {
       // Product has no variants - add directly
       addToCart(product);
-      showToast(`Đã thêm ${product.name} vào giỏ hàng!`, "success");
+      showToast(t("home.addedToCart"), "success");
 
       // Track add_to_cart event
       if (zaloUser?.id) {
@@ -353,11 +351,11 @@ export const Home: React.FC<IHomeProps> = (_props) => {
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#0e6877] animate-pulse"></span>
                 <TextCast className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                  Có thể bạn thích
+                  {t("home.recommendations")}
                 </TextCast>
               </div>
               <span className="text-[10px] font-bold text-[#0e6877] bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-100">
-                Gợi ý riêng cho bạn
+                {t("home.personalized")}
               </span>
             </div>
 
@@ -497,8 +495,8 @@ export const Home: React.FC<IHomeProps> = (_props) => {
                           toggleSavedItem(prod);
                           showToast(
                             isLiked
-                              ? `Đã bỏ lưu ${prod.name}`
-                              : `Đã lưu ${prod.name}`,
+                              ? `${t("toast.unsaved")}: ${prod.name}`
+                              : `${t("toast.saved")}: ${prod.name}`,
                             "success",
                           );
                         }}
@@ -550,7 +548,7 @@ export const Home: React.FC<IHomeProps> = (_props) => {
                             : "5.0"}
                         </span>
                         <span className="text-textColor-variant font-semibold">
-                          ({prod.comments ? prod.comments.length : 0} đánh giá)
+                          ({prod.comments ? prod.comments.length : 0} reviews)
                         </span>
                       </div>
 

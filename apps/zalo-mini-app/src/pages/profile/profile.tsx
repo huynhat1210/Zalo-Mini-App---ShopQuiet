@@ -4,8 +4,6 @@ import { useCart, IOrder } from "../../App";
 import { apiRequest, useTranslation } from "../../utils";
 import { IProfileProps } from "./profile.type";
 import {
-  SunIcon,
-  MoonIcon,
   UserPlusIcon,
   ShareIcon,
   DocumentDuplicateIcon,
@@ -58,8 +56,6 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     fetchGamificationData,
     claimDailyReward,
     exchangeVoucher,
-    theme,
-    toggleTheme,
   } = useCart();
 
   const [orders, setOrders] = useState<IOrder[]>([]);
@@ -86,21 +82,21 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     useState("help-support");
 
   // Dynamic membership ranking badge settings
-  const currentTier = zaloUser?.membershipTier || "Đồng";
-  let tierBadge = "ĐỒNG";
+  const currentTier = zaloUser?.membershipTier || "Bronze";
+  let tierBadge = "BRONZE";
   let badgeColor = "bg-neutral-400 text-white";
 
-  if (currentTier === "Kim cương") {
-    tierBadge = "KIM CƯƠNG";
+  if (currentTier === "Diamond") {
+    tierBadge = "DIAMOND";
     badgeColor = "bg-cyan-400 text-teal-950";
-  } else if (currentTier === "Vàng") {
-    tierBadge = "VÀNG";
+  } else if (currentTier === "Gold") {
+    tierBadge = "GOLD";
     badgeColor = "bg-yellow-400 text-teal-950";
-  } else if (currentTier === "Bạc") {
-    tierBadge = "BẠC";
+  } else if (currentTier === "Silver") {
+    tierBadge = "SILVER";
     badgeColor = "bg-slate-300 text-teal-950";
   } else {
-    tierBadge = "ĐỒNG";
+    tierBadge = "BRONZE";
     badgeColor = "bg-amber-600 text-white";
   }
 
@@ -150,7 +146,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     try {
       const [fetchedOrders, fetchedProducts, fetchedVouchers] =
         await Promise.all([
-          apiRequest<IOrder[]>("/orders"), // Lấy đơn hàng của chính user hiện tại
+          apiRequest<IOrder[]>("/orders"), // Get orders for current user
           apiRequest<any>("/products?page=1&limit=10"),
           apiRequest<any[]>("/vouchers").catch(() => []),
         ]);
@@ -257,7 +253,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
           <span className="text-[10px] font-bold text-[#526069] tracking-wider uppercase">
-            Đang tải thông tin cá nhân...
+            Loading profile information...
           </span>
         </div>
       </PageCast>
@@ -293,20 +289,9 @@ export const Profile: React.FC<IProfileProps> = (props) => {
           </span>
           <div className="flex items-center gap-2">
             <button
-              onClick={toggleTheme}
-              className="p-2 bg-white/10 hover:bg-white/20 active:scale-95 rounded-full transition-colors border-none text-white cursor-pointer"
-              title={theme === "dark" ? "Chuyển giao diện sáng" : "Chuyển giao diện tối"}
-            >
-              {theme === "dark" ? (
-                <SunIcon className="w-5 h-5 text-amber-300" strokeWidth={2.2} />
-              ) : (
-                <MoonIcon className="w-5 h-5 text-teal-100" strokeWidth={2.2} />
-              )}
-            </button>
-            <button
               onClick={() => setIsAuthModalOpen(true)}
               className="px-3 py-1 bg-white/20 hover:bg-white/30 active:scale-95 rounded-full transition-all border-none text-white text-xs font-bold flex items-center gap-1 cursor-pointer shadow-xs"
-              title="Đăng nhập / Đăng ký tài khoản"
+              title="Login / Register account"
             >
               <span>🔑</span> Auth
             </button>
@@ -371,7 +356,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                     d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.387a12.035 12.035 0 01-7.108-7.108c-.155-.44.01-1.03.387-1.312l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.318A2.25 2.25 0 002.1 4.5v2.25z"
                   />
                 </svg>
-                <span>{profile.phone || "Chưa cập nhật số điện thoại"}</span>
+                <span>{profile.phone || "Phone not updated"}</span>
               </p>
               <p className="flex items-center gap-1.5">
                 <svg
@@ -387,7 +372,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                     d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
                   />
                 </svg>
-                <span>{profile.email || "Chưa cập nhật email"}</span>
+                <span>{profile.email || "Email not updated"}</span>
               </p>
               <p className="flex items-center gap-1.5">
                 <svg
@@ -403,7 +388,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                     d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
                   />
                 </svg>
-                <span>{profile.birthday || "Chưa cập nhật ngày sinh"}</span>
+                <span>{profile.birthday || "Birthday not updated"}</span>
               </p>
               <p className="flex items-center gap-1.5">
                 <svg
@@ -419,7 +404,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                     d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <span>{profile.gender || "Chưa cập nhật giới tính"}</span>
+                <span>{profile.gender || "Gender not updated"}</span>
               </p>
             </div>
           </div>
@@ -436,7 +421,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
             {savedItems.length}
           </span>
           <span className="text-[10px] text-[#526069]/65 font-bold uppercase tracking-wider mt-1">
-            Yêu thích
+            Favorites
           </span>
         </button>
         <button
@@ -447,7 +432,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
             {cart.reduce((sum: number, item: any) => sum + item.quantity, 0)}
           </span>
           <span className="text-[10px] text-[#526069]/65 font-bold uppercase tracking-wider mt-1">
-            Giỏ hàng
+            Cart
           </span>
         </button>
         <button
@@ -458,7 +443,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
             {orders.length}
           </span>
           <span className="text-[10px] text-[#526069]/65 font-bold uppercase tracking-wider mt-1">
-            Đơn hàng
+            Orders
           </span>
         </button>
       </div>
@@ -491,13 +476,13 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               <div className="flex justify-between items-center">
                 <div>
                   <h4 className="text-xs font-bold text-textColor flex items-center gap-1.5">
-                    <span>📍</span> Điểm danh nhận Xu
+                    <span>📍</span> Daily Check-in for Xu
                   </h4>
                   <p className="text-[10px] text-textColor-variant mt-0.5 font-semibold">
-                    Hôm nay{' '}
+                    Today{' '}
                     <span className="text-primary font-bold">
                       +{todayConfig.xu} Xu
-                    </span>{' '}• Số dư:{' '}
+                    </span>{' '}• Balance:{' '}
                     <span className="text-amber-500 font-bold">
                       {gamificationData?.points || 0} Xu
                     </span>
@@ -512,7 +497,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                       : 'bg-primary hover:bg-primary-dark text-white shadow-sm'
                   }`}
                 >
-                  {hasClaimed ? 'Đã nhận ✓' : `+${todayConfig.xu} Xu`}
+                  {hasClaimed ? 'Claimed ✓' : `+${todayConfig.xu} Xu`}
                 </button>
               </div>
 
@@ -749,7 +734,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="bg-teal-50 text-teal-600 font-bold text-[10px] px-2 py-0.5 rounded-full">
-                  {userVouchersCount > 0 ? `${userVouchersCount} mã` : ""}
+                  {userVouchersCount > 0 ? `${userVouchersCount} codes` : ""}
                 </span>
                 <svg
                   className="w-4 h-4 text-[#526069]/40"
@@ -845,30 +830,6 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                   {lang === "vi" ? "English" : "Tiếng Việt"}
                 </button>
               </div>
-            </div>
-
-            {/* Dedicated Theme Switcher Row */}
-            <div className="w-full px-4.5 py-3.5 flex justify-between items-center text-xs text-textColor  hover:bg-neutral-50 :bg-slate-800 text-left border-none bg-transparent">
-              <div className="flex items-center gap-3">
-                {theme === "dark" ? (
-                  <SunIcon className="w-5 h-5 text-amber-400" strokeWidth={2.2} />
-                ) : (
-                  <MoonIcon className="w-5 h-5 text-slate-500" strokeWidth={2.2} />
-                )}
-                <span className="font-semibold text-textColor ">
-                  Giao diện (Sáng / Tối)
-                </span>
-              </div>
-              <button
-                onClick={toggleTheme}
-                className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-xl border-none cursor-pointer active:scale-95 transition-all flex items-center gap-1 shadow-xs ${
-                  theme === "dark"
-                    ? "bg-amber-400 text-slate-950 font-extrabold"
-                    : "bg-slate-800 text-white font-bold"
-                }`}
-              >
-                {theme === "dark" ? "Chế độ Sáng ☀️" : "Chế độ Tối 🌙"}
-              </button>
             </div>
           </div>
         </div>

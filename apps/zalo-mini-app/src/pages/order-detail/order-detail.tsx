@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Page } from "zmp-ui";
 import { useCart, IOrderItem } from "../../App";
-import { apiRequest, apiUploadRequest, API_BASE_URL, useTranslation } from "../../utils/api";
+import { apiRequest, apiUploadRequest, API_BASE_URL } from "../../utils/api";
+import { useTranslation } from "../../utils";
 import { IOrderDetailProps } from "./order-detail.type";
 import api, { Payment } from "zmp-sdk";
 import {

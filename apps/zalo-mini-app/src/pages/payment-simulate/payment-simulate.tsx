@@ -18,13 +18,13 @@ export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
       <div className="flex flex-col items-center justify-center h-full p-6 text-center space-y-4">
         <span className="text-4xl">⚠️</span>
         <p className="text-xs text-textColor-variant">
-          Không tìm thấy thông tin đơn hàng thanh toán.
+          Payment order information not found.
         </p>
         <button
           onClick={() => setActiveTab("home")}
           className="h-10 px-6 bg-primary text-white text-xs font-bold uppercase rounded-full border-none cursor-pointer"
         >
-          Quay lại trang chủ
+          Back to Home
         </button>
       </div>
     );
@@ -32,7 +32,7 @@ export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
 
   const handlePaySuccess = async () => {
     try {
-      showToast("Đang xử lý giao dịch...", "info");
+      showToast("Processing transaction...", "info");
       // Update status to PROCESSING on backend
       await apiRequest(`/orders/${selectedOrder.id}/status`, "PATCH", {
         status: "PROCESSING",
@@ -64,7 +64,7 @@ export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
             0,
           ),
           items: (selectedOrder.items ?? []).map((item: IOrderItem) => ({
-            name: item.product?.name || "Sản phẩm",
+            name: item.product?.name || "Product",
             price: item.price,
             quantity: item.quantity,
             size: item.size || "DEFAULT",
@@ -79,21 +79,21 @@ export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
         clearCart();
       }
 
-      showToast("Thanh toán thành công!", "success");
+      showToast("Payment successful!", "success");
       if (fetchNotifications) {
         fetchNotifications();
       }
       setActiveTab("order-success");
     } catch (e) {
       console.error(e);
-      showToast("Thanh toán thất bại, vui lòng thử lại!", "warning");
+      showToast("Payment failed, please try again!", "warning");
     }
   };
 
   const handlePayFail = () => {
     // Keep PENDING_PAYMENT status and redirect to draft orders
     showToast(
-      "Thanh toán chưa hoàn tất. Đơn hàng đã lưu vào Đơn nháp!",
+      "Payment not completed. Order saved to Drafts!",
       "warning",
     );
     setActiveTab("orders");
@@ -101,10 +101,10 @@ export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
 
   const isBank = selectedOrder.paymentMethod === "BANK";
 
-  let methodTitle = "Ví ZaloPay";
+  let methodTitle = "ZaloPay Wallet";
   let methodBg = "bg-[#007aff]";
   if (isBank) {
-    methodTitle = "Chuyển khoản Ngân hàng (ATM / QR)";
+    methodTitle = "Bank Transfer (ATM / QR)";
     methodBg = "bg-[#1b5e20]";
   }
 
@@ -115,11 +115,11 @@ export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
         className={`w-full ${methodBg} text-white px-6 py-8 text-center space-y-2 shadow-md flex-shrink-0`}
       >
         <span className="text-[10px] font-extrabold uppercase tracking-widest opacity-85">
-          Cổng Thanh Toán Giả Lập
+          Simulated Payment Gateway
         </span>
         <h2 className="text-xl font-bold">{methodTitle}</h2>
         <p className="text-xs opacity-90">
-          Đang thực hiện thanh toán an toàn cho đơn hàng của bạn
+          Processing secure payment for your order
         </p>
       </div>
 
@@ -128,7 +128,7 @@ export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
         <div className="bg-white rounded-3xl border border-[#f0edeb] p-6 shadow-xl space-y-6 text-center">
           <div className="space-y-1">
             <span className="text-[10px] text-textColor-variant font-bold uppercase tracking-wider">
-              Mã đơn hàng
+              Order ID
             </span>
             <h3 className="text-lg font-extrabold text-textColor">
               {selectedOrder.id}
@@ -137,7 +137,7 @@ export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
 
           <div className="space-y-1">
             <span className="text-[10px] text-textColor-variant font-bold uppercase tracking-wider">
-              Số tiền cần thanh toán
+              Amount to Pay
             </span>
             <h2 className="text-2xl font-black text-primary">
               {selectedOrder.totalAmount.toLocaleString("vi-VN")} đ
@@ -146,14 +146,14 @@ export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
 
           <div className="bg-[#fbf9f7] border border-[#f0edeb] rounded-2xl p-4 text-left space-y-3">
             <span className="text-[9px] text-[#526069]/70 font-extrabold uppercase tracking-widest block">
-              Chi tiết sản phẩm
+              Product Details
             </span>
             <div className="divide-y divide-[#f0edeb] text-xs">
               {(selectedOrder.items ?? []).map(
                 (item: IOrderItem, idx: number) => (
                   <div key={idx} className="py-2.5 flex justify-between">
                     <span className="text-textColor truncate max-w-[200px]">
-                      {item.product?.name || "Sản phẩm"}
+                      {item.product?.name || "Product"}
                       {item.size && item.size !== "DEFAULT"
                         ? ` (${item.size})`
                         : ""}
@@ -170,9 +170,7 @@ export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
           <div className="bg-amber-50 border border-amber-100 rounded-2xl p-3 flex gap-2.5 items-start text-left text-[10px] text-amber-800">
             <span className="text-sm">💡</span>
             <p className="leading-relaxed">
-              Đây là môi trường thử nghiệm lập trình. Bạn có thể bấm xác nhận đã
-              chuyển khoản để giả lập thanh toán thành công và tự động trừ kho
-              hàng.
+              This is a development testing environment. You can click confirm to simulate successful payment and automatically deduct inventory.
             </p>
           </div>
         </div>
@@ -184,13 +182,13 @@ export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
           onClick={handlePaySuccess}
           className="w-full h-12 bg-primary hover:bg-primary-dark text-white font-bold text-xs uppercase tracking-widest rounded-full shadow-md active:scale-98 transition-all border-none cursor-pointer"
         >
-          Xác nhận đã thanh toán
+          Confirm Payment
         </button>
         <button
           onClick={handlePayFail}
           className="w-full h-12 bg-white hover:bg-neutral-50 text-red-500 font-bold text-xs uppercase tracking-widest rounded-full border border-[#f0edeb] shadow-xs active:scale-98 transition-all cursor-pointer"
         >
-          Hủy thanh toán (Lưu đơn nháp)
+          Cancel Payment (Save Draft)
         </button>
       </div>
     </div>
