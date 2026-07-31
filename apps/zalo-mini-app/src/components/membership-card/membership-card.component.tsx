@@ -2,7 +2,16 @@ import React, { useState, useEffect } from "react";
 import { Page } from "zmp-ui";
 import { IMembershipCardProps } from "./membership-card.type";
 import { apiRequest } from "../../utils/api";
-import { ChevronLeftIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronLeftIcon,
+  InformationCircleIcon,
+  ShieldCheckIcon,
+  SparklesIcon,
+  TruckIcon,
+  TagIcon,
+  GiftIcon,
+  CheckCircleIcon,
+} from "@heroicons/react/24/outline";
 
 const PageCast = Page as any;
 
@@ -269,45 +278,47 @@ export const MembershipCard: React.FC<IMembershipCardProps> = (props) => {
           {[
             {
               level: "Đồng",
-              badge: "🥉",
+              icon: <ShieldCheckIcon className="w-5 h-5 text-amber-700 shrink-0" strokeWidth={2} />,
               min: "0đ",
               max: "1.999.999đ",
-              current: currentTier === "Đồng",
+              current: rawTier.includes("đồng") || rawTier === "dong",
             },
             {
               level: "Bạc",
-              badge: "🥈",
+              icon: <ShieldCheckIcon className="w-5 h-5 text-slate-400 shrink-0" strokeWidth={2} />,
               min: "2.000.000đ",
               max: "9.999.999đ",
-              current: currentTier === "Bạc",
+              current: rawTier.includes("bạc") || rawTier.includes("bac") || rawTier.includes("silver"),
             },
             {
               level: "Vàng",
-              badge: "🥇",
+              icon: <SparklesIcon className="w-5 h-5 text-amber-400 shrink-0" strokeWidth={2} />,
               min: "10.000.000đ",
               max: "49.999.999đ",
-              current: currentTier === "Vàng",
+              current: rawTier.includes("vàng") || rawTier.includes("vang") || rawTier.includes("gold"),
             },
             {
               level: "Kim cương",
-              badge: "💎",
+              icon: <SparklesIcon className="w-5 h-5 text-cyan-400 shrink-0" strokeWidth={2} />,
               min: "50.000.000đ",
               max: "Không giới hạn",
-              current: currentTier === "Kim cương",
+              current: rawTier.includes("kim") || rawTier.includes("diamond"),
             },
           ].map((tier) => (
             <div
               key={tier.level}
-              className={`border rounded-2xl p-4.5 space-y-3 bg-white relative transition-all shadow-xs ${tier.current ? "ring-2 ring-primary ring-offset-2" : ""}`}
+              className={`border rounded-2xl p-4.5 space-y-3 bg-white relative transition-all shadow-xs ${tier.current ? "ring-2 ring-[#0e6877] ring-offset-2" : ""}`}
             >
               {tier.current && (
-                <span className="absolute top-4 right-4 bg-primary text-white font-extrabold text-[8px] uppercase px-2 py-0.5 rounded-full tracking-wider">
+                <span className="absolute top-4 right-4 bg-[#0e6877] text-white font-extrabold text-[8px] uppercase px-2.5 py-0.5 rounded-full tracking-wider shadow-xs">
                   Hạng hiện tại
                 </span>
               )}
               <div className="flex justify-between items-center pb-2 border-b border-[#f0edeb]">
                 <div className="flex items-center gap-2.5">
-                  <span className="text-xl">{tier.badge}</span>
+                  <div className="p-1.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center">
+                    {tier.icon}
+                  </div>
                   <div>
                     <p className="font-bold text-xs text-textColor">
                       Hạng {tier.level}
@@ -324,20 +335,38 @@ export const MembershipCard: React.FC<IMembershipCardProps> = (props) => {
                 </p>
                 <ul className="grid grid-cols-1 gap-2">
                   {privileges[tier.level]?.length > 0 ? (
-                    privileges[tier.level].map((privilege: any) => (
-                      <li
-                        key={privilege.id}
-                        className="text-xs text-textColor-variant flex items-center gap-2"
-                      >
-                        <span className="text-sm">{privilege.icon}</span>
-                        <div className="flex-1">
-                          <span className="font-medium">{privilege.title}</span>
-                          <p className="text-[9px] text-textColor-variant/70 mt-0.5">
-                            {privilege.description}
-                          </p>
-                        </div>
-                      </li>
-                    ))
+                    privileges[tier.level].map((privilege: any) => {
+                      const iconStr = (privilege.icon || "").toString().toLowerCase();
+                      const titleStr = (privilege.title || "").toString().toLowerCase();
+
+                      let privIcon = <CheckCircleIcon className="w-4 h-4 text-[#0e6877] shrink-0" strokeWidth={2} />;
+                      if (iconStr.includes("truck") || titleStr.includes("vận chuyển") || titleStr.includes("giao hàng") || titleStr.includes("freeship")) {
+                        privIcon = <TruckIcon className="w-4 h-4 text-emerald-600 shrink-0" strokeWidth={2} />;
+                      } else if (iconStr.includes("tag") || titleStr.includes("giảm") || titleStr.includes("chiết khấu") || titleStr.includes("voucher")) {
+                        privIcon = <TagIcon className="w-4 h-4 text-[#0e6877] shrink-0" strokeWidth={2} />;
+                      } else if (iconStr.includes("gift") || titleStr.includes("quà") || titleStr.includes("sinh nhật") || titleStr.includes("thưởng")) {
+                        privIcon = <GiftIcon className="w-4 h-4 text-purple-600 shrink-0" strokeWidth={2} />;
+                      } else if (iconStr.includes("star") || titleStr.includes("ưu tiên") || titleStr.includes("hỗ trợ")) {
+                        privIcon = <SparklesIcon className="w-4 h-4 text-amber-500 shrink-0" strokeWidth={2} />;
+                      }
+
+                      return (
+                        <li
+                          key={privilege.id}
+                          className="text-xs text-textColor-variant flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-slate-50 transition-colors"
+                        >
+                          <div className="p-1 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center">
+                            {privIcon}
+                          </div>
+                          <div className="flex-1">
+                            <span className="font-bold text-slate-800">{privilege.title}</span>
+                            <p className="text-[9.5px] text-slate-500 mt-0.5 leading-snug">
+                              {privilege.description}
+                            </p>
+                          </div>
+                        </li>
+                      );
+                    })
                   ) : (
                     <li className="text-xs text-textColor-variant/70 italic">
                       Đang tải đặc quyền...
