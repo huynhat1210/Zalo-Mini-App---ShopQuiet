@@ -147,7 +147,10 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
         ) {
           setVietQrModalData(null);
           showToast(t("checkout.bankConfirmed"), "success");
-          setActiveTab("orders");
+          if (fetchNotifications) {
+            fetchNotifications();
+          }
+          setActiveTab("order-success");
         }
       } catch (e) {}
     }, 3000);

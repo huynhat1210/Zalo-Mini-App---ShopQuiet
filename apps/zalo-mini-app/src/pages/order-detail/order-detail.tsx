@@ -455,6 +455,14 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
             {t("orderDetail.shippingInfo")}
           </h2>
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 shadow-xs space-y-2">
+            <div className="flex justify-between items-center pb-2 border-b border-[#f5f3f0]">
+              <span className="text-textColor-variant">{t("order.shippingMethod")}:</span>
+              <span className={`font-bold px-2.5 py-0.5 rounded-full text-[10px] ${selectedOrder.shippingMethodCode === "express" ? "bg-amber-100 text-amber-900 border border-amber-300/60" : "bg-blue-50 text-blue-800 border border-blue-200/60"}`}>
+                {selectedOrder.shippingMethodCode === "express"
+                  ? t("order.expressShipping")
+                  : t("order.standardShipping")}
+              </span>
+            </div>
             {selectedOrder.trackingNumber && (
               <div className="flex justify-between items-center pb-2 border-b border-[#f5f3f0]">
                 <span className="text-textColor-variant font-medium">Tracking (GHN):</span>

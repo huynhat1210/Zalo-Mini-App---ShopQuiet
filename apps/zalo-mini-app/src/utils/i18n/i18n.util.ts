@@ -259,10 +259,21 @@ export const translations = {
     "order.productList": "Danh sách sản phẩm",
     "order.quantity": "SL",
     "order.paymentDetails": "Chi tiết thanh toán",
-    "order.paymentMethod": "Phương thức",
-    "order.cod": "COD (Thanh toán khi nhận hàng)",
-    "order.bankTransfer": "Chuyển khoản Ngân hàng",
-    "order.totalPayment": "Tổng thanh toán",
+    "order.shippingMethod": "Phương thức giao hàng",
+    "order.standardShipping": "🚚 Giao hàng tiêu chuẩn (3-5 ngày)",
+    "order.expressShipping": "⚡ Giao hàng hỏa tốc (1-2 ngày)",
+
+    // Order Success Page
+    "orderSuccess.confirmed": "Xác nhận đơn hàng",
+    "orderSuccess.thankYou": "Cảm ơn bạn đã đặt hàng!",
+    "orderSuccess.orderMessage": "Đơn hàng %1% của bạn đã được xác nhận và đang được chuẩn bị giao.",
+    "orderSuccess.estimatedDelivery": "Dự kiến giao hàng",
+    "orderSuccess.shippingMethod": "Phương thức giao hàng",
+    "orderSuccess.orderSummary": "Tóm tắt đơn hàng",
+    "orderSuccess.productsCount": "%1% sản phẩm",
+    "orderSuccess.totalPayment": "Tổng thanh toán",
+    "orderSuccess.trackOrder": "Theo dõi đơn hàng",
+    "orderSuccess.continueShopping": "Tiếp tục mua sắm",
 
     // Saved Items Page
     "saved.title": "Sản phẩm yêu thích",
@@ -602,6 +613,21 @@ export const translations = {
     "order.cod": "COD (Cash on Delivery)",
     "order.bankTransfer": "Bank Transfer",
     "order.totalPayment": "Total Payment",
+    "order.shippingMethod": "Shipping Method",
+    "order.standardShipping": "🚚 Standard Delivery (3-5 days)",
+    "order.expressShipping": "⚡ Express Delivery (1-2 days)",
+
+    // Order Success Page
+    "orderSuccess.confirmed": "Order Confirmed",
+    "orderSuccess.thankYou": "Thank you for your order!",
+    "orderSuccess.orderMessage": "Your order %1% has been confirmed and is being prepared for delivery.",
+    "orderSuccess.estimatedDelivery": "Estimated Delivery",
+    "orderSuccess.shippingMethod": "Shipping Method",
+    "orderSuccess.orderSummary": "Order Summary",
+    "orderSuccess.productsCount": "%1% Products",
+    "orderSuccess.totalPayment": "Total Payment",
+    "orderSuccess.trackOrder": "Track Order",
+    "orderSuccess.continueShopping": "Continue Shopping",
 
     // Saved Items Page
     "saved.title": "Saved Items",
