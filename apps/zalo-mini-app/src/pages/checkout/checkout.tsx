@@ -37,20 +37,21 @@ type CmsPaymentMethod = {
   badge?: string | null;
 };
 
-const checkoutAddressSchema = z.object({
-  name: z.string().trim().min(2, "Please enter recipient name"),
+const createCheckoutAddressSchema = (t: (key: any) => string) => z.object({
+  name: z.string().trim().min(2, t("checkout.recipientName")),
   phone: z
     .string()
     .trim()
-    .min(9, "Invalid phone number")
-    .regex(/^[0-9]{9,11}$/, "Invalid phone number"),
-  houseNumber: z.string().trim().min(2, "Please enter house number and street"),
+    .min(9, t("checkout.phoneNumber"))
+    .regex(/^[0-9]{9,11}$/, t("checkout.phoneNumber")),
+  houseNumber: z.string().trim().min(2, t("checkout.houseStreet")),
 });
 
-type CheckoutAddressFormValues = z.infer<typeof checkoutAddressSchema>;
+type CheckoutAddressFormValues = z.infer<ReturnType<typeof createCheckoutAddressSchema>>;
 
 export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   const { t } = useTranslation();
+  const checkoutAddressSchema = createCheckoutAddressSchema(t);
   const {
     cart,
     removeFromCart,
@@ -94,35 +95,8 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
   const [shippingMethod, setShippingMethod] = useState("standard");
   const [paymentMethod, setPaymentMethod] = useState("pay2s");
-  const [shippingMethods, setShippingMethods] = useState<CmsShippingMethod[]>([
-    {
-      code: "standard",
-      name: "Standard Delivery",
-      description: "Receive in 3-5 business days",
-      price: 0,
-    },
-    {
-      code: "express",
-      name: "Express Delivery",
-      description: "Receive in 1-2 business days",
-      price: 5,
-    },
-  ]);
-  const [paymentMethods, setPaymentMethods] = useState<CmsPaymentMethod[]>([
-    {
-      code: "pay2s",
-      name: "Bank Transfer",
-      description: "Secure payment via Bank QR (Auto-confirmed)",
-      provider: "PAY2S",
-      badge: "RECOMMENDED",
-    },
-    {
-      code: "cod",
-      name: "Cash on Delivery (COD)",
-      description: "Pay when receiving goods after inspection",
-      provider: "COD",
-    },
-  ]);
+  const [shippingMethods, setShippingMethods] = useState<CmsShippingMethod[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<CmsPaymentMethod[]>([]);
   const [addresses, setAddresses] = useState<any[]>([]);
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [isEnteringCustomAddress, setIsEnteringCustomAddress] = useState(false);
@@ -172,7 +146,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
             order.status === "SHIPPED")
         ) {
           setVietQrModalData(null);
-          showToast("Bank confirmed payment successfully!", "success");
+          showToast(t("checkout.bankConfirmed"), "success");
           setActiveTab("orders");
         }
       } catch (e) {}
@@ -294,7 +268,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
     setValue,
     formState: { errors },
   } = useForm<CheckoutAddressFormValues>({
-    resolver: zodResolver(checkoutAddressSchema),
+    resolver: zodResolver(createCheckoutAddressSchema(t)),
     defaultValues: {
       name: "",
       phone: "",
@@ -334,11 +308,11 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
             try {
               const ok = await handleDecrypt(token);
               if (!ok && !silentFail)
-                showToast("Failed to decrypt phone number.", "warning");
+                showToast(t("checkout.phoneDecryptError"), "warning");
             } catch (err) {
               console.error(err);
               if (!silentFail)
-                showToast("Error decrypting phone number.", "warning");
+                showToast(t("checkout.phoneDecryptFail"), "warning");
             }
           }
         },
@@ -347,7 +321,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           console.error("getPhoneNumber fail", error);
           if (!silentFail)
             showToast(
-              "Cannot get phone from Zalo. Please enter manually.",
+              t("checkout.phoneZaloError"),
               "warning",
             );
         },
@@ -399,10 +373,10 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           ...watchedAddress,
           houseNumber: street || watchedAddress.houseNumber,
         });
-        showToast("Address filled from current location!", "success");
+        showToast(t("checkout.locationFilled"), "success");
       } catch (err) {
         console.error(err);
-        showToast("Cannot get address from coordinates.", "warning");
+        showToast(t("checkout.locationCoordsError"), "warning");
       } finally {
         setIsLoadingLocation(false);
       }
@@ -420,17 +394,17 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                 if (lat != null && lng != null) {
                   processCoords(Number(lat), Number(lng));
                 } else {
-                  showToast("Cannot get location coordinates.", "warning");
+                  showToast(t("checkout.locationCoordsEmpty"), "warning");
                   setIsLoadingLocation(false);
                 }
               },
               fail: () => {
-                showToast("Please enable GPS on your device.", "warning");
+                showToast(t("checkout.locationGpsError"), "warning");
                 setIsLoadingLocation(false);
               },
             });
           } else {
-            showToast("Cannot get location from browser.", "warning");
+            showToast(t("checkout.locationBrowserError"), "warning");
             setIsLoadingLocation(false);
           }
         },
@@ -444,17 +418,17 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           if (lat != null && lng != null) {
             processCoords(Number(lat), Number(lng));
           } else {
-            showToast("Cannot get location coordinates.", "warning");
+            showToast(t("checkout.locationCoordsEmpty"), "warning");
             setIsLoadingLocation(false);
           }
         },
         fail: () => {
-          showToast("Please enable GPS on your device.", "warning");
+          showToast(t("checkout.locationGpsError"), "warning");
           setIsLoadingLocation(false);
         },
       });
     } else {
-      showToast("Device does not support location.", "warning");
+      showToast(t("checkout.locationNotSupported"), "warning");
       setIsLoadingLocation(false);
     }
   };
@@ -629,11 +603,11 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       if (res && res.code) {
         let desc = "";
         if (res.type === "PERCENT") {
-          desc = `Save ${res.value}% on total`;
+          desc = t("checkout.voucherSavePercent").replace("%1%", String(res.value));
         } else if (res.type === "FIXED") {
-          desc = `Save ${res.value.toLocaleString("vi-VN")} đ`;
+          desc = t("checkout.voucherSaveFixed").replace("%1%", res.value.toLocaleString("vi-VN"));
         } else if (res.type === "FREESHIP") {
-          desc = "Free shipping";
+          desc = t("checkout.voucherFreeship").replace("%1%", res.value.toLocaleString("vi-VN"));
         }
         setAppliedPromo({
           code: res.code,
@@ -641,17 +615,17 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           value: res.value,
           desc,
         });
-        showToast(`Applied code ${res.code} successfully!`, "success");
+        showToast(`${t("cart.applied")} ${res.code}`, "success");
       }
     } catch (err: any) {
-      const msg = err?.message || "Invalid promo code!";
+      const msg = err?.message || t("checkout.promoRequired");
       showToast(msg, "warning");
     }
   };
 
   const handleApplyPromo = () => {
     if (!promoInput) {
-      showToast("Please enter promo code!", "warning");
+      showToast(t("checkout.promoRequired"), "warning");
       return;
     }
     applyPromoCode(promoInput);
@@ -660,12 +634,12 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   const handleRemovePromo = () => {
     setAppliedPromo(null);
     setPromoInput("");
-    showToast("Removed promo code!", "info");
+    showToast(t("checkout.promoRemoved"), "info");
   };
 
   const handlePlaceOrder = async () => {
     if (checkoutItems.length === 0) {
-      showToast("Cart is empty!", "warning");
+      showToast(t("checkout.cartEmpty"), "warning");
       return;
     }
 
@@ -675,7 +649,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       !address.street.trim() ||
       !address.city.trim()
     ) {
-      showToast("Please fill in delivery information!", "warning");
+      showToast(t("checkout.fillDelivery"), "warning");
       return;
     }
 
@@ -684,7 +658,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       if (addresses.length === 0 || isEnteringCustomAddress) {
         try {
           await apiRequest("/addresses", "POST", {
-            label: addresses.length === 0 ? "Default Address" : "New Address",
+            label: addresses.length === 0 ? t("checkout.selectDeliveryAddress") : t("checkout.addNewAddress"),
             phone: address.phone.trim(),
             street: address.street.trim(),
             city: address.city.trim(),
@@ -732,7 +706,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
         // 2. Fetch Pay2S payment URL from backend
         try {
-          showToast("Connecting payment gateway...", "info");
+          showToast(t("checkout.paymentConnecting"), "info");
           const pay2sRes = await apiRequest<any>(
             `/orders/${createdDbOrder.id}/pay2s`,
             "POST",
@@ -831,14 +805,14 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
       // Clear only what was ordered
       clearPurchasedItems();
-      showToast(`Order #${orderNumber} placed successfully!`, "success");
+      showToast(t("checkout.orderSuccess").replace("%1%", orderNumber), "success");
       if (fetchNotifications) {
         fetchNotifications();
       }
       setActiveTab("order-success");
     } catch (error: any) {
       console.error(error);
-      const msg = error?.message || "Order failed, please try again!";
+      const msg = error?.message || t("checkout.orderError");
       showToast(msg, "warning");
     }
   };
@@ -878,21 +852,21 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
             <span className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center text-[9px]">
               1
             </span>
-            <span>Shipping</span>
+            <span>{t("checkout.stepShipping")}</span>
           </div>
           <div className="w-8 h-[1px] bg-[#f0edeb]"></div>
           <div className="flex items-center gap-2 text-textColor/35">
             <span className="w-5 h-5 rounded-full bg-[#f0edeb] text-textColor/35 flex items-center justify-center text-[9px]">
               2
             </span>
-            <span>Payment</span>
+            <span>{t("checkout.stepPayment")}</span>
           </div>
           <div className="w-8 h-[1px] bg-[#f0edeb]"></div>
           <div className="flex items-center gap-2 text-textColor/35">
             <span className="w-5 h-5 rounded-full bg-[#f0edeb] text-textColor/35 flex items-center justify-center text-[9px]">
               3
             </span>
-            <span>Confirm</span>
+            <span>{t("checkout.stepConfirm")}</span>
           </div>
         </div>
 
@@ -915,7 +889,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                 }}
                 className="text-[10px] text-primary font-bold hover:underline bg-transparent border-none cursor-pointer"
               >
-                + Add New Address
+                {t("checkout.addNewAddress")}
               </button>
             )}
           </div>
@@ -933,7 +907,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                     {formatAddressText(address.city, "")}
                   </p>
                   <p className="text-textColor-variant/80 font-bold">
-                    Phone: {formatAddressText(address.phone, "")}
+                    {t("checkout.phone")} {formatAddressText(address.phone, "")}
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
@@ -941,7 +915,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                     onClick={() => setIsSelectorOpen(true)}
                     className="text-xs text-primary font-bold hover:underline border-none bg-transparent cursor-pointer"
                   >
-                    Change
+                    {t("checkout.changeAddress")}
                   </button>
                   <button
                     onClick={() => {
@@ -961,7 +935,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                     }}
                     className="text-xs text-[#526069] font-bold hover:underline border-none bg-transparent cursor-pointer"
                   >
-                    Edit
+                    {t("checkout.editAddress")}
                   </button>
                 </div>
               </div>
@@ -969,7 +943,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
               <div className="space-y-3 animate-fade-in text-left">
                 <div className="flex justify-between items-center mb-1">
                   <p className="text-[9px] text-red-500 font-bold uppercase tracking-wider">
-                    Please select delivery address:
+                    {t("checkout.selectAddress")}
                   </p>
                   {addresses.length > 0 && (
                     <button
@@ -986,18 +960,18 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                       }}
                       className="text-[9px] text-[#526069] font-bold hover:underline bg-transparent border-none cursor-pointer"
                     >
-                      Cancel / Select Saved Address
+                      {t("checkout.cancelSelectAddress")}
                     </button>
                   )}
                 </div>
                 <div className="space-y-2.5">
                   <div>
                     <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
-                      Recipient Name
+                      {t("checkout.recipientName")}
                     </label>
                     <input
                       type="text"
-                      placeholder="Recipient Name"
+                      placeholder={t("checkout.recipientName")}
                       {...register("name")}
                       onChange={(e) => {
                         register("name").onChange(e);
@@ -1014,11 +988,11 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
                   <div>
                     <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
-                      Phone Number
+                      {t("checkout.phoneNumber")}
                     </label>
                     <input
                       type="text"
-                      placeholder="Phone Number"
+                      placeholder={t("checkout.phoneNumber")}
                       {...register("phone")}
                       onChange={(e) => {
                         register("phone").onChange(e);
@@ -1037,7 +1011,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                   <div className="space-y-2">
                     <div>
                       <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
-                        Province / City
+                        {t("checkout.provinceCity")}
                       </label>
                       <select
                         value={selectedProvince}
@@ -1070,7 +1044,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
                     <div>
                       <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
-                        District
+                        {t("checkout.district")}
                       </label>
                       <select
                         value={selectedDistrict}
@@ -1100,7 +1074,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
                     <div>
                       <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
-                        Ward
+                        {t("checkout.ward")}
                       </label>
                       <select
                         value={selectedWard}
@@ -1127,12 +1101,12 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
                   <div>
                     <label className="text-[9px] font-bold text-[#526069] uppercase tracking-wider block mb-1">
-                      House Number, Street
+                      {t("checkout.houseStreet")}
                     </label>
                     <div className="relative">
                       <input
                         type="text"
-                        placeholder="e.g., 123 Nguyen Trai"
+                        placeholder={t("checkout.houseStreetPlaceholder")}
                         {...register("houseNumber")}
                         onChange={(e) => {
                           register("houseNumber").onChange(e);
@@ -1166,7 +1140,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                             <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
                           </svg>
                         )}
-                        Location
+                        {t("checkout.locationBtn")}
                       </button>
                     </div>
                     {errors.houseNumber && (
@@ -1184,7 +1158,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
         {/* Shipping Method Section */}
         <div className="space-y-2.5">
           <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">
-            Shipping Method
+            {t("checkout.shippingMethod")}
           </h2>
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-1 shadow-xs divide-y divide-[#f0edeb]">
             {shippingMethods.map((method, index) => {
@@ -1210,7 +1184,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                         {method.name}
                       </p>
                       <p className="text-[10px] text-primary font-medium mt-0.5">
-                        Estimated: {deliveryRange.displayText}
+                        {t("checkout.estimated")} {deliveryRange.displayText}
                       </p>
                       {method.description && (
                         <p className="text-[10px] text-textColor-variant mt-0.5">
@@ -1222,7 +1196,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                   <span className="text-xs font-bold text-textColor">
                     {method.price > 0
                       ? `${method.price.toLocaleString("vi-VN")} đ`
-                      : "Free"}
+                      : t("checkout.free")}
                   </span>
                 </label>
               );
@@ -1233,7 +1207,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
         {/* Payment Method Section */}
         <div className="space-y-2.5">
           <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">
-            Payment Method
+            {t("checkout.paymentMethod")}
           </h2>
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-1 shadow-xs divide-y divide-[#f0edeb]">
             {paymentMethods.map((method, index) => (
@@ -1271,13 +1245,13 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
         {/* Promo Code Section */}
         <div className="space-y-2.5">
           <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1">
-            Promo Code
+            {t("checkout.promoCode")}
           </h2>
           <div className="bg-white rounded-2xl border border-[#f0edeb] p-4.5 shadow-xs space-y-3.5">
             <div className="flex gap-2.5">
               <input
                 type="text"
-                placeholder="Enter code: WELCOME10, FREESHIP"
+                placeholder={t("checkout.promoCodePlaceholder")}
                 value={promoInput}
                 onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
                 className="flex-1 text-xs px-4 py-2.5 bg-neutral-50 rounded-xl border border-[#eae8e6] text-textColor focus:outline-none focus:border-primary focus:bg-white transition-all uppercase"
@@ -1286,20 +1260,20 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                 onClick={handleApplyPromo}
                 className="h-10 px-5 bg-primary text-white font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer active:scale-95 hover:bg-primary-dark transition-all"
               >
-                Apply
+                {t("checkout.applyBtn")}
               </button>
             </div>
 
             {appliedPromo && (
               <div className="flex justify-between items-center bg-[#e8f5e9] text-[#2e7d32] px-3.5 py-2.5 rounded-xl text-xs font-bold animate-scale-up">
                 <span className="truncate mr-2">
-                  Code: {appliedPromo.code} ({appliedPromo.desc})
+                  {t("checkout.codeApplied")} {appliedPromo.code} ({appliedPromo.desc})
                 </span>
                 <button
                   onClick={handleRemovePromo}
                   className="text-red-500 hover:text-red-700 bg-transparent border-none font-bold text-xs cursor-pointer flex-shrink-0 whitespace-nowrap ml-1"
                 >
-                  Remove
+                  {t("checkout.removePromoBtn")}
                 </button>
               </div>
             )}
@@ -1322,7 +1296,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                     d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-12h1.5m-1.5 3h1.5m-1.5 3h1.5m-1.5 3h1.5M3 6.75A.75.75 0 013.75 6h16.5a.75.75 0 01.75.75v10.5a.75.75 0 01-.75.75H3.75a.75.75 0 01-.75-.75V6.75z"
                   />
                 </svg>
-                Select Voucher From Store
+                {t("checkout.selectVoucherBtn")}
               </button>
             </div>
           </div>
@@ -1331,8 +1305,8 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
         {/* Use Xu Coins Payment Section (1 Xu = 1 VNĐ) */}
         <div className="space-y-2.5">
           <h2 className="text-[10px] font-extrabold uppercase tracking-widest text-[#526069]/70 px-1 flex items-center justify-between">
-            <span>Use Accumulated Xu</span>
-            <span className="text-amber-600 font-black">1 Xu = 1 VNĐ</span>
+            <span>{t("checkout.useXu")}</span>
+            <span className="text-amber-600 font-black">{t("checkout.xuRate")}</span>
           </h2>
           <div className="bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-amber-500/10 rounded-2xl border border-amber-200 p-4 shadow-xs flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -1341,12 +1315,12 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
               </div>
               <div>
                 <p className="text-xs font-extrabold text-textColor">
-                  Current Xu Balance: <span className="text-amber-600 font-black">{userCoins.toLocaleString("vi-VN")} Xu</span>
+                  {t("checkout.xuBalance")} <span className="text-amber-600 font-black">{userCoins.toLocaleString("vi-VN")} Xu</span>
                 </p>
                 <p className="text-[10px] text-[#526069] font-medium mt-0.5">
                   {userCoins > 0
-                    ? `Use Xu to save ${Math.min(userCoins, amountBeforeCoins).toLocaleString("vi-VN")}đ on order`
-                    : "You have no accumulated Xu in wallet"}
+                    ? `${t("checkout.xuSave")} ${Math.min(userCoins, amountBeforeCoins).toLocaleString("vi-VN")}đ`
+                    : t("checkout.xuEmpty")}
                 </p>
               </div>
             </div>
@@ -1394,12 +1368,12 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                           {item.product.name}
                         </p>
                         <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-textColor-variant flex-wrap">
-                          <span>Qty: {item.quantity}</span>
+                          <span>{t("checkout.qty")} {item.quantity}</span>
                           {selectedSize && (
                             <>
                               <span className="text-[#d8d2ce]">|</span>
                               <span className="font-bold text-[#526069]">
-                                Size: {selectedSize}
+                                {t("checkout.size")} {selectedSize}
                               </span>
                             </>
                           )}
@@ -1407,7 +1381,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                             <>
                               <span className="text-[#d8d2ce]">|</span>
                               <span className="font-bold text-[#526069]">
-                                Color: {selectedColor}
+                                {t("checkout.color")} {selectedColor}
                               </span>
                             </>
                           )}
@@ -1436,20 +1410,20 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                 <span>
                   {shippingCost > 0
                     ? `${shippingCost.toLocaleString("vi-VN")} đ`
-                    : "Free"}
+                    : t("checkout.free")}
                 </span>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-[#2e7d32] font-semibold animate-fade-in">
                   <span>
-                    Discount {appliedPromo ? `(${appliedPromo.code})` : ""}
+                    {t("checkout.discount")} {appliedPromo ? `(${appliedPromo.code})` : ""}
                   </span>
                   <span>-{discount.toLocaleString("vi-VN")} đ</span>
                 </div>
               )}
               {coinDiscount > 0 && (
                 <div className="flex justify-between text-amber-600 font-bold animate-fade-in">
-                  <span>Xu Deduction ({coinDiscount.toLocaleString("vi-VN")} Xu)</span>
+                  <span>{t("checkout.xuDeduction")} ({coinDiscount.toLocaleString("vi-VN")} Xu)</span>
                   <span>-{coinDiscount.toLocaleString("vi-VN")} đ</span>
                 </div>
               )}
@@ -1488,7 +1462,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
         <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-center justify-center p-6">
           <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up">
             <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">
-              Select Delivery Address
+              {t("checkout.selectDeliveryAddress")}
             </h3>
 
             <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
@@ -1520,7 +1494,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                         addr.id.toString(),
                       );
                       setIsSelectorOpen(false);
-                      showToast("Delivery address selected!", "success");
+                      showToast(t("checkout.addressSelected"), "success");
                     }}
                     className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex justify-between items-start text-left ${
                       isSelected
@@ -1537,7 +1511,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                         , {formatAddressText(addr.city, "")}
                       </p>
                       <p className="text-textColor-variant/80 font-bold mt-0.5">
-                        Phone: {formatAddressText(addr.phone, "Unknown")}
+                        {t("checkout.phone")} {formatAddressText(addr.phone, "Unknown")}
                       </p>
                     </div>
                   </div>
@@ -1550,17 +1524,17 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                 onClick={() => {
                   setIsSelectorOpen(false);
                   setActiveTab("profile");
-                  showToast("Navigating to address management...", "info");
+                  showToast(t("checkout.navigatingAddresses"), "info");
                 }}
                 className="flex-1 h-10 border border-dashed border-primary/40 text-primary font-bold text-xs uppercase tracking-wider rounded-xl bg-transparent cursor-pointer hover:bg-primary/5 transition-all"
               >
-                + Manage Addresses
+                {t("checkout.manageAddresses")}
               </button>
               <button
                 onClick={() => setIsSelectorOpen(false)}
                 className="h-10 px-4 bg-neutral-100 text-textColor font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-neutral-200"
               >
-                Close
+                {t("common.close")}
               </button>
             </div>
           </div>
@@ -1573,7 +1547,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up flex flex-col max-h-[80vh]">
             <div className="flex justify-between items-center pb-2 border-b border-[#f0edeb]">
               <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">
-                Your Voucher Store
+                {t("checkout.yourVoucherStore")}
               </h3>
               <button
                 onClick={() => setIsVoucherModalOpen(false)}
@@ -1596,11 +1570,11 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
                 let voucherDesc = "";
                 if (voucher.type === "PERCENT") {
-                  voucherDesc = `Save ${voucher.value}% on total order`;
+                  voucherDesc = t("checkout.voucherSavePercent").replace("%1%", String(voucher.value));
                 } else if (voucher.type === "FIXED") {
-                  voucherDesc = `Save ${voucher.value.toLocaleString("vi-VN")} đ`;
+                  voucherDesc = t("checkout.voucherSaveFixed").replace("%1%", voucher.value.toLocaleString("vi-VN"));
                 } else if (voucher.type === "FREESHIP") {
-                  voucherDesc = `Free shipping (Max value ${voucher.value.toLocaleString("vi-VN")} đ)`;
+                  voucherDesc = t("checkout.voucherFreeship").replace("%1%", voucher.value.toLocaleString("vi-VN"));
                 }
 
                 return (
@@ -1650,17 +1624,17 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                         </span>
                         {isOutOfStock && (
                           <span className="text-[7.5px] font-extrabold bg-red-50 text-red-600 border border-red-100 px-1 py-0.5 rounded">
-                            Out of Stock
+                            {t("checkout.outOfStock")}
                           </span>
                         )}
                         {isExpired && (
                           <span className="text-[7.5px] font-extrabold bg-amber-50 text-amber-600 border border-amber-100 px-1 py-0.5 rounded">
-                            Expired
+                            {t("checkout.expired")}
                           </span>
                         )}
                         {isBelowMinVal && !isExpired && !isOutOfStock && (
                           <span className="text-[7.5px] font-extrabold bg-[#eae8e6] text-[#8e8580] px-1 py-0.5 rounded">
-                            Min Order ${voucher.minOrderVal.toFixed(0)}
+                            {t("checkout.minOrder")} {voucher.minOrderVal.toLocaleString("vi-VN")}đ
                           </span>
                         )}
                       </div>
@@ -1671,10 +1645,10 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                       </p>
 
                       <div className="flex justify-between items-center mt-2 text-[8.5px] text-textColor-variant">
-                        <span>Remaining uses: {voucher.stock}</span>
+                        <span>{t("checkout.remaining")} {voucher.stock}</span>
                         {voucher.expiresAt && (
                           <span>
-                            Exp:{" "}
+                            {t("checkout.exp")}{" "}
                             {new Date(voucher.expiresAt).toLocaleDateString(
                               "vi-VN",
                             )}
@@ -1688,7 +1662,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
               {vouchers.length === 0 && (
                 <div className="text-center py-8 text-xs text-textColor-variant">
-                  No vouchers available currently.
+                  {t("checkout.noVouchers")}
                 </div>
               )}
             </div>
@@ -1697,7 +1671,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
               onClick={() => setIsVoucherModalOpen(false)}
               className="w-full h-10 bg-neutral-100 text-textColor font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-neutral-200 mt-2 flex-shrink-0"
             >
-              Close
+              {t("common.close")}
             </button>
           </div>
         </div>

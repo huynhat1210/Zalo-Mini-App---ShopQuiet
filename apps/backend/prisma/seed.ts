@@ -605,27 +605,27 @@ async function main() {
   // Seed Membership Privileges
   const membershipPrivileges = [
     // Đồng tier
-    { tier: 'Đồng', title: 'Miễn phí vận chuyển', description: 'Miễn phí vận chuyển cho đơn từ 200K', icon: '🚚', sortOrder: 1 },
-    { tier: 'Đồng', title: 'Điểm danh hàng ngày', description: 'Nhận 10 điểm thưởng mỗi ngày', icon: '📍', sortOrder: 2 },
-    { tier: 'Đồng', title: 'Chương trình tích điểm', description: 'Tích điểm đổi voucher', icon: '🎁', sortOrder: 3 },
+    { tier: 'Đồng', title: 'Miễn phí vận chuyển', description: 'Miễn phí vận chuyển cho đơn từ 200K', sortOrder: 1 },
+    { tier: 'Đồng', title: 'Điểm danh hàng ngày', description: 'Nhận 10 điểm thưởng mỗi ngày', sortOrder: 2 },
+    { tier: 'Đồng', title: 'Chương trình tích điểm', description: 'Tích điểm đổi voucher', sortOrder: 3 },
     // Bạc tier
-    { tier: 'Bạc', title: 'Miễn phí vận chuyển', description: 'Miễn phí vận chuyển cho đơn từ 150K', icon: '🚚', sortOrder: 1 },
-    { tier: 'Bạc', title: 'Giảm 5% đơn hàng', description: 'Giảm 5% cho tất cả đơn hàng', icon: '💰', sortOrder: 2 },
-    { tier: 'Bạc', title: 'Điểm danh hàng ngày', description: 'Nhận 15 điểm thưởng mỗi ngày', icon: '📍', sortOrder: 3 },
-    { tier: 'Bạc', title: 'Ưu tiên hỗ trợ', description: 'Hỗ trợ khách hàng ưu tiên', icon: '⭐', sortOrder: 4 },
+    { tier: 'Bạc', title: 'Miễn phí vận chuyển', description: 'Miễn phí vận chuyển cho đơn từ 150K', sortOrder: 1 },
+    { tier: 'Bạc', title: 'Giảm 5% đơn hàng', description: 'Giảm 5% cho tất cả đơn hàng', sortOrder: 2 },
+    { tier: 'Bạc', title: 'Điểm danh hàng ngày', description: 'Nhận 15 điểm thưởng mỗi ngày', sortOrder: 3 },
+    { tier: 'Bạc', title: 'Ưu tiên hỗ trợ', description: 'Hỗ trợ khách hàng ưu tiên', sortOrder: 4 },
     // Vàng tier
-    { tier: 'Vàng', title: 'Miễn phí vận chuyển', description: 'Miễn phí vận chuyển cho đơn từ 100K', icon: '🚚', sortOrder: 1 },
-    { tier: 'Vàng', title: 'Giảm 10% đơn hàng', description: 'Giảm 10% cho tất cả đơn hàng', icon: '💰', sortOrder: 2 },
-    { tier: 'Vàng', title: 'Điểm danh hàng ngày', description: 'Nhận 20 điểm thưởng mỗi ngày', icon: '📍', sortOrder: 3 },
-    { tier: 'Vàng', title: 'Voucher sinh nhật', description: 'Voucher giảm 20% sinh nhật', icon: '🎂', sortOrder: 4 },
-    { tier: 'Vàng', title: 'Ưu tiên hỗ trợ', description: 'Hỗ trợ khách hàng 24/7', icon: '⭐', sortOrder: 5 },
+    { tier: 'Vàng', title: 'Miễn phí vận chuyển', description: 'Miễn phí vận chuyển cho đơn từ 100K', sortOrder: 1 },
+    { tier: 'Vàng', title: 'Giảm 10% đơn hàng', description: 'Giảm 10% cho tất cả đơn hàng', sortOrder: 2 },
+    { tier: 'Vàng', title: 'Điểm danh hàng ngày', description: 'Nhận 20 điểm thưởng mỗi ngày', sortOrder: 3 },
+    { tier: 'Vàng', title: 'Voucher sinh nhật', description: 'Voucher giảm 20% sinh nhật', sortOrder: 4 },
+    { tier: 'Vàng', title: 'Ưu tiên hỗ trợ', description: 'Hỗ trợ khách hàng 24/7', sortOrder: 5 },
     // Kim cương tier
-    { tier: 'Kim cương', title: 'Miễn phí vận chuyển', description: 'Miễn phí vận chuyển tất cả đơn hàng', icon: '🚚', sortOrder: 1 },
-    { tier: 'Kim cương', title: 'Giảm 15% đơn hàng', description: 'Giảm 15% cho tất cả đơn hàng', icon: '💰', sortOrder: 2 },
-    { tier: 'Kim cương', title: 'Điểm danh hàng ngày', description: 'Nhận 30 điểm thưởng mỗi ngày', icon: '📍', sortOrder: 3 },
-    { tier: 'Kim cương', title: 'Voucher sinh nhật', description: 'Voucher giảm 30% sinh nhật', icon: '🎂', sortOrder: 4 },
-    { tier: 'Kim cương', title: 'Quà tặng độc quyền', description: 'Quà tặng đặc quyền hàng tháng', icon: '🎁', sortOrder: 5 },
-    { tier: 'Kim cương', title: 'Hỗ trợ VIP', description: 'Manager hỗ trợ trực tiếp', icon: '👑', sortOrder: 6 },
+    { tier: 'Kim cương', title: 'Miễn phí vận chuyển', description: 'Miễn phí vận chuyển tất cả đơn hàng', sortOrder: 1 },
+    { tier: 'Kim cương', title: 'Giảm 15% đơn hàng', description: 'Giảm 15% cho tất cả đơn hàng', sortOrder: 2 },
+    { tier: 'Kim cương', title: 'Điểm danh hàng ngày', description: 'Nhận 30 điểm thưởng mỗi ngày', sortOrder: 3 },
+    { tier: 'Kim cương', title: 'Voucher sinh nhật', description: 'Voucher giảm 30% sinh nhật', sortOrder: 4 },
+    { tier: 'Kim cương', title: 'Quà tặng độc quyền', description: 'Quà tặng đặc quyền hàng tháng', sortOrder: 5 },
+    { tier: 'Kim cương', title: 'Hỗ trợ VIP', description: 'Manager hỗ trợ trực tiếp', sortOrder: 6 },
   ];
 
   for (const privilege of membershipPrivileges) {
@@ -638,11 +638,10 @@ async function main() {
       },
       update: {
         description: privilege.description,
-        icon: privilege.icon,
         sortOrder: privilege.sortOrder,
         active: true,
       },
-      create: privilege,
+      create: { ...privilege, active: true },
     });
   }
 

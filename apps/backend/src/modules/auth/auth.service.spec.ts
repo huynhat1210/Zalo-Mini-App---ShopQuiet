@@ -17,14 +17,21 @@ describe('AuthService', () => {
     role: 'user',
     createdAt: new Date(),
     updatedAt: new Date(),
-    birthday: '',
+    birthday: null,
     gender: null,
-    phone: '',
-    email: '',
+    phone: null,
+    email: null,
     totalSpent: 0,
     membershipTier: 'Đồng',
     gamificationPoints: 0,
-  };
+    height: null,
+    weight: null,
+    footLength: null,
+    clothingSize: null,
+    shoeSize: null,
+    resetOtpCode: null,
+    resetOtpExpiresAt: null,
+  } as any;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({

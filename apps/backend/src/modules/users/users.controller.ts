@@ -45,6 +45,29 @@ export class UsersController {
     return this.usersService.updateSizeProfile(targetUserId, body);
   }
 
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  async getProfile(@Headers('x-zalo-user-id') zaloUserId?: string) {
+    if (!zaloUserId) return null;
+    const user = await this.prisma.user.findUnique({
+      where: { zaloId: zaloUserId },
+      select: {
+        zaloId: true,
+        name: true,
+        avatar: true,
+        phone: true,
+        email: true,
+        birthday: true,
+        gender: true,
+        gamificationPoints: true,
+        membershipTier: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+    return user;
+  }
+
   @Post('sync')
   @UseGuards(JwtAuthGuard)
   async syncUser(@Body() body: SyncUserDto, @CurrentUser() user: any) {

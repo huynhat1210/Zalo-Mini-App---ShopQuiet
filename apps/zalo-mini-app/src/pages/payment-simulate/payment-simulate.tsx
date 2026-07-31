@@ -1,8 +1,10 @@
 import { useCart, IOrderItem } from "../../App";
 import { apiRequest } from "../../utils/api";
+import { useTranslation } from "../../utils";
 import { IPaymentSimulateProps } from "./payment-simulate.type";
 
 export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
+  const { t } = useTranslation();
   const {
     selectedOrder,
     setActiveTab,
@@ -18,13 +20,13 @@ export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
       <div className="flex flex-col items-center justify-center h-full p-6 text-center space-y-4">
         <span className="text-4xl">⚠️</span>
         <p className="text-xs text-textColor-variant">
-          Payment order information not found.
+          {t("payment.title")}
         </p>
         <button
           onClick={() => setActiveTab("home")}
           className="h-10 px-6 bg-primary text-white text-xs font-bold uppercase rounded-full border-none cursor-pointer"
         >
-          Back to Home
+          {t("common.back")}
         </button>
       </div>
     );
@@ -32,7 +34,7 @@ export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
 
   const handlePaySuccess = async () => {
     try {
-      showToast("Processing transaction...", "info");
+      showToast(t("payment.processing"), "info");
       // Update status to PROCESSING on backend
       await apiRequest(`/orders/${selectedOrder.id}/status`, "PATCH", {
         status: "PROCESSING",
@@ -79,21 +81,21 @@ export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
         clearCart();
       }
 
-      showToast("Payment successful!", "success");
+      showToast(t("payment.success"), "success");
       if (fetchNotifications) {
         fetchNotifications();
       }
       setActiveTab("order-success");
     } catch (e) {
       console.error(e);
-      showToast("Payment failed, please try again!", "warning");
+      showToast(t("payment.failed"), "warning");
     }
   };
 
   const handlePayFail = () => {
     // Keep PENDING_PAYMENT status and redirect to draft orders
     showToast(
-      "Payment not completed. Order saved to Drafts!",
+      t("payment.failed"),
       "warning",
     );
     setActiveTab("orders");

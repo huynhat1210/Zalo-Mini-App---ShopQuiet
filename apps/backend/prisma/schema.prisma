@@ -257,9 +257,11 @@ model MembershipPrivilege {
   title       String
   description String
   sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
 
+  @@unique([tier, title])
   @@index([tier])
 }
 
