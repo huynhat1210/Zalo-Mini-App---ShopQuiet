@@ -40,6 +40,15 @@ export const App: React.FC = () => {
     const token = tokenStorage.getAccessToken();
     setIsAuthenticated(!!token);
     setChecking(false);
+
+    // Listen for unauthorized 401 token expiration events
+    const handleUnauthorized = () => {
+      tokenStorage.clearToken();
+      setIsAuthenticated(false);
+    };
+
+    window.addEventListener('cms:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('cms:unauthorized', handleUnauthorized);
   }, []);
 
   const handleLogout = () => {

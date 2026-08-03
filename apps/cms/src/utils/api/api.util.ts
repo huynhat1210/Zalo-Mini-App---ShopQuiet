@@ -115,7 +115,7 @@ export async function apiRequest<T = any>(
           tokenStorage.clearToken();
           localStorage.removeItem('zalo_profile_custom');
           if (typeof window !== 'undefined') {
-            window.location.reload();
+            window.dispatchEvent(new CustomEvent('cms:unauthorized'));
           }
           throw err;
         }
