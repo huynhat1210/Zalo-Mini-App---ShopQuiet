@@ -38,7 +38,7 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
   const [newPassword, setNewPassword] = useState("");
   const [demoOtpNotice, setDemoOtpNotice] = useState("");
 
-  const { loginWithPassword, registerWithPassword, showToast } = useAppStore();
+  const { loginWithPassword, registerWithPassword, requestZaloLogin, showToast } = useAppStore();
 
   if (!isOpen) return null;
 
@@ -225,6 +225,28 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
 
         {/* Form Body */}
         <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+          {/* User-initiated Zalo Login Button (Compliant with Zalo Policy 6.1) */}
+          {!isForgotView && (
+            <div className="pb-3 border-b border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={async () => {
+                  setLoading(true);
+                  const success = await requestZaloLogin(true);
+                  setLoading(false);
+                  if (success) onClose();
+                }}
+                disabled={loading}
+                className="w-full py-3 px-4 rounded-2xl bg-[#0068ff] hover:bg-[#0052cc] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md active:scale-95 transition-all border-none cursor-pointer disabled:opacity-50"
+              >
+                <span className="w-5 h-5 bg-white text-[#0068ff] rounded-full flex items-center justify-center font-black text-[10px]">
+                  Z
+                </span>
+                <span>Đăng nhập nhanh bằng Tài khoản Zalo</span>
+              </button>
+            </div>
+          )}
+
           {/* FORGOT PASSWORD VIEW */}
           {isForgotView ? (
             <div>

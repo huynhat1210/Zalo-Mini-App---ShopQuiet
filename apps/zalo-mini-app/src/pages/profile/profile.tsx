@@ -124,7 +124,12 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     badgeColor = "bg-amber-600 text-white";
   }
 
-  const isUserLoggedIn = !!localStorage.getItem("token") || (!!zaloUser?.id && zaloUser.id !== "guest");
+  const isUserLoggedIn =
+    !!localStorage.getItem("token") ||
+    (!!zaloUser?.id &&
+      zaloUser.id !== "guest" &&
+      !zaloUser.id.startsWith("guest_") &&
+      zaloUser.name !== "Khách");
 
   const profile = {
     name: zaloUser?.name || "",

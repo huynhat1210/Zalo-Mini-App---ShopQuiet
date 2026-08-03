@@ -77,4 +77,5 @@ export interface IAppState {
   ) => Promise<boolean>;
   loginWithPassword: (emailOrPhone: string, password: string) => Promise<boolean>;
   registerWithPassword: (emailOrPhone: string, name: string, password: string, avatar?: string) => Promise<boolean>;
+  requestZaloLogin: (autoRequestPermission?: boolean) => Promise<boolean>;
 }

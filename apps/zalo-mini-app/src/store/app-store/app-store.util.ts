@@ -496,7 +496,9 @@ export const useAppStore = create<IAppState>()(
             const apiAny = api as any;
             let data: any = null;
             if (apiAny && apiAny.getUserInfo) {
-              data = await apiAny.getUserInfo({ autoRequestPermission: true });
+              // Zalo Policy 6.1 Compliant: DO NOT auto-prompt consent on app launch!
+              // Only fetch user info silently if permission was already granted previously.
+              data = await apiAny.getUserInfo({ autoRequestPermission: false });
             }
             const info = data?.userInfo || data;
             const zaloId =
@@ -838,6 +840,71 @@ export const useAppStore = create<IAppState>()(
           return false;
         } catch (e: any) {
           get().showToast(e?.message || "Đăng ký không thành công", "warning");
+          return false;
+        }
+      },
+      requestZaloLogin: async (autoRequestPermission = true) => {
+        try {
+          const apiAny = api as any;
+          let data: any = null;
+          if (apiAny && apiAny.getUserInfo) {
+            data = await apiAny.getUserInfo({ autoRequestPermission });
+          }
+          const info = data?.userInfo || data;
+          const zaloId = info?.id || info?.zaloId || data?.id || data?.zaloId;
+
+          if (zaloId) {
+            const name = info?.name || "Người dùng Zalo";
+            const avatar = info?.avatar || "https://zalo-api.zdn.vn/api/emoticon/avatar";
+
+            let zaloToken = "";
+            if (apiAny && apiAny.getAccessToken) {
+              try {
+                zaloToken = (await apiAny.getAccessToken()) || "";
+              } catch (e) {
+                console.warn("Failed to get Zalo access token:", e);
+              }
+            }
+            if (!zaloToken) {
+              zaloToken = `mock_zalo_token_${zaloId}`;
+            }
+
+            const authData: any = await apiRequest("/auth/login", "POST", {
+              zaloId: String(zaloId),
+              name: String(name),
+              avatar: String(avatar),
+              accessToken: zaloToken,
+            });
+
+            tokenStorage.setTokens({
+              access_token: authData.access_token,
+              refresh_token: authData.refresh_token,
+            });
+
+            const mappedUser = {
+              id: authData.user.zaloId || authData.user.id,
+              name: authData.user.name,
+              avatar: authData.user.avatar,
+              role: authData.user.role,
+              phone: authData.user.phone || "",
+              email: authData.user.email || "",
+              birthday: authData.user.birthday || "",
+              gender: authData.user.gender || "",
+              totalSpent: authData.user.totalSpent || 0,
+              membershipTier: authData.user.membershipTier || "Đồng",
+            };
+
+            set({ zaloUser: mappedUser });
+            localStorage.setItem("zalo_profile_custom", JSON.stringify(mappedUser));
+            get().fetchCart().catch(console.error);
+            get().fetchFavorites().catch(console.error);
+            get().showToast(`Đăng nhập Zalo thành công! Chào ${mappedUser.name}`, "success");
+            return true;
+          }
+          return false;
+        } catch (err: any) {
+          console.warn("Zalo login request failed:", err);
+          get().showToast("Bạn đã từ chối cấp quyền Zalo. Tiếp tục với chế độ Khách.", "warning");
           return false;
         }
       },
