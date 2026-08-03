@@ -158,6 +158,21 @@ export class AutomationService {
       let triggeredCount = 0;
 
       for (const automation of automations) {
+        // Chặn kích hoạt trùng lặp cho các kịch bản chỉ được chạy 1 lần duy nhất trong đời của User
+        if (['NEW_USER', 'FIRST_PURCHASE'].includes(trigger)) {
+          const alreadyExecuted = await this.prisma.automationLog.findFirst({
+            where: {
+              automationId: automation.id,
+              zaloUserId,
+              status: 'SUCCESS',
+            },
+          });
+          if (alreadyExecuted) {
+            this.logger.debug(`Quy trình tự động ${automation.name} (ID: ${automation.id}) đã từng được kích hoạt thành công cho user ${zaloUserId}. Bỏ qua.`);
+            continue;
+          }
+        }
+
         // Check if conditions are met
         if (await this.checkConditions(automation.conditions as Record<string, any>, zaloUserId, context)) {
           // Execute automation actions
