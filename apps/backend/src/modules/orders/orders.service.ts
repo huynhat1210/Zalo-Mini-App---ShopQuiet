@@ -189,6 +189,18 @@ export class OrdersService {
       if (voucher.expiresAt && voucher.expiresAt < new Date()) {
         throw new BadRequestException('Mã giảm giá đã hết hạn.');
       }
+      if (filterUserId) {
+        const existingOrder = await this.prisma.order.findFirst({
+          where: {
+            zaloUserId: filterUserId,
+            voucherCode: dto.voucherCode.trim().toUpperCase(),
+            status: { not: 'CANCELLED' },
+          },
+        });
+        if (existingOrder) {
+          throw new BadRequestException('Bạn đã sử dụng mã giảm giá này rồi.');
+        }
+      }
       if (subtotal < voucher.minOrderVal) {
         throw new BadRequestException('Đơn hàng chưa đạt giá trị tối thiểu của mã giảm giá.');
       }
@@ -306,7 +318,10 @@ export class OrdersService {
           if (voucher && voucher.stock > 0) {
             await tx.voucher.update({
               where: { code: voucher.code },
-              data: { stock: { decrement: 1 } },
+              data: { 
+                stock: { decrement: 1 },
+                usedCount: { increment: 1 }
+              },
             });
           }
         } catch {
