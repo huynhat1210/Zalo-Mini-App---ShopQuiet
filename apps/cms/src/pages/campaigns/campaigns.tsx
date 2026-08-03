@@ -12,6 +12,15 @@ import {
   Trash2,
   X,
   Sparkles,
+  Ticket,
+  Coins,
+  Radio,
+  Zap,
+  Globe,
+  Award,
+  Crown,
+  Gem,
+  Star,
 } from 'lucide-react';
 import type { ICampaignsProps } from './campaigns.type';
 import { useToast } from '../../contexts';
@@ -297,18 +306,19 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
         <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto">
           {[
             { id: 'ALL', label: 'Tất cả' },
-            { id: 'VOUCHER', label: '🎟️ Tặng Voucher' },
-            { id: 'BONUS_COINS', label: '💰 Tặng Xu' },
-            { id: 'BROADCAST', label: '📢 Thông báo' },
-            { id: 'FLASH_SALE', label: '⚡ Flash Sale' },
+            { id: 'VOUCHER', label: 'Tặng Voucher', icon: <Ticket size={13} /> },
+            { id: 'BONUS_COINS', label: 'Tặng Xu', icon: <Coins size={13} /> },
+            { id: 'BROADCAST', label: 'Thông báo', icon: <Radio size={13} /> },
+            { id: 'FLASH_SALE', label: 'Flash Sale', icon: <Zap size={13} /> },
           ].map((t) => (
             <button
               key={t.id}
               onClick={() => setTypeFilter(t.id)}
-              className={`px-3 py-1.5 text-xs font-bold rounded-xl border-none cursor-pointer transition-all whitespace-nowrap ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-xl border-none cursor-pointer transition-all whitespace-nowrap flex items-center gap-1.5 ${
                 typeFilter === t.id ? 'bg-[#0e6877] text-white shadow-2xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
+              {t.icon}
               {t.label}
             </button>
           ))}
@@ -347,22 +357,36 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
                     </td>
 
                     <td className="py-4 px-4">
-                      <span className="font-bold px-2.5 py-1 rounded-full text-[10px] inline-flex items-center gap-1 bg-slate-100 text-slate-700">
-                        {c.type === 'VOUCHER' && <>🎟️ Voucher: {c.voucherCode || 'N/A'}</>}
-                        {c.type === 'BONUS_COINS' && <>💰 Tặng {c.bonusCoins} Xu</>}
-                        {c.type === 'BROADCAST' && <>📢 Thông báo</>}
-                        {c.type === 'FLASH_SALE' && <>⚡ Giảm {c.discountPercent}%</>}
-                      </span>
+                      {c.type === 'VOUCHER' && (
+                        <span className="font-extrabold px-2.5 py-1 rounded-full text-[10px] inline-flex items-center gap-1.5 whitespace-nowrap bg-pink-50 text-pink-700 border border-pink-200/60">
+                          <Ticket size={12} className="text-pink-600" /> Voucher: {c.voucherCode || 'N/A'}
+                        </span>
+                      )}
+                      {c.type === 'BONUS_COINS' && (
+                        <span className="font-extrabold px-2.5 py-1 rounded-full text-[10px] inline-flex items-center gap-1.5 whitespace-nowrap bg-amber-50 text-amber-800 border border-amber-200/60">
+                          <Coins size={12} className="text-amber-500" /> Tặng {c.bonusCoins} Xu
+                        </span>
+                      )}
+                      {c.type === 'BROADCAST' && (
+                        <span className="font-extrabold px-2.5 py-1 rounded-full text-[10px] inline-flex items-center gap-1.5 whitespace-nowrap bg-blue-50 text-blue-700 border border-blue-200/60">
+                          <Radio size={12} className="text-blue-500" /> Thông báo
+                        </span>
+                      )}
+                      {c.type === 'FLASH_SALE' && (
+                        <span className="font-extrabold px-2.5 py-1 rounded-full text-[10px] inline-flex items-center gap-1.5 whitespace-nowrap bg-red-50 text-red-700 border border-red-200/60">
+                          <Zap size={12} className="text-red-500" /> Giảm {c.discountPercent}%
+                        </span>
+                      )}
                     </td>
 
                     <td className="py-4 px-4 font-semibold text-slate-600">
-                      <span className="bg-teal-50 text-[#0e6877] px-2.5 py-0.5 rounded-md text-[10.5px]">
-                        {c.targetSegment === 'ALL' && '🌐 Tất cả người dùng'}
-                        {c.targetSegment === 'SILVER' && '🥈 Hạng Bạc'}
-                        {c.targetSegment === 'GOLD' && '🥇 Hạng Vàng'}
-                        {c.targetSegment === 'DIAMOND' && '💎 Hạng Kim cương'}
-                        {c.targetSegment === 'INACTIVE_30_DAYS' && '⏰ Chưa mua 30 ngày'}
-                        {c.targetSegment === 'VIP' && '⭐ Khách hàng VIP'}
+                      <span className="bg-teal-50/80 text-[#0e6877] px-2.5 py-1 rounded-lg text-[10.5px] inline-flex items-center gap-1.5 whitespace-nowrap border border-teal-200/50 font-bold">
+                        {c.targetSegment === 'ALL' && <><Globe size={12} className="text-[#0e6877]" /> Tất cả người dùng</>}
+                        {c.targetSegment === 'SILVER' && <><Award size={12} className="text-slate-500" /> Hạng Bạc</>}
+                        {c.targetSegment === 'GOLD' && <><Crown size={12} className="text-amber-500" /> Hạng Vàng</>}
+                        {c.targetSegment === 'DIAMOND' && <><Gem size={12} className="text-sky-500" /> Hạng Kim cương</>}
+                        {c.targetSegment === 'INACTIVE_30_DAYS' && <><Clock size={12} className="text-orange-500" /> Chưa mua 30 ngày</>}
+                        {c.targetSegment === 'VIP' && <><Star size={12} className="text-yellow-500" /> Khách hàng VIP</>}
                       </span>
                     </td>
 
@@ -486,10 +510,10 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
                     onChange={(e) => setType(e.target.value)}
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877]"
                   >
-                    <option value="VOUCHER">🎟️ Tặng Voucher</option>
-                    <option value="BONUS_COINS">💰 Tặng Xu Quà Tặng</option>
-                    <option value="BROADCAST">📢 Thông Báo / Banner</option>
-                    <option value="FLASH_SALE">⚡ Giảm Giá Flash Sale</option>
+                    <option value="VOUCHER">Tặng Voucher</option>
+                    <option value="BONUS_COINS">Tặng Xu Quà Tặng</option>
+                    <option value="BROADCAST">Thông Báo / Banner</option>
+                    <option value="FLASH_SALE">Giảm Giá Flash Sale</option>
                   </select>
                 </div>
 
@@ -500,12 +524,12 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
                     onChange={(e) => setTargetSegment(e.target.value)}
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877]"
                   >
-                    <option value="ALL">🌐 Tất cả người dùng</option>
-                    <option value="SILVER">🥈 Hạng Bạc</option>
-                    <option value="GOLD">🥇 Hạng Vàng</option>
-                    <option value="DIAMOND">💎 Hạng Kim Cương</option>
-                    <option value="INACTIVE_30_DAYS">⏰ Chưa mua 30 ngày</option>
-                    <option value="VIP">⭐ Khách VIP (Trên 1M)</option>
+                    <option value="ALL">Tất cả người dùng</option>
+                    <option value="SILVER">Hạng Bạc</option>
+                    <option value="GOLD">Hạng Vàng</option>
+                    <option value="DIAMOND">Hạng Kim Cương</option>
+                    <option value="INACTIVE_30_DAYS">Chưa mua 30 ngày</option>
+                    <option value="VIP">Khách VIP (Trên 1M)</option>
                   </select>
                 </div>
               </div>

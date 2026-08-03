@@ -197,9 +197,9 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
   const funnelChartData = useMemo(() => {
     if (!funnelData) return [];
     return [
-      { label: '👁 Lượt xem', value: funnelData.views, color: '#0e6877', pct: '100%' },
-      { label: '🛒 Thêm giỏ', value: funnelData.addToCarts, color: '#3b82f6', pct: funnelData.conversionRates.viewToCart },
-      { label: '💳 Mua hàng', value: funnelData.purchases, color: '#10b981', pct: funnelData.conversionRates.viewToPurchase },
+      { label: 'Lượt xem', value: funnelData.views, color: '#0e6877', pct: '100%' },
+      { label: 'Thêm giỏ', value: funnelData.addToCarts, color: '#3b82f6', pct: funnelData.conversionRates.viewToCart },
+      { label: 'Mua hàng', value: funnelData.purchases, color: '#10b981', pct: funnelData.conversionRates.viewToPurchase },
     ];
   }, [funnelData]);
 
