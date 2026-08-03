@@ -1,1 +1,1 @@
-export { default as Automation } from './automation';
+export * from './automation';

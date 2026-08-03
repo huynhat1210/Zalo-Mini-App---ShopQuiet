@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { apiRequest } from '../../utils/api';
 import { 
   Play, 
   Pause, 
   Edit, 
   Trash2, 
   Plus, 
-  MoreVertical,
   TrendingUp,
-  Clock,
-  Users,
   CheckCircle,
   XCircle,
   Copy,
@@ -53,7 +51,7 @@ const triggerColors: Record<string, string> = {
   'FIRST_PURCHASE': 'bg-green-100 text-green-700',
 };
 
-export default function Automation() {
+export function Automation() {
   const [automations, setAutomations] = useState<Automation[]>([]);
   const [stats, setStats] = useState<Record<number, AutomationStats>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -68,15 +66,17 @@ export default function Automation() {
   const loadAutomations = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/automation');
-      const data = await response.json();
-      setAutomations(data);
+      const data = await apiRequest<Automation[]>('/automation');
+      setAutomations(data || []);
 
       // Load stats for each automation
-      for (const automation of data) {
-        const statsResponse = await fetch(`/api/automation/${automation.id}/stats`);
-        const statsData = await statsResponse.json();
-        setStats(prev => ({ ...prev, [automation.id]: statsData }));
+      for (const automation of data || []) {
+        try {
+          const statsData = await apiRequest<AutomationStats>(`/automation/${automation.id}/stats`);
+          setStats(prev => ({ ...prev, [automation.id]: statsData }));
+        } catch (e) {
+          console.error(`Failed to load stats for automation ${automation.id}:`, e);
+        }
       }
     } catch (error) {
       console.error('Failed to load automations:', error);
@@ -87,11 +87,7 @@ export default function Automation() {
 
   const toggleAutomation = async (id: number, enabled: boolean) => {
     try {
-      await fetch(`/api/automation/${id}/toggle`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled }),
-      });
+      await apiRequest(`/automation/${id}/toggle`, 'PUT', { enabled });
       loadAutomations();
     } catch (error) {
       console.error('Failed to toggle automation:', error);
@@ -102,7 +98,7 @@ export default function Automation() {
     if (!confirm('Bạn có chắc chắn muốn xóa automation này?')) return;
     
     try {
-      await fetch(`/api/automation/${id}`, { method: 'DELETE' });
+      await apiRequest(`/automation/${id}`, 'DELETE');
       loadAutomations();
     } catch (error) {
       console.error('Failed to delete automation:', error);
@@ -111,14 +107,10 @@ export default function Automation() {
 
   const duplicateAutomation = async (automation: Automation) => {
     try {
-      await fetch('/api/automation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...automation,
-          name: `${automation.name} (Copy)`,
-          enabled: false,
-        }),
+      await apiRequest('/automation', 'POST', {
+        ...automation,
+        name: `${automation.name} (Copy)`,
+        enabled: false,
       });
       loadAutomations();
     } catch (error) {
