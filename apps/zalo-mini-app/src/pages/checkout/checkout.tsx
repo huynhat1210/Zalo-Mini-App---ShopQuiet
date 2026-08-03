@@ -21,7 +21,7 @@ import { Payment } from "zmp-sdk/apis";
 import api from "zmp-sdk";
 const PageCast = Page as any;
 import { ICheckoutProps } from "./checkout.type";
-import { ChevronLeft, MapPin, Ticket } from "lucide-react";
+import { ChevronLeft, MapPin, Ticket, Sparkles, Compass, X, ShieldCheck } from "lucide-react";
 
 type CmsShippingMethod = {
   code: string;
@@ -347,8 +347,13 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
 
   // Location feature
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
-  const handleGetLocation = async () => {
+  const handleOpenLocationModal = () => {
+    setIsLocationModalOpen(true);
+  };
+
+  const executeGpsFetch = async () => {
     const apiAny = api as any;
     setIsLoadingLocation(true);
 
@@ -377,10 +382,11 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           ...watchedAddress,
           houseNumber: street || watchedAddress.houseNumber,
         });
-        showToast(t("checkout.locationFilled"), "success");
+        showToast("✨ Đã định vị thành công địa chỉ giao hàng của bạn!", "success");
+        setIsLocationModalOpen(false);
       } catch (err) {
         console.error(err);
-        showToast(t("checkout.locationCoordsError"), "warning");
+        showToast("Không thể giải mã địa chỉ từ GPS. Vui lòng chọn Tỉnh/Thành thủ công.", "warning");
       } finally {
         setIsLoadingLocation(false);
       }
@@ -398,17 +404,17 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                 if (lat != null && lng != null) {
                   processCoords(Number(lat), Number(lng));
                 } else {
-                  showToast(t("checkout.locationCoordsEmpty"), "warning");
+                  showToast("Không lấy được tọa độ vị trí. Vui lòng tự chọn Tỉnh/Thành phố.", "warning");
                   setIsLoadingLocation(false);
                 }
               },
               fail: () => {
-                showToast(t("checkout.locationGpsError"), "warning");
+                showToast("Bạn chưa bật GPS trên điện thoại. Vui lòng thử lại.", "warning");
                 setIsLoadingLocation(false);
               },
             });
           } else {
-            showToast(t("checkout.locationBrowserError"), "warning");
+            showToast("Thiết bị chưa cấp quyền vị trí. Vui lòng chọn thủ công.", "warning");
             setIsLoadingLocation(false);
           }
         },
@@ -422,17 +428,17 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           if (lat != null && lng != null) {
             processCoords(Number(lat), Number(lng));
           } else {
-            showToast(t("checkout.locationCoordsEmpty"), "warning");
+            showToast("Không lấy được tọa độ vị trí.", "warning");
             setIsLoadingLocation(false);
           }
         },
         fail: () => {
-          showToast(t("checkout.locationGpsError"), "warning");
+          showToast("Vui lòng bật định vị GPS để tự động lấy vị trí.", "warning");
           setIsLoadingLocation(false);
         },
       });
     } else {
-      showToast(t("checkout.locationNotSupported"), "warning");
+      showToast("Trình duyệt không hỗ trợ định vị GPS.", "warning");
       setIsLoadingLocation(false);
     }
   };
@@ -1117,7 +1123,7 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
                       />
                       <button
                         type="button"
-                        onClick={handleGetLocation}
+                        onClick={handleOpenLocationModal}
                         disabled={isLoadingLocation}
                         className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 px-2.5 py-1.5 bg-[#f0edeb] text-[#526069] text-[8px] font-extrabold uppercase tracking-wider rounded-lg border-none cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors disabled:opacity-50"
                       >
@@ -1647,6 +1653,77 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
             >
               {t("common.close")}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Premium Location Permission & GPS Modal */}
+      {isLocationModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+          <div
+            className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 animate-scale-up text-center p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setIsLocationModalOpen(false)}
+              className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors border-none cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Header Icon with Glowing Radar Rings */}
+            <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
+              <div className="absolute inset-0 bg-teal-500/20 rounded-full animate-ping" />
+              <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-teal-600 to-emerald-500 text-white flex items-center justify-center shadow-lg shadow-teal-500/30">
+                <Compass className="w-8 h-8 animate-pulse" />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-black uppercase tracking-widest bg-teal-50 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 px-3 py-1 rounded-full border border-teal-200/50">
+                📍 Tự Động Định Vị Giao Hàng
+              </span>
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight pt-1">
+                Lấy Vị Trí Giao Hàng Của Bạn?
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                ShopQuiet sử dụng định vị GPS để tự động điền chính xác Tỉnh/Thành phố & Phường/Xã giúp tính phí vận chuyển chuẩn nhất cho đơn hàng.
+              </p>
+            </div>
+
+            <div className="pt-2 space-y-2.5">
+              <button
+                type="button"
+                onClick={executeGpsFetch}
+                disabled={isLoadingLocation}
+                className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-extrabold text-xs shadow-md shadow-teal-600/20 active:scale-95 transition-all border-none cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {isLoadingLocation ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Đang dò tìm tọa độ GPS...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 text-amber-300" />
+                    <span>Dùng Vị Trí GPS Hiện Tại</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsLocationModalOpen(false)}
+                className="w-full py-3 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs transition-all border-none cursor-pointer"
+              >
+                Tự Chọn Tỉnh / Thành Phố
+              </button>
+            </div>
+
+            <div className="flex items-center justify-center gap-1 text-[10px] text-slate-400 font-medium pt-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
+              <span>Bảo mật thông tin vị trí của bạn</span>
+            </div>
           </div>
         </div>
       )}
