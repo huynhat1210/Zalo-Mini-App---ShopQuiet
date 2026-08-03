@@ -85,6 +85,7 @@ model User {
   chatMessages  ChatMessage[]
   pointsHistory PointsHistory[]
   campaignUsers CampaignUser[]
+  automationLogs AutomationLog[]
 
   @@index([name])
   @@index([role])
@@ -413,4 +414,62 @@ model CampaignUser {
   @@unique([campaignId, zaloUserId])
   @@index([zaloUserId])
   @@index([campaignId])
+}
+
+model Automation {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  trigger     String   // 'NEW_USER', 'BIRTHDAY', 'CART_ABANDONED', 'INACTIVE_30_DAYS', 'MEMBERSHIP_UPGRADE', 'FIRST_PURCHASE'
+  actions     Json     // Array of actions: [{type: 'NOTIFICATION', config: {...}}, {type: 'VOUCHER', config: {...}}]
+  conditions  Json     @default("{}") // Conditions for triggering
+  enabled     Boolean  @default(true)
+  priority    Int      @default(0) // Higher priority runs first
+  metadata    Json     @default("{}") // Additional configuration
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  logs        AutomationLog[]
+
+  @@index([trigger])
+  @@index([enabled])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+model AutomationLog {
+  id           Int      @id @default(autoincrement())
+  automationId Int
+  zaloUserId   String
+  status       String   // 'SUCCESS', 'FAILED', 'SKIPPED'
+  triggeredAt  DateTime @default(now())
+  executedAt   DateTime?
+  errorMessage String?
+  result       Json     @default("{}")
+  metadata     Json     @default("{}")
+
+  automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+
+  @@index([automationId])
+  @@index([zaloUserId])
+  @@index([status])
+  @@index([triggeredAt])
+}
+
+model AutomationTemplate {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  category    String   // 'WELCOME', 'RETENTION', 'CONVERSION', 'VIP', 'BIRTHDAY'
+  trigger     String
+  actions     Json
+  conditions  Json     @default("{}")
+  isSystem    Boolean  @default(false) // System templates cannot be deleted
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([active])
+  @@index([isSystem])
 }
