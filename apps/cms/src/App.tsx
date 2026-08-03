@@ -25,7 +25,7 @@ const Settings = lazy(() => import('./pages').then((m) => ({ default: m.Settings
 const CommentsPage = lazy(() => import('./pages').then((m) => ({ default: m.CommentsPage })));
 const TransactionsPage = lazy(() => import('./pages').then((m) => ({ default: m.TransactionsPage })));
 const Campaigns = lazy(() => import('./pages').then((m) => ({ default: m.Campaigns })));
-const AutomationPage = lazy(() => import('./pages').then((m) => ({ default: m.Automation })));
+const AutomationPage = lazy(() => import('./pages/automation').then((m) => ({ default: m.Automation })));
 
 const ToastContainerWrapper: React.FC = () => {
   const { toasts, removeToast } = useToast();
