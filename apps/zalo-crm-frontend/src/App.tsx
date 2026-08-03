@@ -1,11 +1,17 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { tokenStorage } from './utils';
+import Keycloak from 'keycloak-js';
 import { LayoutComponent, ToastContainerComponent } from './components';
 import { ToastProviderComponent, useToast } from './contexts';
 
+// Init Keycloak for ShopQuiet Campaign Frontend
+const keycloak = new Keycloak({
+  url: import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8080',
+  realm: import.meta.env.VITE_KEYCLOAK_REALM || 'shopquiet',
+  clientId: 'shopquiet-campaign',
+});
+
 // Lazy loading CRM Pages
-const Login = lazy(() => import('./pages').then((m) => ({ default: m.Login })));
 const Dashboard = lazy(() => import('./pages').then((m) => ({ default: m.Dashboard })));
 const Campaigns = lazy(() => import('./pages').then((m) => ({ default: m.Campaigns })));
 const Automation = lazy(() => import('./pages').then((m) => ({ default: m.Automation })));
@@ -21,13 +27,45 @@ export const App: React.FC = () => {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    const token = tokenStorage.getAccessToken();
-    setIsAuthenticated(!!token);
-    setChecking(false);
+    keycloak
+      .init({
+        onLoad: 'login-required',
+        checkLoginIframe: false,
+      })
+      .then((authenticated) => {
+        setIsAuthenticated(authenticated);
+        if (authenticated) {
+          localStorage.setItem('cms_access_token', keycloak.token || '');
+          localStorage.setItem('cms_refresh_token', keycloak.refreshToken || '');
+
+          const profile = {
+            zaloId: keycloak.tokenParsed?.preferred_username || 'admin',
+            name: keycloak.tokenParsed?.name || 'Administrator',
+            role: keycloak.tokenParsed?.realm_access?.roles?.includes('admin') ? 'admin' : 'user',
+          };
+          localStorage.setItem('zalo_profile_custom', JSON.stringify(profile));
+
+          // Set up token refresh in background
+          setInterval(() => {
+            keycloak.updateToken(70).then((refreshed) => {
+              if (refreshed) {
+                localStorage.setItem('cms_access_token', keycloak.token || '');
+              }
+            });
+          }, 60000);
+        }
+        setChecking(false);
+      })
+      .catch((err) => {
+        console.error('Failed to initialize Keycloak:', err);
+        setChecking(false);
+      });
 
     const handleUnauthorized = () => {
-      tokenStorage.clearToken();
-      setIsAuthenticated(false);
+      localStorage.removeItem('cms_access_token');
+      localStorage.removeItem('cms_refresh_token');
+      localStorage.removeItem('zalo_profile_custom');
+      keycloak.login();
     };
 
     window.addEventListener('crm:unauthorized', handleUnauthorized);
@@ -35,8 +73,10 @@ export const App: React.FC = () => {
   }, []);
 
   const handleLogout = () => {
-    tokenStorage.clearToken();
-    setIsAuthenticated(false);
+    localStorage.removeItem('cms_access_token');
+    localStorage.removeItem('cms_refresh_token');
+    localStorage.removeItem('zalo_profile_custom');
+    keycloak.logout();
   };
 
   if (checking) {
@@ -46,10 +86,6 @@ export const App: React.FC = () => {
         <p className="text-slate-400 text-xs font-semibold">Đang khởi động Campaign Portal...</p>
       </div>
     );
-  }
-
-  if (!isAuthenticated) {
-    return <Login onLoginSuccess={() => setIsAuthenticated(true)} />;
   }
 
   return (

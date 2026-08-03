@@ -16,21 +16,53 @@ Hệ thống Thương Mại Điện Tử Doanh Nghiệp Tích Hợp Zalo Mini Ap
 
 ---
 
-## 💻 Hướng Dẫn Khởi Chạy Dự Án Trên IDE (VS Code)
+## � Keycloak IAM Integration
+
+ShopQuiet sử dụng **Keycloak** làm giải pháp Quản lý danh tính và quyền truy cập (IAM) trung tâm, cung cấp:
+
+- ✅ **Single Sign-On (SSO)**: Đăng nhập một lần truy cập toàn bộ hệ thống
+- ✅ **OpenID Connect**: Chuẩn bảo mật ngành công nghiệp
+- ✅ **JWT Token Management**: Quản lý token tự động với khóa xoay vòng
+- ✅ **Role-Based Access Control**: Phân quyền linh hoạt
+
+### 🚀 Khởi Chạy Keycloak
+
+```bash
+# Khởi động Keycloak (mặc định: admin/admin123)
+docker compose up -d
+
+# Truy cập Admin Console
+http://localhost:8080/admin
+```
+
+### 📖 Hướng Dẫn Cấu Hình
+
+- **Bắt đầu nhanh:** [KEYCLOAK_QUICK_START.md](./KEYCLOAK_QUICK_START.md)
+- **Hướng dẫn chi tiết:** [KEYCLOAK_SETUP.md](./KEYCLOAK_SETUP.md)
+- **Tổng quan tích hợp:** [KEYCLOAK_INTEGRATION_SUMMARY.md](./KEYCLOAK_INTEGRATION_SUMMARY.md)
+
+---
+
+## �💻 Hướng Dẫn Khởi Chạy Dự Án Trên IDE (VS Code)
 
 ### Bước 1: Cài đặt thư viện
+
 Mở Terminal trong VS Code và chạy lệnh:
+
 ```bash
 pnpm install
 ```
 
 ### Bước 2: Chạy dự án
+
 Chạy duy nhất 1 lệnh sau để khởi động toàn bộ hệ thống:
+
 ```bash
 pnpm dev
 ```
 
 Sau khi chạy xong, các dịch vụ sẽ tự động hoạt động tại:
+
 - **Trang Quản trị Admin CMS**: `http://localhost:5173` (Quản lý sản phẩm, đơn hàng, chiến dịch marketing)
 - **Backend API & Socket.io**: `http://localhost:3001` (Xử lý dữ liệu & thông báo thời gian thực)
 - **Zalo Mini App Client**: `http://localhost:3002`
