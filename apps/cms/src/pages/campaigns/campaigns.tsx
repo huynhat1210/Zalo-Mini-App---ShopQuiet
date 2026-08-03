@@ -116,23 +116,78 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
     }
   };
 
-  const handlePredictAi = async () => {
+  // Dedicated AI Predictor Studio State
+  const [isPredictorModalOpen, setIsPredictorModalOpen] = useState(false);
+  const [simType, setSimType] = useState('VOUCHER');
+  const [simSegment, setSimSegment] = useState('ALL');
+  const [simDiscountValue, setSimDiscountValue] = useState<number>(50000);
+  const [simBonusCoins, setSimBonusCoins] = useState<number>(20000);
+  const [simDiscountPercent, setSimDiscountPercent] = useState<number>(15);
+
+  const handleRunSimulation = async (
+    overrideType?: string,
+    overrideSegment?: string,
+    overrideDiscount?: number,
+    overrideCoins?: number,
+    overridePercent?: number,
+  ) => {
+    const targetType = overrideType || simType;
+    const targetSeg = overrideSegment || simSegment;
+    const targetDisc = overrideDiscount !== undefined ? overrideDiscount : simDiscountValue;
+    const targetCoins = overrideCoins !== undefined ? overrideCoins : simBonusCoins;
+    const targetPct = overridePercent !== undefined ? overridePercent : simDiscountPercent;
+
     try {
       setIsPredicting(true);
       const res = await apiRequest('/campaigns/predict-ai', 'POST', {
-        type,
-        targetSegment,
-        bonusCoins,
-        discountPercent,
-        discountValue: voucherMode === 'CREATE' ? newVoucherDiscount : 30000,
+        type: targetType,
+        targetSegment: targetSeg,
+        bonusCoins: targetCoins,
+        discountPercent: targetPct,
+        discountValue: targetDisc,
       });
       if (res) setAiPrediction(res);
-      toastSuccess('Gemini AI Dự Đoán', 'Đã tính toán ROI & Ngân sách dự kiến');
     } catch (e) {
-      toastError('Lỗi', 'Không thể tính toán dự đoán AI');
+      toastError('Lỗi', 'Không thể chạy mô phỏng AI');
     } finally {
       setIsPredicting(false);
     }
+  };
+
+  const handleOpenPredictorStudio = (initialCampaign?: ICampaign) => {
+    if (initialCampaign) {
+      setSimType(initialCampaign.type || 'VOUCHER');
+      setSimSegment(initialCampaign.targetSegment || 'ALL');
+      setSimBonusCoins(initialCampaign.bonusCoins || 20000);
+      setSimDiscountPercent(initialCampaign.discountPercent || 15);
+      setSimDiscountValue(50000);
+      handleRunSimulation(
+        initialCampaign.type,
+        initialCampaign.targetSegment,
+        50000,
+        initialCampaign.bonusCoins || 20000,
+        initialCampaign.discountPercent || 15,
+      );
+    } else {
+      handleRunSimulation();
+    }
+    setIsPredictorModalOpen(true);
+  };
+
+  const handleApplySimulationToModal = () => {
+    setType(simType);
+    setTargetSegment(simSegment);
+    if (simType === 'VOUCHER') {
+      setVoucherMode('CREATE');
+      setNewVoucherDiscount(simDiscountValue);
+    } else if (simType === 'BONUS_COINS') {
+      setBonusCoins(simBonusCoins);
+    } else if (simType === 'FLASH_SALE') {
+      setDiscountPercent(simDiscountPercent);
+    }
+    setIsPredictorModalOpen(false);
+    setIsModalOpen(true);
+    toastSuccess('Đã áp dụng', 'Đã đưa thông số mô phỏng AI vào form tạo mới');
   };
 
   const fetchCampaigns = async () => {
@@ -269,12 +324,20 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
           </div>
         </div>
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2.5 bg-[#0e6877] hover:bg-[#0b5460] text-white text-xs font-bold rounded-2xl transition-all shadow-md flex items-center gap-2 border-none cursor-pointer active:scale-95"
-        >
-          <Plus size={16} /> Tạo Chiến Dịch Mới
-        </button>
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => handleOpenPredictorStudio()}
+            className="px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300/80 text-xs font-extrabold rounded-2xl transition-all flex items-center gap-2 cursor-pointer active:scale-95 shadow-xs"
+          >
+            <Sparkles size={16} className="text-amber-600" /> Mô Phỏng & Dự Đoán ROI AI
+          </button>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="px-4 py-2.5 bg-[#0e6877] hover:bg-[#0b5460] text-white text-xs font-bold rounded-2xl transition-all shadow-md flex items-center gap-2 border-none cursor-pointer active:scale-95"
+          >
+            <Plus size={16} /> Tạo Chiến Dịch Mới
+          </button>
+        </div>
       </div>
 
       {/* KPI Stats Cards */}
@@ -461,6 +524,13 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
 
                     <td className="py-4 px-4 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleOpenPredictorStudio(c)}
+                          title="Mô phỏng ROI & Dự đoán AI"
+                          className="p-1.5 text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition-colors border border-amber-200/80 cursor-pointer"
+                        >
+                          <Sparkles size={14} />
+                        </button>
                         {c.status !== 'COMPLETED' && (
                           <button
                             onClick={() => handleLaunch(c.id)}
@@ -686,53 +756,6 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
                 />
               </div>
 
-              {/* Gemini AI ROI & Budget Predictor Card */}
-              <div className="p-3 bg-gradient-to-r from-teal-900 to-slate-900 rounded-2xl text-white space-y-2 border border-teal-700/50 shadow-md">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 font-extrabold text-xs text-amber-300">
-                    <Sparkles size={14} /> Gemini AI Dự Đoán Hiệu Quả & ROI
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handlePredictAi}
-                    disabled={isPredicting}
-                    className="px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] rounded-lg border-none cursor-pointer transition-all active:scale-95 disabled:opacity-50"
-                  >
-                    {isPredicting ? 'Đang tính toán...' : '📊 Chạy Dự Đoán'}
-                  </button>
-                </div>
-
-                {aiPrediction ? (
-                  <div className="space-y-2 pt-1 text-[11px]">
-                    <div className="grid grid-cols-4 gap-1.5 bg-white/10 p-2 rounded-xl text-center">
-                      <div>
-                        <div className="text-[9px] text-slate-300 font-medium">Khách tiếp cận</div>
-                        <div className="font-extrabold text-white text-xs">{aiPrediction.targetAudienceCount}</div>
-                      </div>
-                      <div>
-                        <div className="text-[9px] text-slate-300 font-medium">Ngân sách</div>
-                        <div className="font-extrabold text-amber-300 text-xs">{aiPrediction.estimatedBudget.toLocaleString('vi-VN')}đ</div>
-                      </div>
-                      <div>
-                        <div className="text-[9px] text-slate-300 font-medium">Doanh thu AI</div>
-                        <div className="font-extrabold text-emerald-400 text-xs">{aiPrediction.estimatedRevenue.toLocaleString('vi-VN')}đ</div>
-                      </div>
-                      <div>
-                        <div className="text-[9px] text-slate-300 font-medium">ROI dự kiến</div>
-                        <div className="font-extrabold text-teal-300 text-xs">+{aiPrediction.estimatedRoi}%</div>
-                      </div>
-                    </div>
-                    <p className="text-[10px] text-teal-100/90 leading-tight italic bg-teal-950/40 p-2 rounded-lg border border-teal-800/40">
-                      💡 {aiPrediction.aiAdvice}
-                    </p>
-                  </div>
-                ) : (
-                  <p className="text-[10px] text-slate-300 italic">
-                    Bấm "Chạy Dự Đoán" để Gemini AI tự động tính toán Ngân Sách, Doanh Thu Kỳ Vọng & Tỷ Lệ ROI trước khi phát chiến dịch!
-                  </p>
-                )}
-              </div>
-
               <div className="pt-3 flex justify-end gap-2.5 border-t border-slate-100">
                 <button
                   type="button"
@@ -749,6 +772,174 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Dedicated Gemini AI Predictor & Simulator Studio Modal ── */}
+      {isPredictorModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-5 border border-slate-100 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2.5 bg-gradient-to-tr from-amber-500 to-amber-300 text-slate-950 rounded-2xl shadow-sm">
+                  <Sparkles size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                    Gemini AI ROI & Budget Predictor Studio
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Mô phỏng ngân sách, lượt tiếp cận & doanh thu dự kiến trước khi khởi chạy chiến dịch
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsPredictorModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 border-none bg-transparent cursor-pointer p-1.5 rounded-full hover:bg-slate-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Simulation Controls Form */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/80 text-xs">
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Loại Ưu Đãi</label>
+                <select
+                  value={simType}
+                  onChange={(e) => setSimType(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877] font-semibold"
+                >
+                  <option value="VOUCHER">Tặng Voucher</option>
+                  <option value="BONUS_COINS">Tặng Xu Quà Tặng</option>
+                  <option value="FLASH_SALE">Giảm Giá Flash Sale</option>
+                  <option value="BROADCAST">Thông Báo / Banner</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Phân Tập Khách Hàng</label>
+                <select
+                  value={simSegment}
+                  onChange={(e) => setSimSegment(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877] font-semibold"
+                >
+                  <option value="ALL">Tất cả người dùng</option>
+                  <option value="SILVER">Hạng Bạc</option>
+                  <option value="GOLD">Hạng Vàng</option>
+                  <option value="DIAMOND">Hạng Kim Cương</option>
+                  <option value="INACTIVE_30_DAYS">Chưa mua 30 ngày</option>
+                  <option value="VIP">Khách VIP (Trên 1M)</option>
+                  <option value="NEW_USER_WELCOME">Tự động: Khách mới</option>
+                  <option value="ABANDONED_CART">Tự động: Giỏ hàng chưa mua</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">
+                  {simType === 'BONUS_COINS' ? 'Số Xu Tặng (VNĐ)' : simType === 'FLASH_SALE' ? 'Tỷ lệ Giảm (%)' : 'Số Tiền Giảm (VNĐ)'}
+                </label>
+                {simType === 'BONUS_COINS' ? (
+                  <input
+                    type="number"
+                    value={simBonusCoins}
+                    onChange={(e) => setSimBonusCoins(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877] font-bold"
+                  />
+                ) : simType === 'FLASH_SALE' ? (
+                  <input
+                    type="number"
+                    value={simDiscountPercent}
+                    onChange={(e) => setSimDiscountPercent(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877] font-bold"
+                  />
+                ) : (
+                  <input
+                    type="number"
+                    value={simDiscountValue}
+                    onChange={(e) => setSimDiscountValue(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877] font-bold"
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => handleRunSimulation()}
+                disabled={isPredicting}
+                className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs rounded-xl shadow-md flex items-center gap-2 cursor-pointer transition-all active:scale-95 border-none disabled:opacity-50"
+              >
+                <Sparkles size={16} /> {isPredicting ? 'Gemini AI Đang Tính Toán...' : 'Chạy Mô Phỏng Dự Đoán AI'}
+              </button>
+            </div>
+
+            {/* AI Results Display */}
+            {aiPrediction && (
+              <div className="space-y-4 animate-fadeIn">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-center">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Khách Tiếp Cận</span>
+                    <h4 className="text-lg font-extrabold text-slate-900 mt-0.5">{aiPrediction.targetAudienceCount} khách</h4>
+                    <span className="text-[10px] text-teal-700 font-bold bg-teal-50 px-2 py-0.5 rounded-full inline-block mt-1">
+                      Mở ~{aiPrediction.estimatedOpenRate}
+                    </span>
+                  </div>
+
+                  <div className="bg-amber-50/70 p-3.5 rounded-2xl border border-amber-200/80 text-center">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 block">Ngân Sách Dự Kiến</span>
+                    <h4 className="text-lg font-extrabold text-amber-900 mt-0.5">
+                      {aiPrediction.estimatedBudget.toLocaleString('vi-VN')} đ
+                    </h4>
+                    <span className="text-[10px] text-amber-800 font-bold block mt-1">Chi phí khuyến mãi</span>
+                  </div>
+
+                  <div className="bg-emerald-50/70 p-3.5 rounded-2xl border border-emerald-200/80 text-center">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">Doanh Thu AI Dự Báo</span>
+                    <h4 className="text-lg font-extrabold text-emerald-900 mt-0.5">
+                      {aiPrediction.estimatedRevenue.toLocaleString('vi-VN')} đ
+                    </h4>
+                    <span className="text-[10px] text-emerald-800 font-bold block mt-1">Chuyển đổi ~{aiPrediction.estimatedConversionRate}</span>
+                  </div>
+
+                  <div className="bg-teal-900 text-white p-3.5 rounded-2xl text-center shadow-md">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-teal-300 block">Tỷ Lệ ROI Dự Kiến</span>
+                    <h4 className="text-xl font-black text-amber-300 mt-0.5">+{aiPrediction.estimatedRoi}%</h4>
+                    <span className="text-[10px] text-teal-200 font-semibold block mt-1">Hiệu quả đầu tư</span>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-slate-900 text-slate-100 rounded-2xl border border-slate-800 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-300">
+                    <Sparkles size={14} /> Nhận Xét & Lời Khuyên Chiến Lược Từ Gemini AI:
+                  </div>
+                  <p className="text-xs text-slate-300 leading-relaxed italic">
+                    "{aiPrediction.aiAdvice}"
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Modal Actions */}
+            <div className="pt-3 flex justify-between items-center border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsPredictorModalOpen(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl border-none cursor-pointer"
+              >
+                Đóng Studio
+              </button>
+              <button
+                type="button"
+                onClick={handleApplySimulationToModal}
+                className="px-5 py-2.5 bg-[#0e6877] hover:bg-[#0b5460] text-white font-extrabold text-xs rounded-xl border-none cursor-pointer shadow-md flex items-center gap-2 active:scale-95 transition-all"
+              >
+                <Plus size={15} /> Áp Dụng Thông Số & Tạo Chiến Dịch Mới
+              </button>
+            </div>
           </div>
         </div>
       )}
