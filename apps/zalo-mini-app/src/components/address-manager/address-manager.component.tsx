@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import api from "zmp-sdk";
+import { MapPinIcon } from "@heroicons/react/24/outline";
 import { apiRequest } from "../../utils/api";
 import { IAddressManagerProps } from "./address-manager.type";
 import {
@@ -351,7 +352,8 @@ export const AddressManager: React.FC<IAddressManagerProps> = (props) => {
                 disabled={locating}
                 className="text-[9px] bg-primary/10 text-primary font-black uppercase px-2 py-1 rounded-md border-none cursor-pointer flex items-center gap-1 active:scale-95 transition-all"
               >
-                {locating ? "Đang định vị..." : "📍 Định vị GPS"}
+                <MapPinIcon className="w-3 h-3 text-primary" />
+                <span>{locating ? "Đang định vị..." : "Định vị GPS"}</span>
               </button>
             </div>
 

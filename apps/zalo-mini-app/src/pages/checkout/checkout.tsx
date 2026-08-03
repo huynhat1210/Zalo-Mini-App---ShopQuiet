@@ -21,7 +21,7 @@ import { Payment } from "zmp-sdk/apis";
 import api from "zmp-sdk";
 const PageCast = Page as any;
 import { ICheckoutProps } from "./checkout.type";
-import { ChevronLeft, MapPin, Ticket, Sparkles, Compass, X, ShieldCheck } from "lucide-react";
+import { ChevronLeft, MapPin, Ticket, Sparkles, Compass, X, ShieldCheck, Navigation, Building2 } from "lucide-react";
 
 type CmsShippingMethod = {
   code: string;
@@ -1680,8 +1680,9 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
             </div>
 
             <div className="space-y-1.5">
-              <span className="text-[10px] font-black uppercase tracking-widest bg-teal-50 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 px-3 py-1 rounded-full border border-teal-200/50">
-                📍 Tự Động Định Vị Giao Hàng
+              <span className="text-[10px] font-black uppercase tracking-widest bg-teal-50 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 px-3 py-1 rounded-full border border-teal-200/50 inline-flex items-center gap-1">
+                <Navigation className="w-3 h-3 text-teal-600 dark:text-teal-400" />
+                <span>Tự Động Định Vị Giao Hàng</span>
               </span>
               <h3 className="text-base font-extrabold text-slate-900 dark:text-white tracking-tight pt-1">
                 Lấy Vị Trí Giao Hàng Của Bạn?
@@ -1714,9 +1715,10 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
               <button
                 type="button"
                 onClick={() => setIsLocationModalOpen(false)}
-                className="w-full py-3 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs transition-all border-none cursor-pointer"
+                className="w-full py-3 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs transition-all border-none cursor-pointer flex items-center justify-center gap-2"
               >
-                Tự Chọn Tỉnh / Thành Phố
+                <Building2 className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                <span>Tự Chọn Tỉnh / Thành Phố</span>
               </button>
             </div>
 
