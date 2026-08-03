@@ -275,7 +275,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
               {t("order.statusProcessing")} (
               {selectedOrder.paymentMethod === "COD"
                 ? "COD"
-                : "Bank Transfer"}
+                : t("order.bankTransfer")}
               )
             </p>
             <p className="text-orange-600/80 text-[10px] leading-relaxed">
@@ -320,7 +320,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
               <div className="grid grid-cols-4 gap-1 py-3 px-2 bg-[#fbf9f7] rounded-2xl border border-[#f0edeb]">
                 {[
                   { key: "PROCESSING", label: t("order.statusProcessing"), stepNum: 1 },
-                  { key: "CONFIRMED", label: "Packed", stepNum: 2 },
+                  { key: "CONFIRMED", label: "Đã đóng gói", stepNum: 2 },
                   { key: "SHIPPED", label: t("order.statusShipped"), stepNum: 3 },
                   { key: "DELIVERED", label: t("order.statusCompleted"), stepNum: 4 },
                 ].map((st, idx) => {
@@ -360,13 +360,13 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                   ? [
                       {
                         label: t("order.statusProcessing"),
-                        desc: "Order received",
+                        desc: "Đã nhận đơn hàng",
                         active: true,
                         isCancelled: false,
                       },
                       {
                         label: t("order.statusCancelled"),
-                        desc: "Order cancelled",
+                        desc: "Đã hủy đơn hàng",
                         active: true,
                         isCancelled: true,
                       },
@@ -374,13 +374,13 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                   : [
                       {
                         label: t("order.statusProcessing"),
-                        desc: "Order received",
+                        desc: "Đã nhận đơn hàng",
                         active: true,
                         isCancelled: false,
                       },
                       {
-                        label: "Preparing",
-                        desc: "Warehouse checking and packing",
+                        label: "Chuẩn bị hàng",
+                        desc: "Kho đang kiểm tra và đóng gói sản phẩm",
                         active: [
                           "PROCESSING",
                           "SHIPPED",
@@ -392,8 +392,8 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                       {
                         label: t("order.statusShipped"),
                         desc: selectedOrder.trackingNumber
-                          ? `GHN Tracking: ${selectedOrder.trackingNumber}`
-                          : "Shipping to your address",
+                          ? `Mã vận đơn GHN: ${selectedOrder.trackingNumber}`
+                          : "Đang giao đến địa chỉ của bạn",
                         active: ["SHIPPED", "DELIVERED", "COMPLETED"].includes(
                           selectedOrder.status,
                         ),
@@ -401,7 +401,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                       },
                       {
                         label: t("order.statusCompleted"),
-                        desc: "Delivered successfully. Thank you!",
+                        desc: "Đã giao hàng thành công. Cảm ơn bạn!",
                         active: ["DELIVERED", "COMPLETED"].includes(
                           selectedOrder.status,
                         ),
@@ -454,7 +454,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
             </div>
             {selectedOrder.trackingNumber && (
               <div className="flex justify-between items-center pb-2 border-b border-[#f5f3f0]">
-                <span className="text-textColor-variant font-medium">Tracking (GHN):</span>
+                <span className="text-textColor-variant font-medium">Mã vận đơn (GHN):</span>
                 <span className="font-bold text-teal-700 bg-teal-50 px-2.5 py-1 rounded-md text-[11px] font-mono select-all">
                   {selectedOrder.trackingNumber}
                 </span>
@@ -494,7 +494,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
             <div className="flex flex-col mt-1 pt-1.5 border-t border-[#f5f3f0]">
               <span className="text-textColor-variant">{t("order.address")}:</span>
               <span className="font-semibold text-textColor mt-0.5 leading-relaxed">
-                {selectedOrder.shippingAddress || "Not provided"}
+                {selectedOrder.shippingAddress || "Chưa cung cấp địa chỉ"}
               </span>
             </div>
           </div>
@@ -646,7 +646,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
               }}
               className="flex-1 h-11 border border-indigo-250 bg-indigo-50 text-indigo-700 font-bold text-xs uppercase tracking-wider rounded-2xl cursor-pointer hover:bg-indigo-100 active:scale-[0.98] transition-all"
             >
-              Return / Refund
+              Trả hàng / Hoàn tiền
             </button>
           </div>
         )}
@@ -656,18 +656,18 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
           <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4.5 space-y-2 text-left mt-4">
             <p className="font-bold text-indigo-800 text-xs">
               {selectedOrder.status === "RETURNED"
-                ? "✓ Return completed"
-                : "⏳ Return request pending"}
+                ? "✓ Đã hoàn tất trả hàng"
+                : "⏳ Yêu cầu trả hàng đang chờ xử lý"}
             </p>
             <p className="text-indigo-750 font-medium text-[10.5px] mt-1">
-              Reason:{" "}
+              Lý do:{" "}
               <span className="font-bold text-textColor">
                 {selectedOrder.returnReason}
               </span>
             </p>
             {selectedOrder.returnDescription && (
               <p className="text-indigo-750 font-medium text-[10.5px]">
-                Details:{" "}
+                Chi tiết:{" "}
                 <span className="text-textColor">
                   {selectedOrder.returnDescription}
                 </span>
