@@ -427,6 +427,22 @@ Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "su
       userWhere.updatedAt = { lte: thirtyDaysAgo };
     } else if (segment === 'VIP') {
       userWhere.totalSpent = { gte: 1000000 };
+    } else if (segment.startsWith('LIST_')) {
+      const listId = parseInt(segment.split('_')[1], 10);
+      const listEntries = await this.prisma.marketingListEntry.findMany({
+        where: { listId, status: 'VERIFIED', hasZalo: true },
+        select: { phone: true, zaloUid: true },
+      });
+
+      const phones = listEntries.map(e => e.phone);
+      const zaloUids = listEntries.map(e => e.zaloUid).filter(Boolean) as string[];
+
+      userWhere = {
+        OR: [
+          { phone: { in: phones } },
+          { zaloId: { in: zaloUids } }
+        ]
+      };
     }
 
     const targetedUsers = await this.prisma.user.findMany({

@@ -81,6 +81,14 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
     aiAdvice: string;
   } | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
+  const [marketingLists, setMarketingLists] = useState<any[]>([]);
+
+  const fetchMarketingLists = async () => {
+    try {
+      const res = await crmApiRequest<any[]>('/marketing-lists');
+      setMarketingLists(res || []);
+    } catch (e) {}
+  };
 
   const resetForm = () => {
     setTitle('');
@@ -212,6 +220,7 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
   useEffect(() => {
     fetchCampaigns();
     fetchVouchers();
+    fetchMarketingLists();
   }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -483,6 +492,12 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
                         {c.targetSegment === 'NEW_USER_WELCOME' && <><Sparkles size={12} className="text-amber-500" /> Tự động: Khách hàng mới</>}
                         {c.targetSegment === 'USER_BIRTHDAY' && <><Sparkles size={12} className="text-pink-500" /> Tự động: Sinh nhật</>}
                         {c.targetSegment === 'ABANDONED_CART' && <><Clock size={12} className="text-red-500" /> Tự động: Bỏ quên giỏ hàng</>}
+                        {c.targetSegment.startsWith('LIST_') && (
+                          <>
+                            <Users size={12} className="text-emerald-600" /> 
+                            Tệp: {marketingLists.find(l => `LIST_${l.id}` === c.targetSegment)?.name || 'Tệp tiếp thị'}
+                          </>
+                        )}
                       </span>
                     </td>
 
@@ -636,6 +651,9 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
                     <option value="NEW_USER_WELCOME">⚡ Tự động: Chào mừng tài khoản mới</option>
                     <option value="USER_BIRTHDAY">⚡ Tự động: Mừng sinh nhật khách trong tháng</option>
                     <option value="ABANDONED_CART">⚡ Tự động: Nhắc giỏ hàng chưa mua (2h)</option>
+                    {marketingLists.map((list) => (
+                      <option key={list.id} value={`LIST_${list.id}`}>👥 Tệp: {list.name} ({list.totalEntries} SĐT)</option>
+                    ))}
                   </select>
                 </div>
               </div>

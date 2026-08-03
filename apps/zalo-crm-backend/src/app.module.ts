@@ -5,6 +5,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { CampaignsModule } from './modules/campaigns/campaigns.module';
 import { AutomationModule } from './modules/automation/automation.module';
+import { MarketingListModule } from './modules/marketing-list/marketing-list.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
@@ -19,6 +20,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     AuthModule,
     CampaignsModule,
     AutomationModule,
+    MarketingListModule,
   ],
   controllers: [AppController],
   providers: [AppService],

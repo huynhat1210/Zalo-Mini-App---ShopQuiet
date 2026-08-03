@@ -9,6 +9,7 @@ const Login = lazy(() => import('./pages').then((m) => ({ default: m.Login })));
 const Dashboard = lazy(() => import('./pages').then((m) => ({ default: m.Dashboard })));
 const Campaigns = lazy(() => import('./pages').then((m) => ({ default: m.Campaigns })));
 const Automation = lazy(() => import('./pages').then((m) => ({ default: m.Automation })));
+const MarketingLists = lazy(() => import('./pages').then((m) => ({ default: m.MarketingLists })));
 
 const ToastContainerWrapper: React.FC = () => {
   const { toasts, removeToast } = useToast();
@@ -69,6 +70,7 @@ export const App: React.FC = () => {
               <Route path="/" element={<Dashboard />} />
               <Route path="/campaigns" element={<Campaigns />} />
               <Route path="/automation" element={<Automation />} />
+              <Route path="/marketing-lists" element={<MarketingLists />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>

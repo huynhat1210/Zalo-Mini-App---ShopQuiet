@@ -68,8 +68,8 @@ export const Login: React.FC<ILoginProps> = (props) => {
           <div className="w-16 h-16 overflow-hidden rounded-2xl border border-slate-200 flex items-center justify-center bg-white mb-4 shadow-sm">
             <img src={logo} alt="Logo" className="w-12 h-12 object-contain" />
           </div>
-          <h2 className="text-2xl font-bold text-[#1b1c1b] tracking-tight">ShopQuiet CMS</h2>
-          <p className="text-[#526069] text-sm mt-1">Đăng nhập cổng quản trị cửa hàng</p>
+          <h2 className="text-2xl font-bold text-[#1b1c1b] tracking-tight">ShopQuiet Campaign</h2>
+          <p className="text-[#526069] text-sm mt-1">Cổng quản lý Chiến dịch ShopQuiet</p>
         </div>
 
         {error && (

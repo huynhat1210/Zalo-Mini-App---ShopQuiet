@@ -473,3 +473,30 @@ model AutomationTemplate {
   @@index([active])
   @@index([isSystem])
 }
+
+model MarketingList {
+  id          Int                  @id @default(autoincrement())
+  name        String
+  description String?
+  sourceType  String               @default("PASTE") // 'PASTE', 'GROUP_SCAN'
+  sourceId    String?              // Group ID or URL if scanned
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  entries     MarketingListEntry[]
+
+  @@index([createdAt])
+}
+
+model MarketingListEntry {
+  id         Int           @id @default(autoincrement())
+  listId     Int
+  phone      String
+  name       String?
+  zaloUid    String?       // Zalo user ID if found
+  hasZalo    Boolean       @default(false)
+  status     String        @default("PENDING") // 'PENDING', 'VERIFIED', 'FAILED'
+  createdAt  DateTime      @default(now())
+  list       MarketingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@index([listId])
+}

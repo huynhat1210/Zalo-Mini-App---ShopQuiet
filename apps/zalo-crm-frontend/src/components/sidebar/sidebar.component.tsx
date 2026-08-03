@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Megaphone,
   Bot,
+  Users,
   LogOut,
   X,
 } from 'lucide-react';
@@ -18,6 +19,7 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
       title: 'CHIẾN DỊCH & MARKETING',
       items: [
         { to: '/', label: 'Tổng quan Chiến dịch', icon: <LayoutDashboard size={17} /> },
+        { to: '/marketing-lists', label: 'Tệp khách hàng', icon: <Users size={17} /> },
         { to: '/campaigns', label: 'Chiến dịch Marketing', icon: <Megaphone size={17} /> },
         { to: '/automation', label: 'Chăm sóc Tự động', icon: <Bot size={17} /> },
       ],
