@@ -6,6 +6,7 @@
   "scripts": {
     "dev:backend": "pnpm --filter backend dev",
     "dev:crm": "pnpm --filter zalo-crm-backend dev",
+    "dev:crm-fe": "pnpm --filter zalo-crm-frontend dev",
     "dev:frontend": "pnpm --filter frontend dev",
     "dev:zalo": "pnpm --filter zalo-mini-app dev",
     "dev:cms": "pnpm --filter cms dev",
