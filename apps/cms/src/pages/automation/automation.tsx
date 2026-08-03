@@ -58,6 +58,33 @@ export function Automation() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedAutomation, setSelectedAutomation] = useState<Automation | null>(null);
 
+  // Form State
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [trigger, setTrigger] = useState('');
+  const [priority, setPriority] = useState(0);
+  const [actions, setActions] = useState<any[]>([{ type: 'NOTIFICATION', config: { title: '', content: '' } }]);
+  const [conditions, setConditions] = useState<any>({});
+
+  // When selectedAutomation changes or modal opens, pre-fill form state
+  useEffect(() => {
+    if (selectedAutomation) {
+      setName(selectedAutomation.name);
+      setDescription(selectedAutomation.description || '');
+      setTrigger(selectedAutomation.trigger);
+      setPriority(selectedAutomation.priority);
+      setActions(selectedAutomation.actions || [{ type: 'NOTIFICATION', config: { title: '', content: '' } }]);
+      setConditions(selectedAutomation.conditions || {});
+    } else {
+      setName('');
+      setDescription('');
+      setTrigger('');
+      setPriority(0);
+      setActions([{ type: 'NOTIFICATION', config: { title: '', content: '' } }]);
+      setConditions({});
+    }
+  }, [selectedAutomation, showCreateModal]);
+
   // Load automations
   useEffect(() => {
     loadAutomations();
@@ -118,6 +145,49 @@ export function Automation() {
     }
   };
 
+  const handleSeedTemplates = async () => {
+    try {
+      setIsLoading(true);
+      await apiRequest('/automation/seed-templates', 'POST');
+      await loadAutomations();
+      alert('Tải kịch bản mẫu thành công!');
+    } catch (error) {
+      console.error('Failed to seed templates:', error);
+      alert('Không thể tải các kịch bản mẫu. Vui lòng kiểm tra lại.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!name.trim()) return alert('Vui lòng nhập tên Automation');
+    if (!trigger) return alert('Vui lòng chọn trigger');
+
+    try {
+      const payload = {
+        name,
+        description,
+        trigger,
+        actions,
+        conditions,
+        priority: Number(priority) || 0,
+      };
+
+      if (selectedAutomation) {
+        await apiRequest(`/automation/${selectedAutomation.id}`, 'PUT', payload);
+      } else {
+        await apiRequest('/automation', 'POST', payload);
+      }
+
+      setShowCreateModal(false);
+      setSelectedAutomation(null);
+      loadAutomations();
+    } catch (error) {
+      console.error('Failed to save automation:', error);
+      alert('Không thể lưu kịch bản tự động hóa. Vui lòng kiểm tra cấu hình.');
+    }
+  };
+
   const getTotalStats = () => {
     const allStats = Object.values(stats);
     return {
@@ -144,13 +214,21 @@ export function Automation() {
           </h1>
           <p className="text-slate-600 mt-1">Quản lý các quy trình marketing tự động</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="px-4 py-2 bg-[#0e6877] text-white rounded-xl hover:bg-[#0b5663] transition-colors flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Tạo Automation
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleSeedTemplates}
+            className="px-4 py-2 border border-[#0e6877] text-[#0e6877] rounded-xl hover:bg-teal-50 transition-colors flex items-center gap-2 cursor-pointer bg-white font-bold text-xs"
+          >
+            ✨ Tải các kịch bản mẫu
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-4 py-2 bg-[#0e6877] text-white rounded-xl hover:bg-[#0b5663] transition-colors flex items-center gap-2 cursor-pointer border-none font-bold text-xs"
+          >
+            <Plus className="w-4 h-4" />
+            Tạo Automation
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -208,13 +286,22 @@ export function Automation() {
         ) : automations.length === 0 ? (
           <div className="p-8 text-center text-slate-600">
             <Zap className="w-12 h-12 mx-auto mb-4 text-slate-400" />
-            <p>Chưa có automation nào</p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="mt-4 px-4 py-2 bg-[#0e6877] text-white rounded-xl hover:bg-[#0b5663] transition-colors"
-            >
-              Tạo Automation đầu tiên
-            </button>
+            <p className="font-semibold">Chưa có kịch bản tự động hóa nào</p>
+            <p className="text-sm text-slate-400 mt-1">Hãy nhấp vào nút dưới đây hoặc "Tải các kịch bản mẫu" để bắt đầu</p>
+            <div className="flex justify-center gap-3 mt-4">
+              <button
+                onClick={handleSeedTemplates}
+                className="px-4 py-2 border border-[#0e6877] text-[#0e6877] rounded-xl hover:bg-teal-50 transition-colors cursor-pointer bg-white font-bold text-xs"
+              >
+                ✨ Tải các kịch bản mẫu
+              </button>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="px-4 py-2 bg-[#0e6877] text-white rounded-xl hover:bg-[#0b5663] transition-colors cursor-pointer border-none font-bold text-xs"
+              >
+                Tạo Automation đầu tiên
+              </button>
+            </div>
           </div>
         ) : (
           <table className="w-full">
@@ -244,7 +331,7 @@ export function Automation() {
                     <div>
                       <p className="font-bold text-slate-800">{automation.name}</p>
                       {automation.description && (
-                        <p className="text-sm text-slate-600 mt-1">{automation.description}</p>
+                        <p className="text-xs text-slate-500 mt-1">{automation.description}</p>
                       )}
                     </div>
                   </td>
@@ -255,7 +342,7 @@ export function Automation() {
                   </td>
                   <td className="px-6 py-4">
                     {stats[automation.id] ? (
-                      <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-4 text-xs">
                         <div className="flex items-center gap-1">
                           <Zap className="w-4 h-4 text-blue-500" />
                           <span className="text-slate-700">{stats[automation.id].totalTriggered}</span>
@@ -276,7 +363,7 @@ export function Automation() {
                   <td className="px-6 py-4">
                     <button
                       onClick={() => toggleAutomation(automation.id, !automation.enabled)}
-                      className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${
+                      className={`px-3 py-1 rounded-full text-xs font-bold transition-colors cursor-pointer border-none ${
                         automation.enabled
                           ? 'bg-green-100 text-green-700 hover:bg-green-200'
                           : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -299,21 +386,21 @@ export function Automation() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setSelectedAutomation(automation)}
-                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
                         title="Edit"
                       >
                         <Edit className="w-4 h-4 text-slate-600" />
                       </button>
                       <button
                         onClick={() => duplicateAutomation(automation)}
-                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
                         title="Duplicate"
                       >
                         <Copy className="w-4 h-4 text-slate-600" />
                       </button>
                       <button
                         onClick={() => deleteAutomation(automation.id)}
-                        className="p-2 hover:bg-red-100 rounded-lg transition-colors"
+                        className="p-2 hover:bg-red-100 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
                         title="Delete"
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />
@@ -330,34 +417,37 @@ export function Automation() {
       {/* Create/Edit Modal */}
       {(showCreateModal || selectedAutomation) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold text-slate-800 mb-4">
+          <div className="bg-white rounded-2xl p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100">
+            <h2 className="text-lg font-bold text-slate-800 mb-4">
               {selectedAutomation ? 'Chỉnh sửa Automation' : 'Tạo Automation Mới'}
             </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Tên Automation</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Tên Automation</label>
                 <input
                   type="text"
-                  defaultValue={selectedAutomation?.name}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877]"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877] text-sm bg-white"
                   placeholder="VD: Chào mừng thành viên mới"
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Mô tả</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Mô tả</label>
                 <textarea
-                  defaultValue={selectedAutomation?.description}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877]"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877] text-sm bg-white"
                   rows={2}
                   placeholder="Mô tả chức năng của automation..."
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Trigger</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Trigger</label>
                 <select 
-                  defaultValue={selectedAutomation?.trigger}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877]"
+                  value={trigger}
+                  onChange={(e) => setTrigger(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877] text-sm bg-white"
                 >
                   <option value="">Chọn trigger...</option>
                   {Object.entries(triggerLabels).map(([value, label]) => (
@@ -370,29 +460,111 @@ export function Automation() {
               
               {/* Actions Section */}
               <div className="border-t border-slate-200 pt-4">
-                <label className="block text-sm font-bold text-slate-700 mb-2">Actions</label>
+                <label className="block text-xs font-bold text-slate-600 mb-2">Actions</label>
                 <div className="space-y-3">
-                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-bold text-slate-700">Action 1</span>
-                      <select className="px-2 py-1 border border-slate-200 rounded-lg text-sm">
-                        <option value="NOTIFICATION">Gửi thông báo</option>
-                        <option value="VOUCHER">Tặng voucher</option>
-                        <option value="POINTS">Tặng Xu</option>
-                      </select>
+                  {actions.map((action, index) => (
+                    <div key={index} className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative">
+                      {actions.length > 1 && (
+                        <button
+                          onClick={() => setActions(actions.filter((_, i) => i !== index))}
+                          className="absolute top-2 right-2 p-1 text-slate-400 hover:text-red-500 rounded-lg hover:bg-slate-200/50 transition-colors border-none bg-transparent cursor-pointer text-xs font-bold"
+                        >
+                          Xóa
+                        </button>
+                      )}
+                      <div className="flex items-center justify-between mb-2 pr-12">
+                        <span className="font-bold text-slate-700 text-xs">Action {index + 1}</span>
+                        <select
+                          value={action.type}
+                          onChange={(e) => {
+                            const newActions = [...actions];
+                            newActions[index].type = e.target.value;
+                            newActions[index].config = {};
+                            setActions(newActions);
+                          }}
+                          className="px-2 py-1 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none"
+                        >
+                          <option value="NOTIFICATION">Gửi thông báo</option>
+                          <option value="VOUCHER">Tặng voucher</option>
+                          <option value="POINTS">Tặng Xu</option>
+                        </select>
+                      </div>
+
+                      {action.type === 'NOTIFICATION' && (
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={action.config?.title || ''}
+                            onChange={(e) => {
+                              const newActions = [...actions];
+                              newActions[index].config = { ...newActions[index].config, title: e.target.value };
+                              setActions(newActions);
+                            }}
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0e6877] text-sm bg-white"
+                            placeholder="Tiêu đề thông báo..."
+                          />
+                          <textarea
+                            value={action.config?.content || ''}
+                            onChange={(e) => {
+                              const newActions = [...actions];
+                              newActions[index].config = { ...newActions[index].config, content: e.target.value };
+                              setActions(newActions);
+                            }}
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0e6877] text-sm mt-2 bg-white"
+                            rows={2}
+                            placeholder="Nội dung thông báo..."
+                          />
+                        </div>
+                      )}
+
+                      {action.type === 'VOUCHER' && (
+                        <div>
+                          <input
+                            type="text"
+                            value={action.config?.voucherCode || ''}
+                            onChange={(e) => {
+                              const newActions = [...actions];
+                              newActions[index].config = { ...newActions[index].config, voucherCode: e.target.value };
+                              setActions(newActions);
+                            }}
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0e6877] text-sm bg-white"
+                            placeholder="Nhập mã voucher (ví dụ: WELCOME50K)..."
+                          />
+                        </div>
+                      )}
+
+                      {action.type === 'POINTS' && (
+                        <div className="space-y-2">
+                          <input
+                            type="number"
+                            value={action.config?.points || 0}
+                            onChange={(e) => {
+                              const newActions = [...actions];
+                              newActions[index].config = { ...newActions[index].config, points: parseInt(e.target.value) || 0 };
+                              setActions(newActions);
+                            }}
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0e6877] text-sm bg-white"
+                            placeholder="Số Xu tặng..."
+                          />
+                          <input
+                            type="text"
+                            value={action.config?.reason || ''}
+                            onChange={(e) => {
+                              const newActions = [...actions];
+                              newActions[index].config = { ...newActions[index].config, reason: e.target.value };
+                              setActions(newActions);
+                            }}
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0e6877] text-sm bg-white"
+                            placeholder="Lý do tặng..."
+                          />
+                        </div>
+                      )}
                     </div>
-                    <input
-                      type="text"
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0e6877] text-sm"
-                      placeholder="Tiêu đề thông báo..."
-                    />
-                    <textarea
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-[#0e6877] text-sm mt-2"
-                      rows={2}
-                      placeholder="Nội dung thông báo..."
-                    />
-                  </div>
-                  <button className="w-full px-4 py-2 border-2 border-dashed border-slate-300 rounded-xl text-slate-600 hover:border-[#0e6877] hover:text-[#0e6877] transition-colors flex items-center justify-center gap-2">
+                  ))}
+                  <button
+                    onClick={() => setActions([...actions, { type: 'NOTIFICATION', config: { title: '', content: '' } }])}
+                    className="w-full px-4 py-2 border-2 border-dashed border-slate-300 rounded-xl text-slate-600 hover:border-[#0e6877] hover:text-[#0e6877] transition-colors flex items-center justify-center gap-2 cursor-pointer bg-white text-xs font-bold"
+                  >
                     <Plus className="w-4 h-4" />
                     Thêm Action
                   </button>
@@ -401,24 +573,57 @@ export function Automation() {
 
               {/* Conditions Section */}
               <div className="border-t border-slate-200 pt-4">
-                <label className="block text-sm font-bold text-slate-700 mb-2">Conditions (Tùy chọn)</label>
+                <label className="block text-xs font-bold text-slate-600 mb-2">Conditions (Tùy chọn)</label>
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
                   <div className="flex items-center gap-2">
-                    <select className="px-2 py-1 border border-slate-200 rounded-lg text-sm">
+                    <select
+                      value={Object.keys(conditions)[0] || 'membershipTier'}
+                      onChange={(e) => {
+                        const field = e.target.value;
+                        const operator = conditions[Object.keys(conditions)[0]]?.operator || 'eq';
+                        const val = conditions[Object.keys(conditions)[0]]?.value || '';
+                        setConditions({ [field]: { operator, value: val } });
+                      }}
+                      className="px-2 py-1 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none"
+                    >
                       <option value="membershipTier">Hạng thành viên</option>
                       <option value="totalSpent">Tổng chi tiêu</option>
-                      <option value="gamificationPoints">Điểm tích lũy</option>
                     </select>
-                    <select className="px-2 py-1 border border-slate-200 rounded-lg text-sm">
+                    <select
+                      value={conditions[Object.keys(conditions)[0]]?.operator || 'eq'}
+                      onChange={(e) => {
+                        const field = Object.keys(conditions)[0] || 'membershipTier';
+                        const operator = e.target.value;
+                        const val = conditions[field]?.value || '';
+                        setConditions({ [field]: { operator, value: val } });
+                      }}
+                      className="px-2 py-1 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none"
+                    >
                       <option value="eq">Bằng</option>
+                      <option value="in">Trong danh sách (ngăn cách bởi dấu phẩy)</option>
                       <option value="gt">Lớn hơn</option>
                       <option value="lt">Nhỏ hơn</option>
-                      <option value="in">Trong danh sách</option>
                     </select>
                     <input
                       type="text"
-                      className="flex-1 px-2 py-1 border border-slate-200 rounded-lg text-sm"
-                      placeholder="Giá trị"
+                      value={
+                        Array.isArray(conditions[Object.keys(conditions)[0]]?.value)
+                          ? conditions[Object.keys(conditions)[0]]?.value.join(', ')
+                          : conditions[Object.keys(conditions)[0]]?.value || ''
+                      }
+                      onChange={(e) => {
+                        const field = Object.keys(conditions)[0] || 'membershipTier';
+                        const operator = conditions[field]?.operator || 'eq';
+                        let val: any = e.target.value;
+                        if (operator === 'in') {
+                          val = val.split(',').map((s: string) => s.trim()).filter(Boolean);
+                        } else if (field === 'totalSpent') {
+                          val = parseFloat(val) || 0;
+                        }
+                        setConditions({ [field]: { operator, value: val } });
+                      }}
+                      className="flex-1 px-2 py-1 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none"
+                      placeholder="Giá trị (VD: Vàng hoặc 1000000)"
                     />
                   </div>
                 </div>
@@ -426,14 +631,15 @@ export function Automation() {
 
               {/* Priority */}
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Priority (Độ ưu tiên)</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Priority (Độ ưu tiên)</label>
                 <input
                   type="number"
-                  defaultValue={selectedAutomation?.priority || 0}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877]"
+                  value={priority}
+                  onChange={(e) => setPriority(parseInt(e.target.value) || 0)}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877] text-sm bg-white"
                   placeholder="0 = thấp nhất, 100 = cao nhất"
                 />
-                <p className="text-xs text-slate-500 mt-1">Automation có priority cao hơn sẽ chạy trước</p>
+                <p className="text-[10px] text-slate-400 mt-1">Automation có priority cao hơn sẽ chạy trước</p>
               </div>
             </div>
             <div className="flex justify-end gap-3 mt-6">
@@ -442,17 +648,13 @@ export function Automation() {
                   setShowCreateModal(false);
                   setSelectedAutomation(null);
                 }}
-                className="px-4 py-2 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+                className="px-4 py-2 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer bg-white text-xs font-bold"
               >
                 Hủy
               </button>
               <button
-                onClick={() => {
-                  setShowCreateModal(false);
-                  setSelectedAutomation(null);
-                  // TODO: Save automation
-                }}
-                className="px-4 py-2 bg-[#0e6877] text-white rounded-xl hover:bg-[#0b5663] transition-colors"
+                onClick={handleSave}
+                className="px-4 py-2 bg-[#0e6877] text-white rounded-xl hover:bg-[#0b5663] transition-colors cursor-pointer border-none text-xs font-bold"
               >
                 {selectedAutomation ? 'Lưu thay đổi' : 'Tạo'}
               </button>

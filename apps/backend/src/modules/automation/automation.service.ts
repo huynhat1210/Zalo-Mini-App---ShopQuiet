@@ -678,5 +678,20 @@ export class AutomationService {
         this.logger.log(`Created template: ${template.name}`);
       }
     }
+
+    const automationCount = await this.prisma.automation.count();
+    if (automationCount === 0) {
+      for (const template of templates) {
+        await this.createAutomation({
+          name: template.name,
+          description: template.description,
+          trigger: template.trigger,
+          actions: template.actions as any,
+          conditions: template.conditions || {},
+          priority: 0,
+        });
+      }
+      this.logger.log('Seeded default active automations.');
+    }
   }
 }
