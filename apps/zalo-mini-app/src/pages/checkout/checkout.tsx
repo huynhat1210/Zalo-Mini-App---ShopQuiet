@@ -20,7 +20,7 @@ import {
 import api from "zmp-sdk";
 const PageCast = Page as any;
 import { ICheckoutProps } from "./checkout.type";
-import { ChevronLeft, MapPin, Ticket } from "lucide-react";
+import { ChevronLeft, MapPin, Ticket, Coins } from "lucide-react";
 
 type CmsShippingMethod = {
   code: string;
@@ -1333,8 +1333,8 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           </h2>
           <div className="bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-amber-500/10 rounded-2xl border border-amber-200 p-4 shadow-xs flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-amber-400 text-teal-950 flex items-center justify-center font-black text-sm shadow-xs border border-amber-300">
-                💰
+              <div className="w-9 h-9 rounded-full bg-amber-400 text-teal-950 flex items-center justify-center shadow-xs border border-amber-300">
+                <Coins className="w-5 h-5 text-teal-950" />
               </div>
               <div>
                 <p className="text-xs font-extrabold text-textColor">

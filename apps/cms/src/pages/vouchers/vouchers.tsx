@@ -280,7 +280,10 @@ export const Vouchers: React.FC = () => {
             {/* Header */}
             <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-[#0e6877] to-[#168a9e] text-white">
               <div>
-                <h3 className="text-base font-black text-white">🎟️ Tạo Mã Giảm Giá Mới</h3>
+                <h3 className="text-base font-black text-white flex items-center gap-2">
+                  <Ticket className="w-5 h-5" />
+                  Tạo Mã Giảm Giá Mới
+                </h3>
                 <p className="text-[11px] text-white/80 font-medium mt-0.5">Thiết lập điều kiện khuyến mãi cho khách hàng</p>
               </div>
               <button

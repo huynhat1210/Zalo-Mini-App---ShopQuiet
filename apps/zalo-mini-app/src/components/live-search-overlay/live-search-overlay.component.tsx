@@ -237,9 +237,9 @@ export const LiveSearchOverlay: React.FC<ILiveSearchOverlayProps> = (props) => {
           onChange={(e: any) => handleSortChange(e.target.value)}
           className="text-[10px] font-extrabold bg-white text-[#0e6877] border border-[#0e6877]/30 rounded-full px-2.5 py-1 outline-none cursor-pointer shrink-0"
         >
-          <option value="newest">⚡ Mới nhất</option>
-          <option value="price-asc">💵 Giá ⬆</option>
-          <option value="price-desc">💵 Giá ⬇</option>
+          <option value="newest">Mới nhất</option>
+          <option value="price-asc">Giá thấp đến cao</option>
+          <option value="price-desc">Giá cao đến thấp</option>
         </select>
       </div>
 

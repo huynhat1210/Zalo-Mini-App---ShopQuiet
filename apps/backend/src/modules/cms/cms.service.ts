@@ -698,7 +698,7 @@ export class CmsService implements OnModuleInit {
             if (endMs <= now) {
               adminNotifs.unshift({
                 id: 'admin-flash-sale-expired',
-                title: '⚡ Chiến dịch Flash Sale đã hết hạn',
+                title: 'Chiến dịch Flash Sale đã hết hạn',
                 content: `Đã kết thúc lúc ${new Date(cfg.endTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} ${new Date(cfg.endTime).toLocaleDateString('vi-VN')}. Tất cả sản phẩm ưu đãi đã quay về giá gốc.`,
                 type: 'admin_flash_sale',
                 date: new Date(cfg.endTime).toLocaleDateString('vi-VN'),
@@ -708,7 +708,7 @@ export class CmsService implements OnModuleInit {
             } else if (cfg.active) {
               adminNotifs.unshift({
                 id: 'admin-flash-sale-active',
-                title: '🔥 Flash Sale đang diễn ra',
+                title: 'Flash Sale đang diễn ra',
                 content: `Chiến dịch đếm ngược sẽ kết thúc vào lúc ${new Date(cfg.endTime).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} - ${new Date(cfg.endTime).toLocaleDateString('vi-VN')}.`,
                 type: 'admin_flash_sale',
                 date: 'Đang diễn ra',
@@ -749,7 +749,7 @@ export class CmsService implements OnModuleInit {
       processingOrders.forEach((o) => {
         adminNotifs.push({
           id: `admin-order-${o.id}`,
-          title: `🛒 Đơn hàng mới #${o.id.slice(-6).toUpperCase()}`,
+          title: `Đơn hàng mới #${o.id.slice(-6).toUpperCase()}`,
           content: `Khách hàng '${o.shippingName || 'Khách Zalo'}' vừa đặt đơn trị giá ${o.totalAmount.toLocaleString('vi-VN')} VNĐ qua ${o.paymentMethod || 'COD'}.`,
           type: 'admin_order',
           date: new Date(o.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date(o.createdAt).toLocaleDateString('vi-VN'),

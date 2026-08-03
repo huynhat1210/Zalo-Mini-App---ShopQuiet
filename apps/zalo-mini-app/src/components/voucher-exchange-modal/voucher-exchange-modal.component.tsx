@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, GiftIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { apiRequest } from "../../utils/api";
 import { IVoucherExchangeModalProps } from "./voucher-exchange-modal.type";
 
@@ -52,7 +52,7 @@ export const VoucherExchangeModalComponent: React.FC<
       } else {
         await apiRequest(`/vouchers/${voucher.code}/exchange`, "POST");
       }
-      if (showToast) showToast(`🎉 Đổi thành công mã ${voucher.code}!`, "success");
+      if (showToast) showToast(`Đổi thành công mã ${voucher.code}!`, "success");
       if (onVoucherExchanged) onVoucherExchanged();
       if (onExchangeSuccess) onExchangeSuccess();
       onClose();
@@ -69,8 +69,9 @@ export const VoucherExchangeModalComponent: React.FC<
     <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-center justify-center p-6 animate-fade-in">
       <div className="bg-white w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb] shadow-2xl space-y-4 animate-scale-up max-h-[70vh] flex flex-col">
         <div className="flex items-center justify-between shrink-0">
-          <h3 className="text-xs font-bold text-textColor uppercase tracking-wider">
-            🎁 Chợ đổi Voucher
+          <h3 className="text-xs font-bold text-textColor uppercase tracking-wider flex items-center gap-1.5">
+            <GiftIcon className="w-4 h-4" />
+            Chợ đổi Voucher
           </h3>
           <button
             onClick={onClose}

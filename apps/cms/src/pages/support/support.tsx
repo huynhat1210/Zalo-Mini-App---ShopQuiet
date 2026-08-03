@@ -4,7 +4,7 @@ import { apiRequest } from '../../utils/api';
 import {
   Search, Send, HelpCircle, Package, Zap,
   ShoppingBag, Star, Phone, Crown, MessageSquare,
-  Wifi, WifiOff, ChevronRight
+  Wifi, WifiOff, ChevronRight, Check, Circle
 } from 'lucide-react';
 
 interface ChatSession {
@@ -39,7 +39,7 @@ const CANNED_RESPONSES = [
   { label: 'Giao hàng', text: 'Đơn hàng thường được giao trong 2-3 ngày làm việc. Bạn sẽ nhận được thông báo khi đơn được xử lý!' },
   { label: 'Đổi/trả', text: 'Sản phẩm có thể đổi/trả trong 7 ngày kể từ ngày nhận hàng. Bạn vui lòng giữ lại hóa đơn và bao bì nhé!' },
   { label: 'Thanh toán', text: 'Chúng tôi hỗ trợ thanh toán qua ZaloPay và COD (tiền mặt khi nhận hàng). Bạn muốn dùng phương thức nào ạ?' },
-  { label: 'Cảm ơn', text: 'Cảm ơn bạn đã tin tưởng ShopQuiet! Chúc bạn có trải nghiệm mua sắm tuyệt vời 🎉' },
+  { label: 'Cảm ơn', text: 'Cảm ơn bạn đã tin tưởng ShopQuiet! Chúc bạn có trải nghiệm mua sắm tuyệt vời' },
 ];
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
@@ -296,9 +296,9 @@ export const Support: React.FC = () => {
               </h2>
               <p className="text-[10px] font-bold mt-0.5">
                 {totalMessages > 0 ? (
-                  <span className="text-rose-600">🔴 {totalMessages} tin chưa trả lời</span>
+                  <span className="text-rose-600 flex items-center gap-1"><Circle className="w-2 h-2 fill-current" /> {totalMessages} tin chưa trả lời</span>
                 ) : (
-                  <span className="text-emerald-600 font-semibold">✓ Tất cả đã trả lời</span>
+                  <span className="text-emerald-600 font-semibold flex items-center gap-1"><Check className="w-4 h-4" /> Tất cả đã trả lời</span>
                 )}
               </p>
             </div>

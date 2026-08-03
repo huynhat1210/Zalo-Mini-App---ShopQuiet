@@ -13,6 +13,7 @@ import {
   Truck,
   AlertTriangle,
   Zap,
+  Check,
 } from 'lucide-react';
 import type { IDashboardProps } from './dashboard.type';
 
@@ -363,8 +364,8 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
                 })
               ) : (
                 <div className="text-center py-12 text-slate-400 text-xs font-medium space-y-2">
-                  <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-base">
-                    ✓
+                  <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+                    <Check className="w-6 h-6" />
                   </div>
                   <p>Kho hàng đang ở trạng thái an toàn!</p>
                 </div>

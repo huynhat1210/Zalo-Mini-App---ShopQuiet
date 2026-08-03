@@ -202,7 +202,7 @@ export const CommentsPage: React.FC = () => {
 
         <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-xs space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Đánh giá Thấp (1-2★)</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Đánh giá Thấp (1-2 sao)</span>
             <div className="p-2.5 bg-rose-50 text-rose-600 rounded-2xl">
               <AlertCircle className="w-5 h-5" />
             </div>
@@ -237,11 +237,11 @@ export const CommentsPage: React.FC = () => {
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
             {[
               { label: 'Tất cả', value: 'ALL' },
-              { label: '5 ★', value: 5 },
-              { label: '4 ★', value: 4 },
-              { label: '3 ★', value: 3 },
-              { label: '2 ★', value: 2 },
-              { label: '1 ★', value: 1 },
+              { label: '5 sao', value: 5 },
+              { label: '4 sao', value: 4 },
+              { label: '3 sao', value: 3 },
+              { label: '2 sao', value: 2 },
+              { label: '1 sao', value: 1 },
             ].map((tab) => (
               <button
                 key={String(tab.value)}

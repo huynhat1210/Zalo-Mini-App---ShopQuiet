@@ -9,6 +9,8 @@ import {
   Users,
   ArrowUpRight,
   ArrowDownRight,
+  FileSpreadsheet,
+  Search,
 } from 'lucide-react';
 import {
   LineChart,
@@ -249,7 +251,8 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
             }
             className="px-4 py-2 bg-emerald-700 text-white text-xs font-bold rounded-2xl hover:bg-emerald-800 transition-all flex items-center gap-2 border-none cursor-pointer shadow-xs active:scale-95"
           >
-            📊 Xuất Excel Báo Cáo
+            <FileSpreadsheet className="w-4 h-4" />
+            Xuất Excel Báo Cáo
           </button>
           <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-2xl p-1">
             {([7, 30] as const).map((r) => (
@@ -455,7 +458,10 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-sm font-bold text-gray-800">🔍 Top Từ Khóa Được Tìm Kiếm Nhiều Nhất</h3>
+            <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              Top Từ Khóa Được Tìm Kiếm Nhiều Nhất
+            </h3>
             <p className="text-gray-400 text-xs mt-0.5">Dữ liệu thực tế từ lượt tìm kiếm của khách hàng trên Zalo Mini App</p>
           </div>
           <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-3 py-1 rounded-full border border-purple-200">

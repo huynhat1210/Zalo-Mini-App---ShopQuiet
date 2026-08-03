@@ -57,7 +57,7 @@ export const translations = {
     "profile.shareBtn": "Chia sẻ ngay (+50 Xu)",
     "profile.dailyCheckin": "Điểm danh nhận Xu hàng ngày",
     "profile.claimReward": "Nhận ngay",
-    "profile.claimed": "Đã nhận ✓",
+    "profile.claimed": "Đã nhận",
     "profile.phoneNotUpdated": "Chưa cập nhật Số điện thoại",
     "profile.emailNotUpdated": "Chưa cập nhật Email",
     "profile.birthdayNotUpdated": "Chưa cập nhật Ngày sinh",
@@ -266,8 +266,8 @@ export const translations = {
     "order.cod": "Thanh toán khi nhận hàng (COD)",
     "order.totalPayment": "Tổng thanh toán",
     "order.shippingMethod": "Phương thức giao hàng",
-    "order.standardShipping": "🚚 Giao hàng tiêu chuẩn (3-5 ngày)",
-    "order.expressShipping": "⚡ Giao hàng hỏa tốc (1-2 ngày)",
+    "order.standardShipping": "Giao hàng tiêu chuẩn (3-5 ngày)",
+    "order.expressShipping": "Giao hàng hỏa tốc (1-2 ngày)",
 
     // Order Success Page
     "orderSuccess.confirmed": "Xác nhận đơn hàng",
@@ -414,10 +414,10 @@ export const translations = {
     "cart.freeship": "Free (Freeship)",
     "cart.voucherDiscount": "Voucher Discount",
     "cart.total": "Total",
-    "cart.selectVoucherModal": "🎟️ Select Voucher",
+    "cart.selectVoucherModal": "Select Voucher",
     "cart.noVouchersAvailable": "No vouchers available",
     "cart.save": "Save",
-    "cart.selected": "Selected ✓",
+    "cart.selected": "Selected",
     "cart.apply": "Apply",
 
     // Profile Page
@@ -446,7 +446,7 @@ export const translations = {
     "profile.shareBtn": "Share Now (+50 Coins)",
     "profile.dailyCheckin": "Daily Check-in for Coins",
     "profile.claimReward": "Claim Now",
-    "profile.claimed": "Claimed ✓",
+    "profile.claimed": "Claimed",
     "profile.phoneNotUpdated": "Phone not updated",
     "profile.emailNotUpdated": "Email not updated",
     "profile.birthdayNotUpdated": "Birthday not updated",
@@ -622,8 +622,8 @@ export const translations = {
     "order.bankTransfer": "Bank Transfer",
     "order.totalPayment": "Total Payment",
     "order.shippingMethod": "Shipping Method",
-    "order.standardShipping": "🚚 Standard Delivery (3-5 days)",
-    "order.expressShipping": "⚡ Express Delivery (1-2 days)",
+    "order.standardShipping": "Standard Delivery (3-5 days)",
+    "order.expressShipping": "Express Delivery (1-2 days)",
 
     // Order Success Page
     "orderSuccess.confirmed": "Order Confirmed",

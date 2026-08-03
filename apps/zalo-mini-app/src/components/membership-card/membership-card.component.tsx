@@ -11,6 +11,7 @@ import {
   TagIcon,
   GiftIcon,
   CheckCircleIcon,
+  StarIcon,
 } from "@heroicons/react/24/outline";
 
 const PageCast = Page as any;
@@ -187,9 +188,10 @@ export const MembershipCard: React.FC<IMembershipCardProps> = (props) => {
                 {profile.name}
               </h3>
               <span
-                className={`inline-block mt-1 font-black text-[9px] uppercase px-2.5 py-0.5 rounded shadow-xs ${badgeColor}`}
+                className={`inline-block mt-1 font-black text-[9px] uppercase px-2.5 py-0.5 rounded shadow-xs ${badgeColor} flex items-center gap-1`}
               >
-                ★ {tierBadge}
+                <StarIcon className="w-3 h-3" />
+                {tierBadge}
               </span>
             </div>
           </div>

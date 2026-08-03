@@ -99,7 +99,7 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
       
       await apiRequest('/cms/database/models/Notification', 'POST', {
         zaloUserId: selectedUserDetails.zaloId,
-        title: 'Quà tặng Voucher riêng biệt 🎁',
+        title: 'Quà tặng Voucher riêng biệt',
         content,
         type: 'PROMOTION',
         date: new Date().toLocaleDateString('vi-VN'),
@@ -593,7 +593,7 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
                       <div className="bg-gradient-to-r from-amber-500/10 via-white to-amber-500/10 p-5 rounded-3xl border border-amber-200 shadow-2xs space-y-3">
                         <div className="flex items-center gap-2">
                           <Gift size={18} className="text-amber-600" />
-                          <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider">Tặng Voucher Tri Ẩn Riêng Khách Hàng 🎁</h4>
+                          <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider">Tặng Voucher Tri Ẩn Riêng Khách Hàng</h4>
                         </div>
                         <p className="text-xs text-slate-600 font-medium">Chọn mã giảm giá khả dụng để gửi quà tặng thẳng vào ứng dụng Zalo của người dùng này:</p>
                         <div className="flex gap-2">

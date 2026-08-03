@@ -145,7 +145,7 @@ export class UsersService implements OnModuleInit {
     // Trigger System Notifications
     if (isNewUser) {
       try {
-        const welcomeTitle = 'Chào mừng bạn đến với ShopQuiet! 🎉';
+        const welcomeTitle = 'Chào mừng bạn đến với ShopQuiet!';
         const existingWelcome = await this.prisma.notification.findFirst({
           where: {
             zaloUserId: zaloId,

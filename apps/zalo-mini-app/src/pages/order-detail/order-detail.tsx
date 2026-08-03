@@ -5,7 +5,7 @@ import { apiRequest, apiUploadRequest, API_BASE_URL } from "../../utils/api";
 import { useTranslation } from "../../utils";
 import { IOrderDetailProps } from "./order-detail.type";
 import api from "zmp-sdk";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, CheckCircle, Clock, Check } from "lucide-react";
 import {
   getRemainingDays,
   getDeliveryStatusText,
@@ -340,7 +340,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                             : "bg-neutral-200 text-neutral-400"
                         }`}
                       >
-                        {isPassed && !isCurrent ? "✓" : st.stepNum}
+                        {isPassed && !isCurrent ? <Check className="w-4 h-4" /> : st.stepNum}
                       </div>
                       <span
                         className={`text-[9.5px] font-extrabold tracking-tight ${
@@ -624,7 +624,12 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
             onClick={handleConfirmReceived}
             className="w-full h-11 bg-[#0e6877] text-white font-bold text-xs uppercase tracking-wider rounded-2xl border-none cursor-pointer hover:bg-[#0c5966] active:scale-[0.98] transition-all shadow-md mt-4"
           >
-            {completing ? t("common.loading") : `✓ ${t("order.statusCompleted")}`}
+            {completing ? t("common.loading") : (
+              <span className="flex items-center justify-center gap-1">
+                <Check className="w-4 h-4" />
+                {t("order.statusCompleted")}
+              </span>
+            )}
           </button>
         )}
 
@@ -654,10 +659,18 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
         {/* Return request details display if in RETURN_REQUESTED or RETURNED */}
         {["RETURN_REQUESTED", "RETURNED"].includes(selectedOrder.status) && (
           <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4.5 space-y-2 text-left mt-4">
-            <p className="font-bold text-indigo-800 text-xs">
-              {selectedOrder.status === "RETURNED"
-                ? "✓ Đã hoàn tất trả hàng"
-                : "⏳ Yêu cầu trả hàng đang chờ xử lý"}
+            <p className="font-bold text-indigo-800 text-xs flex items-center gap-1.5">
+              {selectedOrder.status === "RETURNED" ? (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  Đã hoàn tất trả hàng
+                </>
+              ) : (
+                <>
+                  <Clock className="w-4 h-4" />
+                  Yêu cầu trả hàng đang chờ xử lý
+                </>
+              )}
             </p>
             <p className="text-indigo-750 font-medium text-[10.5px] mt-1">
               Lý do:{" "}

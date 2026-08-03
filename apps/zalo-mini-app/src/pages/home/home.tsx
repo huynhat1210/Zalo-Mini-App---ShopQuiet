@@ -9,6 +9,8 @@ import {
   MagnifyingGlassIcon,
   HeartIcon,
   SparklesIcon,
+  GiftIcon,
+  CurrencyDollarIcon,
 } from "@heroicons/react/24/outline";
 import {
   HeartIcon as HeartSolidIcon,
@@ -640,8 +642,9 @@ export const Home: React.FC<IHomeProps> = (_props) => {
               <SparklesIcon className="w-7 h-7" />
             </div>
             <div>
-              <span className="text-[10px] font-black uppercase tracking-widest bg-amber-100 text-amber-900 px-3 py-1 rounded-full border border-amber-300/50">
-                🎁 Ưu Đãi Đặc Biệt
+              <span className="text-[10px] font-black uppercase tracking-widest bg-amber-100 text-amber-900 px-3 py-1 rounded-full border border-amber-300/50 flex items-center gap-1">
+                <GiftIcon className="w-3.5 h-3.5" />
+                Ưu Đãi Đặc Biệt
               </span>
               <h3 className="text-lg font-extrabold text-slate-900 mt-2.5 leading-snug">
                 {activeCampaign.title}
@@ -660,7 +663,10 @@ export const Home: React.FC<IHomeProps> = (_props) => {
 
             {activeCampaign.type === 'BONUS_COINS' && activeCampaign.bonusCoins > 0 && (
               <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-emerald-900">
-                <span className="text-xs font-bold block">💰 Tặng {activeCampaign.bonusCoins} Xu Quà Tặng</span>
+                <span className="text-xs font-bold block flex items-center gap-1">
+                  <CurrencyDollarIcon className="w-3.5 h-3.5" />
+                  Tặng {activeCampaign.bonusCoins} Xu Quà Tặng
+                </span>
                 <span className="text-[10px] text-emerald-700">Đã cộng vào ví xu của bạn!</span>
               </div>
             )}

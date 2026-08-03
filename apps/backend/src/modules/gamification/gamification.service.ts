@@ -92,7 +92,7 @@ export class GamificationService {
         data: {
           zaloUserId,
           type: 'system',
-          title: `📍 Điểm danh ${currentDayConfig.name} thành công`,
+          title: `Điểm danh ${currentDayConfig.name} thành công`,
           content: `Chúc mừng! Bạn nhận được +${rewardPoints} xu từ điểm danh ${currentDayConfig.name}.`,
           date:
             new Date().toLocaleTimeString('vi-VN', {
@@ -329,7 +329,7 @@ export class GamificationService {
         data: {
           zaloUserId,
           type: 'promotion',
-          title: `🎁 Đổi quà thành công`,
+          title: `Đổi quà thành công`,
           content: `Chúc mừng bạn đã đổi thành công mã voucher: ${voucherCode} (-${voucher.value.toLocaleString('vi-VN')}đ) bằng ${pointsCost} điểm tích lũy. Áp dụng ngay khi thanh toán!`,
           date:
             new Date().toLocaleTimeString('vi-VN', {

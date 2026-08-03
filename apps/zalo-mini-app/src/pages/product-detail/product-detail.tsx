@@ -16,8 +16,9 @@ import {
   PencilSquareIcon,
   HandThumbUpIcon,
   HandThumbDownIcon,
+  StarIcon,
 } from "@heroicons/react/24/outline";
-import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
+import { HeartIcon as HeartSolid, StarIcon as StarSolid } from "@heroicons/react/24/solid";
 import { IProductDetailProps } from "./product-detail.type";
 import { LazyImageComponent } from "../../components";
 
@@ -541,7 +542,7 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
           {/* Sales & Likes metrics (Shopee Style) */}
           <div className="flex items-center text-xs text-textColor-variant gap-3 pt-1">
             <div className="flex items-center gap-1">
-              <span className="text-amber-500">★</span>
+              <StarSolid className="w-4 h-4 text-amber-500" />
               <span>
                 {comments.length > 0
                   ? (
@@ -816,8 +817,12 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                 </div>
 
                 <div className="flex text-amber-500 text-[10px] gap-0.5">
-                  {"★".repeat(rev.rating)}
-                  {"☆".repeat(5 - rev.rating)}
+                  {Array.from({ length: rev.rating }).map((_, i) => (
+                    <StarSolid key={i} className="w-3 h-3" />
+                  ))}
+                  {Array.from({ length: 5 - rev.rating }).map((_, i) => (
+                    <StarIcon key={i} className="w-3 h-3" />
+                  ))}
                 </div>
 
                 <p className="text-textColor text-xs leading-relaxed">

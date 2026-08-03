@@ -12,6 +12,7 @@ import {
   LockClosedIcon,
   UserIcon,
   KeyIcon,
+  LightBulbIcon,
 } from "@heroicons/react/24/outline";
 
 export const AuthModal: React.FC<IAuthModalProps> = ({
@@ -290,8 +291,9 @@ export const AuthModal: React.FC<IAuthModalProps> = ({
               ) : (
                 <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
                   {demoOtpNotice && (
-                    <div className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-2xl text-xs text-amber-800 dark:text-amber-300 font-medium">
-                      💡 {demoOtpNotice}
+                    <div className="p-3 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-2xl text-xs text-amber-800 dark:text-amber-300 font-medium flex items-start gap-2">
+                      <LightBulbIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <span>{demoOtpNotice}</span>
                     </div>
                   )}
 

@@ -278,7 +278,7 @@ export class Pay2sController {
           Mở / Lưu mã QR
         </a>
       </div>
-      <p class="qr-hint">💡 Nhấn giữ mã QR bên trên để lưu vào Ảnh</p>
+      <p class="qr-hint">Nhấn giữ mã QR bên trên để lưu vào Ảnh</p>
     </div>
 
     <div class="details-box">

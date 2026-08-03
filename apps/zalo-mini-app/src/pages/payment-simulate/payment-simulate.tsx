@@ -2,6 +2,7 @@ import { useCart, IOrderItem } from "../../App";
 import { apiRequest } from "../../utils/api";
 import { useTranslation } from "../../utils";
 import { IPaymentSimulateProps } from "./payment-simulate.type";
+import { LightBulbIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
   const { t } = useTranslation();
@@ -18,7 +19,7 @@ export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
   if (!selectedOrder) {
     return (
       <div className="flex flex-col items-center justify-center h-full p-6 text-center space-y-4">
-        <span className="text-4xl">⚠️</span>
+        <ExclamationTriangleIcon className="w-12 h-12 text-amber-500" />
         <p className="text-xs text-textColor-variant">
           {t("payment.title")}
         </p>
@@ -170,7 +171,7 @@ export const PaymentSimulate: React.FC<IPaymentSimulateProps> = (_props) => {
           </div>
 
           <div className="bg-amber-50 border border-amber-100 rounded-2xl p-3 flex gap-2.5 items-start text-left text-[10px] text-amber-800">
-            <span className="text-sm">💡</span>
+            <LightBulbIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <p className="leading-relaxed">
               This is a development testing environment. You can click confirm to simulate successful payment and automatically deduct inventory.
             </p>

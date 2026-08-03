@@ -1162,7 +1162,7 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
                                     : { background: '#f8fafc', color: '#526069', borderColor: '#e2e8f0' }
                                 }
                               >
-                                {v === 'true' ? '✓ TRUE' : '✗ FALSE'}
+                                {v === 'true' ? <><Check className="w-4 h-4 inline mr-1" /> TRUE</> : <><XCircle className="w-4 h-4 inline mr-1" /> FALSE</>}
                               </button>
                             ))}
                           </div>

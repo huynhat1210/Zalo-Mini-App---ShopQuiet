@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { apiRequest, apiUploadRequest, API_BASE_URL } from "../../utils/api";
 import { IReviewModalProps } from "./review-modal.type";
+import { StarIcon as StarSolidIcon } from "@heroicons/react/24/solid";
+import { StarIcon as StarOutlineIcon } from "@heroicons/react/24/outline";
 
 export const ReviewModal: React.FC<IReviewModalProps> = (props) => {
   const {
@@ -141,7 +143,11 @@ export const ReviewModal: React.FC<IReviewModalProps> = (props) => {
                 onClick={() => setReviewRating(star)}
                 className="p-0 border-none bg-transparent cursor-pointer text-xl text-amber-500 hover:scale-110 active:scale-95 transition-transform"
               >
-                {star <= reviewRating ? "★" : "☆"}
+                {star <= reviewRating ? (
+                  <StarSolidIcon className="w-6 h-6" />
+                ) : (
+                  <StarOutlineIcon className="w-6 h-6" />
+                )}
               </button>
             ))}
           </div>

@@ -73,7 +73,7 @@ Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "su
       return JSON.parse(cleanJson);
     } catch (e) {
       return {
-        title: `🔥 UƯ ĐÃI ĐẶC BIỆT: ${topic || 'Siêu Sale ShopQuiet'}`,
+        title: `ƯU ĐÃI ĐẶC BIỆT: ${topic || 'Siêu Sale ShopQuiet'}`,
         description: `Dành riêng cho khách hàng ${targetSegment || 'thân thiết'}! Nhận ngay voucher giảm giá cực sốc hôm nay.`,
         suggestedVoucherValue: '15%',
       };
@@ -165,7 +165,7 @@ Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "su
         await this.prisma.notification.create({
           data: {
             zaloUserId,
-            title: `🎁 Chào mừng bạn đến với ShopQuiet!`,
+            title: `Chào mừng bạn đến với ShopQuiet!`,
             content: activeWelcomeCampaign.description || `Nhận ngay ưu đãi chào mừng thành viên mới từ chiến dịch ${activeWelcomeCampaign.title}!`,
             type: 'WELCOME',
             date: todayStr,
@@ -246,7 +246,7 @@ Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "su
         await this.prisma.notification.create({
           data: {
             zaloUserId,
-            title: `🛒 Giỏ hàng của bạn đang chờ!`,
+            title: `Giỏ hàng của bạn đang chờ!`,
             content: `Bạn có ${count} sản phẩm [${firstProduct}] trong giỏ hàng. Nhấn để chốt đơn ngay trước khi hết hàng!`,
             type: 'ABANDONED_CART',
             date: todayStr,
@@ -290,7 +290,7 @@ Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "su
           data: {
             zaloUserId: u.zaloId,
             points: 100000,
-            reason: `🎂 Quà tặng sinh nhật: +100.000 Xu từ ShopQuiet!`,
+            reason: `Quà tặng sinh nhật: +100.000 Xu từ ShopQuiet!`,
             metadata: { type: 'BIRTHDAY_BONUS' },
           },
         });
@@ -298,7 +298,7 @@ Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "su
         await this.prisma.notification.create({
           data: {
             zaloUserId: u.zaloId,
-            title: `🎂 Chúc Mừng Sinh Nhật ${u.name}!`,
+            title: `Chúc Mừng Sinh Nhật ${u.name}!`,
             content: `ShopQuiet tặng bạn 100.000 Xu quà tặng mừng sinh nhật. Chúc bạn một ngày thật tuyệt vời!`,
             type: 'BIRTHDAY',
             date: todayFullStr,
@@ -326,7 +326,7 @@ Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "su
         data: {
           zaloUserId: inviterZaloId,
           points: 10000,
-          reason: `🤝 Thưởng giới thiệu bạn bè tham gia Zalo Mini App: +10.000 Xu`,
+          reason: `Thưởng giới thiệu bạn bè tham gia Zalo Mini App: +10.000 Xu`,
           metadata: { invitedZaloId },
         },
       });
@@ -335,7 +335,7 @@ Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "su
       await this.prisma.notification.create({
         data: {
           zaloUserId: inviterZaloId,
-          title: `🎁 Nhận 10.000 Xu giới thiệu thành công!`,
+          title: `Nhận 10.000 Xu giới thiệu thành công!`,
           content: `Bạn bè của bạn đã tham gia ShopQuiet từ link chiến dịch của bạn. Bạn nhận được +10.000 Xu!`,
           type: 'REFERRAL',
           date: todayStr,
@@ -481,7 +481,7 @@ Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "su
         await tx.notification.create({
           data: {
             zaloUserId: u.zaloId,
-            title: `🎁 Chiến dịch mới: ${campaign.title}`,
+            title: `Chiến dịch mới: ${campaign.title}`,
             content: campaign.description || `Bạn nhận được ưu đãi từ chiến dịch ${campaign.title}!`,
             type: 'PROMO',
             date: todayStr,

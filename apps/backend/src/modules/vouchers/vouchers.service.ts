@@ -193,7 +193,7 @@ export class VouchersService {
     await this.prisma.notification.create({
       data: {
         zaloUserId,
-        title: 'Chúc mừng bạn trúng giải Vòng quay may mắn! 🎡',
+        title: 'Chúc mừng bạn trúng giải Vòng quay may mắn!',
         content: `Bạn đã quay trúng voucher ${discountStr} mã: ${code}. Hạn sử dụng đến ${expiresAt.toLocaleDateString('vi-VN')}. Hãy copy mã và đặt hàng ngay nhé!`,
         type: 'PROMO',
         date: new Date().toLocaleDateString('vi-VN'),
@@ -277,7 +277,7 @@ export class VouchersService {
 
     const notificationsData = users.map((user) => ({
       zaloUserId: user.zaloId,
-      title: 'Quà tặng Voucher độc quyền từ ShopQuiet 🎁',
+      title: 'Quà tặng Voucher độc quyền từ ShopQuiet',
       content: `Chúc mừng bạn! ShopQuiet tặng bạn mã giảm giá ${voucher.code} giảm trực tiếp ${discountStr} cho đơn hàng từ ${voucher.minOrderVal.toLocaleString('vi-VN')}đ.${expiryStr} Hãy copy mã và mua sắm ngay nhé!`,
       type: 'PROMOTION',
       date: new Date().toLocaleDateString('vi-VN'),

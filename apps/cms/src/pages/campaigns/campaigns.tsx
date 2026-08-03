@@ -745,8 +745,9 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
               )}
 
               <div>
-                <label className="font-bold text-slate-700 block mb-1">
-                  ⏰ Hẹn Giờ Phát Tự Động (Bỏ trống nếu phát thủ công / sự kiện)
+                <label className="font-bold text-slate-700 block mb-1 flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  Hẹn Giờ Phát Tự Động (Bỏ trống nếu phát thủ công / sự kiện)
                 </label>
                 <input
                   type="datetime-local"

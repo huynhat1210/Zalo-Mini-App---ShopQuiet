@@ -9,7 +9,7 @@ import {
   DocumentDuplicateIcon,
   ChevronLeftIcon,
   PencilSquareIcon,
-  CheckIcon,
+  CheckIcon as CheckSolidIcon,
   SparklesIcon,
   PhoneIcon,
   EnvelopeIcon,
@@ -28,6 +28,9 @@ import {
   ChatBubbleLeftRightIcon,
   ChevronRightIcon,
   CalendarDaysIcon,
+  StarIcon,
+  ArrowRightIcon,
+  CheckIcon,
   KeyIcon,
   CheckBadgeIcon,
   XMarkIcon,
@@ -494,7 +497,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                         {day.label}
                       </span>
                       <span className={`text-[11px] font-black mt-0.5 ${isToday ? 'text-white' : isPast ? 'text-neutral-400' : 'text-textColor'}`}>
-                        {isPast && hasClaimed ? '✓' : `${day.xu}`}
+                        {isPast && hasClaimed ? <CheckIcon className="w-3 h-3 inline" /> : `${day.xu}`}
                       </span>
                       <span className={`text-[7px] font-semibold ${isToday ? 'text-white/80' : 'text-textColor-variant'}`}>xu</span>
                     </div>
@@ -549,9 +552,10 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               </div>
               <div className="flex items-center gap-1.5">
                 <span
-                  className={`font-black text-[9px] uppercase px-2.5 py-0.5 rounded shadow-xs ${badgeColor}`}
+                  className={`font-black text-[9px] uppercase px-2.5 py-0.5 rounded shadow-xs ${badgeColor} flex items-center gap-1`}
                 >
-                  ★ {tierBadge}
+                  <StarIcon className="w-3 h-3" />
+                  {tierBadge}
                 </span>
                 <ChevronRightIcon className="w-4 h-4 text-[#526069]/40" strokeWidth={2.5} />
               </div>
@@ -635,7 +639,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
                   onClick={() => setLanguage(lang === "vi" ? "en" : "vi")}
                   className="px-3 py-1 bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-black uppercase tracking-wider rounded-lg border-none cursor-pointer active:scale-95 transition-all"
                 >
-                  {lang === "vi" ? "🇻🇳 Tiếng Việt (➔ EN)" : "🇬🇧 English (➔ VI)"}
+                  {lang === "vi" ? "Tiếng Việt" : "English"} <ArrowRightIcon className="w-3 h-3 inline" /> {lang === "vi" ? "EN" : "VI"}
                 </button>
               </div>
             </div>

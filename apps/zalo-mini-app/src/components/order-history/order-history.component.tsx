@@ -3,7 +3,7 @@ import { Page } from "zmp-ui";
 import { apiRequest, API_BASE_URL, safeParseImages } from "../../utils";
 import { EmptyStateComponent } from "../empty-state";
 import { ReviewModal } from "../review-modal";
-import { ChevronLeftIcon } from "@heroicons/react/24/outline";
+import { ChevronLeftIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/24/solid";
 import { IOrderHistoryProps } from "./order-history.type";
 
@@ -551,15 +551,18 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                   <div className="flex-1 flex flex-col justify-between py-0.5">
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="w-3.5 h-3.5 rounded-full bg-primary/10 text-primary  flex items-center justify-center text-[7px] font-extrabold">
-                          ✓
+                        <span className="w-3.5 h-3.5 rounded-full bg-primary/10 text-primary  flex items-center justify-center">
+                          <CheckIcon className="w-2.5 h-2.5" strokeWidth={3} />
                         </span>
                         <h4 className="text-xs font-bold text-textColor  line-clamp-1">
                           {prod.name}
                         </h4>
                       </div>
                       <div className="flex items-center gap-2 text-[9.5px] text-[#526069]/65  mt-0.5 font-medium">
-                        <span>★ 4.8</span>
+                        <span className="flex items-center gap-0.5">
+                          <StarIcon className="w-3 h-3 text-amber-500" />
+                          4.8
+                        </span>
                         <span>•</span>
                         <span>{prod.category?.name}</span>
                         <span>•</span>

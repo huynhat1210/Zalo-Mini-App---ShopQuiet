@@ -447,7 +447,7 @@ export class OrdersService {
                 data: {
                   zaloUserId: order.zaloUserId,
                   type: 'system',
-                  title: `🎁 Thưởng điểm mua sắm thành công`,
+                  title: `Thưởng điểm mua sắm thành công`,
                   content: `Chúc mừng bạn! Đơn hàng #${order.id} đã hoàn tất và bạn nhận được +${earnedPoints} điểm thưởng tích lũy tài khoản.`,
                   date:
                     new Date().toLocaleTimeString('vi-VN', {
@@ -634,7 +634,7 @@ export class OrdersService {
                 data: {
                   zaloUserId: order.zaloUserId,
                   type: 'promotion',
-                  title: `🎉 Tích điểm thành công`,
+                  title: `Tích điểm thành công`,
                   content: `Chúc mừng! Bạn được cộng +${pointsEarned} điểm tích lũy từ đơn hàng #${order.id} (Hạng ${tier} x${multiplier}).`,
                   date:
                     new Date().toLocaleTimeString('vi-VN', {

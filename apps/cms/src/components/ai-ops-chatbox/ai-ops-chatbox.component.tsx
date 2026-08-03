@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { apiRequest } from '../../utils/api';
 import { useToast } from '../../contexts';
-import { 
-  Bot, 
-  X, 
-  Send, 
-  AlertTriangle, 
-  Package, 
-  ShoppingBag, 
-  Crown, 
-  Sparkles, 
+import {
+  Bot,
+  X,
+  Send,
+  AlertTriangle,
+  Package,
+  ShoppingBag,
+  Crown,
+  Sparkles,
   RefreshCw,
-  CheckCircle2
+  CheckCircle2,
+  Check
 } from 'lucide-react';
 import type { AiOpsAlert, ChatMessage, IAiOpsChatboxProps } from './ai-ops-chatbox.type';
 
@@ -306,8 +307,8 @@ export const AiOpsChatbox: React.FC<IAiOpsChatboxProps> = () => {
                               {alert.title}
                             </span>
                             {alert.isResolved && (
-                              <span className="text-[9.5px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-                                ✓ Đã giải quyết
+                              <span className="text-[9.5px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                <Check className="w-3 h-3" /> Đã giải quyết
                               </span>
                             )}
                           </div>

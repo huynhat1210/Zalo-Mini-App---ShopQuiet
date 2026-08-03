@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, SparklesIcon, GiftIcon } from "@heroicons/react/24/outline";
 import { apiRequest } from "../../utils/api";
 import { ILuckyWheelProps } from "./lucky-wheel.type";
 
@@ -288,7 +288,8 @@ export const LuckyWheel: React.FC<ILuckyWheelProps> = (props) => {
 
         <div className="text-center">
           <h3 className="text-sm font-extrabold text-textColor uppercase tracking-wider flex items-center gap-1.5 justify-center">
-            🎡 Vòng quay may mắn
+            <SparklesIcon className="w-5 h-5" />
+            Vòng quay may mắn
           </h3>
           <p className="text-[10px] text-textColor-variant mt-1">
             Quay thưởng nhận voucher mua sắm cực lớn hàng ngày!
@@ -327,7 +328,11 @@ export const LuckyWheel: React.FC<ILuckyWheelProps> = (props) => {
               onClick={(e) => e.stopPropagation()}
             >
               <span className="text-4xl block">
-                {spinResult.type === "LUCKY" ? "🍀" : "🎉"}
+                {spinResult.type === "LUCKY" ? (
+                  <SparklesIcon className="w-12 h-12 text-green-500 mx-auto" />
+                ) : (
+                  <GiftIcon className="w-12 h-12 text-amber-500 mx-auto" />
+                )}
               </span>
               <div>
                 <h4 className="text-xs font-black text-textColor uppercase tracking-wider">

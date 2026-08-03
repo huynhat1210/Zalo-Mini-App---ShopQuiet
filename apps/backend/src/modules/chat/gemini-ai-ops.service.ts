@@ -65,7 +65,7 @@ export class GeminiAiOpsService {
     const lower = prompt.toLowerCase();
     if (lower.includes('kho') || lower.includes('tồn')) {
       const lowStockCount = await this.prisma.productVariant.count({ where: { stock: { lt: 5 } } });
-      return `📊 BÁO CÁO KHO HÀNG (Gemini AI):\nHiện có ${lowStockCount} phân loại sản phẩm trong kho có tồn kho nguy cấp (< 5 sản phẩm). Bạn nên kiểm tra mục Kho hàng và bấm Nhập hàng ngẫu nhiên để tránh đứt hàng.`;
+      return `BÁO CÁO KHO HÀNG (Gemini AI):\nHiện có ${lowStockCount} phân loại sản phẩm trong kho có tồn kho nguy cấp (< 5 sản phẩm). Bạn nên kiểm tra mục Kho hàng và bấm Nhập hàng ngẫu nhiên để tránh đứt hàng.`;
     }
     if (lower.includes('đơn') || lower.includes('doanh thu')) {
       const totalOrders = await this.prisma.order.count();
@@ -147,7 +147,7 @@ export class GeminiAiOpsService {
         alerts.push({
           id: alertId,
           type: 'STALE_ORDER',
-          title: '⏳ Cảnh báo Đơn hàng Chờ duyệt',
+          title: 'Cảnh báo Đơn hàng Chờ duyệt',
           message: `Hiện có ${processingOrders.length} đơn hàng mới ở trạng thái 'Đang xử lý' chưa được bàn giao cho Shipper. Vui lòng duyệt sớm để tránh bị chậm chỉ tiêu giao hàng!`,
           time: '15 phút trước',
           severity: 'medium',
@@ -267,7 +267,7 @@ export class GeminiAiOpsService {
               data: {
                 zaloUserId: zaloUserId,
                 type: 'voucher',
-                title: '🎁 Bạn nhận được Voucher Tri Ân VIP!',
+                title: 'Bạn nhận được Voucher Tri Ân VIP!',
                 content: `ShopQuiet dành riêng cho bạn ${userName || 'Khách hàng VIP'} Mã Voucher '${code}' giảm ngay 30.000đ cho đơn từ 200.000đ. Nhập mã khi thanh toán nhé!`,
                 date: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('vi-VN'),
                 read: false,
