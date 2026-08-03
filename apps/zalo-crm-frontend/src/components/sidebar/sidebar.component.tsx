@@ -15,9 +15,9 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
 
   const navGroups = [
     {
-      title: 'ZALO CRM SYSTEM',
+      title: 'CHIẾN DỊCH & MARKETING',
       items: [
-        { to: '/', label: 'Tổng quan CRM', icon: <LayoutDashboard size={17} /> },
+        { to: '/', label: 'Tổng quan Chiến dịch', icon: <LayoutDashboard size={17} /> },
         { to: '/campaigns', label: 'Chiến dịch Marketing', icon: <Megaphone size={17} /> },
         { to: '/automation', label: 'Chăm sóc Tự động', icon: <Bot size={17} /> },
       ],
@@ -47,9 +47,9 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
             </div>
             <div>
               <h1 className="font-black text-slate-900 tracking-tight text-sm flex items-center gap-1.5">
-                ShopQuiet <span className="text-[9px] px-1.5 py-0.2 bg-teal-50 text-[#0e6877] rounded font-black border border-teal-200">CRM</span>
+                ShopQuiet <span className="text-[8px] px-1.5 py-0.2 bg-teal-50 text-[#0e6877] rounded font-black border border-teal-200">CAMPAIGN</span>
               </h1>
-              <p className="text-[10px] text-slate-400 font-medium">Hệ thống Tiếp thị Zalo</p>
+              <p className="text-[10px] text-slate-400 font-medium">Hệ thống Chiến dịch Zalo</p>
             </div>
           </div>
 

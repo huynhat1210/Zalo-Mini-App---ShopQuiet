@@ -66,7 +66,7 @@ export const Dashboard: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] gap-3">
         <div className="w-8 h-8 border-3 border-teal-500/20 border-t-teal-500 rounded-full animate-spin"></div>
-        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Đang tải dữ liệu CRM...</span>
+        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Đang tải dữ liệu Chiến dịch...</span>
       </div>
     );
   }
@@ -76,12 +76,12 @@ export const Dashboard: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Tổng quan Zalo CRM</h2>
-          <p className="text-xs text-slate-500">Giám sát hiệu quả tiếp thị và kịch bản tự động hóa Zalo</p>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Tổng quan Chiến dịch ShopQuiet</h2>
+          <p className="text-xs text-slate-500">Giám sát hiệu quả chiến dịch và kịch bản tự động hóa Zalo</p>
         </div>
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-50 border border-teal-100 rounded-xl text-teal-800 text-xs font-semibold">
           <Sparkles size={14} className="text-teal-600 animate-pulse" />
-          <span>AI Marketing Assistant Active</span>
+          <span>AI Campaign Assistant Active</span>
         </div>
       </div>
 
@@ -155,7 +155,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
-          <h4 className="text-xs font-bold text-[#526069] uppercase tracking-wider">Chuyển đổi chiến dịch tiếp thị</h4>
+          <h4 className="text-xs font-bold text-[#526069] uppercase tracking-wider">Hiệu quả chuyển đổi Chiến dịch</h4>
           <div className="h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>

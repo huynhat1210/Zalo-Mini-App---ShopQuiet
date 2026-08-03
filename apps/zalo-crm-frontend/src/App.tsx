@@ -42,7 +42,7 @@ export const App: React.FC = () => {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-3">
         <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-slate-400 text-xs font-semibold">Đang khởi động CRM Portal...</p>
+        <p className="text-slate-400 text-xs font-semibold">Đang khởi động Campaign Portal...</p>
       </div>
     );
   }
