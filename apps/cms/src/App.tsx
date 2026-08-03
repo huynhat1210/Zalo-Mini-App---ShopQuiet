@@ -25,6 +25,7 @@ const Settings = lazy(() => import('./pages').then((m) => ({ default: m.Settings
 const CommentsPage = lazy(() => import('./pages').then((m) => ({ default: m.CommentsPage })));
 const TransactionsPage = lazy(() => import('./pages').then((m) => ({ default: m.TransactionsPage })));
 const Campaigns = lazy(() => import('./pages').then((m) => ({ default: m.Campaigns })));
+const AutomationPage = lazy(() => import('./pages').then((m) => ({ default: m.Automation })));
 
 const ToastContainerWrapper: React.FC = () => {
   const { toasts, removeToast } = useToast();
@@ -94,6 +95,7 @@ export const App: React.FC = () => {
                 <Route path="/transactions" element={<TransactionsPage />} />
                 <Route path="/vouchers" element={<Vouchers />} />
                 <Route path="/campaigns" element={<Campaigns />} />
+                <Route path="/automation" element={<AutomationPage />} />
                 <Route path="/flash-sale" element={<FlashSaleManagement />} />
                 <Route path="/banners" element={<Banners />} />
                 <Route path="/database/:modelName" element={<DatabaseManager />} />

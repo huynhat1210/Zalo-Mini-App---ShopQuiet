@@ -24,6 +24,7 @@ import {
   ChevronDown,
   ChevronRight,
   LogOut,
+  Bot,
 } from 'lucide-react';
 import type { ISidebarComponentProps } from './sidebar.type';
 
@@ -136,6 +137,7 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
       items: [
         { to: '/users', label: 'Khách hàng', icon: <Users size={17} /> },
         { to: '/campaigns', label: 'Chiến dịch Marketing', icon: <Megaphone size={17} /> },
+        { to: '/automation', label: 'Tự động hoá (Automation)', icon: <Bot size={17} /> },
         { to: '/comments', label: 'Bình luận & Đánh giá', icon: <Star size={17} /> },
         { to: '/flash-sale', label: 'Quản lý Flash Sale', icon: <Zap size={17} /> },
         { to: '/vouchers', label: 'Mã giảm giá & KM', icon: <Ticket size={17} /> },
