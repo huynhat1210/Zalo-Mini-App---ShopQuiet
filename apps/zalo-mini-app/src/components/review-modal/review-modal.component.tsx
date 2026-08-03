@@ -6,7 +6,6 @@ export const ReviewModal: React.FC<IReviewModalProps> = (props) => {
   const {
     isOpen,
     onClose,
-    zaloUser,
     orderId,
     productId,
     productName,

@@ -75,7 +75,6 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     setIsCartOpen,
     cart,
     refreshZaloProfile,
-    setIsChatOpen,
     gamificationData,
     fetchGamificationData,
     claimDailyReward,

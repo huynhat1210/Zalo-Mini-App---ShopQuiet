@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Page } from "zmp-ui";
 import { useCart } from "../../App";
 import { useDebounce, trackAnalyticsEvent, useTranslation, safeParseImages } from "../../utils";
+import { useAllProducts, useCategories } from "../../hooks";
 import {
   MagnifyingGlassIcon,
   XMarkIcon,

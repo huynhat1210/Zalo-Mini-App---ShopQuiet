@@ -4,7 +4,7 @@ import { useCart, IOrderItem } from "../../App";
 import { apiRequest, apiUploadRequest, API_BASE_URL } from "../../utils/api";
 import { useTranslation } from "../../utils";
 import { IOrderDetailProps } from "./order-detail.type";
-import api, { Payment } from "zmp-sdk";
+import api from "zmp-sdk";
 import { ChevronLeft } from "lucide-react";
 import {
   getRemainingDays,
@@ -238,7 +238,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
     }
   };
 
-  const statusLabel = t(STATUS_LABEL[selectedOrder.status] || "order.statusProcessing");
+  const statusLabel = t((STATUS_LABEL[selectedOrder.status] || "order.statusProcessing") as any);
   const statusClass =
     STATUS_CLASS[selectedOrder.status] ||
     "bg-neutral-100 text-textColor-variant";

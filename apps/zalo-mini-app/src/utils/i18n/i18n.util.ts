@@ -112,6 +112,8 @@ export const translations = {
     "order.statusShipped": "Đang giao",
     "order.statusCompleted": "Hoàn thành",
     "order.statusCancelled": "Đã hủy",
+    "home.addedToCart": "Đã thêm sản phẩm vào giỏ hàng!",
+    "common.warning": "Lưu ý",
 
     // Search Page
     "search.advanced": "Bộ lọc nâng cao",
@@ -259,6 +261,10 @@ export const translations = {
     "order.productList": "Danh sách sản phẩm",
     "order.quantity": "SL",
     "order.paymentDetails": "Chi tiết thanh toán",
+    "order.paymentMethod": "Phương thức thanh toán",
+    "order.bankTransfer": "Chuyển khoản ngân hàng",
+    "order.cod": "Thanh toán khi nhận hàng (COD)",
+    "order.totalPayment": "Tổng thanh toán",
     "order.shippingMethod": "Phương thức giao hàng",
     "order.standardShipping": "🚚 Giao hàng tiêu chuẩn (3-5 ngày)",
     "order.expressShipping": "⚡ Giao hàng hỏa tốc (1-2 ngày)",
@@ -462,6 +468,8 @@ export const translations = {
     "order.statusShipped": "Shipping",
     "order.statusCompleted": "Completed",
     "order.statusCancelled": "Cancelled",
+    "home.addedToCart": "Added product to cart!",
+    "common.warning": "Warning",
 
     // Search Page
     "search.advanced": "Advanced Filter",

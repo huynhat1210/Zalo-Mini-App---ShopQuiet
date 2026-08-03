@@ -17,11 +17,10 @@ import {
   getWards,
   parseAddressComponents,
 } from "../../constants/vietnam-locations";
-import { Payment } from "zmp-sdk/apis";
 import api from "zmp-sdk";
 const PageCast = Page as any;
 import { ICheckoutProps } from "./checkout.type";
-import { ChevronLeft, MapPin, Ticket, Sparkles, Compass, X, ShieldCheck, Navigation, Building2 } from "lucide-react";
+import { ChevronLeft, MapPin, Ticket } from "lucide-react";
 
 type CmsShippingMethod = {
   code: string;
@@ -52,7 +51,6 @@ type CheckoutAddressFormValues = z.infer<ReturnType<typeof createCheckoutAddress
 
 export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   const { t } = useTranslation();
-  const checkoutAddressSchema = createCheckoutAddressSchema(t);
   const {
     cart,
     removeFromCart,
@@ -131,8 +129,6 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
       universal?: string;
     };
   } | null>(null);
-  const [isCopiedNo, setIsCopiedNo] = useState(false);
-  const [isCopiedContent, setIsCopiedContent] = useState(false);
 
   // Auto-listen to Order Payment Status via Polling while VietQR modal is open
   useEffect(() => {

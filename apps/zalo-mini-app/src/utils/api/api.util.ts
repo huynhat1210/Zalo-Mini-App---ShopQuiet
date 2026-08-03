@@ -190,7 +190,7 @@ export async function apiUploadRequest(
     headers["Authorization"] = `Bearer ${accessToken}`;
   }
 
-  let zaloUserId = tokenStorage.getZaloUserId();
+  let zaloUserId = typeof (tokenStorage as any).getZaloUserId === "function" ? (tokenStorage as any).getZaloUserId() : localStorage.getItem("zalo_user_id");
   if (!zaloUserId) {
     try {
       const cached = localStorage.getItem("zalo_profile_custom");

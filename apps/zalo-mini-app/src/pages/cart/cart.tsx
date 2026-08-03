@@ -19,7 +19,6 @@ export const Cart: React.FC<ICartProps> = (_props) => {
   const {
     cart,
     updateQuantity,
-    updateItemVariant,
     setActiveTab,
     setIsCartOpen,
     showToast,

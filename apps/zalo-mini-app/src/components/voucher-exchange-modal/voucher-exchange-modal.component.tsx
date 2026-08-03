@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { apiRequest } from "../../utils/api";
-import { IVoucherExchangeModalComponentProps } from "./voucher-exchange-modal.type";
+import { IVoucherExchangeModalProps } from "./voucher-exchange-modal.type";
 
 export const VoucherExchangeModalComponent: React.FC<
-  IVoucherExchangeModalComponentProps
+  IVoucherExchangeModalProps
 > = (props) => {
-  const { isOpen, onClose, zaloUser, userPoints, showToast, onVoucherExchanged } =
-    props;
+  const {
+    isOpen,
+    onClose,
+    userPoints = 0,
+    showToast,
+    exchangeVoucher,
+    onExchangeSuccess,
+    onVoucherExchanged,
+  } = props;
 
   const [vouchers, setVouchers] = useState<any[]>([]);
   const [exchangingCode, setExchangingCode] = useState<string | null>(null);
@@ -29,21 +36,28 @@ export const VoucherExchangeModalComponent: React.FC<
   const handleExchange = async (voucher: any) => {
     const cost = voucher.pointCost || 500;
     if (userPoints < cost) {
-      showToast(
-        `Bạn cần tối thiểu ${cost} Xu để đổi voucher này! (Hiện có: ${userPoints} Xu)`,
-        "warning",
-      );
+      if (showToast) {
+        showToast(
+          `Bạn cần tối thiểu ${cost} Xu để đổi voucher này! (Hiện có: ${userPoints} Xu)`,
+          "warning",
+        );
+      }
       return;
     }
 
     try {
       setExchangingCode(voucher.code);
-      await apiRequest(`/vouchers/${voucher.code}/exchange`, "POST");
-      showToast(`🎉 Đổi thành công mã ${voucher.code}!`, "success");
+      if (exchangeVoucher) {
+        await exchangeVoucher(voucher.code, cost);
+      } else {
+        await apiRequest(`/vouchers/${voucher.code}/exchange`, "POST");
+      }
+      if (showToast) showToast(`🎉 Đổi thành công mã ${voucher.code}!`, "success");
       if (onVoucherExchanged) onVoucherExchanged();
+      if (onExchangeSuccess) onExchangeSuccess();
       onClose();
     } catch (e: any) {
-      showToast(e?.message || "Đổi voucher thất bại", "error");
+      if (showToast) showToast(e?.message || "Đổi voucher thất bại", "error");
     } finally {
       setExchangingCode(null);
     }
