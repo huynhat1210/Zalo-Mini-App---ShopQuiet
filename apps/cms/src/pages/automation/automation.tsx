@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { apiRequest } from '../../utils/api';
+import { crmApiRequest } from '../../utils/api';
 import { 
   Play, 
   Pause, 
@@ -93,13 +93,13 @@ export function Automation() {
   const loadAutomations = async () => {
     try {
       setIsLoading(true);
-      const data = await apiRequest<Automation[]>('/automation');
+      const data = await crmApiRequest<Automation[]>('/automation');
       setAutomations(data || []);
 
       // Load stats for each automation
       for (const automation of data || []) {
         try {
-          const statsData = await apiRequest<AutomationStats>(`/automation/${automation.id}/stats`);
+          const statsData = await crmApiRequest<AutomationStats>(`/automation/${automation.id}/stats`);
           setStats(prev => ({ ...prev, [automation.id]: statsData }));
         } catch (e) {
           console.error(`Failed to load stats for automation ${automation.id}:`, e);
@@ -114,7 +114,7 @@ export function Automation() {
 
   const toggleAutomation = async (id: number, enabled: boolean) => {
     try {
-      await apiRequest(`/automation/${id}/toggle`, 'PUT', { enabled });
+      await crmApiRequest(`/automation/${id}/toggle`, 'PUT', { enabled });
       loadAutomations();
     } catch (error) {
       console.error('Failed to toggle automation:', error);
@@ -125,7 +125,7 @@ export function Automation() {
     if (!confirm('Bạn có chắc chắn muốn xóa automation này?')) return;
     
     try {
-      await apiRequest(`/automation/${id}`, 'DELETE');
+      await crmApiRequest(`/automation/${id}`, 'DELETE');
       loadAutomations();
     } catch (error) {
       console.error('Failed to delete automation:', error);
@@ -134,7 +134,7 @@ export function Automation() {
 
   const duplicateAutomation = async (automation: Automation) => {
     try {
-      await apiRequest('/automation', 'POST', {
+      await crmApiRequest('/automation', 'POST', {
         ...automation,
         name: `${automation.name} (Copy)`,
         enabled: false,
@@ -148,7 +148,7 @@ export function Automation() {
   const handleSeedTemplates = async () => {
     try {
       setIsLoading(true);
-      await apiRequest('/automation/seed-templates', 'POST');
+      await crmApiRequest('/automation/seed-templates', 'POST');
       await loadAutomations();
       alert('Tải kịch bản mẫu thành công!');
     } catch (error) {
@@ -174,9 +174,9 @@ export function Automation() {
       };
 
       if (selectedAutomation) {
-        await apiRequest(`/automation/${selectedAutomation.id}`, 'PUT', payload);
+        await crmApiRequest(`/automation/${selectedAutomation.id}`, 'PUT', payload);
       } else {
-        await apiRequest('/automation', 'POST', payload);
+        await crmApiRequest('/automation', 'POST', payload);
       }
 
       setShowCreateModal(false);

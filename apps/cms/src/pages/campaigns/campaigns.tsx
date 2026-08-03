@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiRequest } from '../../utils/api';
+import { apiRequest, crmApiRequest } from '../../utils/api';
 import {
   Megaphone,
   Plus,
@@ -102,7 +102,7 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
   const handleGenerateAi = async () => {
     try {
       setIsAiGenerating(true);
-      const res = await apiRequest<{ title: string; description: string }>('/campaigns/generate-ai', 'POST', {
+      const res = await crmApiRequest<{ title: string; description: string }>('/campaigns/generate-ai', 'POST', {
         topic: title || 'Khuyến mãi đặc biệt ShopQuiet',
         targetSegment,
       });
@@ -139,7 +139,7 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
 
     try {
       setIsPredicting(true);
-      const res = await apiRequest('/campaigns/predict-ai', 'POST', {
+      const res = await crmApiRequest('/campaigns/predict-ai', 'POST', {
         type: targetType,
         targetSegment: targetSeg,
         bonusCoins: targetCoins,
@@ -193,7 +193,7 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
   const fetchCampaigns = async () => {
     try {
       setLoading(true);
-      const res = await apiRequest<ICampaign[]>('/campaigns');
+      const res = await crmApiRequest<ICampaign[]>('/campaigns');
       setCampaigns(res || []);
     } catch (e) {
       toastError('Lỗi', 'Không thể tải danh sách chiến dịch');
@@ -251,7 +251,7 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
     }
 
     try {
-      await apiRequest('/campaigns', 'POST', {
+      await crmApiRequest('/campaigns', 'POST', {
         title,
         description,
         type,
@@ -275,7 +275,7 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
     if (!window.confirm('Bạn có chắc chắn muốn KÍCH HOẠT PHÁT chiến dịch này ngay lập tức?')) return;
     try {
       setLaunchingId(id);
-      await apiRequest(`/campaigns/${id}/launch`, 'POST');
+      await crmApiRequest(`/campaigns/${id}/launch`, 'POST');
       toastSuccess('Thành công', 'Chiến dịch đã được phát tới người dùng Zalo!');
       fetchCampaigns();
     } catch (e: any) {
@@ -288,7 +288,7 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
   const handleDelete = async (id: number) => {
     if (!window.confirm('Xóa chiến dịch này?')) return;
     try {
-      await apiRequest(`/campaigns/${id}`, 'DELETE');
+      await crmApiRequest(`/campaigns/${id}`, 'DELETE');
       toastSuccess('Đã xóa', 'Chiến dịch đã được loại bỏ');
       fetchCampaigns();
     } catch (e) {

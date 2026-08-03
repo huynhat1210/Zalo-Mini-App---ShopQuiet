@@ -1,4 +1,5 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://zalo-mini-app-shopquiet.onrender.com/api/v1';
+export const CRM_API_BASE_URL = import.meta.env.VITE_CRM_API_BASE_URL || 'http://localhost:3002/api/v1';
 
 export const tokenStorage = {
   getAccessToken: () => localStorage.getItem('cms_access_token') || '',
@@ -188,3 +189,47 @@ export async function apiUploadRequest(file: File): Promise<string> {
   const json = await response.json();
   return json.data.url;
 }
+
+export async function crmApiRequest<T = any>(
+  path: string,
+  method: TApiHttpMethod = 'GET',
+  body?: unknown,
+): Promise<T> {
+  const url = `${CRM_API_BASE_URL}${path}`;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  const token = tokenStorage.getAccessToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const options: RequestInit = {
+    method,
+    headers,
+  };
+
+  if (body !== undefined && method !== 'GET') {
+    options.body = JSON.stringify(body);
+  }
+
+  const response = await fetch(url, options);
+
+  if (!response.ok) {
+    let errMsg = `Request failed with status ${response.status}`;
+    try {
+      const errJson = await response.json();
+      errMsg = errJson.message || errMsg;
+    } catch { }
+    throw new Error(errMsg);
+  }
+
+  if (response.status === 204) {
+    return {} as T;
+  }
+
+  const json: IApiResponseEnvelope<T> = await response.json();
+  return json.data;
+}
+
