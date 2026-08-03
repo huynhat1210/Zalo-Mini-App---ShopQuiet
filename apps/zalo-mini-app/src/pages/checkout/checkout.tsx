@@ -348,6 +348,41 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   // Location feature
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
+  const matchProvinceName = (cityRaw: string): string => {
+    if (!cityRaw || !provincesList || provincesList.length === 0) return "TP. Hồ Chí Minh";
+    const clean = cityRaw.toLowerCase().trim();
+    const direct = provincesList.find((p) => p.toLowerCase() === clean);
+    if (direct) return direct;
+
+    if (clean.includes("hồ chí minh") || clean.includes("ho chi minh") || clean.includes("saigon")) {
+      return provincesList.find((p) => p.includes("Hồ Chí Minh")) || "TP. Hồ Chí Minh";
+    }
+    if (clean.includes("hà nội") || clean.includes("ha noi")) {
+      return provincesList.find((p) => p.includes("Hà Nội")) || "Hà Nội";
+    }
+    if (clean.includes("đà nẵng") || clean.includes("da nang")) {
+      return provincesList.find((p) => p.includes("Đà Nẵng")) || "Đà Nẵng";
+    }
+    if (clean.includes("cần thơ") || clean.includes("can tho")) {
+      return provincesList.find((p) => p.includes("Cần Thơ")) || "Cần Thơ";
+    }
+    if (clean.includes("hải phòng") || clean.includes("hai phong")) {
+      return provincesList.find((p) => p.includes("Hải Phòng")) || "Hải Phòng";
+    }
+    if (clean.includes("bình dương") || clean.includes("binh duong")) {
+      return provincesList.find((p) => p.includes("Bình Dương")) || "Bình Dương";
+    }
+    if (clean.includes("đồng nai") || clean.includes("dong nai")) {
+      return provincesList.find((p) => p.includes("Đồng Nai")) || "Đồng Nai";
+    }
+
+    const sub = provincesList.find((p) => {
+      const pClean = p.toLowerCase().replace("tp. ", "").replace("tỉnh ", "");
+      return clean.includes(pClean) || pClean.includes(clean);
+    });
+    return sub || provincesList[0] || "TP. Hồ Chí Minh";
+  };
+
   const handleGetLocation = async () => {
     const apiAny = api as any;
     setIsLoadingLocation(true);
@@ -369,14 +404,32 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           "";
         const city = addr.city || addr.town || addr.county || addr.state || "";
 
-        if (city && provincesList.includes(city)) {
-          setSelectedProvince(city);
-        }
+        // 1. Match province
+        const targetProvince = matchProvinceName(city);
+        setSelectedProvince(targetProvince);
 
-        reset({
-          ...watchedAddress,
-          houseNumber: street || watchedAddress.houseNumber,
-        });
+        // 2. Match district
+        const dists = getDistricts(targetProvince);
+        const targetDistrict = dists[0] || "";
+        setSelectedDistrict(targetDistrict);
+
+        // 3. Match ward
+        const wards = getWards(targetProvince, targetDistrict);
+        const targetWard = wards[0] || "";
+        setSelectedWard(targetWard);
+
+        // 4. Final street & sync react-hook-form
+        const finalStreet = street || watchedAddress.houseNumber || "Địa chỉ hiện tại";
+        setValue("houseNumber", finalStreet, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+
+        // 5. Update parent address state
+        setAddress((prev) => ({
+          name: prev.name || zaloUser?.name || "Người nhận",
+          phone: prev.phone || watchedAddress.phone || "0900000000",
+          street: `${finalStreet}, ${targetWard}, ${targetDistrict}`,
+          city: targetProvince,
+        }));
+
         showToast("Đã tự động điền vị trí giao hàng thành công!", "success");
       } catch (err) {
         console.error(err);
