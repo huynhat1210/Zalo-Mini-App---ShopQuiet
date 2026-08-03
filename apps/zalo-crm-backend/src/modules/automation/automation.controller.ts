@@ -94,7 +94,8 @@ export class AutomationController {
   @Post('seed-templates')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  seedTemplates() {
-    return this.automationService.seedDefaultTemplates();
+  async seedTemplates() {
+    await this.automationService.seedDefaultTemplates();
+    return { success: true };
   }
 }
