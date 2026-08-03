@@ -34,7 +34,7 @@ async function bootstrap() {
     ],
   });
 
-  const port = process.env.CRM_PORT || process.env.PORT || 3002;
+  const port = process.env.CRM_PORT || 3002;
   await app.listen(port);
   console.log(`CRM Campaign Backend Service is running on port: ${port}`);
 }
