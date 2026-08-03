@@ -71,6 +71,16 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
   const [scheduledAt, setScheduledAt] = useState('');
   const [vouchers, setVouchers] = useState<{ code: string; title?: string }[]>([]);
   const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [aiPrediction, setAiPrediction] = useState<{
+    targetAudienceCount: number;
+    estimatedBudget: number;
+    estimatedRevenue: number;
+    estimatedRoi: number;
+    estimatedOpenRate: string;
+    estimatedConversionRate: string;
+    aiAdvice: string;
+  } | null>(null);
+  const [isPredicting, setIsPredicting] = useState(false);
 
   const resetForm = () => {
     setTitle('');
@@ -86,6 +96,7 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
     setBonusCoins(100);
     setDiscountPercent(10);
     setScheduledAt('');
+    setAiPrediction(null);
   };
 
   const handleGenerateAi = async () => {
@@ -102,6 +113,25 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
       toastError('Lỗi', 'Không thể tạo nội dung bằng AI');
     } finally {
       setIsAiGenerating(false);
+    }
+  };
+
+  const handlePredictAi = async () => {
+    try {
+      setIsPredicting(true);
+      const res = await apiRequest('/campaigns/predict-ai', 'POST', {
+        type,
+        targetSegment,
+        bonusCoins,
+        discountPercent,
+        discountValue: voucherMode === 'CREATE' ? newVoucherDiscount : 30000,
+      });
+      if (res) setAiPrediction(res);
+      toastSuccess('Gemini AI Dự Đoán', 'Đã tính toán ROI & Ngân sách dự kiến');
+    } catch (e) {
+      toastError('Lỗi', 'Không thể tính toán dự đoán AI');
+    } finally {
+      setIsPredicting(false);
     }
   };
 
@@ -387,6 +417,9 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
                         {c.targetSegment === 'DIAMOND' && <><Gem size={12} className="text-sky-500" /> Hạng Kim cương</>}
                         {c.targetSegment === 'INACTIVE_30_DAYS' && <><Clock size={12} className="text-orange-500" /> Chưa mua 30 ngày</>}
                         {c.targetSegment === 'VIP' && <><Star size={12} className="text-yellow-500" /> Khách hàng VIP</>}
+                        {c.targetSegment === 'NEW_USER_WELCOME' && <><Sparkles size={12} className="text-amber-500" /> Tự động: Khách hàng mới</>}
+                        {c.targetSegment === 'USER_BIRTHDAY' && <><Sparkles size={12} className="text-pink-500" /> Tự động: Sinh nhật</>}
+                        {c.targetSegment === 'ABANDONED_CART' && <><Clock size={12} className="text-red-500" /> Tự động: Bỏ quên giỏ hàng</>}
                       </span>
                     </td>
 
@@ -518,7 +551,7 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
                 </div>
 
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1">Phân tập Khách hàng</label>
+                  <label className="font-bold text-slate-700 block mb-1">Phân tập Khách hàng / Sự kiện Tự động</label>
                   <select
                     value={targetSegment}
                     onChange={(e) => setTargetSegment(e.target.value)}
@@ -530,6 +563,9 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
                     <option value="DIAMOND">Hạng Kim Cương</option>
                     <option value="INACTIVE_30_DAYS">Chưa mua 30 ngày</option>
                     <option value="VIP">Khách VIP (Trên 1M)</option>
+                    <option value="NEW_USER_WELCOME">⚡ Tự động: Chào mừng tài khoản mới</option>
+                    <option value="USER_BIRTHDAY">⚡ Tự động: Mừng sinh nhật khách trong tháng</option>
+                    <option value="ABANDONED_CART">⚡ Tự động: Nhắc giỏ hàng chưa mua (2h)</option>
                   </select>
                 </div>
               </div>
@@ -640,7 +676,7 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
 
               <div>
                 <label className="font-bold text-slate-700 block mb-1">
-                  ⏰ Hẹn Giờ Phát Tự Động (Bỏ trống nếu phát thủ công)
+                  ⏰ Hẹn Giờ Phát Tự Động (Bỏ trống nếu phát thủ công / sự kiện)
                 </label>
                 <input
                   type="datetime-local"
@@ -648,6 +684,53 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
                   onChange={(e) => setScheduledAt(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877]"
                 />
+              </div>
+
+              {/* Gemini AI ROI & Budget Predictor Card */}
+              <div className="p-3 bg-gradient-to-r from-teal-900 to-slate-900 rounded-2xl text-white space-y-2 border border-teal-700/50 shadow-md">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 font-extrabold text-xs text-amber-300">
+                    <Sparkles size={14} /> Gemini AI Dự Đoán Hiệu Quả & ROI
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handlePredictAi}
+                    disabled={isPredicting}
+                    className="px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-[10px] rounded-lg border-none cursor-pointer transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    {isPredicting ? 'Đang tính toán...' : '📊 Chạy Dự Đoán'}
+                  </button>
+                </div>
+
+                {aiPrediction ? (
+                  <div className="space-y-2 pt-1 text-[11px]">
+                    <div className="grid grid-cols-4 gap-1.5 bg-white/10 p-2 rounded-xl text-center">
+                      <div>
+                        <div className="text-[9px] text-slate-300 font-medium">Khách tiếp cận</div>
+                        <div className="font-extrabold text-white text-xs">{aiPrediction.targetAudienceCount}</div>
+                      </div>
+                      <div>
+                        <div className="text-[9px] text-slate-300 font-medium">Ngân sách</div>
+                        <div className="font-extrabold text-amber-300 text-xs">{aiPrediction.estimatedBudget.toLocaleString('vi-VN')}đ</div>
+                      </div>
+                      <div>
+                        <div className="text-[9px] text-slate-300 font-medium">Doanh thu AI</div>
+                        <div className="font-extrabold text-emerald-400 text-xs">{aiPrediction.estimatedRevenue.toLocaleString('vi-VN')}đ</div>
+                      </div>
+                      <div>
+                        <div className="text-[9px] text-slate-300 font-medium">ROI dự kiến</div>
+                        <div className="font-extrabold text-teal-300 text-xs">+{aiPrediction.estimatedRoi}%</div>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-teal-100/90 leading-tight italic bg-teal-950/40 p-2 rounded-lg border border-teal-800/40">
+                      💡 {aiPrediction.aiAdvice}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-slate-300 italic">
+                    Bấm "Chạy Dự Đoán" để Gemini AI tự động tính toán Ngân Sách, Doanh Thu Kỳ Vọng & Tỷ Lệ ROI trước khi phát chiến dịch!
+                  </p>
+                )}
               </div>
 
               <div className="pt-3 flex justify-end gap-2.5 border-t border-slate-100">

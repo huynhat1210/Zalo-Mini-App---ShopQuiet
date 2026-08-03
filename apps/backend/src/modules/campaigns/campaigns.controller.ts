@@ -27,6 +27,11 @@ export class CampaignsController {
     return this.campaignsService.generateAiCampaignContent(body.topic || '', body.targetSegment || 'ALL');
   }
 
+  @Post('predict-ai')
+  predictAi(@Body() body: any) {
+    return this.campaignsService.predictAiCampaign(body);
+  }
+
   @Post('referral/claim')
   @UseGuards(JwtAuthGuard)
   claimReferral(@Body() body: { inviterZaloId: string }, @CurrentUser() user: any) {

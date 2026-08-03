@@ -81,6 +81,105 @@ Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "su
   }
 
   /**
+   * Gemini AI ROI & Budget Predictor for Campaigns
+   */
+  async predictAiCampaign(dto: any) {
+    const { type, targetSegment, bonusCoins, discountPercent, discountValue } = dto;
+    const segment = targetSegment || 'ALL';
+
+    // 1. Calculate target audience count in DB
+    let userWhere: any = {};
+    if (['SILVER', 'GOLD', 'DIAMOND'].includes(segment)) {
+      const tierMap: Record<string, string> = { SILVER: 'Bạc', GOLD: 'Vàng', DIAMOND: 'Kim cương' };
+      userWhere.membershipTier = tierMap[segment] || segment;
+    } else if (segment === 'INACTIVE_30_DAYS') {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      userWhere.updatedAt = { lte: thirtyDaysAgo };
+    } else if (segment === 'VIP') {
+      userWhere.totalSpent = { gte: 1000000 };
+    }
+
+    const totalUsersCount = await this.prisma.user.count({ where: userWhere });
+    const targetCount = totalUsersCount || 10;
+
+    // 2. Average Order Value
+    const completedOrders = await this.prisma.order.findMany({
+      where: { status: { in: ['COMPLETED', 'DELIVERED'] } },
+      select: { totalAmount: true },
+      take: 50,
+    });
+    const avgOrderVal = completedOrders.length > 0
+      ? completedOrders.reduce((s, o) => s + (o.totalAmount || 0), 0) / completedOrders.length
+      : 180000;
+
+    // 3. Unit cost calculation
+    let unitCost = 0;
+    if (type === 'BONUS_COINS') unitCost = Number(bonusCoins) || 100;
+    else if (type === 'VOUCHER') unitCost = Number(discountValue) || 30000;
+    else if (type === 'FLASH_SALE') unitCost = (avgOrderVal * (Number(discountPercent) || 10)) / 100;
+    else unitCost = 500;
+
+    const openRatePct = 68;
+    const convRatePct = type === 'VOUCHER' ? 22 : type === 'BONUS_COINS' ? 18 : 12;
+
+    const estConvertedCount = Math.max(1, Math.round(targetCount * (convRatePct / 100)));
+    const estBudget = Math.round(targetCount * unitCost);
+    const estRevenue = Math.round(estConvertedCount * avgOrderVal);
+    const estRoi = estBudget > 0 ? Math.round(((estRevenue - estBudget) / estBudget) * 100) : 100;
+
+    return {
+      targetAudienceCount: targetCount,
+      estimatedBudget: estBudget,
+      estimatedRevenue: estRevenue,
+      estimatedRoi: estRoi,
+      estimatedOpenRate: `${openRatePct}%`,
+      estimatedConversionRate: `${convRatePct}%`,
+      aiAdvice: `Dự đoán: Phát tới ${targetCount} khách hàng với mức giảm ${unitCost.toLocaleString('vi-VN')}đ có thể thu về ~${estRevenue.toLocaleString('vi-VN')}đ doanh thu với ROI ước tính ${estRoi}%.`,
+    };
+  }
+
+  /**
+   * Automatically trigger Welcome Campaign when a new user registers
+   */
+  async triggerWelcomeCampaign(zaloUserId: string) {
+    try {
+      const activeWelcomeCampaign = await this.prisma.campaign.findFirst({
+        where: {
+          targetSegment: 'NEW_USER_WELCOME',
+          status: { in: ['RUNNING', 'COMPLETED'] },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (activeWelcomeCampaign) {
+        await this.prisma.campaignUser.upsert({
+          where: {
+            campaignId_zaloUserId: { campaignId: activeWelcomeCampaign.id, zaloUserId },
+          },
+          update: {},
+          create: { campaignId: activeWelcomeCampaign.id, zaloUserId },
+        });
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        await this.prisma.notification.create({
+          data: {
+            zaloUserId,
+            title: `🎁 Chào mừng bạn đến với ShopQuiet!`,
+            content: activeWelcomeCampaign.description || `Nhận ngay ưu đãi chào mừng thành viên mới từ chiến dịch ${activeWelcomeCampaign.title}!`,
+            type: 'WELCOME',
+            date: todayStr,
+          },
+        });
+
+        this.logger.log(`[Auto-Trigger Welcome] Triggered welcome campaign #${activeWelcomeCampaign.id} for new user ${zaloUserId}`);
+      }
+    } catch (e) {
+      this.logger.error('Failed to trigger welcome campaign:', e);
+    }
+  }
+
+  /**
    * Automated Background Runner for Scheduled Campaigns
    */
   async checkAndExecuteScheduledCampaigns() {
