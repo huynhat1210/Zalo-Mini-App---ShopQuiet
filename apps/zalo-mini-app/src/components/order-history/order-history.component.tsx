@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Page } from "zmp-ui";
 import { apiRequest, API_BASE_URL, safeParseImages } from "../../utils";
 import { EmptyStateComponent } from "../empty-state";
+import { ReviewModal } from "../review-modal";
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/24/solid";
 import { IOrderHistoryProps } from "./order-history.type";
