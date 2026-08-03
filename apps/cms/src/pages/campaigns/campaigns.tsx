@@ -139,12 +139,10 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
           const vCode = newVoucherCode.trim().toUpperCase();
           await apiRequest('/vouchers', 'POST', {
             code: vCode,
-            title: newVoucherTitle.trim() || `Ưu đãi ${vCode}`,
-            discountValue: Number(newVoucherDiscount),
-            discountType: 'FIXED_AMOUNT',
-            minOrderValue: Number(newVoucherMinOrder),
+            type: 'FIXED',
+            value: Number(newVoucherDiscount),
+            minOrderVal: Number(newVoucherMinOrder),
             stock: 9999,
-            status: 'ACTIVE',
           });
           finalVoucherCode = vCode;
           fetchVouchers();
