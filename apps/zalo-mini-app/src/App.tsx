@@ -200,7 +200,7 @@ export default function App() {
     };
   }, []);
 
-  // Register Service Worker (Only on standard web browser, not inside Zalo App WebView)
+  // Vite's HMR endpoints must never be handled by a service worker.
   useEffect(() => {
     try {
       const isRealZaloEnv =
@@ -208,21 +208,36 @@ export default function App() {
         (window.navigator.userAgent.toLowerCase().includes("zalo") ||
           !!(window as any).ZaloMiniApp);
 
-      if (
-        "serviceWorker" in navigator &&
-        typeof window !== "undefined" &&
-        !isRealZaloEnv
-      ) {
-        window.addEventListener("load", () => {
+      if ("serviceWorker" in navigator && typeof window !== "undefined") {
+        if (import.meta.env.DEV) {
           navigator.serviceWorker
-            .register("/service-worker.js")
-            .then(() => {
-              console.log("ServiceWorker registration successful");
-            })
+            .getRegistrations()
+            .then((registrations) =>
+              Promise.all(registrations.map((registration) => registration.unregister())),
+            )
             .catch((error) => {
-              console.log("ServiceWorker registration failed:", error);
+              console.warn("Service worker cleanup failed:", error);
             });
-        });
+          return;
+        }
+
+        if (!isRealZaloEnv) {
+          const registerServiceWorker = () => {
+            navigator.serviceWorker
+              .register("/service-worker.js")
+              .then(() => {
+                console.log("ServiceWorker registration successful");
+              })
+              .catch((error) => {
+                console.log("ServiceWorker registration failed:", error);
+              });
+          };
+
+          window.addEventListener("load", registerServiceWorker);
+          return () => {
+            window.removeEventListener("load", registerServiceWorker);
+          };
+        }
       }
     } catch (error) {
       console.warn("[App] Service worker initialization error:", error);

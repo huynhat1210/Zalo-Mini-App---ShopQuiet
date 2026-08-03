@@ -12,6 +12,53 @@ const keycloak = new Keycloak({
   clientId: 'shopquiet-cms',
 });
 
+let keycloakInitialization: Promise<boolean> | undefined;
+let tokenRefreshInterval: ReturnType<typeof setInterval> | undefined;
+
+function persistKeycloakSession() {
+  localStorage.setItem('cms_access_token', keycloak.token || '');
+  localStorage.setItem('cms_refresh_token', keycloak.refreshToken || '');
+
+  const profile = {
+    zaloId: keycloak.tokenParsed?.preferred_username || 'admin',
+    name: keycloak.tokenParsed?.name || 'Administrator',
+    role: keycloak.tokenParsed?.realm_access?.roles?.includes('admin') ? 'admin' : 'user',
+  };
+  localStorage.setItem('zalo_profile_custom', JSON.stringify(profile));
+}
+
+function initializeKeycloak() {
+  if (!keycloakInitialization) {
+    keycloakInitialization = keycloak
+      .init({
+        onLoad: 'login-required',
+        checkLoginIframe: false,
+      })
+      .then((authenticated) => {
+        if (!authenticated) {
+          return false;
+        }
+
+        persistKeycloakSession();
+        if (!tokenRefreshInterval) {
+          tokenRefreshInterval = setInterval(async () => {
+            try {
+              if (await keycloak.updateToken(70)) {
+                persistKeycloakSession();
+              }
+            } catch (error) {
+              console.error('Failed to refresh Keycloak token in CMS:', error);
+            }
+          }, 60000);
+        }
+
+        return true;
+      });
+  }
+
+  return keycloakInitialization;
+}
+
 // React Code-Splitting for Instant Page Transitions
 const Dashboard = lazy(() => import('./pages').then((m) => ({ default: m.Dashboard })));
 const Products = lazy(() => import('./pages').then((m) => ({ default: m.Products })));
@@ -37,37 +84,11 @@ const ToastContainerWrapper: React.FC = () => {
 };
 
 export const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    keycloak
-      .init({
-        onLoad: 'login-required',
-        checkLoginIframe: false,
-      })
-      .then((authenticated) => {
-        setIsAuthenticated(authenticated);
-        if (authenticated) {
-          localStorage.setItem('cms_access_token', keycloak.token || '');
-          localStorage.setItem('cms_refresh_token', keycloak.refreshToken || '');
-
-          const profile = {
-            zaloId: keycloak.tokenParsed?.preferred_username || 'admin',
-            name: keycloak.tokenParsed?.name || 'Administrator',
-            role: keycloak.tokenParsed?.realm_access?.roles?.includes('admin') ? 'admin' : 'user',
-          };
-          localStorage.setItem('zalo_profile_custom', JSON.stringify(profile));
-
-          // Set up token refresh in background
-          setInterval(() => {
-            keycloak.updateToken(70).then((refreshed) => {
-              if (refreshed) {
-                localStorage.setItem('cms_access_token', keycloak.token || '');
-              }
-            });
-          }, 60000);
-        }
+    initializeKeycloak()
+      .then(() => {
         setChecking(false);
       })
       .catch((err) => {
