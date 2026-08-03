@@ -52,11 +52,32 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
   const [type, setType] = useState('VOUCHER');
   const [targetSegment, setTargetSegment] = useState('ALL');
   const [voucherCode, setVoucherCode] = useState('');
+  const [voucherMode, setVoucherMode] = useState<'SELECT' | 'CREATE'>('SELECT');
+  const [newVoucherCode, setNewVoucherCode] = useState('');
+  const [newVoucherTitle, setNewVoucherTitle] = useState('');
+  const [newVoucherDiscount, setNewVoucherDiscount] = useState<number>(30000);
+  const [newVoucherMinOrder, setNewVoucherMinOrder] = useState<number>(100000);
   const [bonusCoins, setBonusCoins] = useState<number>(100);
   const [discountPercent, setDiscountPercent] = useState<number>(10);
   const [scheduledAt, setScheduledAt] = useState('');
   const [vouchers, setVouchers] = useState<{ code: string; title?: string }[]>([]);
   const [isAiGenerating, setIsAiGenerating] = useState(false);
+
+  const resetForm = () => {
+    setTitle('');
+    setDescription('');
+    setType('VOUCHER');
+    setTargetSegment('ALL');
+    setVoucherCode('');
+    setVoucherMode('SELECT');
+    setNewVoucherCode('');
+    setNewVoucherTitle('');
+    setNewVoucherDiscount(30000);
+    setNewVoucherMinOrder(100000);
+    setBonusCoins(100);
+    setDiscountPercent(10);
+    setScheduledAt('');
+  };
 
   const handleGenerateAi = async () => {
     try {
@@ -105,19 +126,51 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
       toastError('Lỗi', 'Vui lòng nhập tên chiến dịch');
       return;
     }
+
+    let finalVoucherCode = voucherCode;
+
+    if (type === 'VOUCHER') {
+      if (voucherMode === 'CREATE') {
+        if (!newVoucherCode.trim()) {
+          toastError('Lỗi', 'Vui lòng nhập mã Voucher mới');
+          return;
+        }
+        try {
+          const vCode = newVoucherCode.trim().toUpperCase();
+          await apiRequest('/vouchers', 'POST', {
+            code: vCode,
+            title: newVoucherTitle.trim() || `Ưu đãi ${vCode}`,
+            discountValue: Number(newVoucherDiscount),
+            discountType: 'FIXED_AMOUNT',
+            minOrderValue: Number(newVoucherMinOrder),
+            stock: 9999,
+            status: 'ACTIVE',
+          });
+          finalVoucherCode = vCode;
+          fetchVouchers();
+        } catch (vErr: any) {
+          toastError('Lỗi tạo Voucher', vErr?.message || 'Không thể tạo Voucher mới');
+          return;
+        }
+      } else if (!voucherCode) {
+        toastError('Lỗi', 'Vui lòng chọn hoặc tạo mới mã Voucher');
+        return;
+      }
+    }
+
     try {
       await apiRequest('/campaigns', 'POST', {
         title,
         description,
         type,
         targetSegment,
-        voucherCode: type === 'VOUCHER' ? voucherCode : null,
+        voucherCode: type === 'VOUCHER' ? finalVoucherCode : null,
         bonusCoins: type === 'BONUS_COINS' ? Number(bonusCoins) : 0,
         discountPercent: type === 'FLASH_SALE' ? Number(discountPercent) : 0,
         scheduledAt: scheduledAt || null,
       });
 
-      toastSuccess('Thành công', 'Đã tạo chiến dịch mới');
+      toastSuccess('Thành công', 'Đã tạo chiến dịch tiếp thị mới');
       setIsModalOpen(false);
       resetForm();
       fetchCampaigns();
@@ -149,17 +202,6 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
     } catch (e) {
       toastError('Lỗi', 'Không thể xóa chiến dịch');
     }
-  };
-
-  const resetForm = () => {
-    setTitle('');
-    setDescription('');
-    setType('VOUCHER');
-    setTargetSegment('ALL');
-    setVoucherCode('');
-    setBonusCoins(100);
-    setDiscountPercent(10);
-    setScheduledAt('');
   };
 
   const filteredCampaigns = campaigns.filter((c) => {
@@ -471,20 +513,94 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
               </div>
 
               {type === 'VOUCHER' && (
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Chọn Mã Voucher Tặng</label>
-                  <select
-                    value={voucherCode}
-                    onChange={(e) => setVoucherCode(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877]"
-                  >
-                    <option value="">-- Chọn mã voucher --</option>
-                    {vouchers.map((v) => (
-                      <option key={v.code} value={v.code}>
-                        {v.code} ({v.title || 'Ưu đãi'})
-                      </option>
-                    ))}
-                  </select>
+                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="font-bold text-slate-700">Mã Voucher Tặng</label>
+                    <div className="flex gap-1 bg-slate-200/70 p-0.5 rounded-lg">
+                      <button
+                        type="button"
+                        onClick={() => setVoucherMode('SELECT')}
+                        className={`px-2.5 py-1 text-[10px] font-extrabold rounded-md transition-all border-none cursor-pointer ${
+                          voucherMode === 'SELECT'
+                            ? 'bg-white text-[#0e6877] shadow-xs'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        Chọn có sẵn
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setVoucherMode('CREATE')}
+                        className={`px-2.5 py-1 text-[10px] font-extrabold rounded-md transition-all border-none cursor-pointer ${
+                          voucherMode === 'CREATE'
+                            ? 'bg-[#0e6877] text-white shadow-xs'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        + Tạo mới trực tiếp
+                      </button>
+                    </div>
+                  </div>
+
+                  {voucherMode === 'SELECT' ? (
+                    <select
+                      value={voucherCode}
+                      onChange={(e) => setVoucherCode(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877]"
+                    >
+                      <option value="">-- Chọn mã voucher sẵn có --</option>
+                      {vouchers.map((v) => (
+                        <option key={v.code} value={v.code}>
+                          {v.code} ({v.title || 'Ưu đãi'})
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="space-y-2 pt-1">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 block mb-0.5">Mã Voucher mới *</label>
+                          <input
+                            type="text"
+                            placeholder="VD: SHOPQUIET50K"
+                            value={newVoucherCode}
+                            onChange={(e) => setNewVoucherCode(e.target.value.toUpperCase())}
+                            className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0e6877] uppercase font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 block mb-0.5">Tên ưu đãi</label>
+                          <input
+                            type="text"
+                            placeholder="VD: Giảm 50K đơn từ 200K"
+                            value={newVoucherTitle}
+                            onChange={(e) => setNewVoucherTitle(e.target.value)}
+                            className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0e6877]"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 block mb-0.5">Số tiền giảm (VNĐ)</label>
+                          <input
+                            type="number"
+                            value={newVoucherDiscount}
+                            onChange={(e) => setNewVoucherDiscount(Number(e.target.value))}
+                            className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0e6877]"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 block mb-0.5">Đơn tối thiểu (VNĐ)</label>
+                          <input
+                            type="number"
+                            value={newVoucherMinOrder}
+                            onChange={(e) => setNewVoucherMinOrder(Number(e.target.value))}
+                            className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-[#0e6877]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
