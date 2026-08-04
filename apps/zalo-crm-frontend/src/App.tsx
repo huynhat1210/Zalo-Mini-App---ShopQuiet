@@ -11,6 +11,73 @@ const keycloak = new Keycloak({
   clientId: 'shopquiet-campaign',
 });
 
+let keycloakInitialization: Promise<boolean> | undefined;
+let tokenRefreshInterval: ReturnType<typeof setInterval> | undefined;
+const KEYCLOAK_INIT_TIMEOUT_MS = 12000;
+
+function persistKeycloakSession() {
+  localStorage.setItem('cms_access_token', keycloak.token || '');
+  localStorage.setItem('cms_refresh_token', keycloak.refreshToken || '');
+
+  const profile = {
+    zaloId: keycloak.tokenParsed?.preferred_username || 'admin',
+    name: keycloak.tokenParsed?.name || 'Administrator',
+    role: keycloak.tokenParsed?.realm_access?.roles?.includes('admin') ? 'admin' : 'user',
+  };
+  localStorage.setItem('zalo_profile_custom', JSON.stringify(profile));
+}
+
+function initializeKeycloak() {
+  if (!keycloakInitialization) {
+    keycloakInitialization = keycloak
+      .init({
+        onLoad: 'login-required',
+        checkLoginIframe: false,
+      })
+      .then((authenticated) => {
+        if (!authenticated) {
+          return false;
+        }
+
+        persistKeycloakSession();
+        if (!tokenRefreshInterval) {
+          tokenRefreshInterval = setInterval(async () => {
+            try {
+              if (await keycloak.updateToken(70)) {
+                persistKeycloakSession();
+              }
+            } catch (error) {
+              console.error('Failed to refresh Keycloak token in Campaign Portal:', error);
+            }
+          }, 60000);
+        }
+
+        return true;
+      });
+  }
+
+  return keycloakInitialization;
+}
+
+async function initializeKeycloakWithTimeout() {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      initializeKeycloak(),
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error('Keycloak did not respond within 12 seconds.'));
+        }, KEYCLOAK_INIT_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
 // Lazy loading CRM Pages
 const Dashboard = lazy(() => import('./pages').then((m) => ({ default: m.Dashboard })));
 const Campaigns = lazy(() => import('./pages').then((m) => ({ default: m.Campaigns })));
@@ -23,41 +90,17 @@ const ToastContainerWrapper: React.FC = () => {
 };
 
 export const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [initializationError, setInitializationError] = useState<string | null>(null);
 
   useEffect(() => {
-    keycloak
-      .init({
-        onLoad: 'login-required',
-        checkLoginIframe: false,
-      })
-      .then((authenticated) => {
-        setIsAuthenticated(authenticated);
-        if (authenticated) {
-          localStorage.setItem('cms_access_token', keycloak.token || '');
-          localStorage.setItem('cms_refresh_token', keycloak.refreshToken || '');
-
-          const profile = {
-            zaloId: keycloak.tokenParsed?.preferred_username || 'admin',
-            name: keycloak.tokenParsed?.name || 'Administrator',
-            role: keycloak.tokenParsed?.realm_access?.roles?.includes('admin') ? 'admin' : 'user',
-          };
-          localStorage.setItem('zalo_profile_custom', JSON.stringify(profile));
-
-          // Set up token refresh in background
-          setInterval(() => {
-            keycloak.updateToken(70).then((refreshed) => {
-              if (refreshed) {
-                localStorage.setItem('cms_access_token', keycloak.token || '');
-              }
-            });
-          }, 60000);
-        }
+    initializeKeycloakWithTimeout()
+      .then(() => {
         setChecking(false);
       })
       .catch((err) => {
         console.error('Failed to initialize Keycloak:', err);
+        setInitializationError('Không thể kết nối Keycloak tại localhost:8080.');
         setChecking(false);
       });
 
@@ -84,6 +127,21 @@ export const App: React.FC = () => {
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-3">
         <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
         <p className="text-slate-400 text-xs font-semibold">Đang khởi động Campaign Portal...</p>
+      </div>
+    );
+  }
+
+  if (initializationError) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <p className="text-sm font-semibold text-slate-100">{initializationError}</p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="h-10 px-4 bg-teal-500 text-xs font-bold text-slate-950 hover:bg-teal-400"
+        >
+          Thử lại
+        </button>
       </div>
     );
   }

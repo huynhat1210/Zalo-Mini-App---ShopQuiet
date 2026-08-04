@@ -428,17 +428,6 @@
   },
   "internationalizationEnabled": false,
   "supportedLocales": [],
-  "authenticationFlows": [
-    {
-      "id": "00000000-0000-0000-0000-000000000000",
-      "alias": "browser",
-      "description": "browser based authentication",
-      "providerId": "basic-flow",
-      "topLevel": true,
-      "builtIn": true,
-      "authenticationExecutions": []
-    }
-  ],
   "authenticatorConfig": [],
   "requiredActions": [],
   "browserSecurityHeaders": {

@@ -14,6 +14,7 @@ const keycloak = new Keycloak({
 
 let keycloakInitialization: Promise<boolean> | undefined;
 let tokenRefreshInterval: ReturnType<typeof setInterval> | undefined;
+const KEYCLOAK_INIT_TIMEOUT_MS = 12000;
 
 function persistKeycloakSession() {
   localStorage.setItem('cms_access_token', keycloak.token || '');
@@ -59,6 +60,25 @@ function initializeKeycloak() {
   return keycloakInitialization;
 }
 
+async function initializeKeycloakWithTimeout() {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      initializeKeycloak(),
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error('Keycloak did not respond within 12 seconds.'));
+        }, KEYCLOAK_INIT_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
 // React Code-Splitting for Instant Page Transitions
 const Dashboard = lazy(() => import('./pages').then((m) => ({ default: m.Dashboard })));
 const Products = lazy(() => import('./pages').then((m) => ({ default: m.Products })));
@@ -85,14 +105,16 @@ const ToastContainerWrapper: React.FC = () => {
 
 export const App: React.FC = () => {
   const [checking, setChecking] = useState(true);
+  const [initializationError, setInitializationError] = useState<string | null>(null);
 
   useEffect(() => {
-    initializeKeycloak()
+    initializeKeycloakWithTimeout()
       .then(() => {
         setChecking(false);
       })
       .catch((err) => {
         console.error('Failed to initialize Keycloak in CMS:', err);
+        setInitializationError('Không thể kết nối Keycloak tại localhost:8080.');
         setChecking(false);
       });
 
@@ -119,6 +141,21 @@ export const App: React.FC = () => {
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-3">
         <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
         <p className="text-slate-450 text-xs font-semibold">Đang khởi động hệ thống...</p>
+      </div>
+    );
+  }
+
+  if (initializationError) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <p className="text-sm font-semibold text-slate-100">{initializationError}</p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="h-10 px-4 bg-emerald-500 text-xs font-bold text-slate-950 hover:bg-emerald-400"
+        >
+          Thử lại
+        </button>
       </div>
     );
   }
