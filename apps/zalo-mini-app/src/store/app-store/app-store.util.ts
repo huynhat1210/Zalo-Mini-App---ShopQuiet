@@ -277,7 +277,7 @@ export const useAppStore = create<IAppState>()(
       },
       toggleSavedItem: (product) => {
         // Require login to save favorites
-        if (!get().zaloUser?.id) {
+        if (!get().zaloUser?.id || !tokenStorage.getAccessToken()) {
           get().showToast("Đăng nhập để lưu sản phẩm yêu thích!", "warning");
           return;
         }
@@ -631,7 +631,7 @@ export const useAppStore = create<IAppState>()(
       },
       fetchFavorites: async () => {
         // Only fetch if user is authenticated
-        if (!get().zaloUser?.id) {
+        if (!get().zaloUser?.id || !tokenStorage.getAccessToken()) {
           set({ savedItems: [] });
           return;
         }
@@ -706,7 +706,7 @@ export const useAppStore = create<IAppState>()(
       },
       fetchGamificationData: async () => {
         const user = get().zaloUser;
-        if (!user || !user.id) return;
+        if (!user || !user.id || !tokenStorage.getAccessToken()) return;
         try {
           const data = await apiRequest<any>(`/gamification/user`, "GET");
           set({ gamificationData: data });
