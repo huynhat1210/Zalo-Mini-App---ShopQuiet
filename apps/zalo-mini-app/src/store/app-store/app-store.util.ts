@@ -418,10 +418,10 @@ export const useAppStore = create<IAppState>()(
             parsed.avatar !== ""
            ) {
              set({ zaloUser: parsed });
-             get().fetchCart().catch(console.error);
-             get().fetchFavorites().catch(console.error);
 
              if (localStorage.getItem("keycloak_managed_session") === "true" && tokenStorage.getAccessToken()) {
+               get().fetchCart().catch(console.error);
+               get().fetchFavorites().catch(console.error);
                return;
              }
 
@@ -471,6 +471,8 @@ export const useAppStore = create<IAppState>()(
                 "zalo_profile_custom",
                 JSON.stringify(mappedUser),
               );
+              get().fetchCart().catch(console.error);
+              get().fetchFavorites().catch(console.error);
             } catch (error) {
               console.error("Cached login failed:", error);
             }

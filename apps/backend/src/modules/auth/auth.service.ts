@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -137,7 +137,10 @@ export class AuthService {
   async loginWithZaloKeycloak(body: LoginDto) {
     if (!body.accessToken) throw new UnauthorizedException('Zalo Access Token is required');
     const zaloProfile = await this.validateZaloAccessToken(body.accessToken);
-    if (!zaloProfile) throw new UnauthorizedException('Unable to verify Zalo account');
+    if (!zaloProfile) {
+      this.logger.warn('Zalo token verification is unavailable for the current backend region');
+      throw new ServiceUnavailableException('Zalo account verification is unavailable from the current server region');
+    }
     const user = await this.usersService.syncUser(
       String(zaloProfile.zaloId), zaloProfile.name, zaloProfile.avatar,
     );
