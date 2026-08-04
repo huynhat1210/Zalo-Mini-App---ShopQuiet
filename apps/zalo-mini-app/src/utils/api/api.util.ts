@@ -1,5 +1,6 @@
 import { TApiHttpMethod } from "./api.type";
 import { tokenStorage } from "../auth";
+import { refreshMiniAppKeycloakToken } from "../auth/keycloak-session";
 
 // @ts-ignore
 const _envBase = import.meta.env.VITE_API_BASE_URL;
@@ -11,6 +12,22 @@ export const API_BASE_URL =
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
+
+function usesKeycloakSession(accessToken: string) {
+  if (localStorage.getItem("keycloak_managed_session") === "true") {
+    return true;
+  }
+
+  const payloadSegment = accessToken.split(".")[1];
+  if (!payloadSegment) return false;
+
+  try {
+    const payload = JSON.parse(atob(payloadSegment.replace(/-/g, "+").replace(/_/g, "/")));
+    return typeof payload.iss === "string" && payload.iss.includes("/realms/");
+  } catch {
+    return false;
+  }
+}
 
 // Subscribe to token refresh
 function subscribeTokenRefresh(callback: (token: string) => void) {
@@ -24,7 +41,11 @@ function onRefreshed(token: string) {
 }
 
 // Refresh access token
-async function refreshAccessToken(): Promise<string> {
+async function refreshAccessToken(accessToken: string): Promise<string> {
+  if (usesKeycloakSession(accessToken)) {
+    return refreshMiniAppKeycloakToken(30);
+  }
+
   const refreshToken = tokenStorage.getRefreshToken();
   if (!refreshToken) {
     throw new Error("No refresh token available");
@@ -97,7 +118,7 @@ export async function apiRequest<T = unknown>(
     if (!isRefreshing) {
       isRefreshing = true;
       try {
-        const newToken = await refreshAccessToken();
+        const newToken = await refreshAccessToken(accessToken);
         onRefreshed(newToken);
         headers["Authorization"] = `Bearer ${newToken}`;
         response = await fetch(url, options);
@@ -117,7 +138,7 @@ export async function apiRequest<T = unknown>(
           fetch(url, options)
             .then((res) => {
               if (!res.ok)
-                throw new Error("Request failed after token refresh");
+                throw new Error(`Request failed after token refresh: ${res.status}`);
               return res.json();
             })
             .then(resolve)
@@ -250,4 +271,3 @@ export function safeParseImages(imagesInput: any, fallback?: string): string[] {
   }
   return [defaultImg];
 }
-

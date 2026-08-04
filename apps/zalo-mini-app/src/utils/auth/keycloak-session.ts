@@ -7,6 +7,8 @@ const keycloak = new Keycloak({
   clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'shopquiet-mini-app',
 });
 
+let initializationPromise: Promise<boolean> | undefined;
+
 function persistSession() {
   if (keycloak.token && keycloak.refreshToken) {
     tokenStorage.setTokens({ access_token: keycloak.token, refresh_token: keycloak.refreshToken });
@@ -22,10 +24,29 @@ function persistSession() {
 }
 
 export async function initializeMiniAppKeycloak() {
-  const authenticated = await keycloak.init({ onLoad: 'check-sso', checkLoginIframe: false });
-  if (!authenticated) return false;
+  if (!initializationPromise) {
+    initializationPromise = keycloak.init({ onLoad: 'check-sso', checkLoginIframe: false }).then((authenticated) => {
+      if (!authenticated) return false;
+      persistSession();
+      keycloak.onTokenExpired = () => void keycloak.updateToken(0).then(persistSession).catch(() => keycloak.login());
+      setInterval(() => void keycloak.updateToken(70).then(persistSession).catch(() => keycloak.login()), 60000);
+      return true;
+    });
+  }
+
+  return initializationPromise;
+}
+
+export async function refreshMiniAppKeycloakToken(minValidity = 30) {
+  const authenticated = await initializeMiniAppKeycloak();
+  if (!authenticated || !keycloak.authenticated) {
+    throw new Error('Keycloak session is not authenticated.');
+  }
+
+  await keycloak.updateToken(minValidity);
   persistSession();
-  keycloak.onTokenExpired = () => void keycloak.updateToken(0).then(persistSession).catch(() => keycloak.login());
-  setInterval(() => void keycloak.updateToken(70).then(persistSession).catch(() => keycloak.login()), 60000);
-  return true;
+  if (!keycloak.token) {
+    throw new Error('Keycloak did not return an access token.');
+  }
+  return keycloak.token;
 }
