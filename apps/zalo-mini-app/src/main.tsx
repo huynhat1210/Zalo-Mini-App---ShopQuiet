@@ -4,10 +4,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import "zmp-ui/zaui.css";
 import "./index.css";
-import {
-  beginMiniAppKeycloakLogin,
-  initializeMiniAppKeycloak,
-} from './utils/auth/keycloak-session';
 
 // ─────────────────────────────────────────────────────────────────────
 // 1. Override window.onerror BEFORE Zalo SDK loads
@@ -67,6 +63,14 @@ if (typeof window !== "undefined") {
       localStorage.removeItem(key);
     }
   });
+
+  // Clear the abandoned browser-redirect session from older Mini App builds.
+  // Native Zalo login now provisions a Keycloak token through the backend.
+  if (localStorage.getItem("keycloak_managed_session") === "true") {
+    localStorage.removeItem("keycloak_managed_session");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+  }
 }
 
 const queryClient = new QueryClient({
@@ -79,64 +83,13 @@ const queryClient = new QueryClient({
   },
 });
 
-function KeycloakBootstrap() {
-  const [status, setStatus] = React.useState<'loading' | 'sign-in' | 'ready' | 'error'>('loading');
-
-  React.useEffect(() => {
-    const timeoutId = window.setTimeout(() => setStatus((current) => (
-      current === 'loading' ? 'sign-in' : current
-    )), 5000);
-
-    void initializeMiniAppKeycloak()
-      .then((authenticated) => setStatus(authenticated ? 'ready' : 'sign-in'))
-      .catch((error) => {
-        console.warn('[ShopQuiet] Keycloak sign-in failed:', error);
-        setStatus('error');
-      });
-
-    return () => window.clearTimeout(timeoutId);
-  }, []);
-
-  if (status === 'loading') {
-    return <div className="min-h-screen flex items-center justify-center text-sm text-slate-600">Dang kiem tra phien dang nhap...</div>;
-  }
-
-  if (status === 'sign-in') {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3 px-6 text-center text-sm text-slate-700">
-        <p>Vui long dang nhap de tiep tuc mua sam.</p>
-        <button
-          type="button"
-          onClick={() => void beginMiniAppKeycloakLogin()}
-          className="px-4 py-2 bg-blue-600 text-white"
-        >
-          Dang nhap voi ShopQuiet
-        </button>
-      </div>
-    );
-  }
-
-  if (status === 'error') {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3 px-6 text-center text-sm text-slate-700">
-        <p>Khong the khoi tao phien dang nhap.</p>
-        <button type="button" onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 text-white">
-          Thu lai
-        </button>
-      </div>
-    );
-  }
-
-  return <App />;
-}
-
 const container = document.getElementById("app");
 if (container) {
   const root = createRoot(container);
   root.render(
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
-        <KeycloakBootstrap />
+        <App />
       </QueryClientProvider>
     </React.StrictMode>,
   );

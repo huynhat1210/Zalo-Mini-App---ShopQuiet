@@ -21,3 +21,9 @@ services:
         sync: false
       - key: KEYCLOAK_REALM
         value: shopquiet
+      - key: KEYCLOAK_ADMIN_USERNAME
+        sync: false
+      - key: KEYCLOAK_ADMIN_PASSWORD
+        sync: false
+      - key: KEYCLOAK_USER_PASSWORD_SECRET
+        sync: false

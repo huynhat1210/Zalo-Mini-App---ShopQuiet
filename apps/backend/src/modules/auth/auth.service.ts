@@ -4,6 +4,7 @@ import { UsersService } from '../users/users.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { randomBytes, createHmac } from 'crypto';
 import * as bcrypt from 'bcrypt';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -18,6 +19,130 @@ export class AuthService {
   private normalizeLoginIdentifier(value: string) {
     const trimmed = value.trim();
     return trimmed.includes('@') ? trimmed.toLowerCase() : trimmed;
+  }
+
+  private getKeycloakConfig() {
+    const url = (process.env.KEYCLOAK_URL || '').replace(/\/$/, '');
+    const realm = process.env.KEYCLOAK_REALM || 'shopquiet';
+    const adminUsername = process.env.KEYCLOAK_ADMIN_USERNAME;
+    const adminPassword = process.env.KEYCLOAK_ADMIN_PASSWORD;
+    const passwordSecret = process.env.KEYCLOAK_USER_PASSWORD_SECRET;
+    if (!url || !adminUsername || !adminPassword || !passwordSecret) {
+      throw new UnauthorizedException('Keycloak native login is not configured');
+    }
+    return { url, realm, adminUsername, adminPassword, passwordSecret };
+  }
+
+  private async keycloakAdminToken(config: ReturnType<AuthService['getKeycloakConfig']>) {
+    const response = await fetch(`${config.url}/realms/master/protocol/openid-connect/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'password', client_id: 'admin-cli',
+        username: config.adminUsername, password: config.adminPassword,
+      }),
+    });
+    if (!response.ok) {
+      this.logger.error(`[Keycloak] Admin token request failed with ${response.status}`);
+      throw new UnauthorizedException('Keycloak administrator credentials are invalid');
+    }
+    const data = await response.json();
+    return String(data.access_token || '');
+  }
+
+  private async keycloakRequest(
+    config: ReturnType<AuthService['getKeycloakConfig']>,
+    adminToken: string, path: string, init: RequestInit = {},
+  ) {
+    const headers = new Headers(init.headers);
+    headers.set('Authorization', `Bearer ${adminToken}`);
+    headers.set('Content-Type', 'application/json');
+    const response = await fetch(`${config.url}${path}`, { ...init, headers });
+    if (!response.ok && response.status !== 409) {
+      const details = await response.text();
+      this.logger.error(`[Keycloak] Admin API ${path} failed (${response.status}): ${details.slice(0, 300)}`);
+      throw new UnauthorizedException('Unable to provision Keycloak user');
+    }
+    return response;
+  }
+
+  private deriveKeycloakPassword(zaloId: string, secret: string) {
+    return createHmac('sha256', secret).update(`shopquiet:${zaloId}`).digest('base64url');
+  }
+
+  private async issueKeycloakTokens(user: any) {
+    const config = this.getKeycloakConfig();
+    const adminToken = await this.keycloakAdminToken(config);
+    const username = String(user.zaloId);
+    const realmPath = `/admin/realms/${encodeURIComponent(config.realm)}`;
+    const usersResponse = await this.keycloakRequest(
+      config, adminToken,
+      `${realmPath}/users?username=${encodeURIComponent(username)}&exact=true`,
+      { method: 'GET' },
+    );
+    const matchingUsers = await usersResponse.json();
+    let keycloakUser = Array.isArray(matchingUsers) ? matchingUsers[0] : undefined;
+    const userPayload = {
+      username, enabled: true, firstName: user.name || 'Zalo User', lastName: '',
+      attributes: { zaloId: username },
+    };
+
+    if (!keycloakUser) {
+      const created = await this.keycloakRequest(
+        config, adminToken, `${realmPath}/users`,
+        { method: 'POST', body: JSON.stringify(userPayload) },
+      );
+      const location = created.headers.get('location');
+      if (!location) throw new UnauthorizedException('Keycloak user was not created');
+      keycloakUser = { id: location.split('/').pop() };
+    } else {
+      await this.keycloakRequest(
+        config, adminToken, `${realmPath}/users/${keycloakUser.id}`,
+        { method: 'PUT', body: JSON.stringify(userPayload) },
+      );
+    }
+
+    const password = this.deriveKeycloakPassword(username, config.passwordSecret);
+    await this.keycloakRequest(
+      config, adminToken, `${realmPath}/users/${keycloakUser.id}/reset-password`,
+      { method: 'PUT', body: JSON.stringify({ type: 'password', temporary: false, value: password }) },
+    );
+
+    const tokenResponse = await fetch(`${config.url}/realms/${encodeURIComponent(config.realm)}/protocol/openid-connect/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'password', client_id: 'shopquiet-mini-app',
+        username, password, scope: 'openid profile email',
+      }),
+    });
+    if (!tokenResponse.ok) {
+      const details = await tokenResponse.text();
+      this.logger.error(`[Keycloak] Native token request failed (${tokenResponse.status}): ${details.slice(0, 300)}`);
+      throw new UnauthorizedException('Keycloak could not issue a Mini App token');
+    }
+    const tokens = await tokenResponse.json();
+    return {
+      access_token: tokens.access_token, refresh_token: tokens.refresh_token,
+      expires_in: tokens.expires_in, refresh_expires_in: tokens.refresh_expires_in,
+      user: {
+        zaloId: user.zaloId, name: user.name, avatar: user.avatar,
+        role: user.role || 'user', phone: user.phone || '', email: user.email || '',
+        birthday: user.birthday || '', totalSpent: user.totalSpent || 0,
+        membershipTier: user.membershipTier || 'Dong',
+      },
+    };
+  }
+
+  async loginWithZaloKeycloak(body: LoginDto) {
+    if (!body.accessToken) throw new UnauthorizedException('Zalo Access Token is required');
+    const zaloProfile = await this.validateZaloAccessToken(body.accessToken);
+    if (!zaloProfile) throw new UnauthorizedException('Unable to verify Zalo account');
+    const user = await this.usersService.syncUser(
+      String(zaloProfile.zaloId), zaloProfile.name, zaloProfile.avatar,
+    );
+    if (!user) throw new UnauthorizedException('Unable to create ShopQuiet user');
+    return this.issueKeycloakTokens(user);
   }
 
   async validateUser(zaloId: any): Promise<any> {
@@ -230,6 +355,10 @@ export class AuthService {
   }
 
   async refreshTokens(refreshToken: string) {
+    const decoded: any = this.jwtService.decode(refreshToken);
+    if (decoded?.iss?.includes('/realms/')) {
+      return this.refreshKeycloakTokens(refreshToken);
+    }
     try {
       // Verify refresh token
       const payload = this.jwtService.verify(refreshToken);
@@ -278,6 +407,25 @@ export class AuthService {
       this.logger.error('[AuthService] Refresh token error:', error);
       throw new UnauthorizedException('Invalid refresh token');
     }
+  }
+
+  private async refreshKeycloakTokens(refreshToken: string) {
+    const config = this.getKeycloakConfig();
+    const response = await fetch(`${config.url}/realms/${encodeURIComponent(config.realm)}/protocol/openid-connect/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token', client_id: 'shopquiet-mini-app', refresh_token: refreshToken,
+      }),
+    });
+    if (!response.ok) throw new UnauthorizedException('Invalid or expired Keycloak refresh token');
+    const tokens = await response.json();
+    return {
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token || refreshToken,
+      expires_in: tokens.expires_in,
+      refresh_expires_in: tokens.refresh_expires_in,
+    };
   }
 
   async logout(refreshToken: string) {

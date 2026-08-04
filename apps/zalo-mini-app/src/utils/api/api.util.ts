@@ -1,6 +1,5 @@
 import { TApiHttpMethod } from "./api.type";
 import { tokenStorage } from "../auth";
-import { refreshMiniAppKeycloakToken } from "../auth/keycloak-session";
 
 // @ts-ignore
 const _envBase = import.meta.env.VITE_API_BASE_URL;
@@ -43,7 +42,17 @@ function onRefreshed(token: string) {
 // Refresh access token
 async function refreshAccessToken(accessToken: string): Promise<string> {
   if (usesKeycloakSession(accessToken)) {
-    return refreshMiniAppKeycloakToken(30);
+    const refreshToken = tokenStorage.getRefreshToken();
+    if (!refreshToken) throw new Error("No Keycloak refresh token available");
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    if (!response.ok) throw new Error("Failed to refresh Keycloak token");
+    const data = await response.json();
+    tokenStorage.setTokens(data);
+    return data.access_token;
   }
 
   const refreshToken = tokenStorage.getRefreshToken();

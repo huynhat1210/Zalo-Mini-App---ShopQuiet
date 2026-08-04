@@ -69,6 +69,13 @@ export class AuthController {
     );
   }
 
+  @Post('zalo-keycloak')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ApiOperation({ summary: 'Login Mini App with Zalo and receive a Keycloak token' })
+  async loginWithZaloKeycloak(@Body() body: LoginDto) {
+    return this.authService.loginWithZaloKeycloak(body);
+  }
+
   @Post('register')
   @Throttle({ default: { limit: 5, ttl: 60000 } })
   @ApiOperation({ summary: 'Register with Email/Phone and Password' })

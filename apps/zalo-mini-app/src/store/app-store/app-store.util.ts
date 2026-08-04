@@ -444,7 +444,7 @@ export const useAppStore = create<IAppState>()(
                 zaloToken = `mock_zalo_token_${parsed.id}`;
               }
 
-              const authData: any = await apiRequest("/auth/login", "POST", {
+              const authData: any = await apiRequest("/auth/zalo-keycloak", "POST", {
                 zaloId: String(parsed.id),
                 name: String(parsed.name || "Người dùng Zalo"),
                 avatar: String(parsed.avatar || ""),
@@ -562,7 +562,7 @@ export const useAppStore = create<IAppState>()(
 
               try {
                 const authData: any = await apiRequest(
-                  "/auth/login",
+                  "/auth/zalo-keycloak",
                   "POST",
                   {
                     zaloId: String(zaloId),
@@ -902,7 +902,7 @@ export const useAppStore = create<IAppState>()(
               zaloToken = `mock_zalo_token_${zaloId}`;
             }
 
-            const authData: any = await apiRequest("/auth/login", "POST", {
+            const authData: any = await apiRequest("/auth/zalo-keycloak", "POST", {
               zaloId: String(zaloId),
               name: String(name),
               avatar: String(avatar),
