@@ -381,16 +381,20 @@ export const useAppStore = create<IAppState>()(
             parsed?.id === "cust-zalo-id-1" ||
             (parsed?.id && String(parsed.id).startsWith("mock_"));
 
-          if (
+           if (
             parsed?.name &&
             parsed.name !== "Alex Johnson" &&
             !(isRealZaloEnv && isMockId) &&
             parsed.avatar &&
             parsed.avatar !== ""
-          ) {
-            set({ zaloUser: parsed });
-            get().fetchCart().catch(console.error);
-            get().fetchFavorites().catch(console.error);
+           ) {
+             set({ zaloUser: parsed });
+             get().fetchCart().catch(console.error);
+             get().fetchFavorites().catch(console.error);
+
+             if (localStorage.getItem("keycloak_managed_session") === "true" && tokenStorage.getAccessToken()) {
+               return;
+             }
 
             try {
               let zaloToken = "";

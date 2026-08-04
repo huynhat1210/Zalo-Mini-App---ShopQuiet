@@ -14,6 +14,7 @@ const keycloak = new Keycloak({
 
 let keycloakInitialization: Promise<boolean> | undefined;
 let tokenRefreshInterval: ReturnType<typeof setInterval> | undefined;
+let tokenRefreshInFlight: Promise<boolean> | undefined;
 const KEYCLOAK_INIT_TIMEOUT_MS = 12000;
 
 function persistKeycloakSession() {
@@ -26,6 +27,22 @@ function persistKeycloakSession() {
     role: keycloak.tokenParsed?.realm_access?.roles?.includes('admin') ? 'admin' : 'user',
   };
   localStorage.setItem('zalo_profile_custom', JSON.stringify(profile));
+}
+
+async function refreshKeycloakToken(minValidity: number) {
+  if (!tokenRefreshInFlight) {
+    tokenRefreshInFlight = keycloak
+      .updateToken(minValidity)
+      .then((refreshed) => {
+        persistKeycloakSession();
+        return refreshed;
+      })
+      .finally(() => {
+        tokenRefreshInFlight = undefined;
+      });
+  }
+
+  return tokenRefreshInFlight;
 }
 
 function initializeKeycloak() {
@@ -41,12 +58,20 @@ function initializeKeycloak() {
         }
 
         persistKeycloakSession();
+        keycloak.onTokenExpired = () => {
+          void refreshKeycloakToken(0).catch((error) => {
+            console.error('Keycloak access token refresh failed in CMS:', error);
+            keycloak.login();
+          });
+        };
+        keycloak.onAuthRefreshError = () => {
+          console.error('Keycloak refresh token is no longer valid in CMS.');
+          keycloak.login();
+        };
         if (!tokenRefreshInterval) {
           tokenRefreshInterval = setInterval(async () => {
             try {
-              if (await keycloak.updateToken(70)) {
-                persistKeycloakSession();
-              }
+              await refreshKeycloakToken(70);
             } catch (error) {
               console.error('Failed to refresh Keycloak token in CMS:', error);
             }

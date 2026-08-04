@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import "zmp-ui/zaui.css";
 import "./index.css";
+import { initializeMiniAppKeycloak } from './utils/auth/keycloak-session';
 
 // ─────────────────────────────────────────────────────────────────────
 // 1. Override window.onerror BEFORE Zalo SDK loads
@@ -76,6 +77,7 @@ const queryClient = new QueryClient({
 });
 
 const container = document.getElementById("app");
+void initializeMiniAppKeycloak().then(() => {
 if (container) {
   const root = createRoot(container);
   root.render(
@@ -86,3 +88,4 @@ if (container) {
     </React.StrictMode>,
   );
 }
+}).catch((error) => console.error('[ShopQuiet] Keycloak initialization failed:', error));
