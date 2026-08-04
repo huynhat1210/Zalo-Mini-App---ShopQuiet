@@ -71,6 +71,23 @@ if (typeof window !== "undefined") {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
   }
+
+  // The Mini App no longer accepts the legacy backend JWT. Keep only a
+  // Keycloak-issued token so an expired token from older app versions cannot
+  // trigger protected requests during startup.
+  const accessToken = localStorage.getItem("access_token");
+  if (accessToken) {
+    try {
+      const payload = JSON.parse(atob(accessToken.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+      if (typeof payload.iss !== "string" || !payload.iss.includes("/realms/")) {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+      }
+    } catch {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+    }
+  }
 }
 
 const queryClient = new QueryClient({
