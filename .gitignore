@@ -6,6 +6,7 @@ dist/
 coverage/
 .next/
 *.log
+*.tsbuildinfo
 request_log.txt
 .DS_Store
 *.local
