@@ -9,6 +9,12 @@ const keycloak = new Keycloak({
 
 let initializationPromise: Promise<boolean> | undefined;
 
+export function beginMiniAppKeycloakLogin() {
+  return keycloak.login({
+    redirectUri: window.location.href,
+  });
+}
+
 function persistSession() {
   if (keycloak.token && keycloak.refreshToken) {
     tokenStorage.setTokens({ access_token: keycloak.token, refresh_token: keycloak.refreshToken });

@@ -4,7 +4,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import "zmp-ui/zaui.css";
 import "./index.css";
-import { initializeMiniAppKeycloak } from './utils/auth/keycloak-session';
+import {
+  beginMiniAppKeycloakLogin,
+  initializeMiniAppKeycloak,
+} from './utils/auth/keycloak-session';
 
 // ─────────────────────────────────────────────────────────────────────
 // 1. Override window.onerror BEFORE Zalo SDK loads
@@ -77,19 +80,40 @@ const queryClient = new QueryClient({
 });
 
 function KeycloakBootstrap() {
-  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>('loading');
+  const [status, setStatus] = React.useState<'loading' | 'sign-in' | 'ready' | 'error'>('loading');
 
   React.useEffect(() => {
-    void initializeMiniAppKeycloak(true)
-      .then((authenticated) => setStatus(authenticated ? 'ready' : 'error'))
+    const timeoutId = window.setTimeout(() => setStatus((current) => (
+      current === 'loading' ? 'sign-in' : current
+    )), 5000);
+
+    void initializeMiniAppKeycloak()
+      .then((authenticated) => setStatus(authenticated ? 'ready' : 'sign-in'))
       .catch((error) => {
         console.warn('[ShopQuiet] Keycloak sign-in failed:', error);
         setStatus('error');
       });
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   if (status === 'loading') {
-    return <div className="min-h-screen flex items-center justify-center text-sm text-slate-600">Dang dang nhap...</div>;
+    return <div className="min-h-screen flex items-center justify-center text-sm text-slate-600">Dang kiem tra phien dang nhap...</div>;
+  }
+
+  if (status === 'sign-in') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 px-6 text-center text-sm text-slate-700">
+        <p>Vui long dang nhap de tiep tuc mua sam.</p>
+        <button
+          type="button"
+          onClick={() => void beginMiniAppKeycloakLogin()}
+          className="px-4 py-2 bg-blue-600 text-white"
+        >
+          Dang nhap voi ShopQuiet
+        </button>
+      </div>
+    );
   }
 
   if (status === 'error') {
