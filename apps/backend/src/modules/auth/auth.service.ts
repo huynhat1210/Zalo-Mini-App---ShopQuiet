@@ -15,6 +15,11 @@ export class AuthService {
     private prisma: PrismaService,
   ) {}
 
+  private normalizeLoginIdentifier(value: string) {
+    const trimmed = value.trim();
+    return trimmed.includes('@') ? trimmed.toLowerCase() : trimmed;
+  }
+
   async validateUser(zaloId: any): Promise<any> {
     const user = await this.usersService.syncUser(String(zaloId), '', '');
     if (!user) {
@@ -395,7 +400,8 @@ export class AuthService {
   }
 
   async register(data: { emailOrPhone: string; name: string; password: string; avatar?: string }) {
-    const { emailOrPhone, name, password, avatar } = data;
+    const { name, password, avatar } = data;
+    const emailOrPhone = this.normalizeLoginIdentifier(data.emailOrPhone);
     const isEmail = emailOrPhone.includes('@');
     
     // Check existing user
@@ -431,7 +437,8 @@ export class AuthService {
   }
 
   async loginWithPassword(data: { emailOrPhone: string; password: string }) {
-    const { emailOrPhone, password } = data;
+    const { password } = data;
+    const emailOrPhone = this.normalizeLoginIdentifier(data.emailOrPhone);
     const isEmail = emailOrPhone.includes('@');
 
     const user = await this.prisma.user.findFirst({
@@ -457,6 +464,7 @@ export class AuthService {
   }
 
   async forgotPassword(emailOrPhone: string) {
+    emailOrPhone = this.normalizeLoginIdentifier(emailOrPhone);
     const isEmail = emailOrPhone.includes('@');
     const user = await this.prisma.user.findFirst({
       where: {
@@ -493,7 +501,8 @@ export class AuthService {
   }
 
   async resetPassword(data: { emailOrPhone: string; otp: string; newPassword: string }) {
-    const { emailOrPhone, otp, newPassword } = data;
+    const { otp, newPassword } = data;
+    const emailOrPhone = this.normalizeLoginIdentifier(data.emailOrPhone);
     const isEmail = emailOrPhone.includes('@');
 
     const user = await this.prisma.user.findFirst({

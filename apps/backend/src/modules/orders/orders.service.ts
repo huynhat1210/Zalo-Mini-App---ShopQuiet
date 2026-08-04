@@ -134,7 +134,10 @@ export class OrdersService {
             : 200000;
 
     let subtotal = 0;
-    const resolvedItemPrices = new Map<number, number>();
+    const resolvedItems = new Map<
+      number,
+      { price: number; productName: string; productImageUrl: string | null }
+    >();
     for (const item of dto.items) {
       if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
         throw new BadRequestException('Số lượng sản phẩm không hợp lệ.');
@@ -149,7 +152,11 @@ export class OrdersService {
         product.isFlashSale && product.flashSalePrice
           ? product.flashSalePrice
           : product.price;
-      resolvedItemPrices.set(item.productId, effectivePrice);
+      resolvedItems.set(item.productId, {
+        price: effectivePrice,
+        productName: product.name,
+        productImageUrl: product.images || null,
+      });
       subtotal += effectivePrice * item.quantity;
     }
 
@@ -353,10 +360,12 @@ export class OrdersService {
           items: {
             create: dto.items.map((item) => ({
               quantity: item.quantity,
-              price: resolvedItemPrices.get(item.productId)!,
+              price: resolvedItems.get(item.productId)!.price,
               productId: item.productId,
               size: item.size || 'DEFAULT',
               color: item.color || 'DEFAULT',
+              productName: resolvedItems.get(item.productId)!.productName,
+              productImageUrl: resolvedItems.get(item.productId)!.productImageUrl,
             })),
           },
         },

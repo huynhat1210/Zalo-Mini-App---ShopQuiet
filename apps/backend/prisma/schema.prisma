@@ -61,8 +61,8 @@ model User {
   updatedAt     DateTime       @updatedAt
   birthday      String?
   gender        String?
-  phone         String?
-  email         String?
+  phone         String?        @unique
+  email         String?        @unique
   totalSpent     Float          @default(0)
   membershipTier String         @default("Đồng")
   gamificationPoints Float      @default(0)
@@ -90,8 +90,6 @@ model User {
   @@index([name])
   @@index([role])
   @@index([createdAt])
-  @@index([email])
-  @@index([phone])
 }
 
 model CartItem {
@@ -149,7 +147,11 @@ model UserAddress {
   street     String
   city       String
   isDefault  Boolean @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
   user       User    @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+
+  @@index([zaloUserId])
 }
 
 model Order {
@@ -178,6 +180,8 @@ model Order {
   @@index([createdAt])
   @@index([paymentMethod])
   @@index([estimatedDeliveryDate])
+  @@index([zaloUserId, createdAt])
+  @@index([status, createdAt])
 }
 
 model OrderItem {
@@ -187,9 +191,14 @@ model OrderItem {
   productId Int
   color     String  @default("DEFAULT")
   size      String  @default("DEFAULT")
+  productName String?
+  productImageUrl String?
   orderId   String
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product   Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
 }
 
 model Notification {
@@ -208,6 +217,7 @@ model Notification {
   @@index([type])
   @@index([date])
   @@index([createdAt])
+  @@index([zaloUserId, read, createdAt])
 }
 
 model Favorite {
@@ -219,7 +229,6 @@ model Favorite {
   user       User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
 
   @@unique([zaloUserId, productId])
-  @@index([zaloUserId])
   @@index([productId])
   @@index([createdAt])
 }
@@ -331,6 +340,8 @@ model ChatMessage {
 
   @@index([zaloUserId])
   @@index([createdAt])
+  @@index([zaloUserId, createdAt])
+  @@index([zaloUserId, sender, read])
 }
 
 model AuditLog {
@@ -357,6 +368,8 @@ model AnalyticsEvent {
   @@index([productId])
   @@index([eventType, productId])
   @@index([createdAt])
+  @@index([eventType, createdAt])
+  @@index([zaloUserId, createdAt])
 }
 
 model PointsHistory {
@@ -413,7 +426,6 @@ model CampaignUser {
 
   @@unique([campaignId, zaloUserId])
   @@index([zaloUserId])
-  @@index([campaignId])
 }
 
 model Automation {
@@ -434,6 +446,7 @@ model Automation {
   @@index([enabled])
   @@index([priority])
   @@index([createdAt])
+  @@index([trigger, enabled, priority])
 }
 
 model AutomationLog {
@@ -454,6 +467,7 @@ model AutomationLog {
   @@index([zaloUserId])
   @@index([status])
   @@index([triggeredAt])
+  @@index([automationId, zaloUserId, status])
 }
 
 model AutomationTemplate {
@@ -498,5 +512,5 @@ model MarketingListEntry {
   createdAt  DateTime      @default(now())
   list       MarketingList @relation(fields: [listId], references: [id], onDelete: Cascade)
 
-  @@index([listId])
+  @@unique([listId, phone])
 }
