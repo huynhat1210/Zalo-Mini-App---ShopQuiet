@@ -18,4 +18,4 @@ COPY keycloak-realm-export.json /opt/keycloak/data/import/shopquiet-realm.json
 ENV JAVA_OPTS_KC_HEAP="-Xms64m -Xmx256m -XX:MetaspaceSize=96M -XX:MaxMetaspaceSize=192m"
 
 ENTRYPOINT ["/bin/sh", "-c"]
-CMD ["/opt/keycloak/bin/kc.sh start --optimized --import-realm --http-enabled=true --http-port=${PORT:-8080} --proxy-headers=xforwarded --hostname-strict=false"]
+CMD ["export KEYCLOAK_ADMIN=\"${KC_BOOTSTRAP_ADMIN_USERNAME}\"; export KEYCLOAK_ADMIN_PASSWORD=\"${KC_BOOTSTRAP_ADMIN_PASSWORD}\"; exec /opt/keycloak/bin/kc.sh start --optimized --import-realm --http-enabled=true --http-port=${PORT:-8080} --proxy-headers=xforwarded --hostname-strict=false"]
