@@ -76,21 +76,44 @@ const queryClient = new QueryClient({
   },
 });
 
+function KeycloakBootstrap() {
+  const [status, setStatus] = React.useState<'loading' | 'ready' | 'error'>('loading');
+
+  React.useEffect(() => {
+    void initializeMiniAppKeycloak(true)
+      .then((authenticated) => setStatus(authenticated ? 'ready' : 'error'))
+      .catch((error) => {
+        console.warn('[ShopQuiet] Keycloak sign-in failed:', error);
+        setStatus('error');
+      });
+  }, []);
+
+  if (status === 'loading') {
+    return <div className="min-h-screen flex items-center justify-center text-sm text-slate-600">Dang dang nhap...</div>;
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3 px-6 text-center text-sm text-slate-700">
+        <p>Khong the khoi tao phien dang nhap.</p>
+        <button type="button" onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 text-white">
+          Thu lai
+        </button>
+      </div>
+    );
+  }
+
+  return <App />;
+}
+
 const container = document.getElementById("app");
 if (container) {
   const root = createRoot(container);
   root.render(
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
-        <App />
+        <KeycloakBootstrap />
       </QueryClientProvider>
     </React.StrictMode>,
   );
 }
-
-// Never block the Zalo WebView render on an external SSO request. Keycloak
-// restores an existing session in the background when its browser context permits it.
-void Promise.race([
-  initializeMiniAppKeycloak(),
-  new Promise<false>((resolve) => window.setTimeout(() => resolve(false), 4000)),
-]).catch((error) => console.warn('[ShopQuiet] Keycloak session was not restored:', error));

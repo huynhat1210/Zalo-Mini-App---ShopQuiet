@@ -362,6 +362,35 @@ export const useAppStore = create<IAppState>()(
 
         const cached = localStorage.getItem("zalo_profile_custom");
 
+        if (
+          localStorage.getItem("keycloak_managed_session") === "true" &&
+          tokenStorage.getAccessToken() &&
+          cached
+        ) {
+          try {
+            const keycloakProfile = JSON.parse(cached);
+            if (keycloakProfile?.id || keycloakProfile?.zaloId) {
+              set({
+                zaloUser: {
+                  id: keycloakProfile.id || keycloakProfile.zaloId,
+                  name: keycloakProfile.name || "ShopQuiet member",
+                  avatar: keycloakProfile.avatar || "",
+                  role: keycloakProfile.role || "user",
+                  phone: keycloakProfile.phone || "",
+                  email: keycloakProfile.email || "",
+                  birthday: keycloakProfile.birthday || "",
+                  gender: keycloakProfile.gender || "",
+                },
+              });
+              get().fetchCart().catch(console.error);
+              get().fetchFavorites().catch(console.error);
+              return;
+            }
+          } catch (error) {
+            console.warn("Failed to restore Keycloak profile:", error);
+          }
+        }
+
         if (cached) {
           let parsed: any = null;
           try {
