@@ -41,7 +41,7 @@ export const LayoutComponent: React.FC<ILayoutComponentProps> = (props) => {
   // Fetch admin profile
   useEffect(() => {
     try {
-      const cached = localStorage.getItem('zalo_profile_custom');
+      const cached = localStorage.getItem('crm_profile');
       if (cached) {
         setAdminUser(JSON.parse(cached));
       }

@@ -41,7 +41,7 @@ interface IEntry {
 }
 
 export const MarketingLists: React.FC = () => {
-  const { success: toastSuccess, error: toastError } = useToast();
+  const { success: toastSuccess, error: toastError, confirm } = useToast();
   const [lists, setLists] = useState<IMarketingList[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -176,7 +176,7 @@ export const MarketingLists: React.FC = () => {
 
   const handleDeleteList = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm('Bạn có chắc chắn muốn xóa tệp khách hàng này?')) return;
+    if (!(await confirm('Xóa tệp khách hàng?', 'Thao tác này không thể hoàn tác.'))) return;
 
     try {
       await crmApiRequest(`/marketing-lists/${id}`, 'DELETE');

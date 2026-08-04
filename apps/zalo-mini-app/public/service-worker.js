@@ -1,4 +1,4 @@
-const CACHE_NAME = "shopquiet-v2";
+const CACHE_NAME = "shopquiet-v3";
 const urlsToCache = ["/", "/index.html"];
 
 self.addEventListener("install", (event) => {
@@ -23,13 +23,20 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.match(event.request).then((response) =>
       response ||
-      fetch(event.request).then((networkResponse) => {
-        if (networkResponse.ok && networkResponse.type === "basic") {
-          const responseCopy = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseCopy));
-        }
-        return networkResponse;
-      }),
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse.ok && networkResponse.type === "basic") {
+            const responseCopy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseCopy));
+          }
+          return networkResponse;
+        })
+        .catch(async () => {
+          const cachedResponse = await caches.match(event.request);
+          if (cachedResponse) return cachedResponse;
+          if (event.request.mode === "navigate") return caches.match("/index.html");
+          return new Response("Network unavailable", { status: 503, statusText: "Service Unavailable" });
+        }),
     ),
   );
 });
@@ -47,4 +54,5 @@ self.addEventListener("activate", (event) => {
       );
     }),
   );
+  self.clients.claim();
 });

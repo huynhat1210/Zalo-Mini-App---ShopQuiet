@@ -43,7 +43,7 @@ export const Login: React.FC<ILoginProps> = (props) => {
           refresh_token: authData.refresh_token,
         });
         // Save authData.user in localStorage to synchronize with dynamic header display
-        localStorage.setItem('zalo_profile_custom', JSON.stringify(authData.user));
+        localStorage.setItem('crm_profile', JSON.stringify(authData.user));
         onLoginSuccess();
       } else {
         setError('Đăng nhập thất bại. Không nhận được Access Token.');

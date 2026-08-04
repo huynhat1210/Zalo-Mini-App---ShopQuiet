@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
 
-function loadRuntimeEnv() {
+export function loadRuntimeEnv() {
   const candidates = [
     path.resolve(__dirname, '..', '.env'),
     path.resolve(__dirname, '..', '..', '.env'),
@@ -33,7 +33,9 @@ function loadRuntimeEnv() {
         value = value.slice(1, -1);
       }
 
-      if (!process.env[key]) {
+      // Local app env must win over the workspace-level deployment env. In
+      // production, the platform-provided environment remains authoritative.
+      if (process.env.NODE_ENV !== 'production' || !process.env[key]) {
         process.env[key] = value;
       }
     }
@@ -58,9 +60,6 @@ export class PrismaService
       },
     });
 
-    if (process.env.DIRECT_URL) {
-      process.env.DATABASE_URL = process.env.DIRECT_URL;
-    }
   }
 
   async onModuleInit() {

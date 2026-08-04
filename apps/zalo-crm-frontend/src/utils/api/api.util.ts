@@ -2,16 +2,16 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localho
 export const CRM_API_BASE_URL = import.meta.env.VITE_CRM_API_BASE_URL || 'http://localhost:3002/api/v1';
 
 export const tokenStorage = {
-  getAccessToken: () => localStorage.getItem('cms_access_token') || '',
-  getRefreshToken: () => localStorage.getItem('cms_refresh_token') || '',
-  setAccessToken: (token: string) => localStorage.setItem('cms_access_token', token),
+  getAccessToken: () => localStorage.getItem('crm_access_token') || '',
+  getRefreshToken: () => localStorage.getItem('crm_refresh_token') || '',
+  setAccessToken: (token: string) => localStorage.setItem('crm_access_token', token),
   setTokens: (tokens: { access_token: string; refresh_token: string }) => {
-    localStorage.setItem('cms_access_token', tokens.access_token);
-    localStorage.setItem('cms_refresh_token', tokens.refresh_token);
+    localStorage.setItem('crm_access_token', tokens.access_token);
+    localStorage.setItem('crm_refresh_token', tokens.refresh_token);
   },
   clearToken: () => {
-    localStorage.removeItem('cms_access_token');
-    localStorage.removeItem('cms_refresh_token');
+    localStorage.removeItem('crm_access_token');
+    localStorage.removeItem('crm_refresh_token');
   },
 };
 
@@ -32,19 +32,42 @@ export interface IApiResponseEnvelope<T = any> {
   };
 }
 
-let isRefreshing = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
+function usesKeycloakSession() {
+  const token = tokenStorage.getAccessToken();
+  const payloadSegment = token.split('.')[1];
+  if (!payloadSegment) return false;
 
-function subscribeTokenRefresh(callback: (token: string) => void) {
-  refreshSubscribers.push(callback);
+  try {
+    const payload = JSON.parse(atob(payloadSegment.replace(/-/g, '+').replace(/_/g, '/')));
+    return typeof payload.iss === 'string' && payload.iss.includes('/realms/');
+  } catch {
+    return false;
+  }
 }
 
-function onRefreshed(token: string) {
-  refreshSubscribers.forEach(callback => callback(token));
-  refreshSubscribers = [];
+function refreshKeycloakAccessToken(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => reject(new Error('Timed out while refreshing the Keycloak session.')), 10000);
+    window.dispatchEvent(new CustomEvent('crm:keycloak-refresh', {
+      detail: {
+        resolve: (token: string) => {
+          window.clearTimeout(timeoutId);
+          resolve(token);
+        },
+        reject: (error: Error) => {
+          window.clearTimeout(timeoutId);
+          reject(error);
+        },
+      },
+    }));
+  });
 }
 
 async function refreshAccessToken(): Promise<string> {
+  if (usesKeycloakSession()) {
+    return refreshKeycloakAccessToken();
+  }
+
   const refreshToken = tokenStorage.getRefreshToken();
   if (!refreshToken) {
     throw new Error('No refresh token available');
@@ -105,42 +128,26 @@ export async function apiRequest<T = any>(
 
   if (!response.ok) {
     if (response.status === 401 && !path.includes('/auth/login') && !path.includes('/auth/refresh')) {
-      if (!isRefreshing) {
-        isRefreshing = true;
-        try {
-          const newAccessToken = await refreshAccessToken();
-          isRefreshing = false;
-          onRefreshed(newAccessToken);
-        } catch (err) {
-          isRefreshing = false;
-          tokenStorage.clearToken();
-          localStorage.removeItem('zalo_profile_custom');
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('cms:unauthorized'));
-          }
-          throw err;
-        }
-      }
-
-      return new Promise<T>((resolve, reject) => {
-        subscribeTokenRefresh(async (token: string) => {
-          try {
-            const retryHeaders = {
-              ...headers,
-              'Authorization': `Bearer ${token}`,
-            };
-            const retryOptions = { ...options, headers: retryHeaders };
-            const retryResponse = await fetch(url, retryOptions);
-            if (!retryResponse.ok) {
-              throw new Error(`Retried request failed: ${retryResponse.status}`);
-            }
-            const json: IApiResponseEnvelope<T> = await retryResponse.json();
-            resolve(json.data);
-          } catch (e) {
-            reject(e);
-          }
+      try {
+        const newAccessToken = await refreshAccessToken();
+        const retryResponse = await fetch(url, {
+          ...options,
+          headers: { ...headers, Authorization: `Bearer ${newAccessToken}` },
         });
-      });
+        if (!retryResponse.ok) {
+          throw new Error(`Retried request failed: ${retryResponse.status}`);
+        }
+        if (retryResponse.status === 204) return {} as T;
+        const retryJson: IApiResponseEnvelope<T> = await retryResponse.json();
+        return retryJson.data;
+      } catch (err) {
+        if (!usesKeycloakSession()) {
+          tokenStorage.clearToken();
+        }
+        localStorage.removeItem('crm_profile');
+        window.dispatchEvent(new CustomEvent('crm:unauthorized'));
+        throw err;
+      }
     }
 
     let errMsg = `Request failed with status ${response.status}`;
@@ -232,4 +239,3 @@ export async function crmApiRequest<T = any>(
   const json: IApiResponseEnvelope<T> = await response.json();
   return json.data;
 }
-

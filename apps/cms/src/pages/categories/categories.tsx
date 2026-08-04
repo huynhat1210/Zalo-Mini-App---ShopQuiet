@@ -26,7 +26,7 @@ interface Category {
 }
 
 export const Categories: React.FC = () => {
-  const { success: toastSuccess, error: toastError, warning: toastWarning } = useToast();
+  const { success: toastSuccess, error: toastError, warning: toastWarning, confirm } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -90,7 +90,7 @@ export const Categories: React.FC = () => {
       toastWarning('Không thể xóa', `Danh mục "${cat.name}" đang chứa ${count} sản phẩm.`);
       return;
     }
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa danh mục "${cat.name}"?`)) return;
+    if (!(await confirm('Xóa danh mục?', `Danh mục "${cat.name}" sẽ bị gỡ vĩnh viễn.`))) return;
 
     try {
       await apiRequest(`/categories/${cat.id}`, 'DELETE');

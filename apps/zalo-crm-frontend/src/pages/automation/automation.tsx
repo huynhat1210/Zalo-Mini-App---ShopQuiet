@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { crmApiRequest } from '../../utils/api';
+import { useToast } from '../../contexts';
 import { 
   Play, 
   Pause, 
@@ -52,6 +53,7 @@ const triggerColors: Record<string, string> = {
 };
 
 export function Automation() {
+  const { success: toastSuccess, error: toastError, warning: toastWarning, confirm } = useToast();
   const [automations, setAutomations] = useState<Automation[]>([]);
   const [stats, setStats] = useState<Record<number, AutomationStats>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -122,7 +124,7 @@ export function Automation() {
   };
 
   const deleteAutomation = async (id: number) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa automation này?')) return;
+    if (!(await confirm('Xóa automation?', 'Thao tác này không thể hoàn tác.'))) return;
     
     try {
       await crmApiRequest(`/automation/${id}`, 'DELETE');
@@ -150,18 +152,24 @@ export function Automation() {
       setIsLoading(true);
       await crmApiRequest('/automation/seed-templates', 'POST');
       await loadAutomations();
-      alert('Tải kịch bản mẫu thành công!');
+      toastSuccess('Đã tải kịch bản mẫu');
     } catch (error) {
       console.error('Failed to seed templates:', error);
-      alert('Không thể tải các kịch bản mẫu. Vui lòng kiểm tra lại.');
+      toastError('Không thể tải kịch bản mẫu', 'Vui lòng kiểm tra lại dịch vụ Campaign.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSave = async () => {
-    if (!name.trim()) return alert('Vui lòng nhập tên Automation');
-    if (!trigger) return alert('Vui lòng chọn trigger');
+    if (!name.trim()) {
+      toastWarning('Thiếu tên automation', 'Vui lòng nhập tên trước khi lưu.');
+      return;
+    }
+    if (!trigger) {
+      toastWarning('Thiếu trigger', 'Vui lòng chọn trigger trước khi lưu.');
+      return;
+    }
 
     try {
       const payload = {
@@ -184,7 +192,7 @@ export function Automation() {
       loadAutomations();
     } catch (error) {
       console.error('Failed to save automation:', error);
-      alert('Không thể lưu kịch bản tự động hóa. Vui lòng kiểm tra cấu hình.');
+      toastError('Không thể lưu automation', 'Vui lòng kiểm tra cấu hình.');
     }
   };
 

@@ -15,8 +15,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as express from 'express';
 import type { NextFunction, Request, Response } from 'express';
+import { loadRuntimeEnv } from './prisma/prisma.service';
 
 async function bootstrap() {
+  loadRuntimeEnv();
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn'], // Enable basic default logger to diagnose bootstrap crashes
   });

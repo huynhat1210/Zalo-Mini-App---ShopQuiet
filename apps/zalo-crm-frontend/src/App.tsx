@@ -8,7 +8,7 @@ import { ToastProviderComponent, useToast } from './contexts';
 const keycloak = new Keycloak({
   url: import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8080',
   realm: import.meta.env.VITE_KEYCLOAK_REALM || 'shopquiet',
-  clientId: 'shopquiet-campaign',
+  clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'shopquiet-campaign',
 });
 
 let keycloakInitialization: Promise<boolean> | undefined;
@@ -17,15 +17,16 @@ let tokenRefreshInFlight: Promise<boolean> | undefined;
 const KEYCLOAK_INIT_TIMEOUT_MS = 12000;
 
 function persistKeycloakSession() {
-  localStorage.setItem('cms_access_token', keycloak.token || '');
-  localStorage.setItem('cms_refresh_token', keycloak.refreshToken || '');
+  localStorage.setItem('crm_access_token', keycloak.token || '');
+  localStorage.setItem('crm_refresh_token', keycloak.refreshToken || '');
+  localStorage.setItem('crm_auth_provider', 'keycloak');
 
   const profile = {
     zaloId: keycloak.tokenParsed?.preferred_username || 'admin',
     name: keycloak.tokenParsed?.name || 'Administrator',
     role: keycloak.tokenParsed?.realm_access?.roles?.includes('admin') ? 'admin' : 'user',
   };
-  localStorage.setItem('zalo_profile_custom', JSON.stringify(profile));
+  localStorage.setItem('crm_profile', JSON.stringify(profile));
 }
 
 async function refreshKeycloakToken(minValidity: number) {
@@ -130,20 +131,46 @@ export const App: React.FC = () => {
       });
 
     const handleUnauthorized = () => {
-      localStorage.removeItem('cms_access_token');
-      localStorage.removeItem('cms_refresh_token');
-      localStorage.removeItem('zalo_profile_custom');
+      // A Keycloak session is refreshed by the adapter. Re-triggering login
+      // here causes a redirect loop while a refresh is already in progress.
+      if (localStorage.getItem('crm_auth_provider') === 'keycloak') {
+        return;
+      }
+      localStorage.removeItem('crm_access_token');
+      localStorage.removeItem('crm_refresh_token');
+      localStorage.removeItem('crm_profile');
       keycloak.login();
     };
 
+    const handleKeycloakRefresh = (event: Event) => {
+      const { resolve, reject } = (event as CustomEvent<{
+        resolve: (token: string) => void;
+        reject: (error: Error) => void;
+      }>).detail || {};
+
+      if (!resolve || !reject) return;
+
+      void refreshKeycloakToken(30)
+        .then(() => {
+          if (!keycloak.token) throw new Error('Keycloak did not return an access token.');
+          resolve(keycloak.token);
+        })
+        .catch(reject);
+    };
+
     window.addEventListener('crm:unauthorized', handleUnauthorized);
-    return () => window.removeEventListener('crm:unauthorized', handleUnauthorized);
+    window.addEventListener('crm:keycloak-refresh', handleKeycloakRefresh);
+    return () => {
+      window.removeEventListener('crm:unauthorized', handleUnauthorized);
+      window.removeEventListener('crm:keycloak-refresh', handleKeycloakRefresh);
+    };
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('cms_access_token');
-    localStorage.removeItem('cms_refresh_token');
-    localStorage.removeItem('zalo_profile_custom');
+    localStorage.removeItem('crm_access_token');
+    localStorage.removeItem('crm_refresh_token');
+    localStorage.removeItem('crm_profile');
+    localStorage.removeItem('crm_auth_provider');
     keycloak.logout();
   };
 

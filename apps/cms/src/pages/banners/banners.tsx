@@ -22,7 +22,7 @@ interface Banner {
 }
 
 export const Banners: React.FC<IBannersProps> = (_props) => {
-  const { success: toastSuccess, error: toastError, warning: toastWarning } = useToast();
+  const { success: toastSuccess, error: toastError, warning: toastWarning, confirm } = useToast();
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -84,7 +84,7 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
   };
 
   const handleDeleteBanner = async (id: number) => {
-    if (!window.confirm('Bạn có chắc muốn xóa banner này không?')) return;
+    if (!(await confirm('Xóa banner?', 'Banner này sẽ không còn hiển thị trong ứng dụng.'))) return;
     try {
       await apiRequest(`/banners/${id}`, 'DELETE');
       setBanners(banners.filter((b) => b.id !== id));

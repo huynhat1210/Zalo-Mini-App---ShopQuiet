@@ -9,8 +9,7 @@ export const API_BASE_URL =
     ? `${window.location.origin}/api/v1`
     : "http://localhost:3000/api/v1");
 
-let isRefreshing = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
+let refreshPromise: Promise<string> | null = null;
 
 function usesKeycloakSession(accessToken: string) {
   if (localStorage.getItem("keycloak_managed_session") === "true") {
@@ -28,15 +27,12 @@ function usesKeycloakSession(accessToken: string) {
   }
 }
 
-// Subscribe to token refresh
-function subscribeTokenRefresh(callback: (token: string) => void) {
-  refreshSubscribers.push(callback);
-}
-
-// Notify all subscribers
-function onRefreshed(token: string) {
-  refreshSubscribers.forEach((callback) => callback(token));
-  refreshSubscribers = [];
+function extractTokenPair(payload: any) {
+  const tokens = payload?.data || payload;
+  if (!tokens?.access_token || !tokens?.refresh_token) {
+    throw new Error("Invalid token refresh response");
+  }
+  return tokens;
 }
 
 // Refresh access token
@@ -50,9 +46,9 @@ async function refreshAccessToken(accessToken: string): Promise<string> {
       body: JSON.stringify({ refresh_token: refreshToken }),
     });
     if (!response.ok) throw new Error("Failed to refresh Keycloak token");
-    const data = await response.json();
-    tokenStorage.setTokens(data);
-    return data.access_token;
+    const tokens = extractTokenPair(await response.json());
+    tokenStorage.setTokens(tokens);
+    return tokens.access_token;
   }
 
   const refreshToken = tokenStorage.getRefreshToken();
@@ -73,9 +69,9 @@ async function refreshAccessToken(accessToken: string): Promise<string> {
     throw new Error("Failed to refresh token");
   }
 
-  const data = await response.json();
-  tokenStorage.setTokens(data);
-  return data.access_token;
+  const tokens = extractTokenPair(await response.json());
+  tokenStorage.setTokens(tokens);
+  return tokens.access_token;
 }
 
 export async function apiRequest<T = unknown>(
@@ -124,36 +120,18 @@ export async function apiRequest<T = unknown>(
 
   // Handle 401 Unauthorized - try to refresh token
   if (response.status === 401 && accessToken) {
-    if (!isRefreshing) {
-      isRefreshing = true;
-      try {
-        const newToken = await refreshAccessToken(accessToken);
-        onRefreshed(newToken);
-        headers["Authorization"] = `Bearer ${newToken}`;
-        response = await fetch(url, options);
-      } catch (error) {
-        // Refresh failed, clear tokens and redirect to login
-        tokenStorage.clearTokens();
-        // In a real app, you might redirect to login here
-        throw new Error("Session expired. Please login again.");
-      } finally {
-        isRefreshing = false;
-      }
-    } else {
-      // Wait for the refresh to complete
-      return new Promise((resolve, reject) => {
-        subscribeTokenRefresh((token: string) => {
-          headers["Authorization"] = `Bearer ${token}`;
-          fetch(url, options)
-            .then((res) => {
-              if (!res.ok)
-                throw new Error(`Request failed after token refresh: ${res.status}`);
-              return res.json();
-            })
-            .then(resolve)
-            .catch(reject);
+    try {
+      if (!refreshPromise) {
+        refreshPromise = refreshAccessToken(accessToken).finally(() => {
+          refreshPromise = null;
         });
-      });
+      }
+      const newToken = await refreshPromise;
+      headers["Authorization"] = `Bearer ${newToken}`;
+      response = await fetch(url, options);
+    } catch (error) {
+      tokenStorage.clearTokens();
+      throw new Error("Session expired. Please login again.");
     }
   }
 

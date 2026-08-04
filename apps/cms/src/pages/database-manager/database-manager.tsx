@@ -58,7 +58,7 @@ import type { IDatabaseManagerProps } from './database-manager.type';
 export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
   const { modelName } = useParams<{ modelName: string }>();
   const navigate = useNavigate();
-  const { success, error: toastError } = useToast();
+  const { success, error: toastError, confirm } = useToast();
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -180,7 +180,7 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
 
   const handleDeleteRecord = async (id: string | number) => {
     if (!modelName) return;
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa bản ghi này của bảng ${modelName}?`)) return;
+    if (!(await confirm('Xóa bản ghi?', `Bản ghi trong bảng ${modelName} sẽ bị xóa vĩnh viễn.`))) return;
     try {
       await apiRequest(`/cms/database/models/${modelName}/${id}`, 'DELETE');
       setRecords(records.filter((r) => r.id !== id));
@@ -298,7 +298,7 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
 
   const handleBulkDelete = async () => {
     if (selectedRecords.size === 0) return;
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa ${selectedRecords.size} bản ghi đã chọn?`)) return;
+    if (!(await confirm('Xóa các bản ghi đã chọn?', `${selectedRecords.size} bản ghi sẽ bị xóa vĩnh viễn.`))) return;
 
     try {
       await Promise.all(

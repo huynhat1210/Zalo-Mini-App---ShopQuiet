@@ -7,7 +7,7 @@ export function exportToExcel<T extends Record<string, any>>(
   columnMap: { key: keyof T | string; label: string; formatter?: (val: any, row: T) => any }[],
 ) {
   if (!data || data.length === 0) {
-    alert('Không có dữ liệu để xuất Excel.');
+    console.warn('Không có dữ liệu để xuất Excel.');
     return;
   }
 

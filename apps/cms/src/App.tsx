@@ -9,7 +9,7 @@ import './App.css';
 const keycloak = new Keycloak({
   url: import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8080',
   realm: import.meta.env.VITE_KEYCLOAK_REALM || 'shopquiet',
-  clientId: 'shopquiet-cms',
+  clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'shopquiet-cms',
 });
 
 let keycloakInitialization: Promise<boolean> | undefined;
@@ -132,6 +132,14 @@ const ToastContainerWrapper: React.FC = () => {
 export const App: React.FC = () => {
   const [checking, setChecking] = useState(true);
   const [initializationError, setInitializationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV || !('serviceWorker' in navigator)) return;
+
+    void navigator.serviceWorker.getRegistrations().then((registrations) =>
+      Promise.all(registrations.map((registration) => registration.unregister())),
+    );
+  }, []);
 
   useEffect(() => {
     initializeKeycloakWithTimeout()

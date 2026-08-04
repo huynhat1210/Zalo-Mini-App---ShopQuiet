@@ -37,7 +37,7 @@ interface Product {
 }
 
 export const Products: React.FC<IProductsProps> = (_props) => {
-  const { success: toastSuccess, error: toastError } = useToast();
+  const { success: toastSuccess, error: toastError, confirm } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -216,7 +216,7 @@ export const Products: React.FC<IProductsProps> = (_props) => {
   };
 
   const handleDeleteProduct = async (id: number) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi cửa hàng?')) return;
+    if (!(await confirm('Xóa sản phẩm?', 'Sản phẩm này sẽ bị xóa khỏi cửa hàng.'))) return;
     try {
       await apiRequest(`/products/${id}`, 'DELETE');
       toastSuccess('Xóa thành công', 'Đã xóa sản phẩm khỏi hệ thống.');

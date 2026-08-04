@@ -21,7 +21,7 @@ interface MediaFile {
 }
 
 export const Media: React.FC<IMediaProps> = (_props) => {
-  const { success: toastSuccess, error: toastError } = useToast();
+  const { success: toastSuccess, error: toastError, confirm } = useToast();
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -87,7 +87,7 @@ export const Media: React.FC<IMediaProps> = (_props) => {
   };
 
   const handleDeleteFile = async (filename: string) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa vĩnh viễn hình ảnh này?')) return;
+    if (!(await confirm('Xóa hình ảnh?', 'Tệp này sẽ bị xóa vĩnh viễn khỏi máy chủ.'))) return;
     try {
       await apiRequest(`/media/${filename}`, 'DELETE');
       setFiles(files.filter(f => f.filename !== filename));

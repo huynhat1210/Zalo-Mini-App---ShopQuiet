@@ -62,7 +62,7 @@ interface Order {
 }
 
 export const Orders: React.FC<IOrdersProps> = (_props) => {
-  const { success: toastSuccess, error: toastError } = useToast();
+  const { success: toastSuccess, error: toastError, confirm } = useToast();
   
   const getBackendUrl = () => {
     return window.location.origin.includes('localhost') ? 'http://localhost:3000' : 'https://zalo-mini-app-shopquiet.onrender.com';
@@ -745,8 +745,8 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
                       <div className="pt-2 flex items-center gap-2">
                         {order.status !== 'COMPLETED' && order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && order.status !== 'RETURNED' && (
                           <button
-                            onClick={() => {
-                              if (window.confirm(`Bạn có chắc muốn hủy đơn hàng #${order.id.slice(-6).toUpperCase()}?`)) {
+                            onClick={async () => {
+                              if (await confirm('Hủy đơn hàng?', `Đơn #${order.id.slice(-6).toUpperCase()} sẽ được chuyển sang trạng thái đã hủy.`)) {
                                 handleUpdateStatus(order.id, 'CANCELLED');
                               }
                             }}

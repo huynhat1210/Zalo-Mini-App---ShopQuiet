@@ -67,7 +67,7 @@ interface ICampaignDetail extends ICampaign {
 }
 
 export const Campaigns: React.FC<ICampaignsProps> = () => {
-  const { success: toastSuccess, error: toastError } = useToast();
+  const { success: toastSuccess, error: toastError, confirm } = useToast();
   const [campaigns, setCampaigns] = useState<ICampaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -317,7 +317,7 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
   };
 
   const handleLaunch = async (id: number) => {
-    if (!window.confirm('Bạn có chắc chắn muốn KÍCH HOẠT PHÁT chiến dịch này ngay lập tức?')) return;
+    if (!(await confirm('Phát chiến dịch ngay?', 'Chiến dịch sẽ được gửi tới nhóm khách hàng đã chọn.'))) return;
     try {
       setLaunchingId(id);
       await crmApiRequest(`/campaigns/${id}/launch`, 'POST');
@@ -331,7 +331,7 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('Xóa chiến dịch này?')) return;
+    if (!(await confirm('Xóa chiến dịch?', 'Thao tác này không thể hoàn tác.'))) return;
     try {
       await crmApiRequest(`/campaigns/${id}`, 'DELETE');
       toastSuccess('Đã xóa', 'Chiến dịch đã được loại bỏ');

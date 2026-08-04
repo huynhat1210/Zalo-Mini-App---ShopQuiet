@@ -220,6 +220,17 @@ export class UsersService implements OnModuleInit {
     });
   }
 
+  async updateUserRole(zaloId: string, role: 'admin' | 'user') {
+    return this.prisma.user.update({
+      where: { zaloId },
+      data: { role },
+    });
+  }
+
+  async deleteUser(zaloId: string) {
+    return this.prisma.user.delete({ where: { zaloId } });
+  }
+
   async getMembershipPrivileges(tier: string) {
     return this.prisma.membershipPrivilege.findMany({
       where: { tier },

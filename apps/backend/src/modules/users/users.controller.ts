@@ -2,10 +2,13 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Body,
   Headers,
   UseGuards,
   Param,
+  BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
@@ -91,6 +94,29 @@ export class UsersController {
   @Roles('admin')
   async getAllUsers() {
     return this.usersService.getAllUsers();
+  }
+
+  @Patch(':zaloId/role')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async updateUserRole(
+    @Param('zaloId') zaloId: string,
+    @Body() body: { role?: string },
+  ) {
+    if (body.role !== 'admin' && body.role !== 'user') {
+      throw new BadRequestException('Vai tro nguoi dung khong hop le.');
+    }
+    return this.usersService.updateUserRole(zaloId, body.role);
+  }
+
+  @Delete(':zaloId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  async deleteUser(@Param('zaloId') zaloId: string, @CurrentUser() currentUser: any) {
+    if (currentUser?.zaloId === zaloId) {
+      throw new ForbiddenException('Khong the xoa tai khoan dang dang nhap.');
+    }
+    return this.usersService.deleteUser(zaloId);
   }
 
   @Get('me/reviews')

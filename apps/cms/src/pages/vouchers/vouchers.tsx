@@ -29,7 +29,7 @@ interface Voucher {
 }
 
 export const Vouchers: React.FC = () => {
-  const { success: toastSuccess, error: toastError, warning: toastWarning } = useToast();
+  const { success: toastSuccess, error: toastError, warning: toastWarning, confirm } = useToast();
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -93,7 +93,7 @@ export const Vouchers: React.FC = () => {
   };
 
   const handleDeleteVoucher = async (code: string) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa mã giảm giá "${code}" không?`)) return;
+    if (!(await confirm('Xóa mã giảm giá?', `Mã "${code}" sẽ bị gỡ vĩnh viễn.`))) return;
     try {
       await apiRequest(`/vouchers/${code}`, 'DELETE');
       setVouchers(vouchers.filter((v) => v.code !== code));

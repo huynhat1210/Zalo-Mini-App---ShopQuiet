@@ -19,8 +19,10 @@ import type { IUserManagementProps } from './user-management.type';
 import { exportToExcel } from '../../utils/excel-export.util';
 import { PaginationComponent } from '../../components';
 
+const canRenderAvatar = (avatar?: string) => Boolean(avatar && !avatar.includes('zalo-api.zdn.vn'));
+
 export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
-  const { success, error: toastError } = useToast();
+  const { success, error: toastError, confirm } = useToast();
   const { canEdit, canDelete } = usePermissions();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,7 +118,7 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
   };
 
   const handleDeleteUser = async (zaloId: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) return;
+    if (!(await confirm('Xóa người dùng?', 'Dữ liệu người dùng này sẽ bị xóa khỏi hệ thống.'))) return;
     try {
       await apiRequest(`/users/${zaloId}`, 'DELETE');
       setUsers(users.filter(u => u.zaloId !== zaloId));
@@ -338,7 +340,7 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
                           onClick={() => handleViewUser(user)}
                         >
                           <div className="w-9 h-9 rounded-2xl bg-teal-50 border border-teal-100 flex items-center justify-center font-black text-xs text-[#0e6877] shrink-0 shadow-2xs">
-                            {user.avatar ? (
+                            {canRenderAvatar(user.avatar) ? (
                               <img src={user.avatar} alt="" className="w-full h-full rounded-2xl object-cover" />
                             ) : (
                               (user.name || 'Z')[0].toUpperCase()
@@ -449,7 +451,7 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
             <div className="bg-gradient-to-r from-[#0e6877] to-[#168a9e] text-white p-6 flex items-center justify-between shrink-0 shadow-sm">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center text-xl font-black shrink-0 overflow-hidden shadow-inner">
-                  {selectedUserDetails.avatar ? (
+                  {canRenderAvatar(selectedUserDetails.avatar) ? (
                     <img src={selectedUserDetails.avatar} alt="" className="w-full h-full object-cover" />
                   ) : (
                     (selectedUserDetails.name || 'Z')[0].toUpperCase()

@@ -164,7 +164,7 @@ export const Inventory: React.FC = () => {
 
     try {
       setUpdatingId(variantId);
-      await apiRequest(`/products/variants/${variantId}`, 'PATCH', { stock: newStock });
+      await apiRequest(`/variants/${variantId}`, 'PATCH', { stock: newStock });
       toastSuccess('Cập nhật thành công', `Tồn kho mới: ${newStock} sản phẩm.`);
       fetchInventory();
     } catch (err: any) {
@@ -190,7 +190,7 @@ export const Inventory: React.FC = () => {
     try {
       setSavingAll(true);
       const updatePromises = modifiedVariantIds.map((vId) =>
-        apiRequest(`/products/variants/${vId}`, 'PATCH', { stock: stockInputs[vId] }).catch((e) =>
+        apiRequest(`/variants/${vId}`, 'PATCH', { stock: stockInputs[vId] }).catch((e) =>
           console.error(`Failed variant #${vId}:`, e),
         ),
       );
