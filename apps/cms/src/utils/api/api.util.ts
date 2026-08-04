@@ -15,6 +15,25 @@ export const tokenStorage = {
   },
 };
 
+function usesKeycloakSession() {
+  if (localStorage.getItem('cms_auth_provider') === 'keycloak') {
+    return true;
+  }
+
+  const token = tokenStorage.getAccessToken();
+  const payloadSegment = token.split('.')[1];
+  if (!payloadSegment) {
+    return false;
+  }
+
+  try {
+    const payload = JSON.parse(atob(payloadSegment.replace(/-/g, '+').replace(/_/g, '/')));
+    return typeof payload.iss === 'string' && payload.iss.includes('/realms/');
+  } catch {
+    return false;
+  }
+}
+
 export type TApiHttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 export interface IApiResponseEnvelope<T = any> {
@@ -54,7 +73,7 @@ function refreshKeycloakAccessToken(): Promise<string> {
 }
 
 async function refreshAccessToken(): Promise<string> {
-  if (localStorage.getItem('cms_auth_provider') === 'keycloak') {
+  if (usesKeycloakSession()) {
     return refreshKeycloakAccessToken();
   }
 
@@ -136,7 +155,7 @@ export async function apiRequest<T = any>(
         const retryJson: IApiResponseEnvelope<T> = await retryResponse.json();
         return retryJson.data;
       } catch (err) {
-        if (localStorage.getItem('cms_auth_provider') !== 'keycloak') {
+        if (!usesKeycloakSession()) {
           tokenStorage.clearToken();
           localStorage.removeItem('zalo_profile_custom');
           window.dispatchEvent(new CustomEvent('cms:unauthorized'));
