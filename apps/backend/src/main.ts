@@ -50,11 +50,11 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1', {
     exclude: [
       '/',
-      'pay2s/(.*)',
-      'api/pay2s/(.*)',
-      'pay/(.*)',
-      'uploads/(.*)',
-      'public/(.*)',
+      'pay2s/*path',
+      'api/pay2s/*path',
+      'pay/*path',
+      'uploads/*path',
+      'public/*path',
     ],
   });
 
