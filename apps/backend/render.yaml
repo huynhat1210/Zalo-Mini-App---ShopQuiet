@@ -17,3 +17,7 @@ services:
         sync: false
       - key: SUPABASE_ANON_KEY
         sync: false
+      - key: KEYCLOAK_URL
+        sync: false
+      - key: KEYCLOAK_REALM
+        value: shopquiet

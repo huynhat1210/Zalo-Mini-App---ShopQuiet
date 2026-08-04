@@ -22,7 +22,7 @@ function persistSession() {
 }
 
 export async function initializeMiniAppKeycloak() {
-  const authenticated = await keycloak.init({ onLoad: 'login-required', checkLoginIframe: false });
+  const authenticated = await keycloak.init({ onLoad: 'check-sso', checkLoginIframe: false });
   if (!authenticated) return false;
   persistSession();
   keycloak.onTokenExpired = () => void keycloak.updateToken(0).then(persistSession).catch(() => keycloak.login());

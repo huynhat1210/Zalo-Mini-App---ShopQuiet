@@ -1,0 +1,27 @@
+databases:
+  - name: shopquiet-keycloak-db
+    databaseName: keycloak
+    user: keycloak
+
+services:
+  - type: web
+    name: shopquiet-keycloak
+    runtime: docker
+    dockerfilePath: ./apps/keycloak/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/ready
+    envVars:
+      - key: KC_DB
+        value: postgres
+      - key: KC_DB_URL
+        sync: false
+      - key: KC_DB_USERNAME
+        sync: false
+      - key: KC_DB_PASSWORD
+        sync: false
+      - key: KC_BOOTSTRAP_ADMIN_USERNAME
+        value: admin
+      - key: KC_BOOTSTRAP_ADMIN_PASSWORD
+        generateValue: true
+      - key: KC_PROXY_HEADERS
+        value: xforwarded

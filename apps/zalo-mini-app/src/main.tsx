@@ -77,7 +77,6 @@ const queryClient = new QueryClient({
 });
 
 const container = document.getElementById("app");
-void initializeMiniAppKeycloak().then(() => {
 if (container) {
   const root = createRoot(container);
   root.render(
@@ -88,4 +87,10 @@ if (container) {
     </React.StrictMode>,
   );
 }
-}).catch((error) => console.error('[ShopQuiet] Keycloak initialization failed:', error));
+
+// Never block the Zalo WebView render on an external SSO request. Keycloak
+// restores an existing session in the background when its browser context permits it.
+void Promise.race([
+  initializeMiniAppKeycloak(),
+  new Promise<false>((resolve) => window.setTimeout(() => resolve(false), 4000)),
+]).catch((error) => console.warn('[ShopQuiet] Keycloak session was not restored:', error));
