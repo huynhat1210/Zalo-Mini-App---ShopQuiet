@@ -32,19 +32,32 @@ export interface IApiResponseEnvelope<T = any> {
   };
 }
 
-let isRefreshing = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
+function refreshKeycloakAccessToken(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      reject(new Error('Timed out while refreshing the Keycloak session.'));
+    }, 10000);
 
-function subscribeTokenRefresh(callback: (token: string) => void) {
-  refreshSubscribers.push(callback);
-}
-
-function onRefreshed(token: string) {
-  refreshSubscribers.forEach(callback => callback(token));
-  refreshSubscribers = [];
+    window.dispatchEvent(new CustomEvent('cms:keycloak-refresh', {
+      detail: {
+        resolve: (token: string) => {
+          window.clearTimeout(timeoutId);
+          resolve(token);
+        },
+        reject: (error: Error) => {
+          window.clearTimeout(timeoutId);
+          reject(error);
+        },
+      },
+    }));
+  });
 }
 
 async function refreshAccessToken(): Promise<string> {
+  if (localStorage.getItem('cms_auth_provider') === 'keycloak') {
+    return refreshKeycloakAccessToken();
+  }
+
   const refreshToken = tokenStorage.getRefreshToken();
   if (!refreshToken) {
     throw new Error('No refresh token available');
@@ -105,42 +118,31 @@ export async function apiRequest<T = any>(
 
   if (!response.ok) {
     if (response.status === 401 && !path.includes('/auth/login') && !path.includes('/auth/refresh')) {
-      if (!isRefreshing) {
-        isRefreshing = true;
-        try {
-          const newAccessToken = await refreshAccessToken();
-          isRefreshing = false;
-          onRefreshed(newAccessToken);
-        } catch (err) {
-          isRefreshing = false;
+      try {
+        const newAccessToken = await refreshAccessToken();
+        const retryResponse = await fetch(url, {
+          ...options,
+          headers: { ...headers, Authorization: `Bearer ${newAccessToken}` },
+        });
+
+        if (!retryResponse.ok) {
+          throw new Error(`Retried request failed: ${retryResponse.status}`);
+        }
+
+        if (retryResponse.status === 204) {
+          return {} as T;
+        }
+
+        const retryJson: IApiResponseEnvelope<T> = await retryResponse.json();
+        return retryJson.data;
+      } catch (err) {
+        if (localStorage.getItem('cms_auth_provider') !== 'keycloak') {
           tokenStorage.clearToken();
           localStorage.removeItem('zalo_profile_custom');
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('cms:unauthorized'));
-          }
-          throw err;
+          window.dispatchEvent(new CustomEvent('cms:unauthorized'));
         }
+        throw err;
       }
-
-      return new Promise<T>((resolve, reject) => {
-        subscribeTokenRefresh(async (token: string) => {
-          try {
-            const retryHeaders = {
-              ...headers,
-              'Authorization': `Bearer ${token}`,
-            };
-            const retryOptions = { ...options, headers: retryHeaders };
-            const retryResponse = await fetch(url, retryOptions);
-            if (!retryResponse.ok) {
-              throw new Error(`Retried request failed: ${retryResponse.status}`);
-            }
-            const json: IApiResponseEnvelope<T> = await retryResponse.json();
-            resolve(json.data);
-          } catch (e) {
-            reject(e);
-          }
-        });
-      });
     }
 
     let errMsg = `Request failed with status ${response.status}`;
@@ -232,4 +234,3 @@ export async function crmApiRequest<T = any>(
   const json: IApiResponseEnvelope<T> = await response.json();
   return json.data;
 }
-

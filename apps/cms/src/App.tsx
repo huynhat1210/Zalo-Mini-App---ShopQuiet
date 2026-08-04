@@ -20,6 +20,7 @@ const KEYCLOAK_INIT_TIMEOUT_MS = 12000;
 function persistKeycloakSession() {
   localStorage.setItem('cms_access_token', keycloak.token || '');
   localStorage.setItem('cms_refresh_token', keycloak.refreshToken || '');
+  localStorage.setItem('cms_auth_provider', 'keycloak');
 
   const profile = {
     zaloId: keycloak.tokenParsed?.preferred_username || 'admin',
@@ -144,20 +145,48 @@ export const App: React.FC = () => {
       });
 
     const handleUnauthorized = () => {
+      if (localStorage.getItem('cms_auth_provider') === 'keycloak') {
+        return;
+      }
       localStorage.removeItem('cms_access_token');
       localStorage.removeItem('cms_refresh_token');
       localStorage.removeItem('zalo_profile_custom');
       keycloak.login();
     };
 
+    const handleKeycloakRefresh = (event: Event) => {
+      const { resolve, reject } = (event as CustomEvent<{
+        resolve: (token: string) => void;
+        reject: (error: Error) => void;
+      }>).detail || {};
+
+      if (!resolve || !reject) {
+        return;
+      }
+
+      void refreshKeycloakToken(30)
+        .then(() => {
+          if (!keycloak.token) {
+            throw new Error('Keycloak did not return an access token.');
+          }
+          resolve(keycloak.token);
+        })
+        .catch(reject);
+    };
+
     window.addEventListener('cms:unauthorized', handleUnauthorized);
-    return () => window.removeEventListener('cms:unauthorized', handleUnauthorized);
+    window.addEventListener('cms:keycloak-refresh', handleKeycloakRefresh);
+    return () => {
+      window.removeEventListener('cms:unauthorized', handleUnauthorized);
+      window.removeEventListener('cms:keycloak-refresh', handleKeycloakRefresh);
+    };
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('cms_access_token');
     localStorage.removeItem('cms_refresh_token');
     localStorage.removeItem('zalo_profile_custom');
+    localStorage.removeItem('cms_auth_provider');
     keycloak.logout();
   };
 
