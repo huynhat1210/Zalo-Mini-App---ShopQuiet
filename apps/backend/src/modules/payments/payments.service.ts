@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { OrderTrackingGateway } from '../websocket/websocket.gateway';
+import { OrderStatus } from '@prisma/client';
 
 export interface BankConfig {
   bankId: string; // e.g. 'MB', 'VCB', 'TCB', 'ACB', 'VTB'
@@ -105,7 +106,7 @@ export class PaymentsService {
     // Find all pending orders
     const pendingOrders = await this.prisma.order.findMany({
       where: {
-        status: { in: ['PENDING', 'PROCESSING'] },
+        status: { in: [OrderStatus.PENDING, OrderStatus.PENDING_PAYMENT, OrderStatus.PROCESSING] },
       },
     });
 
@@ -119,7 +120,7 @@ export class PaymentsService {
       await this.prisma.order.update({
         where: { id: matchedOrder.id },
         data: {
-          status: 'PROCESSING',
+          status: OrderStatus.PROCESSING,
         },
       });
 

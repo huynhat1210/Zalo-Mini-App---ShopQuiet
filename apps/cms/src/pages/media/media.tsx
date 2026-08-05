@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiRequest } from '../../utils/api';
+import { API_BASE_URL, apiRequest, tokenStorage } from '../../utils/api';
 import { useToast } from '../../contexts';
 import { PaginationComponent } from '../../components';
 import { 
@@ -59,9 +59,8 @@ export const Media: React.FC<IMediaProps> = (_props) => {
     try {
       setUploading(true);
       
-      // We need to fetch directly to append token and custom content type
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || (window.location.origin + '/api/v1');
-      const token = localStorage.getItem('access_token');
+      const baseUrl = API_BASE_URL;
+      const token = tokenStorage.getAccessToken();
       
       const response = await fetch(`${baseUrl}/media/upload`, {
         method: 'POST',
@@ -100,14 +99,7 @@ export const Media: React.FC<IMediaProps> = (_props) => {
 
   const handleCopyUrl = (url: string, filename: string) => {
     // Generate absolute path
-    const absoluteUrl = window.location.origin.includes('localhost')
-      ? `http://localhost:3000${url}`
-      : `${window.location.origin.replace('cms', 'backend')}${url}`;
-
-    // fallback mapping URL dynamically
-    const finalUrl = absoluteUrl.includes('render.com') 
-      ? url 
-      : absoluteUrl;
+    const finalUrl = `${API_BASE_URL.replace('/api/v1', '')}${url}`;
 
     navigator.clipboard.writeText(finalUrl);
     setCopiedFilename(filename);

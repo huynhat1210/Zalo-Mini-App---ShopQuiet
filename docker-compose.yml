@@ -1,19 +1,70 @@
 services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/app.Dockerfile
+      args:
+        APP_NAME: backend
+    container_name: shopquiet-backend
+    env_file:
+      - path: ./apps/backend/.env
+        format: raw
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+    command: ["node", "apps/backend/dist/main.js"]
+    ports:
+      - "127.0.0.1:3000:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - keycloak
+    restart: unless-stopped
+
+  crm-backend:
+    build:
+      context: .
+      dockerfile: docker/app.Dockerfile
+      args:
+        APP_NAME: zalo-crm-backend
+    container_name: shopquiet-crm-backend
+    env_file:
+      - path: ./apps/zalo-crm-backend/.env
+        format: raw
+    environment:
+      NODE_ENV: production
+      CRM_PORT: 3002
+    command: ["node", "apps/zalo-crm-backend/dist/main.js"]
+    ports:
+      - "127.0.0.1:3002:3002"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - keycloak
+    restart: unless-stopped
+
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.5
     container_name: shopquiet-keycloak
     command: start-dev --import-realm
     env_file:
-      - ./.keycloak.local
+      - path: ./.keycloak.local
+        format: raw
     environment:
       KC_HOSTNAME_STRICT: "false"
       KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_PROXY_HEADERS: "xforwarded"
       KC_HTTP_ENABLED: "true"
+      KC_SPI_THEME_DEFAULT: "shopquiet"
+      KC_SPI_THEME_CACHE_THEMES: "false"
+      KC_SPI_THEME_CACHE_TEMPLATES: "false"
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     volumes:
       - keycloak_data:/opt/keycloak/data
       - ./keycloak-realm-export.json:/opt/keycloak/data/import/shopquiet-realm.json:ro
+      - ./keycloak/themes/shopquiet:/opt/keycloak/themes/shopquiet:ro
     restart: unless-stopped
 
 volumes:

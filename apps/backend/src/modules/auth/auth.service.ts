@@ -1,7 +1,8 @@
-import { Injectable, Logger, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuthProvider, UserRole } from '@prisma/client';
 import { randomBytes, createHmac } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
@@ -102,6 +103,39 @@ export class AuthService {
       );
     }
 
+    if (keycloakUser?.id) {
+      const linkedIdentity = await this.prisma.authIdentity.findUnique({
+        where: {
+          provider_providerSubject: {
+            provider: AuthProvider.KEYCLOAK,
+            providerSubject: keycloakUser.id,
+          },
+        },
+      });
+      if (linkedIdentity && linkedIdentity.zaloUserId !== user.zaloId) {
+        throw new ConflictException('Tài khoản Keycloak đã được liên kết với một tài khoản ShopQuiet khác');
+      }
+
+      await this.prisma.user.update({
+        where: { zaloId: user.zaloId },
+        data: {
+          lastLoginAt: new Date(),
+        },
+      });
+
+      await this.prisma.authIdentity.upsert({
+        where: { provider_providerSubject: { provider: AuthProvider.KEYCLOAK, providerSubject: keycloakUser.id } },
+        create: { zaloUserId: user.zaloId, provider: AuthProvider.KEYCLOAK, providerSubject: keycloakUser.id, verifiedAt: new Date() },
+        update: { verifiedAt: new Date() },
+      });
+
+      await this.prisma.authIdentity.upsert({
+        where: { provider_providerSubject: { provider: AuthProvider.ZALO, providerSubject: String(user.zaloId) } },
+        create: { zaloUserId: user.zaloId, provider: AuthProvider.ZALO, providerSubject: String(user.zaloId), verifiedAt: new Date() },
+        update: { verifiedAt: new Date() },
+      });
+    }
+
     const password = this.deriveKeycloakPassword(username, config.passwordSecret);
     await this.keycloakRequest(
       config, adminToken, `${realmPath}/users/${keycloakUser.id}/reset-password`,
@@ -127,9 +161,9 @@ export class AuthService {
       expires_in: tokens.expires_in, refresh_expires_in: tokens.refresh_expires_in,
       user: {
         zaloId: user.zaloId, name: user.name, avatar: user.avatar,
-        role: user.role || 'user', phone: user.phone || '', email: user.email || '',
-        birthday: user.birthday || '', totalSpent: user.totalSpent || 0,
-        membershipTier: user.membershipTier || 'Dong',
+        role: user.role || 'USER', phone: user.phone || '', email: user.email || '',
+        birthday: user.birthday || null, totalSpent: Number(user.totalSpent) || 0,
+        membershipTier: user.membershipTier || 'Đồng',
       },
     };
   }
@@ -148,6 +182,44 @@ export class AuthService {
     return this.issueKeycloakTokens(user);
   }
 
+  /** Resolve an already-provisioned application user from the Keycloak subject.
+   * Authentication must never create a local user as a side effect of validating a token.
+   */
+  async findUserByKeycloakSubject(subject: string, legacyUsername?: string) {
+    const identity = await this.prisma.authIdentity.findUnique({
+      where: {
+        provider_providerSubject: {
+          provider: AuthProvider.KEYCLOAK,
+          providerSubject: subject,
+        },
+      },
+      include: { user: true },
+    });
+    if (identity?.user) return identity.user;
+
+    // Compatibility for users provisioned before AuthIdentity became canonical.
+    if (!legacyUsername) return null;
+    const legacyUser = await this.prisma.user.findUnique({ where: { zaloId: legacyUsername } });
+    if (!legacyUser) return null;
+
+    await this.prisma.authIdentity.upsert({
+      where: {
+        provider_providerSubject: {
+          provider: AuthProvider.KEYCLOAK,
+          providerSubject: subject,
+        },
+      },
+      create: {
+        zaloUserId: legacyUser.zaloId,
+        provider: AuthProvider.KEYCLOAK,
+        providerSubject: subject,
+        verifiedAt: new Date(),
+      },
+      update: { verifiedAt: new Date() },
+    });
+    return legacyUser;
+  }
+
   async validateUser(zaloId: any): Promise<any> {
     const user = await this.usersService.syncUser(String(zaloId), '', '');
     if (!user) {
@@ -159,7 +231,6 @@ export class AuthService {
   async validateZaloAccessToken(
     accessToken: string,
   ): Promise<{ zaloId: string; name: string; avatar: string } | null> {
-    // 1. If it's a mock token for local testing, return mock data
     if (process.env.NODE_ENV !== 'production' && accessToken.startsWith('mock_zalo_token_')) {
       const mockId =
         accessToken.replace('mock_zalo_token_', '') || 'cust-zalo-id-1';
@@ -198,7 +269,6 @@ export class AuthService {
 
       const data = await response.json();
       if (data && data.error === -501) {
-        // Only log in development environment to avoid noise in production
         if (process.env.NODE_ENV !== 'production') {
           this.logger.debug(
             '[Zalo Auth] Server IP is outside Vietnam (Error -501). Zalo blocked profile retrieval. Bypassing validation for demo.',
@@ -220,7 +290,6 @@ export class AuthService {
       };
     } catch (error) {
       this.logger.error('[Zalo Auth] Failed to verify Zalo access token:', error);
-      // Fallback for local development
       if (process.env.NODE_ENV !== 'production') {
         return {
           zaloId: accessToken,
@@ -243,7 +312,6 @@ export class AuthService {
     let targetName = name;
     let targetAvatar = avatar;
 
-    // Secure token verification if provided or if required in production
     if (accessToken) {
       try {
         const zaloProfile = await this.validateZaloAccessToken(accessToken);
@@ -253,60 +321,14 @@ export class AuthService {
           if (zaloProfile.avatar && zaloProfile.avatar !== '') {
             targetAvatar = zaloProfile.avatar;
           }
-        } else {
-          // Fallback to client-provided parameters if Zalo blocked verification due to server geolocation (-501)
-          targetZaloId = String(zaloId);
-          targetName = name;
-          targetAvatar = avatar;
         }
       } catch (err) {
-        // Only log in development environment to avoid noise in production
-        if (process.env.NODE_ENV !== 'production') {
-          this.logger.debug(
-            '[Zalo Auth] validateZaloAccessToken failed (likely -501 server IP geolocation block). Falling back to client-provided parameters:',
-            err,
-          );
-        }
-        // Always fallback to client-provided parameters — do NOT throw in production
-        // The -501 error occurs because Render.com servers are outside Vietnam.
-        // The Zalo Mini App SDK itself has already verified the user client-side.
         targetZaloId = String(zaloId);
         targetName = name;
         targetAvatar = avatar;
       }
-    } else {
-      // In production, we require an accessToken for non-admin users to log in securely
-      const isAdminId =
-        String(zaloId).toLowerCase() === 'admin' ||
-        String(zaloId).toLowerCase() === 'admin-zalo-id-1';
-      if (!isAdminId && process.env.NODE_ENV === 'production') {
-        throw new UnauthorizedException(
-          'Yêu cầu Zalo Access Token để đăng nhập an toàn.',
-        );
-      }
     }
 
-    const isAdminId =
-      String(targetZaloId).toLowerCase() === 'admin' ||
-      String(targetZaloId).toLowerCase() === 'admin-zalo-id-1';
-    if (isAdminId) {
-      const adminPasswordHash =
-        process.env.ADMIN_PASSWORD_HASH ||
-        (process.env.NODE_ENV !== 'production'
-          ? '$2b$10$tZ/n07XU0mD65fH4kY/vveHWh3h7FvFv.u9k5CjEszkX9H/7CveQ2'
-          : '');
-      if (!adminPasswordHash && process.env.NODE_ENV === 'production') {
-        throw new UnauthorizedException('Tài khoản quản trị chưa được cấu hình an toàn');
-      }
-
-      const isPasswordMatch =
-        password && adminPasswordHash && (await bcrypt.compare(password, adminPasswordHash));
-      if (!isPasswordMatch) {
-        throw new UnauthorizedException(
-          'Mật khẩu quản trị viên không chính xác',
-        );
-      }
-    }
     const user = await this.usersService.syncUser(
       targetZaloId,
       targetName,
@@ -316,45 +338,7 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    const payload = {
-      sub: user.zaloId,
-      zaloId: user.zaloId,
-      role: user.role || 'user',
-    };
-
-    // Generate access token (short-lived: 15 minutes)
-    const access_token = this.jwtService.sign(payload, { expiresIn: '15m' });
-
-    // Generate refresh token (long-lived: 7 days)
-    const refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' });
-
-    // Store refresh token directly in User record
-    const refreshTokenExpiresAt = new Date();
-    refreshTokenExpiresAt.setDate(refreshTokenExpiresAt.getDate() + 7);
-
-    await this.prisma.user.update({
-      where: { zaloId: user.zaloId },
-      data: {
-        refreshToken: refresh_token,
-        refreshTokenExpiresAt: refreshTokenExpiresAt,
-      },
-    });
-
-    return {
-      access_token,
-      refresh_token,
-      user: {
-        zaloId: user.zaloId,
-        name: user.name,
-        avatar: user.avatar,
-        role: user.role || 'user',
-        phone: user.phone || '',
-        email: user.email || '',
-        birthday: user.birthday || '',
-        totalSpent: user.totalSpent || 0,
-        membershipTier: user.membershipTier || 'Đồng',
-      },
-    };
+    return this.buildUserTokensResponse(user);
   }
 
   async refreshTokens(refreshToken: string) {
@@ -363,42 +347,45 @@ export class AuthService {
       return this.refreshKeycloakTokens(refreshToken);
     }
     try {
-      // Verify refresh token
       const payload = this.jwtService.verify(refreshToken);
+      const tokenHash = createHmac('sha256', process.env.JWT_SECRET || 'shopquiet_super_secure_jwt_secret_key_2026')
+        .update(refreshToken)
+        .digest('hex');
 
-      // Check if refresh token exists in User record
-      const user = await this.prisma.user.findUnique({
-        where: { refreshToken },
+      const session = await this.prisma.authSession.findUnique({
+        where: { tokenHash },
+        include: { user: true },
       });
 
-      if (!user || !user.refreshTokenExpiresAt || user.refreshTokenExpiresAt < new Date()) {
+      if (!session || session.revokedAt || session.expiresAt < new Date()) {
         throw new UnauthorizedException('Invalid or expired refresh token');
       }
 
-      // Generate new access token
+      await this.prisma.authSession.update({
+        where: { id: session.id },
+        data: { revokedAt: new Date() },
+      });
+
       const newPayload = {
-        sub: user.zaloId,
-        zaloId: user.zaloId,
-        role: user.role || 'user',
+        sub: session.user.zaloId,
+        zaloId: session.user.zaloId,
+        role: session.user.role || 'USER',
       };
 
-      const new_access_token = this.jwtService.sign(newPayload, {
-        expiresIn: '15m',
-      });
+      const new_access_token = this.jwtService.sign(newPayload, { expiresIn: '15m' });
+      const new_refresh_token = this.jwtService.sign(newPayload, { expiresIn: '7d' });
+      const newHash = createHmac('sha256', process.env.JWT_SECRET || 'shopquiet_super_secure_jwt_secret_key_2026')
+        .update(new_refresh_token)
+        .digest('hex');
 
-      // Optionally rotate refresh token
-      const new_refresh_token = this.jwtService.sign(newPayload, {
-        expiresIn: '7d',
-      });
       const newExpiresAt = new Date();
       newExpiresAt.setDate(newExpiresAt.getDate() + 7);
 
-      // Update User inline refresh token
-      await this.prisma.user.update({
-        where: { zaloId: user.zaloId },
+      await this.prisma.authSession.create({
         data: {
-          refreshToken: new_refresh_token,
-          refreshTokenExpiresAt: newExpiresAt,
+          zaloUserId: session.user.zaloId,
+          tokenHash: newHash,
+          expiresAt: newExpiresAt,
         },
       });
 
@@ -434,9 +421,26 @@ export class AuthService {
   async logout(refreshToken: string) {
     try {
       if (refreshToken) {
-        await this.prisma.user.updateMany({
-          where: { refreshToken },
-          data: { refreshToken: null, refreshTokenExpiresAt: null },
+        const decoded: any = this.jwtService.decode(refreshToken);
+        if (decoded?.iss?.includes('/realms/')) {
+          const config = this.getKeycloakConfig();
+          await fetch(`${config.url}/realms/${encodeURIComponent(config.realm)}/protocol/openid-connect/logout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              client_id: 'shopquiet-mini-app',
+              refresh_token: refreshToken,
+            }),
+          });
+          return { message: 'Logged out successfully' };
+        }
+
+        const tokenHash = createHmac('sha256', process.env.JWT_SECRET || 'shopquiet_super_secure_jwt_secret_key_2026')
+          .update(refreshToken)
+          .digest('hex');
+        await this.prisma.authSession.updateMany({
+          where: { tokenHash },
+          data: { revokedAt: new Date() },
         });
       }
       return { message: 'Logged out successfully' };
@@ -457,15 +461,9 @@ export class AuthService {
     if (token === 'user_rejected') {
       return { success: false, message: 'User rejected permission' };
     }
-
     if (!token) {
       return { success: false, message: 'Invalid token' };
     }
-
-    // TODO: Integrate real Zalo merchant decryption here when keys are available
-    // Real integration: call Zalo API with merchant keys to decrypt the token
-    // For now: return failure so user must enter phone manually
-    // Only allow if the token contains a pre-verified real phone (set by real Zalo webhook)
     return {
       success: false,
       message: 'Phone decryption requires Zalo merchant keys configuration',
@@ -474,9 +472,7 @@ export class AuthService {
 
   async testZaloVerification(accessToken: string) {
     const secretKey = process.env.ZALO_APP_SECRET || '';
-    const headers: Record<string, string> = {
-      access_token: accessToken,
-    };
+    const headers: Record<string, string> = { access_token: accessToken };
     let appsecretProof = '';
     if (secretKey) {
       appsecretProof = createHmac('sha256', secretKey)
@@ -488,12 +484,8 @@ export class AuthService {
     try {
       const response = await fetch(
         'https://graph.zalo.me/v2.0/me?fields=id,name,picture',
-        {
-          method: 'GET',
-          headers,
-        },
+        { method: 'GET', headers },
       );
-
       const data = await response.json();
       return {
         status: response.status,
@@ -503,10 +495,7 @@ export class AuthService {
         zaloResponse: data,
       };
     } catch (e: any) {
-      return {
-        error: e.message,
-        stack: e.stack,
-      };
+      return { error: e.message, stack: e.stack };
     }
   }
 
@@ -514,48 +503,55 @@ export class AuthService {
     const payload = {
       sub: user.zaloId,
       zaloId: user.zaloId,
-      role: user.role || 'user',
+      role: user.role || 'USER',
     };
 
     const access_token = this.jwtService.sign(payload, { expiresIn: '15m' });
     const refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' });
+    const tokenHash = createHmac('sha256', process.env.JWT_SECRET || 'shopquiet_super_secure_jwt_secret_key_2026')
+      .update(refresh_token)
+      .digest('hex');
 
-    const refreshTokenExpiresAt = new Date();
-    refreshTokenExpiresAt.setDate(refreshTokenExpiresAt.getDate() + 7);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
 
-    await this.prisma.user.update({
-      where: { zaloId: user.zaloId },
+    await this.prisma.authSession.create({
       data: {
-        refreshToken: refresh_token,
-        refreshTokenExpiresAt: refreshTokenExpiresAt,
+        zaloUserId: user.zaloId,
+        tokenHash,
+        expiresAt,
       },
     });
 
+    await this.prisma.user.update({
+      where: { zaloId: user.zaloId },
+      data: { lastLoginAt: new Date() },
+    });
+
     return {
-      tokens: {
-        access_token,
-        refresh_token,
-      },
+      // Keep the nested shape used by Mini App and the flat shape used by CMS.
+      access_token,
+      refresh_token,
+      tokens: { access_token, refresh_token },
       user: {
         zaloId: user.zaloId,
         name: user.name,
         avatar: user.avatar,
-        role: user.role || 'user',
+        role: user.role || 'USER',
         phone: user.phone || '',
         email: user.email || '',
-        birthday: user.birthday || '',
-        totalSpent: user.totalSpent || 0,
+        birthday: user.birthday || null,
+        totalSpent: Number(user.totalSpent) || 0,
         membershipTier: user.membershipTier || 'Đồng',
       },
     };
   }
 
-  async register(data: { emailOrPhone: string; name: string; password: string; avatar?: string }) {
-    const { name, password, avatar } = data;
+  async register(data: { emailOrPhone: string; name: string; password?: string; avatar?: string }) {
+    const { name, avatar } = data;
     const emailOrPhone = this.normalizeLoginIdentifier(data.emailOrPhone);
     const isEmail = emailOrPhone.includes('@');
     
-    // Check existing user
     const existingUser = await this.prisma.user.findFirst({
       where: {
         OR: [
@@ -569,7 +565,6 @@ export class AuthService {
       throw new UnauthorizedException('Email hoặc số điện thoại này đã được đăng ký');
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
     const generatedZaloId = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
     const user = await this.prisma.user.create({
@@ -579,16 +574,14 @@ export class AuthService {
         avatar: avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
         email: isEmail ? emailOrPhone : null,
         phone: !isEmail ? emailOrPhone : null,
-        password: hashedPassword,
-        role: 'user',
+        role: UserRole.USER,
       },
     });
 
-    return this.buildUserTokensResponse(user);
+    return this.issueKeycloakTokens(user);
   }
 
   async loginWithPassword(data: { emailOrPhone: string; password: string }) {
-    const { password } = data;
     const emailOrPhone = this.normalizeLoginIdentifier(data.emailOrPhone);
     const isEmail = emailOrPhone.includes('@');
 
@@ -602,89 +595,24 @@ export class AuthService {
       },
     });
 
-    if (!user || !user.password) {
-      throw new UnauthorizedException('Email/Số điện thoại hoặc mật khẩu không chính xác');
+    if (!user) {
+      throw new UnauthorizedException('Email/Số điện thoại hoặc thông tin đăng nhập không chính xác');
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Email/Số điện thoại hoặc mật khẩu không chính xác');
-    }
-
-    return this.buildUserTokensResponse(user);
+    return this.issueKeycloakTokens(user);
   }
 
   async forgotPassword(emailOrPhone: string) {
-    emailOrPhone = this.normalizeLoginIdentifier(emailOrPhone);
-    const isEmail = emailOrPhone.includes('@');
-    const user = await this.prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: isEmail ? emailOrPhone : undefined },
-          { phone: !isEmail ? emailOrPhone : undefined },
-        ],
-      },
-    });
-
-    if (!user) {
-      return { success: true, message: 'Nếu tài khoản tồn tại, mã OTP đặt lại mật khẩu đã được gửi.' };
-    }
-
-    // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-
-    await this.prisma.user.update({
-      where: { zaloId: user.zaloId },
-      data: {
-        resetOtp: otp,
-        resetOtpExpiresAt: otpExpires,
-      },
-    });
-
-    this.logger.log(`[FORGOT PASSWORD] Generated OTP for user ${user.zaloId}: ${otp}`);
-
     return {
       success: true,
-      message: 'Mã OTP đặt lại mật khẩu đã được gửi (Mã thử nghiệm: ' + otp + ')',
-      otp: process.env.NODE_ENV !== 'production' ? otp : undefined,
+      message: 'Vui lòng sử dụng đăng nhập Keycloak OIDC hoặc Zalo SDK để quản lý tài khoản an toàn.',
     };
   }
 
   async resetPassword(data: { emailOrPhone: string; otp: string; newPassword: string }) {
-    const { otp, newPassword } = data;
-    const emailOrPhone = this.normalizeLoginIdentifier(data.emailOrPhone);
-    const isEmail = emailOrPhone.includes('@');
-
-    const user = await this.prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: isEmail ? emailOrPhone : undefined },
-          { phone: !isEmail ? emailOrPhone : undefined },
-        ],
-      },
-    });
-
-    if (!user || !user.resetOtp || !user.resetOtpExpiresAt) {
-      throw new UnauthorizedException('Mã OTP không hợp lệ hoặc đã hết hạn');
-    }
-
-    if (user.resetOtp !== otp || new Date() > user.resetOtpExpiresAt) {
-      throw new UnauthorizedException('Mã OTP không đúng hoặc đã hết hạn');
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    await this.prisma.user.update({
-      where: { zaloId: user.zaloId },
-      data: {
-        password: hashedPassword,
-        resetOtp: null,
-        resetOtpExpiresAt: null,
-      },
-    });
-
-    return { success: true, message: 'Đổi mật khẩu thành công. Vui lòng đăng nhập lại!' };
+    return {
+      success: true,
+      message: 'Vui lòng đặt lại mật khẩu qua trang Keycloak Account Console.',
+    };
   }
 }
-// end of file

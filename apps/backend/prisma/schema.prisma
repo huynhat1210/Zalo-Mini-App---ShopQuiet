@@ -8,6 +8,47 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  COMPLETED
+  RETURN_REQUESTED
+  RETURNED
+  CANCELLED
+  REFUNDED
+}
+
+enum AuthProvider {
+  ZALO
+  GOOGLE
+  FACEBOOK
+  EMAIL
+  KEYCLOAK
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
 model Category {
   id          Int       @id @default(autoincrement())
   name        String
@@ -18,30 +59,30 @@ model Category {
 }
 
 model Product {
-  id             Int              @id @default(autoincrement())
-  name           String
-  description    String
-  price          Float
-  tags           String?
-  images         String
-  categoryId     Int
-  materialCare   String?
-  shippingReturn String?
-  sizeChart      String?          // JSON: [{size, height, weight, bust, waist}]
-  isFlashSale    Boolean          @default(false)
-  flashSalePrice Float?
+  id                Int              @id @default(autoincrement())
+  name              String
+  description       String
+  price             Decimal          @db.Decimal(12, 2)
+  tags              String?
+  images            Json
+  categoryId        Int
+  materialCare      String?
+  shippingReturn    String?
+  sizeChart         Json?
+  isFlashSale       Boolean          @default(false)
+  flashSalePrice    Decimal?         @db.Decimal(12, 2)
   flashSaleDiscount Int?
-  soldCount      Int              @default(0)
-  likeCount      Int              @default(0)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @default(now()) @updatedAt
-  cartItems      CartItem[]
-  comments       Comment[]
-  favorites      Favorite[]
-  orderItems     OrderItem[]
-  category       Category         @relation(fields: [categoryId], references: [id])
-  variants       ProductVariant[]
-  analyticsEvents AnalyticsEvent[]
+  soldCount         Int              @default(0)
+  likeCount         Int              @default(0)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @default(now()) @updatedAt
+  cartItems         CartItem[]
+  comments          Comment[]
+  favorites         Favorite[]
+  orderItems        OrderItem[]
+  category          Category         @relation(fields: [categoryId], references: [id])
+  variants          ProductVariant[]
+  analyticsEvents   AnalyticsEvent[]
 
   @@index([categoryId])
   @@index([name])
@@ -51,45 +92,83 @@ model Product {
   @@index([soldCount])
 }
 
-
 model User {
-  zaloId        String         @id
-  name          String
-  avatar        String?
-  role          String         @default("user")
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  birthday      String?
-  gender        String?
-  phone         String?        @unique
-  email         String?        @unique
-  totalSpent     Float          @default(0)
-  membershipTier String         @default("Đồng")
-  gamificationPoints Float      @default(0)
-  height            Float?
-  weight            Float?
-  footLength        Float?
-  clothingSize      String?
-  shoeSize          String?
-  refreshToken      String?        @unique
-  refreshTokenExpiresAt DateTime?
-  password          String?
-  resetOtp          String?
-  resetOtpExpiresAt DateTime?
-  cartItems     CartItem[]
-  comments      Comment[]
-  favorites     Favorite[]
-  notifications Notification[]
-  orders        Order[]
-  addresses     UserAddress[]
-  chatMessages  ChatMessage[]
-  pointsHistory PointsHistory[]
-  campaignUsers CampaignUser[]
+  zaloId             String         @id
+  name               String
+  avatar             String?
+  role               UserRole       @default(USER)
+  status             UserStatus     @default(ACTIVE)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  birthday           DateTime?
+  gender             String?
+  phone              String?        @unique
+  email              String?        @unique
+  totalSpent         Decimal        @default(0) @db.Decimal(12, 2)
+  membershipTier     String         @default("Đồng")
+  gamificationPoints Decimal        @default(0) @db.Decimal(10, 0)
+  height             Float?
+  weight             Float?
+  footLength         Float?
+  clothingSize       String?
+  shoeSize           String?
+  lastLoginAt        DateTime?
+  emailVerifiedAt    DateTime?
+  phoneVerifiedAt    DateTime?
+  termsAcceptedAt    DateTime?
+  marketingConsentAt DateTime?
+  deletedAt          DateTime?
+
+  cartItems      CartItem[]
+  comments       Comment[]
+  favorites      Favorite[]
+  notifications  Notification[]
+  orders         Order[]
+  addresses      UserAddress[]
+  chatMessages   ChatMessage[]
+  pointsHistory  PointsHistory[]
+  campaignUsers  CampaignUser[]
   automationLogs AutomationLog[]
+  authIdentities AuthIdentity[]
+  authSessions   AuthSession[]
 
   @@index([name])
   @@index([role])
+  @@index([status])
   @@index([createdAt])
+}
+
+model AuthIdentity {
+  id              Int          @id @default(autoincrement())
+  zaloUserId      String
+  provider        AuthProvider
+  providerSubject String
+  verifiedAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  user User @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+
+  @@unique([provider, providerSubject])
+  @@unique([zaloUserId, provider])
+  @@index([zaloUserId])
+}
+
+model AuthSession {
+  id         String    @id @default(uuid())
+  zaloUserId String
+  tokenHash  String    @unique
+  deviceInfo String?
+  ipAddress  String?
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user User @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+
+  @@index([zaloUserId])
+  @@index([expiresAt])
 }
 
 model CartItem {
@@ -126,7 +205,7 @@ model Comment {
   content    String
   rating     Int      @default(5)
   orderId    String?
-  images     String?
+  images     Json?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -140,40 +219,41 @@ model Comment {
 }
 
 model UserAddress {
-  id         Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   zaloUserId String
-  label      String
-  phone      String
-  street     String
-  city       String
-  isDefault  Boolean @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  user       User    @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+  label     String
+  phone     String
+  street    String
+  city      String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
 
   @@index([zaloUserId])
 }
 
 model Order {
-  id              String      @id
-  totalAmount     Float
-  status          String      @default("PROCESSING")
-  zaloUserId      String?
-  createdAt       DateTime    @default(now())
-  paymentMethod   String      @default("COD")
-  voucherCode     String?
-  discountAmount  Float       @default(0)
-  shippingAddress String?
-  shippingPhone   String?
-  shippingName    String?
-  trackingNumber  String?
-  returnReason      String?
-  returnDescription String?
-  returnImages      String? // JSON string array of proof images
+  id                  String               @id
+  totalAmount         Decimal              @db.Decimal(12, 2)
+  status              OrderStatus          @default(PROCESSING)
+  zaloUserId          String?
+  createdAt           DateTime             @default(now())
+  paymentMethod       String               @default("COD")
+  voucherCode         String?
+  discountAmount      Decimal              @default(0) @db.Decimal(12, 2)
+  shippingAddress     String?
+  shippingPhone       String?
+  shippingName        String?
+  trackingNumber      String?
+  returnReason        String?
+  returnDescription   String?
+  returnImages        Json?
   estimatedDeliveryDate DateTime?
-  shippingMethodCode String?
-  user            User?       @relation(fields: [zaloUserId], references: [zaloId])
-  items           OrderItem[]
+  shippingMethodCode  String?
+  user                User?                @relation(fields: [zaloUserId], references: [zaloId])
+  items               OrderItem[]
+  paymentTransactions PaymentTransaction[]
 
   @@index([zaloUserId])
   @@index([status])
@@ -185,20 +265,56 @@ model Order {
 }
 
 model OrderItem {
-  id        Int     @id @default(autoincrement())
-  quantity  Int
-  price     Float
-  productId Int
-  color     String  @default("DEFAULT")
-  size      String  @default("DEFAULT")
-  productName String?
+  id              Int      @id @default(autoincrement())
+  quantity        Int
+  price           Decimal  @db.Decimal(12, 2)
+  productId       Int
+  color           String   @default("DEFAULT")
+  size            String   @default("DEFAULT")
+  productName     String?
   productImageUrl String?
-  orderId   String
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product   Product @relation(fields: [productId], references: [id])
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product         Product  @relation(fields: [productId], references: [id])
 
   @@index([orderId])
   @@index([productId])
+}
+
+model PaymentTransaction {
+  id              String        @id @default(uuid())
+  orderId         String
+  transactionCode String        @unique
+  provider        String        @default("PAY2S")
+  amount          Decimal       @db.Decimal(12, 2)
+  currency        String        @default("VND")
+  status          PaymentStatus @default(PENDING)
+  rawResponse     Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([status])
+  @@index([provider])
+}
+
+model PaymentWebhookEvent {
+  id             String    @id @default(uuid())
+  provider       String    @default("PAY2S")
+  eventId        String?   @unique
+  idempotencyKey String?   @unique
+  eventType      String
+  payload        Json
+  processed      Boolean   @default(false)
+  processedAt    DateTime?
+  errorMessage   String?
+  createdAt      DateTime  @default(now())
+
+  @@index([provider])
+  @@index([processed])
+  @@index([createdAt])
 }
 
 model Notification {
@@ -236,9 +352,9 @@ model Favorite {
 model Voucher {
   code        String    @id
   type        String
-  value       Float
-  minOrderVal Float     @default(0)
-  maxDiscount Float?
+  value       Decimal   @db.Decimal(12, 2)
+  minOrderVal Decimal   @default(0) @db.Decimal(12, 2)
+  maxDiscount Decimal?  @db.Decimal(12, 2)
   stock       Int       @default(999)
   usedCount   Int       @default(0)
   expiresAt   DateTime?
@@ -264,7 +380,7 @@ model Banner {
 
 model MembershipPrivilege {
   id          Int      @id @default(autoincrement())
-  tier        String   // 'Đồng', 'Bạc', 'Vàng', 'Kim cương'
+  tier        String
   title       String
   description String
   sortOrder   Int      @default(0)
@@ -308,7 +424,7 @@ model ShippingMethod {
   code          String   @unique
   name          String
   description   String?
-  price         Float    @default(0)
+  price         Decimal  @default(0) @db.Decimal(12, 2)
   estimatedDays String?
   sortOrder     Int      @default(0)
   active        Boolean  @default(true)
@@ -332,7 +448,7 @@ model PaymentMethod {
 model ChatMessage {
   id         Int      @id @default(autoincrement())
   zaloUserId String
-  sender     String   // "USER" or "ADMIN"
+  sender     String
   content    String
   read       Boolean  @default(false)
   createdAt  DateTime @default(now())
@@ -355,13 +471,13 @@ model AuditLog {
 model AnalyticsEvent {
   id         Int      @id @default(autoincrement())
   zaloUserId String
-  eventType  String   // "view", "click", "add_to_cart", "purchase", "search", "filter", "share"
+  eventType  String
   productId  Int?
   categoryId Int?
   metadata   Json     @default("{}")
   createdAt  DateTime @default(now())
 
-  product    Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@index([zaloUserId])
   @@index([eventType])
@@ -380,32 +496,32 @@ model PointsHistory {
   metadata   Json     @default("{}")
   createdAt  DateTime @default(now())
 
-  user       User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+  user User @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
 
   @@index([zaloUserId])
   @@index([createdAt])
 }
 
 model Campaign {
-  id              Int            @id @default(autoincrement())
-  title           String
-  description     String?
-  type            String         // 'VOUCHER', 'BONUS_COINS', 'BROADCAST', 'FLASH_SALE'
-  targetSegment   String         @default("ALL") // 'ALL', 'SILVER', 'GOLD', 'DIAMOND', 'INACTIVE_30_DAYS', 'VIP'
-  voucherCode     String?
-  bonusCoins      Int            @default(0)
-  discountPercent Int            @default(0)
-  status          String         @default("DRAFT") // 'DRAFT', 'SCHEDULED', 'RUNNING', 'COMPLETED', 'CANCELLED'
-  scheduledAt     DateTime?
-  startedAt       DateTime?
-  endedAt         DateTime?
-  totalTargeted   Int            @default(0)
-  totalOpened     Int            @default(0)
-  totalConverted  Int            @default(0)
-  revenueGenerated Float         @default(0)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @default(now()) @updatedAt
-  users           CampaignUser[]
+  id               Int            @id @default(autoincrement())
+  title            String
+  description      String?
+  type             String
+  targetSegment    String         @default("ALL")
+  voucherCode      String?
+  bonusCoins       Int            @default(0)
+  discountPercent  Int            @default(0)
+  status           String         @default("DRAFT")
+  scheduledAt      DateTime?
+  startedAt        DateTime?
+  endedAt          DateTime?
+  totalTargeted    Int            @default(0)
+  totalOpened      Int            @default(0)
+  totalConverted   Int            @default(0)
+  revenueGenerated Decimal        @default(0) @db.Decimal(12, 2)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @default(now()) @updatedAt
+  users            CampaignUser[]
 
   @@index([status])
   @@index([type])
@@ -413,33 +529,33 @@ model Campaign {
 }
 
 model CampaignUser {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   campaignId  Int
   zaloUserId  String
-  isOpened    Boolean  @default(false)
-  isConverted Boolean  @default(false)
+  isOpened    Boolean   @default(false)
+  isConverted Boolean   @default(false)
   openedAt    DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
-  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  user        User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
 
   @@unique([campaignId, zaloUserId])
   @@index([zaloUserId])
 }
 
 model Automation {
-  id          Int      @id @default(autoincrement())
+  id          Int             @id @default(autoincrement())
   name        String
   description String?
-  trigger     String   // 'NEW_USER', 'BIRTHDAY', 'CART_ABANDONED', 'INACTIVE_30_DAYS', 'MEMBERSHIP_UPGRADE', 'FIRST_PURCHASE'
-  actions     Json     // Array of actions: [{type: 'NOTIFICATION', config: {...}}, {type: 'VOUCHER', config: {...}}]
-  conditions  Json     @default("{}") // Conditions for triggering
-  enabled     Boolean  @default(true)
-  priority    Int      @default(0) // Higher priority runs first
-  metadata    Json     @default("{}") // Additional configuration
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  trigger     String
+  actions     Json
+  conditions  Json            @default("{}")
+  enabled     Boolean         @default(true)
+  priority    Int             @default(0)
+  metadata    Json            @default("{}")
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
   logs        AutomationLog[]
 
   @@index([trigger])
@@ -450,18 +566,18 @@ model Automation {
 }
 
 model AutomationLog {
-  id           Int      @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   automationId Int
   zaloUserId   String
-  status       String   // 'SUCCESS', 'FAILED', 'SKIPPED'
-  triggeredAt  DateTime @default(now())
+  status       String
+  triggeredAt  DateTime  @default(now())
   executedAt   DateTime?
   errorMessage String?
-  result       Json     @default("{}")
-  metadata     Json     @default("{}")
+  result       Json      @default("{}")
+  metadata     Json      @default("{}")
 
-  automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
-  user         User       @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
+  automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
 
   @@index([automationId])
   @@index([zaloUserId])
@@ -474,11 +590,11 @@ model AutomationTemplate {
   id          Int      @id @default(autoincrement())
   name        String
   description String?
-  category    String   // 'WELCOME', 'RETENTION', 'CONVERSION', 'VIP', 'BIRTHDAY'
+  category    String
   trigger     String
   actions     Json
   conditions  Json     @default("{}")
-  isSystem    Boolean  @default(false) // System templates cannot be deleted
+  isSystem    Boolean  @default(false)
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -492,8 +608,8 @@ model MarketingList {
   id          Int                  @id @default(autoincrement())
   name        String
   description String?
-  sourceType  String               @default("PASTE") // 'PASTE', 'GROUP_SCAN'
-  sourceId    String?              // Group ID or URL if scanned
+  sourceType  String               @default("PASTE")
+  sourceId    String?
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
   entries     MarketingListEntry[]
@@ -502,15 +618,15 @@ model MarketingList {
 }
 
 model MarketingListEntry {
-  id         Int           @id @default(autoincrement())
-  listId     Int
-  phone      String
-  name       String?
-  zaloUid    String?       // Zalo user ID if found
-  hasZalo    Boolean       @default(false)
-  status     String        @default("PENDING") // 'PENDING', 'VERIFIED', 'FAILED'
-  createdAt  DateTime      @default(now())
-  list       MarketingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  id        Int           @id @default(autoincrement())
+  listId    Int
+  phone     String
+  name      String?
+  zaloUid   String?
+  hasZalo   Boolean       @default(false)
+  status    String        @default("PENDING")
+  createdAt DateTime      @default(now())
+  list      MarketingList @relation(fields: [listId], references: [id], onDelete: Cascade)
 
   @@unique([listId, phone])
 }

@@ -10,6 +10,7 @@ describe('AuthController', () => {
 
   const mockUser = {
     zaloId: '123456',
+    keycloakUserId: null,
     name: 'Test User',
     avatar: 'avatar.jpg',
     role: 'user',
@@ -23,6 +24,10 @@ describe('AuthController', () => {
   const mockLoginResponse = {
     access_token: 'mock-jwt-token',
     refresh_token: 'mock-refresh-token',
+    tokens: {
+      access_token: 'mock-jwt-token',
+      refresh_token: 'mock-refresh-token',
+    },
     user: mockUser,
   };
 

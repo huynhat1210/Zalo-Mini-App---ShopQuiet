@@ -132,7 +132,7 @@ export class GamificationService {
       throw new Error('Không tìm thấy người dùng');
     }
 
-    const newTotalPoints = (user.gamificationPoints || 0) + points;
+    const newTotalPoints = Number(user.gamificationPoints || 0) + points;
 
     await this.prisma.user.update({
       where: { zaloId: zaloUserId },
@@ -281,7 +281,7 @@ export class GamificationService {
       return { success: false, message: 'Không tìm thấy người dùng!' };
     }
 
-    if ((user.gamificationPoints || 0) < pointsCost) {
+    if (Number(user.gamificationPoints || 0) < pointsCost) {
       return { success: false, message: 'Bạn không đủ điểm tích lũy!' };
     }
 
@@ -330,7 +330,7 @@ export class GamificationService {
           zaloUserId,
           type: 'promotion',
           title: `Đổi quà thành công`,
-          content: `Chúc mừng bạn đã đổi thành công mã voucher: ${voucherCode} (-${voucher.value.toLocaleString('vi-VN')}đ) bằng ${pointsCost} điểm tích lũy. Áp dụng ngay khi thanh toán!`,
+          content: `Chúc mừng bạn đã đổi thành công mã voucher: ${voucherCode} (-${Number(voucher.value).toLocaleString('vi-VN')}đ) bằng ${pointsCost} điểm tích lũy. Áp dụng ngay khi thanh toán!`,
           date:
             new Date().toLocaleTimeString('vi-VN', {
               hour: '2-digit',

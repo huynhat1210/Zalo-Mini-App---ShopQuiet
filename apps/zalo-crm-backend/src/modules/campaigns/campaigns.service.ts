@@ -110,7 +110,7 @@ Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "su
       take: 50,
     });
     const avgOrderVal = completedOrders.length > 0
-      ? completedOrders.reduce((s, o) => s + (o.totalAmount || 0), 0) / completedOrders.length
+      ? completedOrders.reduce((s, o) => s + Number(o.totalAmount || 0), 0) / completedOrders.length
       : 180000;
 
     // 3. Unit cost calculation
@@ -261,12 +261,15 @@ Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "su
    * Automated Birthday Auto-Campaign Runner
    */
   async checkBirthdayCampaigns() {
-    const todayStr = new Date().toISOString().slice(5, 10); // MM-DD
-    const users = await this.prisma.user.findMany({
-      where: {
-        birthday: { contains: todayStr },
-      },
+    const today = new Date();
+    const usersWithBirthday = await this.prisma.user.findMany({
+      where: { birthday: { not: null } },
     });
+    const users = usersWithBirthday.filter(
+      (user) => user.birthday &&
+        user.birthday.getMonth() === today.getMonth() &&
+        user.birthday.getDate() === today.getDate(),
+    );
 
     const todayFullStr = new Date().toISOString().split('T')[0];
 

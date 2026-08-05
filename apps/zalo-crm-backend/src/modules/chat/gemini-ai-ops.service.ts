@@ -70,7 +70,7 @@ export class GeminiAiOpsService {
     if (lower.includes('đơn') || lower.includes('doanh thu')) {
       const totalOrders = await this.prisma.order.count();
       const completedOrders = await this.prisma.order.findMany({ where: { status: { in: ['COMPLETED', 'DELIVERED'] } } });
-      const rev = completedOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+      const rev = completedOrders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
       return `📈 THỐNG KÊ KINH DOANH (Gemini AI):\nTổng số đơn hàng ghi nhận: ${totalOrders} đơn. Tổng doanh thu tích lũy từ các đơn hoàn thành: ${rev.toLocaleString('vi-VN')} VNĐ.`;
     }
 

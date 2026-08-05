@@ -155,11 +155,10 @@ export async function apiRequest<T = any>(
         const retryJson: IApiResponseEnvelope<T> = await retryResponse.json();
         return retryJson.data;
       } catch (err) {
-        if (!usesKeycloakSession()) {
-          tokenStorage.clearToken();
-          localStorage.removeItem('zalo_profile_custom');
-          window.dispatchEvent(new CustomEvent('cms:unauthorized'));
-        }
+        tokenStorage.clearToken();
+        localStorage.removeItem('cms_auth_provider');
+        localStorage.removeItem('zalo_profile_custom');
+        window.dispatchEvent(new CustomEvent('cms:unauthorized'));
         throw err;
       }
     }

@@ -393,7 +393,7 @@ export class AutomationService {
       data: {
         zaloUserId,
         title: `Bạn nhận được Voucher ${voucherCode}!`,
-        content: `Mã giảm giá ${voucher.value.toLocaleString('vi-VN')}đ cho đơn từ ${voucher.minOrderVal.toLocaleString('vi-VN')}đ. Hãy mua sắm ngay nhé!`,
+        content: `Mã giảm giá ${Number(voucher.value).toLocaleString('vi-VN')}đ cho đơn từ ${Number(voucher.minOrderVal).toLocaleString('vi-VN')}đ. Hãy mua sắm ngay nhé!`,
         type: 'VOUCHER',
         date: new Date().toLocaleTimeString('vi-VN', {
           hour: '2-digit',

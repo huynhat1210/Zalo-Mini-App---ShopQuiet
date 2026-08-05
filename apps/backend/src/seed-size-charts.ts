@@ -2,16 +2,16 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-const DEFAULT_CLOTHING_CHART = JSON.stringify([
+const DEFAULT_CLOTHING_CHART = [
   { size: "XS", height: "< 155", weight: "< 45", bust: "80-84", waist: "62-66" },
   { size: "S",  height: "155-160", weight: "45-53", bust: "84-88", waist: "66-70" },
   { size: "M",  height: "160-168", weight: "53-62", bust: "88-92", waist: "70-74" },
   { size: "L",  height: "168-175", weight: "62-72", bust: "92-96", waist: "74-80" },
   { size: "XL", height: "175-180", weight: "72-82", bust: "96-100", waist: "80-86" },
   { size: "XXL",height: "> 180",  weight: "> 82",  bust: "100-108", waist: "86-94" }
-]);
+];
 
-const DEFAULT_SHOES_CHART = JSON.stringify([
+const DEFAULT_SHOES_CHART = [
   { size: "35", footLength: "21.5-22.0", euSize: "35" },
   { size: "36", footLength: "22.0-22.5", euSize: "36" },
   { size: "37", footLength: "22.5-23.0", euSize: "37" },
@@ -22,7 +22,7 @@ const DEFAULT_SHOES_CHART = JSON.stringify([
   { size: "42", footLength: "26.5-27.0", euSize: "42" },
   { size: "43", footLength: "27.0-27.5", euSize: "43" },
   { size: "44", footLength: "28.0-28.5", euSize: "44" }
-]);
+];
 
 async function main() {
   const products = await prisma.product.findMany({
@@ -39,14 +39,14 @@ async function main() {
       if (isShoes) {
         await prisma.product.update({
           where: { id: product.id },
-          data: { sizeChart: DEFAULT_SHOES_CHART }
+          data: { sizeChart: DEFAULT_SHOES_CHART as any }
         });
         updatedCount++;
         console.log(`[DB Seed] Updated shoes sizeChart for product #${product.id}: ${product.name}`);
       } else if (isClothing) {
         await prisma.product.update({
           where: { id: product.id },
-          data: { sizeChart: DEFAULT_CLOTHING_CHART }
+          data: { sizeChart: DEFAULT_CLOTHING_CHART as any }
         });
         updatedCount++;
         console.log(`[DB Seed] Updated clothing sizeChart for product #${product.id}: ${product.name}`);

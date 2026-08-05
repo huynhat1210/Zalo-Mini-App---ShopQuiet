@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { apiRequest } from '../../utils/api';
+import { API_BASE_URL, apiRequest } from '../../utils/api';
 import { 
   Search, 
   Check, 
@@ -64,10 +64,7 @@ interface Order {
 export const Orders: React.FC<IOrdersProps> = (_props) => {
   const { success: toastSuccess, error: toastError, confirm } = useToast();
   
-  const getBackendUrl = () => {
-    return window.location.origin.includes('localhost') ? 'http://localhost:3000' : 'https://zalo-mini-app-shopquiet.onrender.com';
-  };
-  const serverUrl = getBackendUrl();
+  const serverUrl = API_BASE_URL.replace('/api/v1', '');
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);

@@ -66,6 +66,15 @@ export class CommentsService {
       });
     }
 
+    let parsedImages: any = null;
+    if (images) {
+      try {
+        parsedImages = typeof images === 'string' ? JSON.parse(images) : images;
+      } catch (e) {
+        parsedImages = [images];
+      }
+    }
+
     const comment = await this.prisma.comment.create({
       data: {
         productId,
@@ -73,7 +82,7 @@ export class CommentsService {
         content,
         rating: rating || 5,
         orderId: orderId || null,
-        images: images || null,
+        images: parsedImages,
       },
       include: {
         user: true,

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { apiRequest, apiUploadRequest } from '../../utils/api';
+import { API_BASE_URL, apiRequest, apiUploadRequest } from '../../utils/api';
 import { useToast } from '../../contexts';
 import { PaginationComponent } from '../../components';
 import { validateField, validateRecord } from '../../utils/validation';
@@ -1064,7 +1064,7 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
                     const sampleVal = records[0]?.[key];
                     const isLongText = ['description', 'content', 'materialCare', 'shippingReturn'].includes(key);
                     const fieldErrorsList = fieldErrors[key] || [];
-                    const apiOrigin = (import.meta.env.VITE_API_BASE_URL || 'https://zalo-mini-app-shopquiet.onrender.com/api/v1').replace('/api/v1', '');
+                    const apiOrigin = API_BASE_URL.replace('/api/v1', '');
                     
                     return (
                       <div key={key} className="space-y-1.5">

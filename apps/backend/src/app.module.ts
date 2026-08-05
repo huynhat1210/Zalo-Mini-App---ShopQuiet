@@ -69,7 +69,7 @@ import { LoggerModule } from './common/logger/logger.module';
             store: await redisStore(redisConfig),
           };
         }
-        // Use in-memory cache for development/Render without Redis
+        // Use in-memory cache in local development when Redis is not configured.
         return {
           store: 'memory',
           ttl: 600, // 10 minutes default TTL

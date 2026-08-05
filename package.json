@@ -1,6 +1,7 @@
 {
   "name": "zalo-ecommerce-monorepo",
   "version": "1.0.0",
+  "packageManager": "pnpm@11.20.0",
   "description": "Zalo Mini App E-Commerce Monorepo Architecture",
   "private": true,
   "scripts": {
@@ -19,10 +20,14 @@
     "db:migrate:dev": "pnpm --filter backend db:migrate:dev",
     "db:seed": "pnpm --filter backend db:seed",
     "db:push": "pnpm --filter backend db:push",
-    "db:studio": "pnpm --filter backend db:studio"
-    ,"ngrok": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/ngrok/start-ngrok.ps1"
-    ,"dev:with-ngrok": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev/start-dev-with-ngrok.ps1"
-    ,"restore-env": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev/restore-env.ps1"
+    "db:studio": "pnpm --filter backend db:studio",
+    "tunnel": "node scripts/start-tunnel.js",
+    "tunnel:quick": "node scripts/start-tunnel.js",
+    "start:local": "node scripts/start-local.js",
+    "start:docker": "node scripts/start-docker.js",
+    "docker:up": "docker compose up -d --build backend crm-backend keycloak",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f backend crm-backend keycloak"
   },
   "devDependencies": {
     "typescript": "^5.4.5"

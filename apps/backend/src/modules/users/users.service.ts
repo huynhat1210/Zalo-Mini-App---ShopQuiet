@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { UserRole, OrderStatus } from '@prisma/client';
 
 @Injectable()
 export class UsersService implements OnModuleInit {
@@ -37,19 +38,16 @@ export class UsersService implements OnModuleInit {
       gender,
     });
 
-    // Check if the user already exists in the database
     const existingUser = await this.prisma.user.findUnique({
       where: { zaloId },
     });
 
-    const role = existingUser?.role
+    const role: UserRole = existingUser?.role
       ? existingUser.role
-      : zaloId.toLowerCase() === 'admin' ||
-          zaloId.toLowerCase() === 'admin-zalo-id-1'
-        ? 'admin'
-        : 'user';
+      : zaloId.toLowerCase() === 'admin' || zaloId.toLowerCase() === 'admin-zalo-id-1'
+        ? UserRole.ADMIN
+        : UserRole.USER;
 
-    // If they already have a name/avatar in the DB, preserve it unless the incoming name/avatar is a real Zalo profile (not default guest)
     const finalName =
       name && name !== '' && name !== 'Người dùng Zalo' && name !== 'Khách'
         ? name
@@ -63,8 +61,8 @@ export class UsersService implements OnModuleInit {
           'https://zalo-api.zdn.vn/api/emoticon/avatar';
 
     const isNewUser = !existingUser;
+    const parsedBirthday = birthday ? (isNaN(Date.parse(birthday)) ? undefined : new Date(birthday)) : undefined;
 
-    // First upsert to make sure user exists in DB
     const user = await this.prisma.user.upsert({
       where: { zaloId },
       update: {
@@ -72,7 +70,7 @@ export class UsersService implements OnModuleInit {
         avatar: finalAvatar,
         role,
         ...(phone !== undefined && { phone }),
-        ...(birthday !== undefined && { birthday }),
+        ...(parsedBirthday !== undefined && { birthday: parsedBirthday }),
         ...(email !== undefined && { email }),
         ...(gender !== undefined && { gender }),
       },
@@ -81,33 +79,30 @@ export class UsersService implements OnModuleInit {
         name,
         avatar: finalAvatar,
         phone,
-        birthday,
+        birthday: parsedBirthday,
         email,
         gender,
         role,
       },
     });
 
-    // Sum totalAmount of all COMPLETED and DELIVERED orders
-    // Annual Tier Rule: Calculate completed orders within the last 365 days (annual rolling window)
     const oneYearAgo = new Date();
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
     const completedOrders = await this.prisma.order.findMany({
       where: {
         zaloUserId: zaloId,
-        status: { in: ['COMPLETED', 'DELIVERED'] },
+        status: { in: [OrderStatus.COMPLETED, OrderStatus.DELIVERED] },
         createdAt: { gte: oneYearAgo },
       },
       select: { totalAmount: true },
     });
 
     const totalSpent = completedOrders.reduce(
-      (sum, order) => sum + order.totalAmount,
+      (sum, order) => sum + Number(order.totalAmount),
       0,
     );
 
-    // Calculate tier or respect client-provided dev test tier
     let finalMembershipTier = membershipTier;
     let finalTotalSpent = totalSpent;
 
@@ -142,7 +137,6 @@ export class UsersService implements OnModuleInit {
       }
     }
 
-    // Trigger System Notifications
     if (isNewUser) {
       try {
         const welcomeTitle = 'Chào mừng bạn đến với ShopQuiet!';
@@ -199,7 +193,6 @@ export class UsersService implements OnModuleInit {
       }
     }
 
-    // Update with fresh stats and return
     return this.prisma.user.update({
       where: { zaloId },
       data: {
@@ -221,9 +214,10 @@ export class UsersService implements OnModuleInit {
   }
 
   async updateUserRole(zaloId: string, role: 'admin' | 'user') {
+    const enumRole = role === 'admin' ? UserRole.ADMIN : UserRole.USER;
     return this.prisma.user.update({
       where: { zaloId },
-      data: { role },
+      data: { role: enumRole },
     });
   }
 
@@ -361,4 +355,3 @@ export class UsersService implements OnModuleInit {
     });
   }
 }
-

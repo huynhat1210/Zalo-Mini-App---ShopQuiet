@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import api from "zmp-sdk";
+import { getAccessToken } from "zmp-sdk/apis";
 import { apiRequest } from "../../utils/api";
 import { tokenStorage } from "../../utils/auth";
 import type { IAppState } from "./app-store.type";
@@ -427,22 +428,22 @@ export const useAppStore = create<IAppState>()(
 
             try {
               let zaloToken = "";
-              const apiAny = api as any;
-              if (
-                typeof window !== "undefined" &&
-                apiAny &&
-                apiAny.getAccessToken
-              ) {
-                try {
-                  const token = await apiAny.getAccessToken();
-                  zaloToken = token || "";
-                } catch (e) {
-                  console.error("Failed to get Zalo access token:", e);
-                }
+              try {
+                zaloToken = (await getAccessToken({})) || "";
+              } catch (e) {
+                console.warn("Failed to get Zalo access token:", e);
               }
-              if (!zaloToken) {
-                zaloToken = `mock_zalo_token_${parsed.id}`;
-              }
+               // Never send a mock token from the real Zalo WebView. A
+               // cached profile can survive longer than the native Zalo
+               // access token, so force a fresh native login instead.
+               if (!zaloToken) {
+                 if (isRealZaloEnv) {
+                   tokenStorage.clearTokens();
+                   localStorage.removeItem("zalo_profile_custom");
+                   return;
+                 }
+                 zaloToken = `mock_zalo_token_${parsed.id}`;
+               }
 
               const authData: any = await apiRequest("/auth/zalo-keycloak", "POST", {
                 zaloId: String(parsed.id),
@@ -473,9 +474,11 @@ export const useAppStore = create<IAppState>()(
               );
               get().fetchCart().catch(console.error);
               get().fetchFavorites().catch(console.error);
-            } catch (error) {
-              console.error("Cached login failed:", error);
-            }
+             } catch (error) {
+               tokenStorage.clearTokens();
+               localStorage.removeItem("zalo_profile_custom");
+               console.warn("Cached Zalo session is no longer valid; login is required.", error);
+             }
             return;
           } else {
             localStorage.removeItem("zalo_profile_custom");
@@ -551,16 +554,17 @@ export const useAppStore = create<IAppState>()(
                 "https://zalo-api.zdn.vn/api/emoticon/avatar";
 
               let zaloToken = "";
-              if (apiAny && apiAny.getAccessToken) {
-                try {
-                  zaloToken = (await apiAny.getAccessToken()) || "";
-                } catch (e) {
-                  console.warn("Failed to get Zalo access token:", e);
-                }
+              try {
+                zaloToken = (await getAccessToken({})) || "";
+              } catch (e) {
+                console.warn("Failed to get Zalo access token:", e);
               }
-              if (!zaloToken) {
-                zaloToken = `mock_zalo_token_${zaloId}`;
-              }
+               if (!zaloToken) {
+                 // A real Zalo WebView must provide a native access token.
+                 // Do not authenticate a user with a fabricated token.
+                 console.warn("Zalo access token is unavailable; waiting for login permission.");
+                 return;
+               }
 
               try {
                 const authData: any = await apiRequest(
@@ -596,27 +600,10 @@ export const useAppStore = create<IAppState>()(
                 );
                 get().fetchCart().catch(console.error);
                 get().fetchFavorites().catch(console.error);
-              } catch (error) {
-                console.error("Login failed:", error);
-                const user = {
-                  name,
-                  avatar,
-                  id: zaloId,
-                  phone: "",
-                  email: "",
-                  birthday: "",
-                  gender: "",
-                };
-                set({ zaloUser: user });
-                localStorage.setItem(
-                  "zalo_profile_custom",
-                  JSON.stringify(user),
-                );
-                apiRequest("/users/sync", "POST", {
-                  zaloId: user.id,
-                  name: user.name,
-                  avatar: user.avatar,
-                }).catch(console.error);
+               } catch (error) {
+                 tokenStorage.clearTokens();
+                 localStorage.removeItem("zalo_profile_custom");
+                 console.warn("Zalo login was not completed:", error);
               }
             } else {
               fallbackMockUser();
@@ -893,16 +880,17 @@ export const useAppStore = create<IAppState>()(
             const avatar = info?.avatar || "https://zalo-api.zdn.vn/api/emoticon/avatar";
 
             let zaloToken = "";
-            if (apiAny && apiAny.getAccessToken) {
-              try {
-                zaloToken = (await apiAny.getAccessToken()) || "";
-              } catch (e) {
-                console.warn("Failed to get Zalo access token:", e);
-              }
+            try {
+              zaloToken = (await getAccessToken({})) || "";
+            } catch (e) {
+              console.warn("Failed to get Zalo access token:", e);
             }
-            if (!zaloToken) {
-              zaloToken = `mock_zalo_token_${zaloId}`;
-            }
+             if (!zaloToken) {
+               tokenStorage.clearTokens();
+               localStorage.removeItem("zalo_profile_custom");
+               get().showToast("Vui lòng cấp quyền đăng nhập Zalo rồi thử lại.", "warning");
+               return false;
+             }
 
             const authData: any = await apiRequest("/auth/zalo-keycloak", "POST", {
               zaloId: String(zaloId),

@@ -53,10 +53,18 @@ describe('AuthService', () => {
         {
           provide: PrismaService,
           useValue: {
-            refreshToken: {
-              deleteMany: jest.fn().mockResolvedValue({ count: 0 }),
+            user: {
+              update: jest.fn().mockResolvedValue(mockUser),
+            },
+            authSession: {
               create: jest.fn().mockResolvedValue({}),
               findUnique: jest.fn(),
+              update: jest.fn().mockResolvedValue({}),
+              updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+            },
+            authIdentity: {
+              findUnique: jest.fn(),
+              upsert: jest.fn().mockResolvedValue({}),
             },
           },
         },
@@ -101,6 +109,10 @@ describe('AuthService', () => {
       expect(result).toEqual({
         access_token: 'mock-jwt-token',
         refresh_token: 'mock-jwt-token',
+        tokens: {
+          access_token: 'mock-jwt-token',
+          refresh_token: 'mock-jwt-token',
+        },
         user: {
           zaloId: mockUser.zaloId,
           name: mockUser.name,
@@ -108,7 +120,7 @@ describe('AuthService', () => {
           role: mockUser.role,
           phone: '',
           email: '',
-          birthday: '',
+          birthday: null,
           totalSpent: 0,
           membershipTier: 'Đồng',
         },
@@ -147,11 +159,11 @@ describe('AuthService', () => {
         {
           sub: userWithoutRole.zaloId,
           zaloId: userWithoutRole.zaloId,
-          role: 'user',
+          role: 'USER',
         },
         { expiresIn: '15m' },
       );
-      expect(result.user.role).toBe('user');
+      expect(result.user.role).toBe('USER');
     });
   });
 

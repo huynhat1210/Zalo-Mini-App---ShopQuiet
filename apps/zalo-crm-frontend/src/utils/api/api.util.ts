@@ -141,9 +141,8 @@ export async function apiRequest<T = any>(
         const retryJson: IApiResponseEnvelope<T> = await retryResponse.json();
         return retryJson.data;
       } catch (err) {
-        if (!usesKeycloakSession()) {
-          tokenStorage.clearToken();
-        }
+        tokenStorage.clearToken();
+        localStorage.removeItem('crm_auth_provider');
         localStorage.removeItem('crm_profile');
         window.dispatchEvent(new CustomEvent('crm:unauthorized'));
         throw err;
@@ -221,7 +220,15 @@ export async function crmApiRequest<T = any>(
     options.body = JSON.stringify(body);
   }
 
-  const response = await fetch(url, options);
+  let response = await fetch(url, options);
+
+  if (response.status === 401) {
+    const newAccessToken = await refreshAccessToken();
+    response = await fetch(url, {
+      ...options,
+      headers: { ...headers, Authorization: `Bearer ${newAccessToken}` },
+    });
+  }
 
   if (!response.ok) {
     let errMsg = `Request failed with status ${response.status}`;

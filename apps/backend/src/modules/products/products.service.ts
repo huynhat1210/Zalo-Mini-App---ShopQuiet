@@ -123,12 +123,13 @@ export class ProductsService {
     if (product) {
       const isCampaignActive = await this.isFlashSaleCampaignActive();
       if (isCampaignActive && product.isFlashSale) {
-        const originalPrice = product.price;
+        const originalPrice = Number(product.price);
+        const flashPriceNum = product.flashSalePrice ? Number(product.flashSalePrice) : null;
         let discountPercent = product.flashSaleDiscount || 20;
-        let salePrice = product.flashSalePrice || Math.round(originalPrice * (1 - discountPercent / 100));
+        let salePrice = flashPriceNum || Math.round(originalPrice * (1 - discountPercent / 100));
 
-        if (product.flashSalePrice && product.price > product.flashSalePrice) {
-          discountPercent = Math.round(((product.price - product.flashSalePrice) / product.price) * 100);
+        if (flashPriceNum && originalPrice > flashPriceNum) {
+          discountPercent = Math.round(((originalPrice - flashPriceNum) / originalPrice) * 100);
         }
 
         return {
@@ -410,12 +411,13 @@ export class ProductsService {
     });
 
     const mappedProducts = flashSaleProducts.map((product) => {
-      const originalPrice = product.price;
+      const originalPrice = Number(product.price);
+      const flashPriceNum = product.flashSalePrice ? Number(product.flashSalePrice) : null;
       let discountPercent = product.flashSaleDiscount || 20;
-      let salePrice = product.flashSalePrice || Math.round(originalPrice * (1 - discountPercent / 100));
+      let salePrice = flashPriceNum || Math.round(originalPrice * (1 - discountPercent / 100));
 
-      if (product.flashSalePrice && product.price > product.flashSalePrice) {
-        discountPercent = Math.round(((product.price - product.flashSalePrice) / product.price) * 100);
+      if (flashPriceNum && originalPrice > flashPriceNum) {
+        discountPercent = Math.round(((originalPrice - flashPriceNum) / originalPrice) * 100);
       }
 
       return {

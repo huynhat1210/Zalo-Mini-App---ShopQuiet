@@ -272,13 +272,13 @@ export class VouchersService {
       : '';
     const discountStr =
       voucher.type === 'PERCENT'
-        ? `${voucher.value}%`
-        : `${voucher.value.toLocaleString('vi-VN')}đ`;
+        ? `${Number(voucher.value)}%`
+        : `${Number(voucher.value).toLocaleString('vi-VN')}đ`;
 
     const notificationsData = users.map((user) => ({
       zaloUserId: user.zaloId,
       title: 'Quà tặng Voucher độc quyền từ ShopQuiet',
-      content: `Chúc mừng bạn! ShopQuiet tặng bạn mã giảm giá ${voucher.code} giảm trực tiếp ${discountStr} cho đơn hàng từ ${voucher.minOrderVal.toLocaleString('vi-VN')}đ.${expiryStr} Hãy copy mã và mua sắm ngay nhé!`,
+      content: `Chúc mừng bạn! ShopQuiet tặng bạn mã giảm giá ${voucher.code} giảm trực tiếp ${discountStr} cho đơn hàng từ ${Number(voucher.minOrderVal).toLocaleString('vi-VN')}đ.${expiryStr} Hãy copy mã và mua sắm ngay nhé!`,
       type: 'PROMOTION',
       date: new Date().toLocaleDateString('vi-VN'),
       read: false,

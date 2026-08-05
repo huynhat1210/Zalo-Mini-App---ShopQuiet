@@ -20,13 +20,25 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         jwksUri: `${keycloakUrl}/realms/${realm}/protocol/openid-connect/certs`,
       }),
       algorithms: ['RS256'],
-      issuer: `${keycloakUrl}/realms/${realm}`,
+      // Quick Tunnel hostnames change between local runs and Keycloak may
+      // derive the issuer from the forwarded request host. The signature is
+      // still verified against this realm's JWKS; validate() below checks the
+      // realm path without hard-coding a transient hostname.
     });
   }
 
   async validate(payload: any) {
-    const username = payload.preferred_username || payload.sub;
-    const user = await this.authService.validateUser(username);
+    try {
+      const issuer = new URL(String(payload.iss || ''));
+      if (issuer.pathname.replace(/\/$/, '') !== `/realms/${process.env.KEYCLOAK_REALM || 'shopquiet'}`) {
+        throw new UnauthorizedException('Token không thuộc realm ShopQuiet');
+      }
+    } catch {
+      throw new UnauthorizedException('Issuer token không hợp lệ');
+    }
+    const subject = String(payload.sub || '');
+    const username = payload.preferred_username ? String(payload.preferred_username) : undefined;
+    const user = await this.authService.findUserByKeycloakSubject(subject, username);
     if (!user) {
       throw new UnauthorizedException('Không tìm thấy tài khoản tương ứng trong hệ thống');
     }

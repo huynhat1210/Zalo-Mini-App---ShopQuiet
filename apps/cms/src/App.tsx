@@ -11,16 +11,19 @@ const keycloak = new Keycloak({
   realm: import.meta.env.VITE_KEYCLOAK_REALM || 'shopquiet',
   clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'shopquiet-cms',
 });
+const keycloakIssuer = `${import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8080'}/realms/${import.meta.env.VITE_KEYCLOAK_REALM || 'shopquiet'}`;
 
 let keycloakInitialization: Promise<boolean> | undefined;
 let tokenRefreshInterval: ReturnType<typeof setInterval> | undefined;
 let tokenRefreshInFlight: Promise<boolean> | undefined;
+let authRedirectInProgress = false;
 const KEYCLOAK_INIT_TIMEOUT_MS = 12000;
 
 function persistKeycloakSession() {
   localStorage.setItem('cms_access_token', keycloak.token || '');
   localStorage.setItem('cms_refresh_token', keycloak.refreshToken || '');
   localStorage.setItem('cms_auth_provider', 'keycloak');
+  localStorage.setItem('cms_keycloak_issuer', keycloakIssuer);
 
   const profile = {
     zaloId: keycloak.tokenParsed?.preferred_username || 'admin',
@@ -28,6 +31,40 @@ function persistKeycloakSession() {
     role: keycloak.tokenParsed?.realm_access?.roles?.includes('admin') ? 'admin' : 'user',
   };
   localStorage.setItem('zalo_profile_custom', JSON.stringify(profile));
+}
+
+function clearStaleKeycloakSession() {
+  const token = localStorage.getItem('cms_access_token') || '';
+  const tokenPayload = token.split('.')[1];
+  let tokenIssuer = '';
+  if (tokenPayload) {
+    try {
+      tokenIssuer = JSON.parse(atob(tokenPayload.replace(/-/g, '+').replace(/_/g, '/'))).iss || '';
+    } catch {
+      tokenIssuer = '';
+    }
+  }
+  if (localStorage.getItem('cms_keycloak_issuer') !== keycloakIssuer || (tokenIssuer && tokenIssuer !== keycloakIssuer)) {
+    localStorage.removeItem('cms_access_token');
+    localStorage.removeItem('cms_refresh_token');
+    localStorage.removeItem('cms_auth_provider');
+    localStorage.removeItem('zalo_profile_custom');
+  }
+}
+
+function restartKeycloakLogin() {
+  if (authRedirectInProgress) return;
+  authRedirectInProgress = true;
+  localStorage.removeItem('cms_access_token');
+  localStorage.removeItem('cms_refresh_token');
+  localStorage.removeItem('cms_auth_provider');
+  localStorage.removeItem('zalo_profile_custom');
+  // Reuse the existing Keycloak SSO session. Forcing prompt=login here
+  // creates a re-authentication loop whenever an API request returns 401.
+  void keycloak.login().catch((error) => {
+    authRedirectInProgress = false;
+    console.error('Failed to restart Keycloak login in CMS:', error);
+  });
 }
 
 async function refreshKeycloakToken(minValidity: number) {
@@ -48,6 +85,7 @@ async function refreshKeycloakToken(minValidity: number) {
 
 function initializeKeycloak() {
   if (!keycloakInitialization) {
+    clearStaleKeycloakSession();
     keycloakInitialization = keycloak
       .init({
         onLoad: 'login-required',
@@ -62,17 +100,17 @@ function initializeKeycloak() {
         keycloak.onTokenExpired = () => {
           void refreshKeycloakToken(0).catch((error) => {
             console.error('Keycloak access token refresh failed in CMS:', error);
-            keycloak.login();
+            restartKeycloakLogin();
           });
         };
         keycloak.onAuthRefreshError = () => {
           console.error('Keycloak refresh token is no longer valid in CMS.');
-          keycloak.login();
+          restartKeycloakLogin();
         };
         if (!tokenRefreshInterval) {
           tokenRefreshInterval = setInterval(async () => {
             try {
-              await refreshKeycloakToken(70);
+              await refreshKeycloakToken(120);
             } catch (error) {
               console.error('Failed to refresh Keycloak token in CMS:', error);
             }
@@ -148,18 +186,13 @@ export const App: React.FC = () => {
       })
       .catch((err) => {
         console.error('Failed to initialize Keycloak in CMS:', err);
+        restartKeycloakLogin();
         setInitializationError('Không thể kết nối Keycloak tại localhost:8080.');
         setChecking(false);
       });
 
     const handleUnauthorized = () => {
-      if (localStorage.getItem('cms_auth_provider') === 'keycloak') {
-        return;
-      }
-      localStorage.removeItem('cms_access_token');
-      localStorage.removeItem('cms_refresh_token');
-      localStorage.removeItem('zalo_profile_custom');
-      keycloak.login();
+      restartKeycloakLogin();
     };
 
     const handleKeycloakRefresh = (event: Event) => {
@@ -190,12 +223,14 @@ export const App: React.FC = () => {
     };
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     localStorage.removeItem('cms_access_token');
     localStorage.removeItem('cms_refresh_token');
     localStorage.removeItem('zalo_profile_custom');
     localStorage.removeItem('cms_auth_provider');
-    keycloak.logout();
+    // Keep the shared Keycloak SSO session alive so Campaign stays signed in.
+    keycloak.clearToken();
+    window.location.assign(await keycloak.createLoginUrl({ prompt: 'login' }));
   };
 
   if (checking) {

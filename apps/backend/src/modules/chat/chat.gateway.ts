@@ -7,9 +7,10 @@ import {
   MessageBody,
   ConnectedSocket,
 } from '@nestjs/websockets';
+import { UseGuards } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { JwtService } from '@nestjs/jwt';
 import { ChatService } from './chat.service';
+import { WsJwtAuthGuard } from '../auth/guards/ws-jwt-auth.guard';
 
 @WebSocketGateway({
   cors: {
@@ -22,8 +23,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(
     private readonly chatService: ChatService,
-    private readonly jwtService: JwtService,
   ) {}
+
+  publishMessage(message: any) {
+    if (!this.server || !message?.zaloUserId) return;
+    this.server.to(message.zaloUserId).to('admin').emit('message', message);
+  }
+
+  async publishSessions() {
+    if (!this.server) return;
+    const sessions = await this.chatService.getSessions();
+    this.server.to('admin').emit('sessions_list', sessions);
+  }
 
   handleConnection(client: Socket) {
     console.log(`Socket client connected: ${client.id}`);
@@ -34,36 +45,25 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('join')
+  @UseGuards(WsJwtAuthGuard)
   handleJoinRoom(
     @MessageBody() data: { roomId: string; token?: string },
     @ConnectedSocket() client: Socket,
   ) {
     if (!data || !data.roomId) return;
     
-    // Security Guard: Prevent unauthorized clients from joining admin room
-    if (data.roomId === 'admin') {
-      const rawToken = client.handshake.headers?.authorization || client.handshake.auth?.token || data.token;
-      if (!rawToken) {
-        console.warn(`Unauthorized attempt to join admin room without token from client ${client.id}`);
-        client.emit('error', { message: 'Unauthorized: Admin token required' });
-        return;
-      }
+    const user = client.data.user;
+    if (!user) return;
 
-      const token = rawToken.replace(/^Bearer\s+/i, '');
-      try {
-        const payload = this.jwtService.verify(token, {
-          secret: process.env.JWT_SECRET || 'your-secret-key',
-        });
-        if (!payload || (payload.role && payload.role !== 'ADMIN')) {
-          console.warn(`Non-admin client ${client.id} attempted to join admin room`);
-          client.emit('error', { message: 'Forbidden: Admin access required' });
-          return;
-        }
-      } catch (err) {
-        console.warn(`Invalid JWT token attempt to join admin room from client ${client.id}`);
-        client.emit('error', { message: 'Unauthorized: Invalid or expired token' });
+    // A user may only join their own room; admins may join the support room.
+    if (data.roomId === 'admin') {
+      if (user.role !== 'admin') {
+        client.emit('error', { message: 'Forbidden: Admin access required' });
         return;
       }
+    } else if (data.roomId !== user.zaloId && user.role !== 'admin') {
+      client.emit('error', { message: 'Forbidden: Invalid chat room' });
+      return;
     }
 
     client.join(data.roomId);
@@ -72,6 +72,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
 
   @SubscribeMessage('send_message')
+  @UseGuards(WsJwtAuthGuard)
   async handleMessage(
     @MessageBody()
     data: {
@@ -79,30 +80,37 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       sender: string;
       content: string;
     },
+    @ConnectedSocket() client: Socket,
   ) {
-    // Save to Database
+    const user = client?.data?.user;
+    if (!user || (user.role !== 'admin' && data.zaloUserId !== user.zaloId)) {
+      client?.emit('error', { message: 'Forbidden: Invalid chat recipient' });
+      return;
+    }
+    const sender = user.role === 'admin' ? 'ADMIN' : 'USER';
+
+    // Save to Database using the authenticated role, never the client-provided sender.
     const savedMsg = await this.chatService.saveMessage(
       data.zaloUserId,
-      data.sender,
+      sender,
       data.content,
     );
 
-    // Broadcast message to both user's room and admin room instantly
-    this.server.to(data.zaloUserId).to('admin').emit('message', savedMsg);
-
-    // Broadcast session update to all admin clients
-    const updatedSessions = await this.chatService.getSessions();
-    this.server.to('admin').emit('sessions_list', updatedSessions);
+    this.publishMessage(savedMsg);
+    await this.publishSessions();
   }
 
   @SubscribeMessage('mark_read')
+  @UseGuards(WsJwtAuthGuard)
   async handleMarkRead(
     @MessageBody() data: { zaloUserId: string; sender: string },
+    @ConnectedSocket() client: Socket,
   ) {
-    await this.chatService.markAsRead(data.zaloUserId, data.sender);
+    const user = client.data.user;
+    if (!user || (user.role !== 'admin' && data.zaloUserId !== user.zaloId)) return;
+    await this.chatService.markAsRead(data.zaloUserId, user.role === 'admin' ? 'USER' : 'ADMIN');
 
     // Broadcast session update to update unread badge counts
-    const updatedSessions = await this.chatService.getSessions();
-    this.server.to('admin').emit('sessions_list', updatedSessions);
+    await this.publishSessions();
   }
 }

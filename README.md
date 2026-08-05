@@ -89,11 +89,11 @@ Sau khi chạy xong, các dịch vụ sẽ tự động hoạt động tại:
 
 ---
 
-## 🚀 Hướng Dẫn Deploy Backend Lên Môi Trường Thực Tế (Render.com)
+## 🚀 Chạy Môi Trường Local
 
-- Backend được kết nối trực tiếp với **Render.com**.
-- Mỗi khi push code lên GitHub (`git push origin main`), Render sẽ tự động build và deploy phiên bản mới nhất.
-- Database PostgreSQL được host trực tiếp trên Render Database.
+- PostgreSQL chạy tại máy qua dịch vụ `postgresql-x64-18`.
+- Keycloak chạy qua Docker Compose tại `http://localhost:8080`.
+- Backend, CMS và Campaign đọc cấu hình từ các file `.env` trong từng ứng dụng.
 
 ---
 

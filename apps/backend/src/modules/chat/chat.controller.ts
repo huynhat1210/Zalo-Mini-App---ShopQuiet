@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { ChatGateway } from './chat.gateway';
 
 import { IsString } from 'class-validator';
 
@@ -35,7 +36,10 @@ export class MarkReadChatDto {
 @ApiTags('Chat Support')
 @Controller('chat')
 export class ChatController {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly chatGateway: ChatGateway,
+  ) {}
 
   @ApiOperation({ summary: 'Lấy lịch sử tin nhắn tư vấn CSKH của người dùng' })
   @Get('messages')
@@ -60,7 +64,15 @@ export class ChatController {
     if (dto.sender === 'ADMIN' && user.role !== 'admin') {
       throw new ForbiddenException('Chỉ quản trị viên có thể gửi tin nhắn hỗ trợ.');
     }
-    return this.chatService.saveMessage(dto.zaloUserId || user.zaloId, dto.sender, dto.content);
+    const sender = user.role === 'admin' ? 'ADMIN' : 'USER';
+    const message = await this.chatService.saveMessage(
+      dto.zaloUserId || user.zaloId,
+      sender,
+      dto.content,
+    );
+    this.chatGateway.publishMessage(message);
+    await this.chatGateway.publishSessions();
+    return message;
   }
 
   @ApiOperation({ summary: 'Đánh dấu tất cả tin nhắn trong hội thoại là đã đọc' })

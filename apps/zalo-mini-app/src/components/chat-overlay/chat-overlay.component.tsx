@@ -4,6 +4,7 @@ import api from "zmp-sdk";
 import { useCart } from "../../App";
 import { useAppStore } from "../../store";
 import { apiRequest, API_BASE_URL } from "../../utils/api";
+import { tokenStorage } from "../../utils/auth";
 import { useTranslation } from "../../utils/i18n/i18n.util";
 import {
   ChatBubbleLeftRightIcon,
@@ -80,12 +81,25 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
 
   // 2. Connect WebSockets (Socket.IO)
   useEffect(() => {
-    const socket = io(serverUrl);
+    const socket = io(serverUrl, {
+      auth: { token: tokenStorage.getAccessToken() },
+      transports: ['websocket', 'polling'],
+    });
     socketRef.current = socket;
 
     socket.on("connect", () => {
       socket.emit("join", { roomId: userId });
     });
+    socket.on("connect_error", (error) => {
+      console.warn("Chat realtime unavailable; messages will use REST fallback:", error.message);
+    });
+    const tokenRefreshTimer = window.setInterval(() => {
+      const token = tokenStorage.getAccessToken();
+      if (token && socket.auth && (socket.auth as { token?: string }).token !== token) {
+        socket.auth = { token };
+        if (socket.connected) socket.disconnect().connect();
+      }
+    }, 30000);
 
     socket.on("message", (msg: Message) => {
       setMessages((prev) => {
@@ -115,6 +129,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
     });
 
     return () => {
+      window.clearInterval(tokenRefreshTimer);
       socket.disconnect();
     };
   }, [userId, serverUrl, showToast, t]);
@@ -143,15 +158,6 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
 
     setMessages((prev) => [...prev, newMsg]);
 
-    if (socketRef.current?.connected) {
-      socketRef.current.emit("send_message", {
-        zaloUserId: userId,
-        sender: "USER",
-        content: text,
-      });
-      return;
-    }
-
     try {
       const saved = await apiRequest<Message>("/chat/messages", "POST", {
         zaloUserId: userId,
@@ -166,6 +172,9 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
       }
     } catch (err) {
       console.error("Failed to send message via REST:", err);
+      pendingTempIds.current.delete(tempId);
+      setMessages((prev) => prev.filter((message) => message.id !== tempId));
+      showToast("Không thể gửi tin nhắn. Vui lòng thử lại.", "warning");
     }
   };
 

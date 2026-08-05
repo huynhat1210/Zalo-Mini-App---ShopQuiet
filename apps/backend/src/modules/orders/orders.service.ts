@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { OrderStatus } from '@prisma/client';
 import * as crypto from 'crypto';
 import { calculateEstimatedDeliveryDate } from '../../utils/delivery-date.util';
 import { OrderTrackingGateway } from '../websocket/websocket.gateway';
@@ -62,13 +63,13 @@ export class OrdersService {
     const completedOrders = await this.prisma.order.findMany({
       where: {
         zaloUserId,
-        status: { in: ['COMPLETED', 'DELIVERED'] },
+        status: { in: [OrderStatus.COMPLETED, OrderStatus.DELIVERED] },
       },
       select: { totalAmount: true },
     });
 
     const totalOrderSpend = completedOrders.reduce(
-      (sum, order) => sum + order.totalAmount,
+      (sum, order) => sum + Number(order.totalAmount),
       0,
     );
 
@@ -150,12 +151,12 @@ export class OrdersService {
       }
       const effectivePrice =
         product.isFlashSale && product.flashSalePrice
-          ? product.flashSalePrice
-          : product.price;
+          ? Number(product.flashSalePrice)
+          : Number(product.price);
       resolvedItems.set(item.productId, {
         price: effectivePrice,
         productName: product.name,
-        productImageUrl: product.images || null,
+        productImageUrl: Array.isArray(product.images) ? (product.images[0] as string) : String(product.images || ''),
       });
       subtotal += effectivePrice * item.quantity;
     }
@@ -168,7 +169,7 @@ export class OrdersService {
       throw new BadRequestException('Phương thức thanh toán không khả dụng.');
     }
     const orderPaymentMethod = paymentCode === 'pay2s' ? 'PAY2S' : 'COD';
-    const initialStatus = paymentCode === 'pay2s' ? 'PENDING_PAYMENT' : 'PROCESSING';
+    const initialStatus = paymentCode === 'pay2s' ? OrderStatus.PENDING_PAYMENT : OrderStatus.PROCESSING;
 
     const shippingMethodCode = dto.shippingMethodCode || 'standard';
     const shippingMethod = await this.prisma.shippingMethod.findFirst({
@@ -178,7 +179,7 @@ export class OrdersService {
       throw new BadRequestException('Shipping method is unavailable.');
     }
 
-    let shippingCost = shippingMethod.price;
+    let shippingCost = Number(shippingMethod.price);
     if (shippingMethodCode === 'standard' && subtotal >= freeShipThreshold) {
       shippingCost = 0;
     }
@@ -201,26 +202,29 @@ export class OrdersService {
           where: {
             zaloUserId: filterUserId,
             voucherCode: dto.voucherCode.trim().toUpperCase(),
-            status: { not: 'CANCELLED' },
+            status: { not: OrderStatus.CANCELLED },
           },
         });
         if (existingOrder) {
           throw new BadRequestException('Bạn đã sử dụng mã giảm giá này rồi.');
         }
       }
-      if (subtotal < voucher.minOrderVal) {
+      const minOrderVal = Number(voucher.minOrderVal);
+      const voucherVal = Number(voucher.value);
+      const maxDiscountVal = voucher.maxDiscount ? Number(voucher.maxDiscount) : 0;
+
+      if (subtotal < minOrderVal) {
         throw new BadRequestException('Đơn hàng chưa đạt giá trị tối thiểu của mã giảm giá.');
       }
       if (voucher.type.toUpperCase() === 'PERCENT') {
-        voucherDiscount = Math.round(subtotal * (voucher.value / 100));
-        if (voucher.maxDiscount) {
-          voucherDiscount = Math.min(voucherDiscount, voucher.maxDiscount);
+        voucherDiscount = Math.round(subtotal * (voucherVal / 100));
+        if (maxDiscountVal > 0) {
+          voucherDiscount = Math.min(voucherDiscount, maxDiscountVal);
         }
       } else if (voucher.type.toUpperCase() === 'FIXED') {
-        voucherDiscount = Math.min(voucher.value, subtotal);
+        voucherDiscount = Math.min(voucherVal, subtotal);
       } else if (voucher.type.toUpperCase() === 'FREESHIP') {
-        const maxFreeshipValue =
-          voucher.value && voucher.value > 0 ? voucher.value : shippingCost;
+        const maxFreeshipValue = voucherVal > 0 ? voucherVal : shippingCost;
         voucherDiscount = Math.min(shippingCost, maxFreeshipValue);
       }
     }
@@ -228,13 +232,12 @@ export class OrdersService {
     let pointsDiscount = 0;
     let pointsToDeduct = 0;
 
-    // Check if user requested to use coins to deduct order amount (1 Xu = 1 VNĐ)
     if (dto.usePoints && filterUserId) {
       const user = await this.prisma.user.findUnique({
         where: { zaloId: filterUserId },
         select: { gamificationPoints: true },
       });
-      const userPoints = user?.gamificationPoints || 0;
+      const userPoints = Number(user?.gamificationPoints || 0);
       if (userPoints > 0) {
         const amountBeforePoints = Math.max(0, subtotal + shippingCost - (tierDiscount + voucherDiscount));
         pointsDiscount = Math.min(Math.round(userPoints), amountBeforePoints);
@@ -436,23 +439,23 @@ export class OrdersService {
       // Track campaign ROI & conversion
       await this.campaignsService.recordConversion(
         order.zaloUserId,
-        order.totalAmount,
+        Number(order.totalAmount),
         dto.voucherCode,
       );
 
       // Chỉ tích điểm khi đơn hàng ĐÃ THANH TOÁN (COD tính là đã xác nhận khi tạo)
       // Đơn PENDING_PAYMENT (chuyển khoản chưa thanh toán) sẽ được tích điểm khi webhook xác nhận thanh toán
-      const shouldRewardPoints = order.status !== 'PENDING_PAYMENT';
+      const shouldRewardPoints = order.status !== OrderStatus.PENDING_PAYMENT;
 
       if (shouldRewardPoints) {
-        const earnedPoints = Math.round(order.totalAmount / 1000);
+        const earnedPoints = Math.round(Number(order.totalAmount) / 1000);
         if (earnedPoints > 0) {
           try {
             const user = await this.prisma.user.findUnique({
               where: { zaloId: order.zaloUserId },
             });
             if (user) {
-              const newPoints = (user.gamificationPoints || 0) + earnedPoints;
+              const newPoints = Number(user.gamificationPoints || 0) + earnedPoints;
               await this.prisma.user.update({
                 where: { zaloId: order.zaloUserId },
                 data: { gamificationPoints: newPoints },
@@ -582,7 +585,7 @@ export class OrdersService {
     const order = await this.prisma.order.update({
       where: { id },
       data: {
-        status,
+        status: status as OrderStatus,
         ...(trackingNumber !== undefined ? { trackingNumber } : {}),
       },
       include: {
@@ -596,7 +599,7 @@ export class OrdersService {
 
     const itemsText = order.items
       .map(
-        (i) =>
+        (i: any) =>
           `${i.product.name}${i.color && i.color !== 'DEFAULT' ? ` (Màu: ${i.color})` : ''}${i.size && i.size !== 'DEFAULT' ? ` (Size: ${i.size})` : ''} x${i.quantity}`,
       )
       .join(', ');
@@ -633,11 +636,11 @@ export class OrdersService {
                     ? 3
                     : 1;
             const pointsEarned = Math.round(
-              (order.totalAmount / 1000) * multiplier,
+              (Number(order.totalAmount) / 1000) * multiplier,
             );
 
             if (pointsEarned > 0) {
-              const newPoints = (user.gamificationPoints || 0) + pointsEarned;
+              const newPoints = Number(user.gamificationPoints || 0) + pointsEarned;
               await this.prisma.user.update({
                 where: { zaloId: order.zaloUserId },
                 data: { gamificationPoints: newPoints },
@@ -782,10 +785,10 @@ export class OrdersService {
     const order = await this.prisma.order.update({
       where: { id },
       data: {
-        status: 'RETURN_REQUESTED',
+        status: OrderStatus.RETURN_REQUESTED,
         returnReason: reason,
         returnDescription: description,
-        returnImages: images ? JSON.stringify(images) : null,
+        returnImages: images ? (images as any) : undefined,
       },
     });
 

@@ -750,7 +750,7 @@ export class CmsService implements OnModuleInit {
         adminNotifs.push({
           id: `admin-order-${o.id}`,
           title: `Đơn hàng mới #${o.id.slice(-6).toUpperCase()}`,
-          content: `Khách hàng '${o.shippingName || 'Khách Zalo'}' vừa đặt đơn trị giá ${o.totalAmount.toLocaleString('vi-VN')} VNĐ qua ${o.paymentMethod || 'COD'}.`,
+          content: `Khách hàng '${o.shippingName || 'Khách Zalo'}' vừa đặt đơn trị giá ${Number(o.totalAmount).toLocaleString('vi-VN')} VNĐ qua ${o.paymentMethod || 'COD'}.`,
           type: 'admin_order',
           date: new Date(o.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date(o.createdAt).toLocaleDateString('vi-VN'),
           read: false,
@@ -818,7 +818,7 @@ export class CmsService implements OnModuleInit {
     });
 
     const totalRevenue = completedOrders.reduce(
-      (sum, order) => sum + order.totalAmount,
+      (sum, order) => sum + Number(order.totalAmount),
       0,
     );
 
@@ -882,7 +882,7 @@ export class CmsService implements OnModuleInit {
         month: '2-digit',
       });
       if (dailyRevenue[dateString] !== undefined) {
-        dailyRevenue[dateString] += order.totalAmount;
+        dailyRevenue[dateString] += Number(order.totalAmount);
       }
     });
 
@@ -899,30 +899,23 @@ export class CmsService implements OnModuleInit {
         },
       },
     });
-    const categoryChartData = categories
-      .map((cat) => {
-        const totalSold = cat.products.reduce(
-          (sum, p) => sum + (p.soldCount || 0),
-          0,
-        );
-        return {
-          name: cat.name,
-          value: totalSold,
-        };
-      })
-      .filter((c) => c.value > 0);
+
+    const categorySales = categories.map((cat) => {
+      const totalSold = cat.products.reduce((acc, p) => acc + p.soldCount, 0);
+      return {
+        name: cat.name,
+        value: totalSold,
+      };
+    });
 
     return {
-      stats: {
-        totalRevenue,
-        totalOrders: allOrders.length,
-        totalUsers,
-        statusCounts: orderStatusCounts,
-      },
+      totalRevenue,
+      orderStatusCounts,
+      totalUsers,
       lowStockVariants,
       bestSellers,
       revenueChartData,
-      categoryChartData,
+      categorySales,
     };
   }
 
@@ -947,7 +940,11 @@ export class CmsService implements OnModuleInit {
     return { success: true, status };
   }
 
-  async getTransactions(search?: string, gateway?: string, status?: string) {
+  async getTransactions(
+    search?: string,
+    gateway?: string,
+    status?: string,
+  ) {
     const orders = await this.prisma.order.findMany({
       where: {
         AND: [
@@ -955,7 +952,6 @@ export class CmsService implements OnModuleInit {
             ? {
                 OR: [
                   { id: { contains: search, mode: 'insensitive' } },
-                  { paymentMethod: { contains: search, mode: 'insensitive' } },
                   { shippingName: { contains: search, mode: 'insensitive' } },
                   { shippingPhone: { contains: search, mode: 'insensitive' } },
                 ],
@@ -969,18 +965,16 @@ export class CmsService implements OnModuleInit {
             ? status === 'PAID'
               ? {
                   OR: [
-                    // Pay2S đã nhận chuyển khoản (PROCESSING trở lên)
                     {
                       AND: [
                         { paymentMethod: 'PAY2S' },
-                        { status: { in: ['PROCESSING', 'SHIPPED', 'DELIVERED', 'COMPLETED'] } },
+                        { status: { in: ['PROCESSING', 'SHIPPED', 'DELIVERED', 'COMPLETED'] as any } },
                       ],
                     },
-                    // COD chỉ tính khi giao hàng xong (COMPLETED)
                     {
                       AND: [
                         { paymentMethod: 'COD' },
-                        { status: 'COMPLETED' },
+                        { status: 'COMPLETED' as any },
                       ],
                     },
                   ],
@@ -988,30 +982,26 @@ export class CmsService implements OnModuleInit {
               : status === 'PENDING'
               ? {
                   OR: [
-                    // Pay2S chưa thanh toán
                     {
                       AND: [
                         { paymentMethod: 'PAY2S' },
-                        { status: { notIn: ['PROCESSING', 'SHIPPED', 'DELIVERED', 'COMPLETED', 'CANCELLED'] } },
+                        { status: { notIn: ['PROCESSING', 'SHIPPED', 'DELIVERED', 'COMPLETED', 'CANCELLED'] as any } },
                       ],
                     },
-                    // COD đang chuẩn bị / giao hàng (chưa thu tiền)
                     {
                       AND: [
                         { paymentMethod: 'COD' },
-                        { status: { notIn: ['COMPLETED', 'CANCELLED'] } },
+                        { status: { notIn: ['COMPLETED', 'CANCELLED'] as any } },
                       ],
                     },
                   ],
                 }
-              : { status: status }
+              : { status: status as any }
             : {},
         ],
       },
       include: {
-        user: {
-          select: { zaloId: true, name: true, phone: true, avatar: true },
-        },
+        user: true,
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -1025,17 +1015,15 @@ export class CmsService implements OnModuleInit {
       if (o.status === 'CANCELLED') {
         paymentStatus = 'CANCELLED';
       } else if (isCod) {
-        // COD: chỉ thu tiền khi giao xong
         paymentStatus = isCodPaid ? 'PAID' : 'COD_PENDING';
       } else {
-        // Pay2S: PROCESSING trở lên = đã nhận chuyển khoản
         paymentStatus = isPay2sPaid ? 'PAID' : 'PENDING';
       }
 
       return {
         id: `TXN-${o.id}`,
         orderId: o.id,
-        amount: o.totalAmount,
+        amount: Number(o.totalAmount),
         paymentMethod: o.paymentMethod || 'PAY2S',
         paymentStatus,
         orderStatus: o.status,

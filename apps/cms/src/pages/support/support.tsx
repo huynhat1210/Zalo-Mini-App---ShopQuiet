@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { apiRequest } from '../../utils/api';
+import { API_BASE_URL, apiRequest, tokenStorage } from '../../utils/api';
 import {
   Search, Send, HelpCircle, Package, Zap,
   ShoppingBag, Star, Phone, Crown, MessageSquare,
@@ -70,11 +70,7 @@ export const Support: React.FC = () => {
   const socketRef = useRef<Socket | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const getBackendUrl = () =>
-    window.location.origin.includes('localhost')
-      ? 'http://localhost:3000'
-      : 'https://zalo-mini-app-shopquiet.onrender.com';
-  const serverUrl = getBackendUrl();
+  const serverUrl = API_BASE_URL.replace('/api/v1', '');
 
   const fetchSessions = async () => {
     try {
@@ -116,11 +112,24 @@ export const Support: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const socket = io(serverUrl);
+    const socket = io(serverUrl, {
+      auth: { token: tokenStorage.getAccessToken() },
+      transports: ['websocket', 'polling'],
+    });
     socketRef.current = socket;
     socket.on('connect', () => {
       socket.emit('join', { roomId: 'admin' });
     });
+    socket.on('connect_error', (error) => {
+      console.warn('Chat realtime unavailable; REST actions remain available:', error.message);
+    });
+    const tokenRefreshTimer = window.setInterval(() => {
+      const token = tokenStorage.getAccessToken();
+      if (token && socket.auth && (socket.auth as { token?: string }).token !== token) {
+        socket.auth = { token };
+        if (socket.connected) socket.disconnect().connect();
+      }
+    }, 30000);
     socket.on('sessions_list', (updatedSessions: ChatSession[]) => {
       setSessions(updatedSessions);
     });
@@ -145,7 +154,7 @@ export const Support: React.FC = () => {
       }
       fetchSessions();
     });
-    return () => { socket.disconnect(); };
+    return () => { window.clearInterval(tokenRefreshTimer); socket.disconnect(); };
   }, [activeSession, serverUrl]);
 
   useEffect(() => {
@@ -182,7 +191,7 @@ export const Support: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputValue.trim() || !activeSession) return;
     const text = inputValue.trim();
     setInputValue('');
@@ -198,12 +207,16 @@ export const Support: React.FC = () => {
       ),
     );
 
-    // Socket emit saves to DB & broadcasts to room instantly
-    socketRef.current?.emit('send_message', {
-      zaloUserId: activeSession.zaloUserId,
-      sender: 'ADMIN',
-      content: text,
-    });
+    try {
+      await apiRequest('/chat/messages', 'POST', {
+        zaloUserId: activeSession.zaloUserId,
+        sender: 'ADMIN',
+        content: text,
+      });
+    } catch (error) {
+      console.error('Failed to send chat reply:', error);
+      fetchSessions();
+    }
   };
 
   const handleCannedResponse = (text: string) => {
