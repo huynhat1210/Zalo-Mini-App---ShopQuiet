@@ -32,7 +32,7 @@ async function bootstrap() {
   logger.log('Starting application...');
 
   // Enable global exception filter
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(app.get(HttpExceptionFilter));
 
   // Enable global response transformation interceptor
   app.useGlobalInterceptors(new TransformInterceptor());
@@ -65,6 +65,8 @@ async function bootstrap() {
     .setTitle('ShopQuiet E-Commerce API Server')
     .setDescription('Hệ thống API Server dành cho Zalo Mini App E-Commerce và Trang Quản trị ShopQuiet CMS')
     .setVersion('1.0.0')
+    .setContact('ShopQuiet Engineering', 'https://shopquiet.local', 'engineering@shopquiet.local')
+    .addServer('/api/v1', 'API v1')
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT', name: 'Authorization', description: 'Nhập JWT Token', in: 'header' },
       'JWT-auth',
@@ -84,12 +86,24 @@ async function bootstrap() {
     .addTag('Notifications', 'Thông báo hệ thống & Đẩy Zalo ZNS')
     .addTag('Chat Support', 'Hệ thống Live Chat CSKH')
     .addTag('Analytics & Reports', 'Báo cáo & Thống kê doanh thu')
+    .addTag('System Monitoring', 'Nhật ký hệ thống và lỗi API')
     .addTag('Health Check', 'Kiểm tra trạng thái máy chủ')
     .build();
   const document = SwaggerModule.createDocument(app, config, {
     extraModels: [SuccessResponseDto, ErrorResponseDto],
   });
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('api/docs', app, document, {
+    jsonDocumentUrl: 'api/docs-json',
+    customSiteTitle: 'ShopQuiet API Documentation',
+    swaggerOptions: {
+      persistAuthorization: true,
+      displayRequestDuration: true,
+      docExpansion: 'none',
+      filter: true,
+      tagsSorter: 'alpha',
+      operationsSorter: 'alpha',
+    },
+  });
 
   app.use((req: Request, res: Response, next: NextFunction) => {
     try {

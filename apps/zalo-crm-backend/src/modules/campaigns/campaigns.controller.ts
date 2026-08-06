@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Body,
   Param,
@@ -40,6 +41,27 @@ export class CampaignsController {
     return this.campaignsService.predictAiCampaign(body);
   }
 
+  @Post('preview')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  preview(@Body() body: { targetSegment?: string }) {
+    return this.campaignsService.previewTargetAudience(body.targetSegment || 'ALL');
+  }
+
+  @Get('templates')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  listTemplates() {
+    return this.campaignsService.listTemplates();
+  }
+
+  @Post('templates')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  createTemplate(@Body() body: any) {
+    return this.campaignsService.createTemplate(body);
+  }
+
   @Post('referral/claim')
   @UseGuards(JwtAuthGuard)
   claimReferral(@Body() body: { inviterZaloId: string }, @CurrentUser() user: any) {
@@ -71,6 +93,34 @@ export class CampaignsController {
   @Roles('admin')
   launchCampaign(@Param('id', ParseIntPipe) id: number) {
     return this.campaignsService.launchCampaign(id);
+  }
+
+  @Post(':id/request-approval')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  requestApproval(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+    return this.campaignsService.requestApproval(id, user?.sub || user?.id);
+  }
+
+  @Post(':id/approve')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  approve(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: any) {
+    return this.campaignsService.approve(id, user?.sub || user?.id);
+  }
+
+  @Get(':id/history')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  history(@Param('id', ParseIntPipe) id: number) {
+    return this.campaignsService.getHistory(id);
+  }
+
+  @Patch(':id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  updateStatus(@Param('id', ParseIntPipe) id: number, @Body() body: { status?: string }) {
+    return this.campaignsService.updateStatus(id, body.status || 'PAUSED');
   }
 
   @Post(':id/open')

@@ -12,8 +12,10 @@ import {
   Database,
   Smartphone,
   Check,
+  Edit,
 } from 'lucide-react';
 import { useToast } from '../../contexts';
+import { PaginationComponent } from '../../components';
 
 interface IMarketingList {
   id: number;
@@ -47,6 +49,7 @@ export const MarketingLists: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedList, setSelectedList] = useState<any | null>(null);
+  const [editingListId, setEditingListId] = useState<number | null>(null);
   const [listEntries, setListEntries] = useState<IEntry[]>([]);
   const [loadingEntries, setLoadingEntries] = useState(false);
 
@@ -54,6 +57,8 @@ export const MarketingLists: React.FC = () => {
   const [listName, setListName] = useState('');
   const [listDesc, setListDesc] = useState('');
   const [phonesText, setPhonesText] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   useEffect(() => {
     fetchLists();
   }, []);
@@ -87,7 +92,7 @@ export const MarketingLists: React.FC = () => {
     }
 
     try {
-      const res = await crmApiRequest('/marketing-lists', 'POST', {
+      const res = await crmApiRequest(editingListId ? `/marketing-lists/${editingListId}` : '/marketing-lists', editingListId ? 'PATCH' : 'POST', {
         name: listName,
         description: listDesc,
         phones,
@@ -95,6 +100,7 @@ export const MarketingLists: React.FC = () => {
       if (res) {
         toastSuccess('Thành công', 'Đã tạo tệp khách hàng và bắt đầu tra cứu Zalo!');
         setIsCreateModalOpen(false);
+        setEditingListId(null);
         resetCreateForm();
         fetchLists();
       }
@@ -107,6 +113,21 @@ export const MarketingLists: React.FC = () => {
     setListName('');
     setListDesc('');
     setPhonesText('');
+    setEditingListId(null);
+  };
+
+  const handleOpenEdit = async (list: IMarketingList, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const detail = await crmApiRequest<any>(`/marketing-lists/${list.id}`);
+      setEditingListId(list.id);
+      setListName(detail?.name || list.name);
+      setListDesc(detail?.description || list.description || '');
+      setPhonesText((detail?.entries || []).map((entry: IEntry) => entry.phone).join('\n'));
+      setIsCreateModalOpen(true);
+    } catch (error) {
+      toastError('Lỗi', 'Không thể tải tệp để chỉnh sửa.');
+    }
   };
 
   const handleDeleteList = async (id: number, e: React.MouseEvent) => {
@@ -142,6 +163,8 @@ export const MarketingLists: React.FC = () => {
     l => l.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
          (l.description && l.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+  const totalPages = Math.max(1, Math.ceil(filteredLists.length / itemsPerPage));
+  const visibleLists = filteredLists.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // Summary Metrics
   const totalLists = lists.length;
@@ -218,7 +241,7 @@ export const MarketingLists: React.FC = () => {
               type="text"
               placeholder="Tìm kiếm tệp..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 bg-white"
             />
           </div>
@@ -257,7 +280,7 @@ export const MarketingLists: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
-                {filteredLists.map((list) => {
+                {visibleLists.map((list) => {
                   const hasZaloPct = list.totalEntries > 0 ? Math.round((list.hasZaloEntries / list.totalEntries) * 100) : 0;
                   
                   return (
@@ -303,6 +326,13 @@ export const MarketingLists: React.FC = () => {
                       </td>
                       <td className="py-4 px-6 text-right" onClick={e => e.stopPropagation()}>
                         <button
+                          onClick={(e) => handleOpenEdit(list, e)}
+                          className="p-1.5 mr-1 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors border-none cursor-pointer bg-transparent"
+                          title="Chỉnh sửa tệp"
+                        >
+                          <Edit size={15} />
+                        </button>
+                        <button
                           onClick={(e) => handleDeleteList(list.id, e)}
                           className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border-none cursor-pointer bg-transparent"
                           title="Xóa tệp"
@@ -315,6 +345,14 @@ export const MarketingLists: React.FC = () => {
                 })}
               </tbody>
             </table>
+            <PaginationComponent
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredLists.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={(value) => { setItemsPerPage(value); setCurrentPage(1); }}
+            />
           </div>
         )}
       </div>
@@ -324,7 +362,7 @@ export const MarketingLists: React.FC = () => {
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
           <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-scaleUp">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h3 className="font-bold text-slate-900 text-sm">Tạo tệp khách hàng thủ công</h3>
+              <h3 className="font-bold text-slate-900 text-sm">{editingListId ? 'Chỉnh sửa tệp khách hàng' : 'Tạo tệp khách hàng thủ công'}</h3>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
                 className="p-1 hover:bg-slate-200 rounded-lg text-slate-400 hover:text-slate-700 transition-colors border-none bg-transparent cursor-pointer"
@@ -383,7 +421,7 @@ export const MarketingLists: React.FC = () => {
                   type="submit"
                   className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm border-none cursor-pointer"
                 >
-                  Tạo và Kiểm tra
+                  {editingListId ? 'Lưu thay đổi' : 'Tạo và Kiểm tra'}
                 </button>
               </div>
             </form>

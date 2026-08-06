@@ -17,7 +17,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CreateNotificationDto } from './dto/notification.dto';
 
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('Notifications')
 @Controller('notifications')
@@ -63,6 +63,8 @@ export class NotificationsController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Gửi ngay hoặc lên lịch thông báo hệ thống' })
   async createNotification(@Body() body: CreateNotificationDto) {
     return this.notificationsService.create(body);
   }

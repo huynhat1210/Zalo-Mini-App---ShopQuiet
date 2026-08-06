@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Keycloak from 'keycloak-js';
 import { LayoutComponent, ToastContainerComponent } from './components';
 import { ToastProviderComponent, useToast, PermissionProviderComponent } from './contexts';
+import type { Role } from './utils/permissions';
+import { API_BASE_URL } from './utils/api';
 import './App.css';
 
 // Init Keycloak for ShopQuiet CMS Frontend
@@ -167,6 +169,8 @@ const FlashSaleManagement = lazy(() => import('./pages').then((m) => ({ default:
 const Settings = lazy(() => import('./pages').then((m) => ({ default: m.Settings })));
 const CommentsPage = lazy(() => import('./pages').then((m) => ({ default: m.CommentsPage })));
 const TransactionsPage = lazy(() => import('./pages').then((m) => ({ default: m.TransactionsPage })));
+const AuditLogs = lazy(() => import('./pages').then((m) => ({ default: m.AuditLogs })));
+const SystemLogs = lazy(() => import('./pages').then((m) => ({ default: m.SystemLogs })));
 
 const ToastContainerWrapper: React.FC = () => {
   const { toasts, removeToast } = useToast();
@@ -176,6 +180,9 @@ const ToastContainerWrapper: React.FC = () => {
 export const App: React.FC = () => {
   const [checking, setChecking] = useState(true);
   const [initializationError, setInitializationError] = useState<string | null>(null);
+  const [cmsRole, setCmsRole] = useState<Role>(
+    keycloak.tokenParsed?.realm_access?.roles?.includes('admin') ? 'admin' : 'viewer',
+  );
 
   useEffect(() => {
     if (!import.meta.env.DEV || !('serviceWorker' in navigator)) return;
@@ -188,6 +195,20 @@ export const App: React.FC = () => {
   useEffect(() => {
     initializeKeycloakWithTimeout()
       .then(() => {
+        void fetch(`${API_BASE_URL}/auth/profile`, {
+          headers: { Authorization: `Bearer ${keycloak.token || ''}` },
+        })
+          .then((response) => response.json())
+          .then((payload) => {
+            const role = String(payload?.data?.role || payload?.role || '').toLowerCase();
+            setCmsRole(role === 'admin' ? 'admin' : 'viewer');
+            const storedProfile = JSON.parse(localStorage.getItem('zalo_profile_custom') || '{}');
+            localStorage.setItem('zalo_profile_custom', JSON.stringify({
+              ...storedProfile,
+              role: role === 'admin' ? 'admin' : 'user',
+            }));
+          })
+          .catch((error) => console.error('Failed to load CMS role from backend:', error));
         setChecking(false);
       })
       .catch((err) => {
@@ -265,7 +286,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <PermissionProviderComponent>
+    <PermissionProviderComponent initialRole={cmsRole}>
       <ToastProviderComponent>
         <BrowserRouter>
           <LayoutComponent onLogout={handleLogout}>
@@ -287,6 +308,8 @@ export const App: React.FC = () => {
                 <Route path="/products" element={<Products />} />
                 <Route path="/orders" element={<Orders />} />
                 <Route path="/transactions" element={<TransactionsPage />} />
+                <Route path="/audit-logs" element={<AuditLogs />} />
+                <Route path="/system-logs" element={<SystemLogs />} />
                 <Route path="/vouchers" element={<Vouchers />} />
                 <Route path="/flash-sale" element={<FlashSaleManagement />} />
                 <Route path="/banners" element={<Banners />} />

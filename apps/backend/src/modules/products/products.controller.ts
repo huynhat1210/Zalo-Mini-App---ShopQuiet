@@ -27,6 +27,7 @@ import {
   UpdateProductDto,
   CreateVariantDto,
   UpdateVariantStockDto,
+  UpdateProductStockDto,
 } from './dto/create-product.dto';
 
 @ApiTags('Products & Categories')
@@ -114,6 +115,26 @@ export class ProductsController {
     return this.productsService.findFlashSaleProducts();
   }
 
+  @Get('products/admin/all')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  async getAllProductsAdmin(
+    @Query('search') search?: string,
+    @Query('categoryId') categoryId?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('sort') sort?: string,
+  ) {
+    return this.productsService.findAllAdmin(
+      search,
+      categoryId,
+      page ? Number(page) : 1,
+      limit ? Number(limit) : 20,
+      sort,
+    );
+  }
+
   @Get('products/flash-sale/config')
   @ApiOperation({ summary: 'Get flash sale config' })
   async getFlashSaleConfig() {
@@ -196,6 +217,18 @@ export class ProductsController {
     @Body() body: UpdateProductDto,
   ) {
     return this.productsService.update(id, body);
+  }
+
+  @Patch('products/:id/stock')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update stock for a simple product (Admin only)' })
+  async updateProductStock(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateProductStockDto,
+  ) {
+    return this.productsService.updateProductStock(id, body.stock);
   }
 
   @Delete('products/:id')

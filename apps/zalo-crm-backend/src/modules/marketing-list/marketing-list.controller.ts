@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../auth/roles.guard';
 import { Roles } from '../../auth/roles.decorator';
@@ -27,6 +27,16 @@ export class MarketingListController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.marketingListService.findOne(+id);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @Body('name') name: string,
+    @Body('description') description: string,
+    @Body('phones') phones: string[],
+  ) {
+    return this.marketingListService.updateList(+id, name, description, phones);
   }
 
   @Delete(':id')

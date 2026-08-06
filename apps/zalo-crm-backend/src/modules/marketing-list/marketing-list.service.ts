@@ -112,6 +112,29 @@ export class MarketingListService {
     };
   }
 
+  async updateList(id: number, name: string, description: string, phones: string[]) {
+    await this.findOne(id);
+    if (!name || !name.trim()) throw new BadRequestException('List name is required.');
+
+    const cleanPhones = [...new Set((phones || [])
+      .map((phone) => phone.trim().replace(/[^0-9]/g, ''))
+      .filter((phone) => phone.length >= 9 && phone.length <= 11))];
+    if (!cleanPhones.length) throw new BadRequestException('At least one valid phone number is required.');
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.marketingList.update({
+        where: { id },
+        data: { name: name.trim(), description: description?.trim() || null },
+      });
+      await tx.marketingListEntry.deleteMany({ where: { listId: id } });
+      await tx.marketingListEntry.createMany({
+        data: cleanPhones.map((phone) => ({ listId: id, phone, status: 'PENDING', hasZalo: false })),
+      });
+    });
+    void this.matchEntriesToUsers(id);
+    return this.findOne(id);
+  }
+
   async deleteList(id: number) {
     await this.findOne(id);
     await this.prisma.marketingList.delete({

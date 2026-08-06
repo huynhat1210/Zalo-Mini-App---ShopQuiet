@@ -48,7 +48,12 @@ export class TransformInterceptor implements NestInterceptor {
           pagination = {
             total: pagSource.total !== undefined ? Number(pagSource.total) : 0,
             page: pagSource.page !== undefined ? Number(pagSource.page) : 1,
-            limit: pagSource.limit !== undefined ? Number(pagSource.limit) : 10,
+            page_size:
+              pagSource.page_size !== undefined
+                ? Number(pagSource.page_size)
+                : pagSource.limit !== undefined
+                  ? Number(pagSource.limit)
+                  : 10,
             total_pages:
               pagSource.total_pages !== undefined
                 ? Number(pagSource.total_pages)

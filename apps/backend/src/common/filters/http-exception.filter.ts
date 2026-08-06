@@ -7,10 +7,13 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpExceptionFilter.name);
+
+  constructor(private readonly prisma: PrismaService) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
@@ -102,6 +105,18 @@ export class HttpExceptionFilter implements ExceptionFilter {
       `${request.method} ${request.url} - Status: ${status} - Message: ${message}`,
       exception instanceof Error ? exception.stack : '',
     );
+
+    void this.prisma.systemLog.create({
+      data: {
+        level: status >= 500 ? 'ERROR' : 'WARN',
+        method: request.method,
+        path: request.originalUrl || request.url,
+        statusCode: status,
+        message: String(message).slice(0, 2000),
+        requestId,
+        traceId,
+      },
+    }).catch((error) => this.logger.warn(`System log persistence failed: ${error?.message || error}`));
 
     response.status(status).json(errorResponse);
   }

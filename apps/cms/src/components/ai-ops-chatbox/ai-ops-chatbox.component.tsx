@@ -41,7 +41,7 @@ export const AiOpsChatbox: React.FC<IAiOpsChatboxProps> = () => {
             {
               id: 'init-msg',
               sender: 'BOT',
-              text: 'Xin chào Admin! 🤖 Tôi là Trợ Lý Gemini AI Vận Hành Doanh Nghiệp. Tôi vừa tự động quét hệ thống và phát hiện các vấn đề cần bạn xử lý:',
+              text: 'Xin chào Admin! Tôi là Trợ Lý Gemini AI Vận Hành Doanh Nghiệp. Tôi vừa tự động quét hệ thống và phát hiện các vấn đề cần bạn xử lý:',
               time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
             },
             ...res.alerts.map((a) => ({
@@ -106,7 +106,7 @@ export const AiOpsChatbox: React.FC<IAiOpsChatboxProps> = () => {
           {
             id: `done-${Date.now()}`,
             sender: 'BOT',
-            text: `✅ ${res.message}`,
+            text: res.message,
             time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
           },
         ]);
@@ -145,7 +145,7 @@ export const AiOpsChatbox: React.FC<IAiOpsChatboxProps> = () => {
         {
           id: `bot-reply-${Date.now()}`,
           sender: 'BOT',
-          text: res.reply || '🤖 Trợ lý Gemini AI đã xử lý xong yêu cầu.',
+          text: res.reply || 'Trợ lý Gemini AI đã xử lý xong yêu cầu.',
           time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -155,7 +155,7 @@ export const AiOpsChatbox: React.FC<IAiOpsChatboxProps> = () => {
         {
           id: `bot-err-${Date.now()}`,
           sender: 'BOT',
-          text: '⚠️ Không thể kết nối với Gemini AI. Vui lòng kiểm tra lại.',
+          text: 'Không thể kết nối với Gemini AI. Vui lòng kiểm tra lại.',
           time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
@@ -252,11 +252,11 @@ export const AiOpsChatbox: React.FC<IAiOpsChatboxProps> = () => {
             <div className="bg-gradient-to-r from-[#0e6877] to-[#168a9e] text-white p-4 flex justify-between items-center shadow-sm">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center border border-white/30 text-white font-bold">
-                  🤖
+                  <Bot size={18} />
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm flex items-center gap-1.5">
-                    Gemini AI Operations Center
+                    Trung tâm AI vận hành
                     <span className="text-[9px] font-bold bg-teal-400/30 px-1.5 py-0.5 rounded text-teal-100 font-mono">1.5 Flash</span>
                   </h3>
                   <p className="text-[10px] text-teal-100/90 mt-0.5">Trợ lý giám sát & xử lý sự cố doanh nghiệp</p>
@@ -290,7 +290,7 @@ export const AiOpsChatbox: React.FC<IAiOpsChatboxProps> = () => {
                     <div className="flex items-start gap-2 max-w-[92%]">
                       {!isUser && (
                         <div className="w-7 h-7 rounded-xl bg-[#0e6877] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-1">
-                          🤖
+                          <Bot size={14} />
                         </div>
                       )}
 

@@ -16,4 +16,5 @@ export * from './vouchers';
 export * from './flash-sale/flash-sale';
 export * from './comments/comments';
 export * from './transactions/transactions';
-
+export * from './audit-logs';
+export * from './system-logs';

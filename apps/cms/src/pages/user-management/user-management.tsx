@@ -12,7 +12,13 @@ import {
   Ruler,
   Phone,
   Download,
-  X
+  X,
+  Star,
+  Gem,
+  Crown,
+  Shield,
+  Medal,
+  Package,
 } from 'lucide-react';
 
 import type { IUserManagementProps } from './user-management.type';
@@ -50,7 +56,7 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
     try {
       if (!isSilent) setLoading(true);
       const res = await apiRequest('/users');
-      setUsers(Array.isArray(res) ? res : []);
+      setUsers(Array.isArray(res) ? res.map((user) => ({ ...user, role: String(user.role || 'USER').toLowerCase() })) : []);
     } catch (err) {
       console.error('Failed to load users:', err);
     } finally {
@@ -195,13 +201,13 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
   const getTierBadge = (tier: string) => {
     switch (tier) {
       case 'Kim cương':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-800 border border-purple-300">💎 Kim cương</span>;
+        return <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-800 border border-purple-300"><Gem size={11} /> Kim cương</span>;
       case 'Vàng':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300">👑 Vàng</span>;
+        return <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300"><Crown size={11} /> Vàng</span>;
       case 'Bạc':
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-200 text-slate-700 border border-slate-300">🛡️ Bạc</span>;
+        return <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-200 text-slate-700 border border-slate-300"><Shield size={11} /> Bạc</span>;
       default:
-        return <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#f0edeb] text-amber-900 border border-amber-200">🥉 Đồng</span>;
+        return <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#f0edeb] text-amber-900 border border-amber-200"><Medal size={11} /> Đồng</span>;
     }
   };
 
@@ -259,10 +265,10 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
             className="px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 focus:outline-none cursor-pointer"
           >
             <option value="ALL">Tất cả Hạng Thành Viên</option>
-            <option value="Đồng">🥉 Hạng Đồng</option>
-            <option value="Bạc">🛡️ Hạng Bạc</option>
-            <option value="Vàng">👑 Hạng Vàng</option>
-            <option value="Kim cương">💎 Hạng Kim Cương</option>
+            <option value="Đồng">Hạng Đồng</option>
+            <option value="Bạc">Hạng Bạc</option>
+            <option value="Vàng">Hạng Vàng</option>
+            <option value="Kim cương">Hạng Kim Cương</option>
           </select>
 
           <select
@@ -477,10 +483,10 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
             {/* Modal Navigation Tabs */}
             <div className="bg-slate-50 px-6 py-2 border-b border-slate-200 flex gap-2 overflow-x-auto shrink-0">
               {[
-                { id: 'profile', label: '👤 Hồ Sơ & Vóc Dáng', count: null },
-                { id: 'orders', label: '🛍️ Đơn Hàng Mua', count: userOrders.length },
-                { id: 'favorites', label: '❤️ Sản Phẩm Thích', count: userFavorites.length },
-                { id: 'comments', label: '⭐ Đánh Giá Viết', count: userComments.length },
+                { id: 'profile', label: 'Hồ sơ & vóc dáng', count: null },
+                { id: 'orders', label: 'Đơn hàng mua', count: userOrders.length },
+                { id: 'favorites', label: 'Sản phẩm yêu thích', count: userFavorites.length },
+                { id: 'comments', label: 'Đánh giá đã viết', count: userComments.length },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -635,7 +641,7 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
                           <div key={order.id} className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center justify-between gap-3">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-2xl bg-teal-50 text-[#0e6877] font-black flex items-center justify-center text-sm border border-teal-100 shrink-0">
-                                📦
+                                <Package size={17} />
                               </div>
                               <div>
                                 <p className="font-mono font-black text-slate-900 text-xs">#{order.id}</p>
@@ -697,7 +703,7 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
                           <div key={comm.id} className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-2xs space-y-2">
                             <div className="flex justify-between items-center border-b border-slate-100 pb-2">
                               <span className="text-xs font-black text-[#0e6877]">Đánh giá cho Sản phẩm #{comm.productId}</span>
-                              <span className="text-xs font-black text-amber-500">⭐ {comm.rating}/5</span>
+                              <span className="flex items-center gap-1 text-xs font-black text-amber-500"><Star size={12} /> {comm.rating}/5</span>
                             </div>
                             <p className="text-xs text-slate-700 italic leading-relaxed">"{comm.content}"</p>
                           </div>

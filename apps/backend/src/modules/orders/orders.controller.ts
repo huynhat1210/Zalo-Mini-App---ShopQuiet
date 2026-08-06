@@ -6,6 +6,7 @@ import {
   Body,
   Param,
   Headers,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import type { CreateOrderDto } from './orders.service';
@@ -15,7 +16,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('Orders')
 @Controller('orders')
@@ -41,8 +42,24 @@ export class OrdersController {
   @Get('admin/all')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  async getAllOrdersAdmin() {
-    return this.ordersService.findAllAdmin();
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Lấy danh sách đơn hàng quản trị có phân trang' })
+  @ApiQuery({ name: 'page', required: false, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, example: 20 })
+  @ApiQuery({ name: 'search', required: false, example: 'SQ-12345' })
+  @ApiQuery({ name: 'status', required: false, example: 'PROCESSING' })
+  async getAllOrdersAdmin(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.ordersService.findAllAdmin({
+      page: page ? Number(page) : 1,
+      limit: limit ? Number(limit) : 20,
+      search,
+      status,
+    });
   }
 
 

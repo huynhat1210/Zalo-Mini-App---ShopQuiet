@@ -72,6 +72,7 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalOrders, setTotalOrders] = useState(0);
 
   // Expanded row IDs set (all expanded by default for maximum visibility!)
   const [expandedOrderIds, setExpandedOrderIds] = useState<Record<string, boolean>>({});
@@ -137,9 +138,16 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
   const fetchOrders = async (isSilent = false) => {
     try {
       if (!isSilent) setLoading(true);
-      const res = await apiRequest<Order[]>('/orders/admin/all');
-      const list = Array.isArray(res) ? res : [];
+      const params = new URLSearchParams({
+        page: String(currentPage),
+        limit: String(itemsPerPage),
+      });
+      if (searchTerm.trim()) params.set('search', searchTerm.trim());
+      if (statusFilter !== 'ALL') params.set('status', statusFilter);
+      const res = await apiRequest<{ data: Order[]; pagination?: { total?: number } }>(`/orders/admin/all?${params.toString()}`, 'GET', undefined, { envelope: true });
+      const list = res?.data || [];
       setOrders(list);
+      setTotalOrders(Number(res?.pagination?.total || list.length));
 
       // Orders stay collapsed by default for clean and compact management
     } catch (err) {
@@ -155,7 +163,7 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
       fetchOrders(true);
     }, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [currentPage, itemsPerPage, searchTerm, statusFilter]);
 
   const handleUpdateStatus = async (orderId: string, newStatus: string, trackNum?: string) => {
     try {
@@ -288,19 +296,9 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
     }
   };
 
-  const filteredOrders = orders.filter((o) => {
-    const name = getRecipientName(o).toLowerCase();
-    const phone = getRecipientPhone(o);
-    const matchSearch =
-      o.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      name.includes(searchTerm.toLowerCase()) ||
-      phone.includes(searchTerm);
-    const matchStatus = statusFilter === 'ALL' || o.status === statusFilter;
-    return matchSearch && matchStatus;
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / itemsPerPage));
-  const paginatedOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const filteredOrders = orders;
+  const totalPages = Math.max(1, Math.ceil(totalOrders / itemsPerPage));
+  const paginatedOrders = orders;
 
   useEffect(() => {
     setCurrentPage(1);

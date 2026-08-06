@@ -20,7 +20,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { CloudinaryService } from '../media/cloudinary.service';
 
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('CMS Admin')
 @Controller('cms')
@@ -168,6 +168,63 @@ export class CmsController {
   @Roles('admin')
   async getAdminNotifications() {
     return this.cmsService.getAdminNotifications();
+  }
+
+  @Get('audit-logs')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Tra cứu lịch sử thao tác quản trị' })
+  @ApiQuery({ name: 'page', required: false, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, example: 25 })
+  @ApiQuery({ name: 'action', required: false, example: 'ORDER_STATUS_UPDATED' })
+  async getAuditLogs(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('action') action?: string,
+  ) {
+    return this.cmsService.getAuditLogs({
+      page: page ? Number(page) : 1,
+      limit: limit ? Number(limit) : 25,
+      action,
+    });
+  }
+
+  @Get('system-logs')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Tra cứu lỗi API và nhật ký hệ thống' })
+  @ApiQuery({ name: 'page', required: false, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, example: 25 })
+  @ApiQuery({ name: 'level', required: false, enum: ['WARN', 'ERROR'] })
+  @ApiQuery({ name: 'statusCode', required: false, example: 401 })
+  async getSystemLogs(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('level') level?: string,
+    @Query('statusCode') statusCode?: string,
+  ) {
+    return this.cmsService.getSystemLogs({
+      page: page ? Number(page) : 1,
+      limit: limit ? Number(limit) : 25,
+      level,
+      statusCode: statusCode ? Number(statusCode) : undefined,
+    });
+  }
+
+  @Patch('approvals/:type/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Duyệt hoặc từ chối nội dung CMS' })
+  @ApiResponse({ status: 200, description: 'Đã cập nhật trạng thái duyệt' })
+  async updateApproval(
+    @Param('type') type: string,
+    @Param('id', ParseIntPipe) id: number,
+    @Body('status') status: string,
+  ) {
+    return this.cmsService.updateApproval(type, id, status);
   }
 
   @Post('upload')

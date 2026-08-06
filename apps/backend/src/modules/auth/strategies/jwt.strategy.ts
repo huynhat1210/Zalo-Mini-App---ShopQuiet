@@ -43,8 +43,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Không tìm thấy tài khoản tương ứng trong hệ thống');
     }
 
-    const kcRoles = payload.realm_access?.roles || [];
-    const role = kcRoles.includes('admin') ? 'admin' : (user.role || 'user');
+    const kcRoles = Array.isArray(payload.realm_access?.roles)
+      ? payload.realm_access.roles.map((value: unknown) => String(value).toLowerCase())
+      : [];
+    // Prisma stores enum values as ADMIN/USER while RolesGuard uses lowercase names.
+    // The local database role remains authoritative; Keycloak admin is accepted as an explicit platform role.
+    const role = kcRoles.includes('admin') || String(user.role).toUpperCase() === 'ADMIN'
+      ? 'admin'
+      : 'user';
 
     return {
       zaloId: user.zaloId,

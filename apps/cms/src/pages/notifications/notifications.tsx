@@ -46,6 +46,7 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
   const [targetType, setTargetType] = useState<'all' | 'specific'>('all');
   const [specificUserId, setSpecificUserId] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [scheduledAt, setScheduledAt] = useState('');
 
   const fetchHistory = async () => {
     try {
@@ -77,6 +78,7 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
         content: content.trim(),
         type,
         zaloUserId: targetType === 'specific' ? specificUserId.trim() : null
+        ,scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
       };
 
       await apiRequest('/notifications', 'POST', payload);
@@ -86,6 +88,7 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
       setTitle('');
       setContent('');
       setSpecificUserId('');
+      setScheduledAt('');
       
       setTimeout(() => setSuccessMsg(''), 3000);
       fetchHistory();
@@ -244,6 +247,12 @@ export const Notifications: React.FC<INotificationsProps> = (_props) => {
                 />
               </div>
             )}
+
+            {/* Submit Button */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Lịch gửi (bỏ trống để gửi ngay)</label>
+              <input type="datetime-local" value={scheduledAt} min={new Date().toISOString().slice(0, 16)} onChange={(event) => setScheduledAt(event.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-800 outline-none focus:border-[#0e6877] focus:bg-white" />
+            </div>
 
             {/* Submit Button */}
             <div className="pt-4">

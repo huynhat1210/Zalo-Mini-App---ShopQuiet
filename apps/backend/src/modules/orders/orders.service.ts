@@ -532,19 +532,47 @@ export class OrdersService {
     }));
   }
 
-  async findAllAdmin() {
-    return this.prisma.order.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-      include: {
-        items: {
-          include: {
-            product: true,
+  async findAllAdmin(options: { page?: number; limit?: number; search?: string; status?: string } = {}) {
+    const page = Math.max(1, Math.floor(options.page || 1));
+    const limit = Math.min(100, Math.max(1, Math.floor(options.limit || 20)));
+    const search = options.search?.trim();
+    const status = options.status?.trim();
+    const where = {
+      ...(status && status !== 'ALL' ? { status: status as OrderStatus } : {}),
+      ...(search
+        ? {
+            OR: [
+              { id: { contains: search, mode: 'insensitive' as const } },
+              { zaloUserId: { contains: search, mode: 'insensitive' as const } },
+              { shippingName: { contains: search, mode: 'insensitive' as const } },
+              { shippingPhone: { contains: search, mode: 'insensitive' as const } },
+            ],
+          }
+        : {}),
+    };
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.order.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
           },
         },
-      },
-    });
+      }),
+      this.prisma.order.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: { page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)) },
+    };
   }
 
   async findOne(id: string, zaloUserId?: string) {
@@ -594,6 +622,14 @@ export class OrdersService {
             product: true,
           },
         },
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        adminId: 'admin-default',
+        action: 'ORDER_STATUS_UPDATED',
+        details: JSON.stringify({ orderId: id, status, trackingNumber: trackingNumber || null }),
       },
     });
 

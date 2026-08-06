@@ -286,7 +286,7 @@ export const Categories: React.FC = () => {
               <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-[#0e6877] to-[#168a9e] text-white shrink-0 shadow-sm">
                 <div>
                   <h3 className="text-base font-black text-white">
-                    {editingCategory ? '✏️ Chỉnh Sửa Danh Mục' : '✨ Thêm Danh Mục Mới'}
+                    <span className="flex items-center gap-2">{editingCategory ? <Edit3 size={16} /> : <FolderPlus size={16} />} {editingCategory ? 'Chỉnh sửa danh mục' : 'Thêm danh mục mới'}</span>
                   </h3>
                   <p className="text-[11px] text-white/80 font-medium mt-0.5">Cấu hình nhóm phân loại mặt hàng hiển thị trên Mini App</p>
                 </div>

@@ -18,7 +18,7 @@ export class CommentsService {
 
   async findByProduct(productId: number): Promise<CommentWithUser[]> {
     return this.prisma.comment.findMany({
-      where: { productId },
+      where: { productId, approvalStatus: 'APPROVED' },
       include: {
         user: true,
       },
@@ -83,6 +83,7 @@ export class CommentsService {
         rating: rating || 5,
         orderId: orderId || null,
         images: parsedImages,
+        approvalStatus: 'PENDING',
       },
       include: {
         user: true,

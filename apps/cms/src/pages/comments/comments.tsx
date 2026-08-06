@@ -9,6 +9,8 @@ import {
   Sparkles,
   RefreshCw,
   ImageIcon,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 import { apiRequest, API_BASE_URL } from '../../utils/api';
 import { PaginationComponent } from '../../components';
@@ -22,6 +24,7 @@ interface CustomerComment {
   orderId?: string;
   images?: string;
   createdAt: string;
+  approvalStatus?: string;
   user?: {
     zaloId: string;
     name: string;
@@ -86,6 +89,15 @@ export const CommentsPage: React.FC = () => {
       console.error('Failed to delete comment:', e);
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleApproval = async (id: number, status: 'APPROVED' | 'REJECTED') => {
+    try {
+      const updated = await apiRequest<CustomerComment>(`/cms/approvals/comments/${id}`, 'PATCH', { status });
+      setComments((current) => current.map((comment) => (comment.id === id ? { ...comment, ...updated } : comment)));
+    } catch (error) {
+      console.error('Failed to update comment approval:', error);
     }
   };
 
@@ -422,6 +434,10 @@ export const CommentsPage: React.FC = () => {
 
                       {/* 6. Action */}
                       <td className="py-4 px-5 align-top text-center">
+                        <div className="mb-2 flex items-center justify-center gap-1">
+                          {item.approvalStatus !== 'APPROVED' && <button type="button" onClick={() => handleApproval(item.id, 'APPROVED')} title="Duyệt đánh giá" className="rounded-lg border border-emerald-200 bg-emerald-50 p-2 text-emerald-700"><CheckCircle2 className="h-4 w-4" /></button>}
+                          {item.approvalStatus !== 'REJECTED' && <button type="button" onClick={() => handleApproval(item.id, 'REJECTED')} title="Từ chối đánh giá" className="rounded-lg border border-rose-200 bg-rose-50 p-2 text-rose-700"><XCircle className="h-4 w-4" /></button>}
+                        </div>
                         <button
                           onClick={() => setDeletingId(item.id)}
                           className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-all inline-flex items-center justify-center"

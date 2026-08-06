@@ -12,7 +12,7 @@ import {
   Sparkles,
   ChevronRight,
 } from 'lucide-react';
-import { apiRequest } from '../../utils/api';
+import { crmApiRequest } from '../../utils/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 interface Notification {
@@ -53,12 +53,23 @@ export const LayoutComponent: React.FC<ILayoutComponentProps> = (props) => {
   // Fetch notifications
   const fetchNotifications = async () => {
     try {
-      const res = await apiRequest('/cms/notifications');
-      if (Array.isArray(res)) {
-        setNotifications(res);
-      }
+      const campaigns = await crmApiRequest<Array<{ id: number; title: string; status: string; updatedAt: string }>>('/campaigns');
+      const statusCopy: Record<string, { title: string; content: string; type: string; link: string }> = {
+        COMPLETED: { title: 'Chiến dịch đã phát', content: 'Chiến dịch đã hoàn tất gửi đến tệp khách hàng.', type: 'campaign_completed', link: '/campaigns' },
+        SCHEDULED: { title: 'Chiến dịch đã lên lịch', content: 'Chiến dịch đang chờ đến thời gian phát.', type: 'campaign_scheduled', link: '/campaigns' },
+        PAUSED: { title: 'Chiến dịch đang tạm dừng', content: 'Chiến dịch cần được tiếp tục trước khi phát.', type: 'campaign_paused', link: '/campaigns' },
+      };
+      setNotifications((campaigns || []).filter((campaign) => statusCopy[campaign.status]).slice(0, 8).map((campaign) => ({
+        id: `campaign-${campaign.id}-${campaign.status}`,
+        title: statusCopy[campaign.status].title,
+        content: `${campaign.title}: ${statusCopy[campaign.status].content}`,
+        type: statusCopy[campaign.status].type,
+        date: new Date(campaign.updatedAt).toLocaleString('vi-VN'),
+        read: true,
+        link: statusCopy[campaign.status].link,
+      })));
     } catch (e) {
-      console.error('Failed to load notifications in layout:', e);
+      console.error('Không thể tải thông báo chiến dịch:', e);
     }
   };
 
@@ -123,7 +134,7 @@ export const LayoutComponent: React.FC<ILayoutComponentProps> = (props) => {
             </button>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black text-[#0e6877] bg-teal-50 px-2.5 py-1 rounded-full uppercase tracking-wider border border-teal-200 shadow-2xs">
-                Admin Control Panel
+                Bảng điều hành chiến dịch
               </span>
             </div>
           </div>
@@ -148,7 +159,7 @@ export const LayoutComponent: React.FC<ILayoutComponentProps> = (props) => {
                   <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
                     <span className="text-xs font-black text-slate-900 flex items-center gap-2">
                       <Bell size={15} className="text-[#0e6877]" />
-                      Thông báo hệ thống ({unreadCount})
+                      Thông báo chiến dịch ({unreadCount})
                     </span>
                     {unreadCount > 0 && (
                       <button 

@@ -16,7 +16,7 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
 
   const navGroups = [
     {
-      title: 'CHIẾN DỊCH & MARKETING',
+      title: 'CHIẾN DỊCH & TIẾP THỊ',
       items: [
         { to: '/', label: 'Tổng quan Chiến dịch', icon: <LayoutDashboard size={17} /> },
         { to: '/marketing-lists', label: 'Tệp khách hàng', icon: <Users size={17} /> },
@@ -48,8 +48,8 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
               <img src={logo} alt="Logo" className="w-6.5 h-6.5 object-contain" />
             </div>
             <div>
-              <h1 className="font-black text-slate-900 tracking-tight text-sm flex items-center gap-1.5">
-                ShopQuiet <span className="text-[8px] px-1.5 py-0.2 bg-teal-50 text-[#0e6877] rounded font-black border border-teal-200">CAMPAIGN</span>
+            <h1 className="font-black text-slate-900 tracking-tight text-sm flex items-center gap-1.5">
+                ShopQuiet <span className="text-[8px] px-1.5 py-0.2 bg-teal-50 text-[#0e6877] rounded font-black border border-teal-200">CHIẾN DỊCH</span>
               </h1>
               <p className="text-[10px] text-slate-400 font-medium">Hệ thống Chiến dịch Zalo</p>
             </div>

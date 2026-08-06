@@ -8,6 +8,8 @@ import {
   Save,
   X,
   Link as LinkIcon,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 import type { IBannersProps } from './banners.type';
 import { useToast } from '../../contexts';
@@ -19,6 +21,7 @@ interface Banner {
   description?: string;
   link?: string;
   active: boolean;
+  approvalStatus?: string;
 }
 
 export const Banners: React.FC<IBannersProps> = (_props) => {
@@ -69,6 +72,16 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
       );
     } catch (err: any) {
       toastError('Không thể cập nhật', err.message || 'Lỗi khi bật/tắt banner');
+    }
+  };
+
+  const handleApproval = async (id: number, status: 'APPROVED' | 'REJECTED') => {
+    try {
+      const updated = await apiRequest<Banner>(`/cms/approvals/banners/${id}`, 'PATCH', { status });
+      setBanners((current) => current.map((banner) => (banner.id === id ? { ...banner, ...updated } : banner)));
+      toastSuccess(status === 'APPROVED' ? 'Đã duyệt banner' : 'Đã từ chối banner', 'Trạng thái nội dung đã được cập nhật.');
+    } catch (error: any) {
+      toastError('Không thể duyệt banner', error?.message || 'Đã xảy ra lỗi khi cập nhật trạng thái.');
     }
   };
 
@@ -164,6 +177,7 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
                   <span className={`absolute top-3 right-3 text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${banner.active ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-200 text-slate-500 border-slate-300'}`}>
                     {banner.active ? 'Đang hiển thị' : 'Đã khóa'}
                   </span>
+                  {banner.approvalStatus !== 'APPROVED' && <span className="absolute bottom-3 left-3 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">{banner.approvalStatus === 'REJECTED' ? 'Đã từ chối' : 'Chờ duyệt'}</span>}
                 </div>
 
                 <div className="p-4 space-y-2">
@@ -179,6 +193,8 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
 
               <div className="p-4 pt-3 border-t border-slate-100/80 mt-2 flex justify-between items-center bg-slate-50/50">
                 <div className="flex items-center gap-2">
+                  {banner.approvalStatus !== 'APPROVED' && <button type="button" onClick={() => handleApproval(banner.id, 'APPROVED')} title="Duyệt banner" className="rounded-lg border border-emerald-200 bg-emerald-50 p-2 text-emerald-700 hover:bg-emerald-100"><CheckCircle2 size={14} /></button>}
+                  {banner.approvalStatus !== 'REJECTED' && <button type="button" onClick={() => handleApproval(banner.id, 'REJECTED')} title="Từ chối banner" className="rounded-lg border border-rose-200 bg-rose-50 p-2 text-rose-700 hover:bg-rose-100"><XCircle size={14} /></button>}
                   <button
                     type="button"
                     onClick={() => handleToggleBanner(banner.id, banner.active)}
@@ -241,7 +257,7 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
             {/* Header */}
             <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-[#0e6877] to-[#168a9e] text-white">
               <div>
-                <h3 className="text-base font-black text-white">🖼️ Thêm Banner Quảng Cáo Mới</h3>
+                <h3 className="flex items-center gap-2 text-base font-black text-white"><ImageIcon size={17} /> Thêm banner quảng cáo mới</h3>
                 <p className="text-[11px] text-white/80 font-medium mt-0.5">Tải ảnh và thiết lập liên kết khuyến mãi trang chủ</p>
               </div>
               <button

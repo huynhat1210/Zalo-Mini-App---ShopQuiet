@@ -76,6 +76,9 @@ model Product {
   likeCount         Int              @default(0)
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @default(now()) @updatedAt
+  approvalStatus    String           @default("APPROVED")
+  approvedAt        DateTime?
+  approvedBy        String?
   cartItems         CartItem[]
   comments          Comment[]
   favorites         Favorite[]
@@ -195,6 +198,9 @@ model Comment {
   images     Json?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  approvalStatus String  @default("APPROVED")
+  approvedAt DateTime?
+  approvedBy String?
   product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   user       User     @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
 
@@ -312,6 +318,8 @@ model Notification {
   type       String
   date       String
   read       Boolean  @default(false)
+  status     String   @default("SENT")
+  scheduledAt DateTime?
   createdAt  DateTime @default(now())
   user       User?    @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
 
@@ -321,6 +329,7 @@ model Notification {
   @@index([date])
   @@index([createdAt])
   @@index([zaloUserId, read, createdAt])
+  @@index([status, scheduledAt])
 }
 
 model Favorite {
@@ -362,6 +371,9 @@ model Banner {
   cta         String?
   link        String?
   active      Boolean  @default(true)
+  approvalStatus String  @default("APPROVED")
+  approvedAt DateTime?
+  approvedBy String?
   createdAt   DateTime @default(now())
 }
 
@@ -455,6 +467,22 @@ model AuditLog {
   createdAt DateTime @default(now())
 }
 
+model SystemLog {
+  id        Int      @id @default(autoincrement())
+  level     String   @default("ERROR")
+  method    String
+  path      String
+  statusCode Int
+  message   String
+  requestId String?
+  traceId   String?
+  createdAt DateTime @default(now())
+
+  @@index([level, createdAt])
+  @@index([statusCode, createdAt])
+  @@index([path, createdAt])
+}
+
 model AnalyticsEvent {
   id         Int      @id @default(autoincrement())
   zaloUserId String
@@ -499,6 +527,14 @@ model Campaign {
   bonusCoins       Int            @default(0)
   discountPercent  Int            @default(0)
   status           String         @default("DRAFT")
+  approvalStatus   String         @default("NOT_REQUIRED")
+  approvedAt       DateTime?
+  approvedBy       String?
+  experimentKey    String?
+  variantLabel     String?
+  dailyLimit       Int            @default(1)
+  quietHoursStart  Int            @default(22)
+  quietHoursEnd    Int            @default(7)
   scheduledAt      DateTime?
   startedAt        DateTime?
   endedAt          DateTime?
@@ -509,10 +545,13 @@ model Campaign {
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @default(now()) @updatedAt
   users            CampaignUser[]
+  histories        CampaignHistory[]
 
   @@index([status])
   @@index([type])
   @@index([createdAt])
+  @@index([approvalStatus])
+  @@index([experimentKey])
 }
 
 model CampaignUser {
@@ -529,6 +568,39 @@ model CampaignUser {
 
   @@unique([campaignId, zaloUserId])
   @@index([zaloUserId])
+}
+
+model CampaignHistory {
+  id         Int      @id @default(autoincrement())
+  campaignId Int
+  action     String
+  actorId    String?
+  details    Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId, createdAt])
+  @@index([action])
+}
+
+model CampaignTemplate {
+  id              Int      @id @default(autoincrement())
+  name            String
+  description     String?
+  type            String
+  targetSegment   String   @default("ALL")
+  content         String
+  voucherCode     String?
+  bonusCoins      Int      @default(0)
+  discountPercent Int      @default(0)
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([active])
+  @@index([type])
+  @@index([createdAt])
 }
 
 model Automation {

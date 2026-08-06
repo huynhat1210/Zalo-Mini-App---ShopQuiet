@@ -21,8 +21,8 @@ export class PaginationDto {
   @ApiProperty({ example: 1, description: 'Current page number' })
   page: number;
 
-  @ApiProperty({ example: 10, description: 'Page limit' })
-  limit: number;
+  @ApiProperty({ example: 10, description: 'Number of records per page' })
+  page_size: number;
 
   @ApiProperty({ example: 3, description: 'Total pages available' })
   total_pages: number;

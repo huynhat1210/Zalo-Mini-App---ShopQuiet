@@ -83,7 +83,7 @@ export const Analytics: React.FC<IAnalyticsProps> = (_props) => {
         if (!isSilent) setLoading(true);
 
         const [orders, daily, topProds, funnel, topSearches] = await Promise.allSettled([
-          apiRequest<IOrder[]>('/orders/admin/all').catch(() => []),
+          apiRequest<IOrder[]>('/orders/admin/all?page=1&limit=100').catch(() => []),
           apiRequest<IDailyStatPoint[]>(`/analytics/daily-stats?days=${timeRange}`).catch(() => []),
           apiRequest<ITopProduct[]>('/analytics/top-products?limit=8').catch(() => []),
           apiRequest<IFunnelData>('/analytics/funnel').catch(() => null),

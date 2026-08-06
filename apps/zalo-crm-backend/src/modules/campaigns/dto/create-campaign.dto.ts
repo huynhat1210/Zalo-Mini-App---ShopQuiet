@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsInt, IsDateString } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsInt, IsDateString, IsBoolean, Min, Max } from 'class-validator';
 
 export class CreateCampaignDto {
   @IsString()
@@ -32,4 +32,33 @@ export class CreateCampaignDto {
   @IsDateString()
   @IsOptional()
   scheduledAt?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  approvalRequired?: boolean;
+
+  @IsInt()
+  @IsOptional()
+  @Min(1)
+  dailyLimit?: number;
+
+  @IsInt()
+  @IsOptional()
+  @Min(0)
+  @Max(23)
+  quietHoursStart?: number;
+
+  @IsInt()
+  @IsOptional()
+  @Min(0)
+  @Max(23)
+  quietHoursEnd?: number;
+
+  @IsString()
+  @IsOptional()
+  experimentKey?: string;
+
+  @IsString()
+  @IsOptional()
+  variantLabel?: string;
 }

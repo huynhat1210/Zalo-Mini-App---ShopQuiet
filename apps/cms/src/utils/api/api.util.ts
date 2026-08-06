@@ -113,6 +113,7 @@ export async function apiRequest<T = any>(
   path: string,
   method: TApiHttpMethod = 'GET',
   body?: unknown,
+  requestOptions: { envelope?: boolean } = {},
 ): Promise<T> {
   const url = `${API_BASE_URL}${path}`;
   const headers: Record<string, string> = {
@@ -153,7 +154,7 @@ export async function apiRequest<T = any>(
         }
 
         const retryJson: IApiResponseEnvelope<T> = await retryResponse.json();
-        return retryJson.data;
+        return requestOptions.envelope ? retryJson as T : retryJson.data;
       } catch (err) {
         tokenStorage.clearToken();
         localStorage.removeItem('cms_auth_provider');
@@ -176,7 +177,7 @@ export async function apiRequest<T = any>(
   }
 
   const json: IApiResponseEnvelope<T> = await response.json();
-  return json.data;
+  return requestOptions.envelope ? json as T : json.data;
 }
 
 export async function apiUploadRequest(file: File): Promise<string> {
@@ -191,11 +192,27 @@ export async function apiUploadRequest(file: File): Promise<string> {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch(url, {
+  const requestOptions: RequestInit = {
     method: 'POST',
     headers,
     body: formData,
-  });
+  };
+  let response = await fetch(url, requestOptions);
+
+  if (response.status === 401) {
+    try {
+      const newAccessToken = await refreshAccessToken();
+      response = await fetch(url, {
+        ...requestOptions,
+        headers: { Authorization: `Bearer ${newAccessToken}` },
+      });
+    } catch (err) {
+      tokenStorage.clearToken();
+      localStorage.removeItem('cms_auth_provider');
+      window.dispatchEvent(new CustomEvent('cms:unauthorized'));
+      throw err;
+    }
+  }
 
   if (!response.ok) {
     let errMsg = `Upload failed with status ${response.status}`;
@@ -234,7 +251,25 @@ export async function crmApiRequest<T = any>(
     options.body = JSON.stringify(body);
   }
 
-  const response = await fetch(url, options);
+  let response = await fetch(url, options);
+
+  if (!response.ok) {
+    if (response.status === 401 && !path.includes('/auth/')) {
+      try {
+        const newAccessToken = await refreshAccessToken();
+        response = await fetch(url, {
+          ...options,
+          headers: { ...headers, Authorization: `Bearer ${newAccessToken}` },
+        });
+      } catch (err) {
+        tokenStorage.clearToken();
+        localStorage.removeItem('cms_auth_provider');
+        localStorage.removeItem('zalo_profile_custom');
+        window.dispatchEvent(new CustomEvent('cms:unauthorized'));
+        throw err;
+      }
+    }
+  }
 
   if (!response.ok) {
     let errMsg = `Request failed with status ${response.status}`;

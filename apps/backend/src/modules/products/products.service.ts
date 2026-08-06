@@ -18,6 +18,7 @@ export class ProductsService {
     limit: number = 10,
     sort?: string,
     includeFlashSale?: boolean,
+    includeUnapproved = false,
   ) {
     const cacheKey = `products_${search || ''}_${categoryId || ''}_${page}_${limit}_${sort || ''}_${includeFlashSale ? 'inc' : 'exc'}`;
     const cachedData = await this.cacheManager.get(cacheKey);
@@ -26,7 +27,7 @@ export class ProductsService {
       return cachedData;
     }
 
-    const where: Prisma.ProductWhereInput = {};
+    const where: Prisma.ProductWhereInput = includeUnapproved ? {} : { approvalStatus: 'APPROVED' };
 
     if (search) {
       const cleanSearch = search.trim().replace(/^#/, '');
@@ -64,11 +65,12 @@ export class ProductsService {
 
     const [products, total] = await Promise.all([
       this.prisma.product.findMany({
-        where,
+      where,
         include: {
           category: true,
           variants: true,
           comments: {
+            where: { approvalStatus: 'APPROVED' },
             select: {
               rating: true,
             },
@@ -103,6 +105,10 @@ export class ProductsService {
     return result;
   }
 
+  async findAllAdmin(search?: string, categoryId?: string, page = 1, limit = 20, sort?: string) {
+    return this.findAll(search, categoryId, page, limit, sort, true, true);
+  }
+
   async findOne(id: number) {
     const product = await this.prisma.product.findUnique({
       where: { id },
@@ -110,6 +116,7 @@ export class ProductsService {
         category: true,
         variants: true,
         comments: {
+          where: { approvalStatus: 'APPROVED' },
           include: {
             user: true,
           },
@@ -120,6 +127,9 @@ export class ProductsService {
       },
     });
 
+    if (product && product.approvalStatus !== 'APPROVED') {
+      return null;
+    }
     if (product) {
       const isCampaignActive = await this.isFlashSaleCampaignActive();
       if (isCampaignActive && product.isFlashSale) {
@@ -265,6 +275,28 @@ export class ProductsService {
     await this.invalidateProductCache(id);
 
     return product;
+  }
+
+  async updateProductStock(id: number, stock: number) {
+    if (!Number.isInteger(stock) || stock < 0) {
+      throw new BadRequestException('Tồn kho phải là số nguyên không âm.');
+    }
+
+    const variants = await this.prisma.productVariant.findMany({
+      where: { productId: id },
+      select: { id: true },
+    });
+    if (variants.length > 0) {
+      throw new BadRequestException('Sản phẩm có biến thể. Hãy cập nhật tồn kho theo từng biến thể.');
+    }
+
+    const variant = await this.prisma.productVariant.upsert({
+      where: { productId_color_size: { productId: id, color: 'DEFAULT', size: 'DEFAULT' } },
+      update: { stock },
+      create: { productId: id, color: 'DEFAULT', size: 'DEFAULT', stock },
+    });
+    await this.invalidateProductCache(id);
+    return variant;
   }
 
   async delete(id: number) {

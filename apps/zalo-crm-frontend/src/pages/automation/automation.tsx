@@ -35,12 +35,12 @@ interface AutomationStats {
 }
 
 const triggerLabels: Record<string, string> = {
-  'NEW_USER': '👤 Thành viên mới',
-  'BIRTHDAY': '🎂 Sinh nhật',
-  'CART_ABANDONED': '🛒 Giỏ hàng bỏ quên',
-  'INACTIVE_30_DAYS': '💤 Chưa mua 30 ngày',
-  'MEMBERSHIP_UPGRADE': '⭐ Thăng hạng',
-  'FIRST_PURCHASE': '🛍️ Mua lần đầu',
+  'NEW_USER': 'Thành viên mới',
+  'BIRTHDAY': 'Sinh nhật',
+  'CART_ABANDONED': 'Giỏ hàng bỏ quên',
+  'INACTIVE_30_DAYS': 'Chưa mua 30 ngày',
+  'MEMBERSHIP_UPGRADE': 'Thăng hạng',
+  'FIRST_PURCHASE': 'Mua lần đầu',
 };
 
 const triggerColors: Record<string, string> = {
@@ -124,7 +124,7 @@ export function Automation() {
   };
 
   const deleteAutomation = async (id: number) => {
-    if (!(await confirm('Xóa automation?', 'Thao tác này không thể hoàn tác.'))) return;
+    if (!(await confirm('Xóa quy trình?', 'Thao tác này không thể hoàn tác.'))) return;
     
     try {
       await crmApiRequest(`/automation/${id}`, 'DELETE');
@@ -138,7 +138,7 @@ export function Automation() {
     try {
       await crmApiRequest('/automation', 'POST', {
         ...automation,
-        name: `${automation.name} (Copy)`,
+        name: `${automation.name} (Bản sao)`,
         enabled: false,
       });
       loadAutomations();
@@ -163,7 +163,7 @@ export function Automation() {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      toastWarning('Thiếu tên automation', 'Vui lòng nhập tên trước khi lưu.');
+      toastWarning('Thiếu tên quy trình', 'Vui lòng nhập tên trước khi lưu.');
       return;
     }
     if (!trigger) {
@@ -192,7 +192,7 @@ export function Automation() {
       loadAutomations();
     } catch (error) {
       console.error('Failed to save automation:', error);
-      toastError('Không thể lưu automation', 'Vui lòng kiểm tra cấu hình.');
+      toastError('Không thể lưu quy trình', 'Vui lòng kiểm tra cấu hình.');
     }
   };
 
@@ -202,9 +202,9 @@ export function Automation() {
       totalTriggered: allStats.reduce((sum, s) => sum + s.totalTriggered, 0),
       successful: allStats.reduce((sum, s) => sum + s.successful, 0),
       failed: allStats.reduce((sum, s) => sum + s.failed, 0),
-      successRate: allStats.length > 0 
-        ? Math.round((allStats.reduce((sum, s) => sum + s.successful, 0) / 
-                     allStats.reduce((sum, s) => sum + s.totalTriggered, 0)) * 100) 
+      successRate: allStats.reduce((sum, s) => sum + s.totalTriggered, 0) > 0
+        ? Math.round((allStats.reduce((sum, s) => sum + s.successful, 0) /
+                     allStats.reduce((sum, s) => sum + s.totalTriggered, 0)) * 100)
         : 0,
     };
   };
@@ -227,14 +227,14 @@ export function Automation() {
             onClick={handleSeedTemplates}
             className="px-4 py-2 border border-[#0e6877] text-[#0e6877] rounded-xl hover:bg-teal-50 transition-colors flex items-center gap-2 cursor-pointer bg-white font-bold text-xs"
           >
-            ✨ Tải các kịch bản mẫu
+            <Zap className="w-4 h-4" /> Tải các kịch bản mẫu
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
             className="px-4 py-2 bg-[#0e6877] text-white rounded-xl hover:bg-[#0b5663] transition-colors flex items-center gap-2 cursor-pointer border-none font-bold text-xs"
           >
             <Plus className="w-4 h-4" />
-            Tạo Automation
+            Tạo quy trình tự động
           </button>
         </div>
       </div>
@@ -247,7 +247,7 @@ export function Automation() {
               <Zap className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-slate-600">Total Triggered</p>
+              <p className="text-sm text-slate-600">Tổng lượt kích hoạt</p>
               <p className="text-xl font-bold text-slate-800">{totalStats.totalTriggered}</p>
             </div>
           </div>
@@ -258,7 +258,7 @@ export function Automation() {
               <CheckCircle className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-slate-600">Successful</p>
+              <p className="text-sm text-slate-600">Thành công</p>
               <p className="text-xl font-bold text-slate-800">{totalStats.successful}</p>
             </div>
           </div>
@@ -269,7 +269,7 @@ export function Automation() {
               <XCircle className="w-5 h-5 text-red-600" />
             </div>
             <div>
-              <p className="text-sm text-slate-600">Failed</p>
+              <p className="text-sm text-slate-600">Thất bại</p>
               <p className="text-xl font-bold text-slate-800">{totalStats.failed}</p>
             </div>
           </div>
@@ -280,7 +280,7 @@ export function Automation() {
               <TrendingUp className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-sm text-slate-600">Success Rate</p>
+              <p className="text-sm text-slate-600">Tỷ lệ thành công</p>
               <p className="text-xl font-bold text-slate-800">{totalStats.successRate}%</p>
             </div>
           </div>
@@ -301,13 +301,13 @@ export function Automation() {
                 onClick={handleSeedTemplates}
                 className="px-4 py-2 border border-[#0e6877] text-[#0e6877] rounded-xl hover:bg-teal-50 transition-colors cursor-pointer bg-white font-bold text-xs"
               >
-                ✨ Tải các kịch bản mẫu
+                <Zap className="w-4 h-4" /> Tải các kịch bản mẫu
               </button>
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="px-4 py-2 bg-[#0e6877] text-white rounded-xl hover:bg-[#0b5663] transition-colors cursor-pointer border-none font-bold text-xs"
               >
-                Tạo Automation đầu tiên
+                Tạo quy trình đầu tiên
               </button>
             </div>
           </div>
@@ -319,16 +319,16 @@ export function Automation() {
                   Tên
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-extrabold text-slate-600 uppercase tracking-wider">
-                  Trigger
+                  Sự kiện kích hoạt
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-extrabold text-slate-600 uppercase tracking-wider">
-                  Stats
+                  Thống kê
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-extrabold text-slate-600 uppercase tracking-wider">
-                  Status
+                  Trạng thái
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-extrabold text-slate-600 uppercase tracking-wider">
-                  Actions
+                  Thao tác
                 </th>
               </tr>
             </thead>
@@ -380,12 +380,12 @@ export function Automation() {
                       {automation.enabled ? (
                         <span className="flex items-center gap-1">
                           <Play className="w-3 h-3" />
-                          Active
+                          Đang bật
                         </span>
                       ) : (
                         <span className="flex items-center gap-1">
                           <Pause className="w-3 h-3" />
-                          Paused
+                          Đang tắt
                         </span>
                       )}
                     </button>
@@ -395,7 +395,7 @@ export function Automation() {
                       <button
                         onClick={() => setSelectedAutomation(automation)}
                         className="p-2 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
-                        title="Edit"
+                        title="Chỉnh sửa"
                       >
                         <Edit className="w-4 h-4 text-slate-600" />
                       </button>
@@ -409,7 +409,7 @@ export function Automation() {
                       <button
                         onClick={() => deleteAutomation(automation.id)}
                         className="p-2 hover:bg-red-100 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
-                        title="Delete"
+                        title="Xóa"
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />
                       </button>
@@ -424,14 +424,19 @@ export function Automation() {
 
       {/* Create/Edit Modal */}
       {(showCreateModal || selectedAutomation) && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100">
-            <h2 className="text-lg font-bold text-slate-800 mb-4">
-              {selectedAutomation ? 'Chỉnh sửa Automation' : 'Tạo Automation Mới'}
-            </h2>
-            <div className="space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
+          <div className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-[28px] border border-white/70 bg-white shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-100 bg-white px-6 py-5">
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Tên Automation</label>
+                <div className="mb-1 flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#0e6877]"><Zap className="h-4 w-4" /> Bộ điều phối tự động</div>
+                <h2 className="text-lg font-extrabold text-slate-900">{selectedAutomation ? 'Chỉnh sửa quy trình' : 'Tạo quy trình mới'}</h2>
+                <p className="mt-1 text-xs text-slate-500">Thiết lập điều kiện và hành động chăm sóc khách hàng.</p>
+              </div>
+              <button onClick={() => { setShowCreateModal(false); setSelectedAutomation(null); }} className="rounded-xl border-none bg-slate-100 px-3 py-2 text-xs font-bold text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-800">Đóng</button>
+            </div>
+            <div className="space-y-4 overflow-y-auto px-6 py-5">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Tên quy trình</label>
                 <input
                   type="text"
                   value={name}
@@ -447,17 +452,17 @@ export function Automation() {
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877] text-sm bg-white"
                   rows={2}
-                  placeholder="Mô tả chức năng của automation..."
+                  placeholder="Mô tả chức năng của quy trình..."
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Trigger</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Sự kiện kích hoạt</label>
                 <select 
                   value={trigger}
                   onChange={(e) => setTrigger(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877] text-sm bg-white"
                 >
-                  <option value="">Chọn trigger...</option>
+                  <option value="">Chọn sự kiện...</option>
                   {Object.entries(triggerLabels).map(([value, label]) => (
                     <option key={value} value={value}>
                       {label}
@@ -466,9 +471,9 @@ export function Automation() {
                 </select>
               </div>
               
-              {/* Actions Section */}
+              {/* Khu vực thao tác */}
               <div className="border-t border-slate-200 pt-4">
-                <label className="block text-xs font-bold text-slate-600 mb-2">Actions</label>
+                <label className="block text-xs font-bold text-slate-600 mb-2">Thao tác</label>
                 <div className="space-y-3">
                   {actions.map((action, index) => (
                     <div key={index} className="p-4 bg-slate-50 rounded-xl border border-slate-200 relative">
@@ -481,7 +486,7 @@ export function Automation() {
                         </button>
                       )}
                       <div className="flex items-center justify-between mb-2 pr-12">
-                        <span className="font-bold text-slate-700 text-xs">Action {index + 1}</span>
+                        <span className="font-bold text-slate-700 text-xs">Hành động {index + 1}</span>
                         <select
                           value={action.type}
                           onChange={(e) => {
@@ -574,14 +579,14 @@ export function Automation() {
                     className="w-full px-4 py-2 border-2 border-dashed border-slate-300 rounded-xl text-slate-600 hover:border-[#0e6877] hover:text-[#0e6877] transition-colors flex items-center justify-center gap-2 cursor-pointer bg-white text-xs font-bold"
                   >
                     <Plus className="w-4 h-4" />
-                    Thêm Action
+                    Thêm hành động
                   </button>
                 </div>
               </div>
 
               {/* Conditions Section */}
               <div className="border-t border-slate-200 pt-4">
-                <label className="block text-xs font-bold text-slate-600 mb-2">Conditions (Tùy chọn)</label>
+                <label className="block text-xs font-bold text-slate-600 mb-2">Điều kiện (tùy chọn)</label>
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
                   <div className="flex items-center gap-2">
                     <select
@@ -639,7 +644,7 @@ export function Automation() {
 
               {/* Priority */}
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Priority (Độ ưu tiên)</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Mức ưu tiên</label>
                 <input
                   type="number"
                   value={priority}
@@ -647,10 +652,10 @@ export function Automation() {
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:border-[#0e6877] text-sm bg-white"
                   placeholder="0 = thấp nhất, 100 = cao nhất"
                 />
-                <p className="text-[10px] text-slate-400 mt-1">Automation có priority cao hơn sẽ chạy trước</p>
+                <p className="text-[10px] text-slate-400 mt-1">Quy trình có mức ưu tiên cao hơn sẽ chạy trước</p>
               </div>
             </div>
-            <div className="flex justify-end gap-3 mt-6">
+            <div className="flex justify-end gap-3 border-t border-slate-100 bg-white px-6 py-4">
               <button
                 onClick={() => {
                   setShowCreateModal(false);

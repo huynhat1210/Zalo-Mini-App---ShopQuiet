@@ -13,8 +13,11 @@ import {
   Image as ImageIcon,
   Tag,
   Layers,
+  Boxes,
   DollarSign,
-  FileText
+  FileText,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
 import { useToast } from '../../contexts';
 import type { IProductsProps } from './products.type';
@@ -34,6 +37,7 @@ interface Product {
   categoryId?: number;
   category?: Category;
   variants?: { id: number; color: string; size: string; stock: number }[];
+  approvalStatus?: string;
 }
 
 export const Products: React.FC<IProductsProps> = (_props) => {
@@ -51,6 +55,7 @@ export const Products: React.FC<IProductsProps> = (_props) => {
   const [editedPrices, setEditedPrices] = useState<Record<number, number>>({});
   const [editedStocks, setEditedStocks] = useState<Record<number, number>>({});
   const [savingAll, setSavingAll] = useState(false);
+  const [editedVariantStocks, setEditedVariantStocks] = useState<Record<number, number>>({});
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -88,7 +93,7 @@ export const Products: React.FC<IProductsProps> = (_props) => {
     try {
       setLoading(true);
       const [prodRes, catRes] = await Promise.all([
-        apiRequest<any>('/products?page=1&limit=100'),
+        apiRequest<any>('/products/admin/all?page=1&limit=100'),
         apiRequest<Category[]>('/categories').catch(() => []),
       ]);
       const list = Array.isArray(prodRes) ? prodRes : prodRes?.data || [];
@@ -120,7 +125,7 @@ export const Products: React.FC<IProductsProps> = (_props) => {
     if (product.variants && product.variants.length > 0) {
       return product.variants.reduce((sum, v) => sum + (v.stock || 0), 0);
     }
-    return 10;
+    return 0;
   };
 
   const handlePriceChange = (id: number, val: number) => {
@@ -145,11 +150,17 @@ export const Products: React.FC<IProductsProps> = (_props) => {
     try {
       setSavingAll(true);
       const updatePromises = updatedProductIds.map(async (id) => {
-        const payload: Record<string, any> = {};
-        if (editedPrices[id] !== undefined) payload.price = editedPrices[id];
-        return apiRequest(`/products/${id}`, 'PATCH', payload).catch((err) => {
-          console.error(`Failed to update product #${id}:`, err);
-        });
+        const product = products.find((item) => item.id === id);
+        if (!product) return;
+        if (editedPrices[id] !== undefined) {
+          await apiRequest(`/products/${id}`, 'PATCH', { price: editedPrices[id] });
+        }
+        if (editedStocks[id] !== undefined) {
+          if (product.variants && product.variants.length > 0) {
+            throw new Error(`Sản phẩm "${product.name}" có biến thể, hãy sửa tồn kho theo từng biến thể.`);
+          }
+          await apiRequest(`/products/${id}/stock`, 'PATCH', { stock: editedStocks[id] });
+        }
       });
 
       await Promise.all(updatePromises);
@@ -168,6 +179,7 @@ export const Products: React.FC<IProductsProps> = (_props) => {
 
   const handleOpenAddModal = () => {
     setEditingProduct(null);
+    setEditedVariantStocks({});
     setFormData({
       name: '',
       price: 150000,
@@ -190,6 +202,7 @@ export const Products: React.FC<IProductsProps> = (_props) => {
 
   const handleOpenEditModal = (product: Product) => {
     setEditingProduct(product);
+    setEditedVariantStocks(Object.fromEntries((product.variants || []).map((variant) => [variant.id, variant.stock])));
     let parsedSizeChart: { size: string; height: string; weight: string; bust: string; waist: string }[] = [
       { size: 'XS', height: '< 155', weight: '< 45', bust: '80-84', waist: '62-66' },
       { size: 'S',  height: '155-160', weight: '45-53', bust: '84-88', waist: '66-70' },
@@ -223,6 +236,16 @@ export const Products: React.FC<IProductsProps> = (_props) => {
       setProducts((prev) => prev.filter((p) => p.id !== id));
     } catch (err: any) {
       toastError('Xóa thất bại', err.message || 'Lỗi khi xóa sản phẩm.');
+    }
+  };
+
+  const handleApproval = async (id: number, status: 'APPROVED' | 'REJECTED') => {
+    try {
+      const updated = await apiRequest<Product>(`/cms/approvals/products/${id}`, 'PATCH', { status });
+      setProducts((current) => current.map((product) => (product.id === id ? { ...product, ...updated } : product)));
+      toastSuccess(status === 'APPROVED' ? 'Đã duyệt sản phẩm' : 'Đã từ chối sản phẩm', 'Trạng thái hiển thị đã được cập nhật.');
+    } catch (error: any) {
+      toastError('Không thể duyệt sản phẩm', error?.message || 'Đã xảy ra lỗi khi cập nhật trạng thái.');
     }
   };
 
@@ -260,6 +283,9 @@ export const Products: React.FC<IProductsProps> = (_props) => {
       };
       if (editingProduct) {
         await apiRequest(`/products/${editingProduct.id}`, 'PUT', payload);
+        await Promise.all(Object.entries(editedVariantStocks).map(([variantId, stock]) =>
+          apiRequest(`/products/variants/${variantId}`, 'PATCH', { stock }),
+        ));
         toastSuccess('Cập nhật thành công', `Đã lưu thông tin sản phẩm #${editingProduct.id}.`);
       } else {
         await apiRequest('/products', 'POST', payload);
@@ -423,6 +449,7 @@ export const Products: React.FC<IProductsProps> = (_props) => {
                 {paginatedProducts.map((product) => {
                   const img = getFirstImage(product.images);
                   const currentPrice = editedPrices[product.id] !== undefined ? editedPrices[product.id] : product.price;
+                  const hasVariants = Boolean(product.variants && product.variants.length > 0);
                   const currentStock = getProductTotalStock(product);
                   const isModified = editedPrices[product.id] !== undefined || editedStocks[product.id] !== undefined;
 
@@ -452,6 +479,7 @@ export const Products: React.FC<IProductsProps> = (_props) => {
                             <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md inline-block mt-0.5">
                               {product.originalPrice ? `Gốc: ${product.originalPrice.toLocaleString('vi-VN')}đ` : 'Giá Niêm Yết'}
                             </span>
+                            {product.approvalStatus !== 'APPROVED' && <span className="ml-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md inline-block">{product.approvalStatus === 'REJECTED' ? 'Đã từ chối' : 'Chờ duyệt'}</span>}
                           </div>
                         </div>
                       </td>
@@ -482,8 +510,10 @@ export const Products: React.FC<IProductsProps> = (_props) => {
                           <input
                             type="number"
                             value={currentStock}
+                            disabled={hasVariants}
                             onChange={(e) => handleStockChange(product.id, Number(e.target.value))}
-                            className={`w-full py-1.5 px-2.5 text-xs font-bold rounded-xl border focus:outline-none transition-all ${editedStocks[product.id] !== undefined
+                            title={hasVariants ? 'Sửa tồn kho trong từng biến thể ở phần chi tiết sản phẩm' : 'Tồn kho sản phẩm'}
+                            className={`w-full py-1.5 px-2.5 text-xs font-bold rounded-xl border focus:outline-none transition-all ${hasVariants ? 'cursor-not-allowed bg-slate-100 text-slate-400' : editedStocks[product.id] !== undefined
                                 ? 'bg-amber-100/60 border-amber-400 text-amber-900'
                                 : currentStock < 5
                                   ? 'bg-red-50 border-red-200 text-red-700'
@@ -496,6 +526,8 @@ export const Products: React.FC<IProductsProps> = (_props) => {
                       {/* Actions */}
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1">
+                          {product.approvalStatus !== 'APPROVED' && <button type="button" onClick={() => handleApproval(product.id, 'APPROVED')} title="Duyệt sản phẩm" className="p-2 text-emerald-700 hover:bg-emerald-50 rounded-xl"><CheckCircle2 size={15} /></button>}
+                          {product.approvalStatus !== 'REJECTED' && <button type="button" onClick={() => handleApproval(product.id, 'REJECTED')} title="Từ chối sản phẩm" className="p-2 text-rose-700 hover:bg-rose-50 rounded-xl"><XCircle size={15} /></button>}
                           <button
                             onClick={() => handleOpenEditModal(product)}
                             className="p-2 text-slate-500 hover:text-[#0e6877] hover:bg-teal-50 rounded-xl transition-all border-none cursor-pointer"
@@ -610,6 +642,28 @@ export const Products: React.FC<IProductsProps> = (_props) => {
                     </div>
                   </div>
                 </div>
+
+                {editingProduct?.variants && editingProduct.variants.length > 0 && (
+                  <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3.5">
+                    <div className="flex items-center gap-2 text-xs font-black text-[#0e6877] uppercase tracking-wider pb-2 border-b border-slate-100">
+                      <Boxes size={14} /> <span>Tồn kho theo biến thể</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {editingProduct.variants.map((variant) => (
+                        <label key={variant.id} className="text-[10px] font-bold text-slate-600">
+                          {variant.color || 'Mặc định'} / {variant.size || 'Mặc định'}
+                          <input
+                            type="number"
+                            min={0}
+                            value={editedVariantStocks[variant.id] ?? variant.stock}
+                            onChange={(e) => setEditedVariantStocks((current) => ({ ...current, [variant.id]: Math.max(0, Number(e.target.value)) }))}
+                            className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs font-bold focus:border-[#0e6877] focus:bg-white focus:outline-none"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs space-y-3.5">
                   <div className="flex items-center gap-2 text-xs font-black text-[#0e6877] uppercase tracking-wider pb-2 border-b border-slate-100">

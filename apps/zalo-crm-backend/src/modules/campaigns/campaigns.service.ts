@@ -53,6 +53,106 @@ export class CampaignsService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  private async resolveTargetedUsers(targetSegment: string) {
+    const segment = (targetSegment || 'ALL').toUpperCase();
+    const tierMap: Record<string, string> = {
+      SILVER: 'Báº¡c',
+      GOLD: 'VÃ ng',
+      DIAMOND: 'Kim cÆ°Æ¡ng',
+    };
+    let userWhere: any = {};
+
+    if (tierMap[segment]) {
+      userWhere.membershipTier = tierMap[segment];
+    } else if (segment === 'INACTIVE_30_DAYS') {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 30);
+      userWhere.updatedAt = { lte: cutoff };
+    } else if (segment === 'NEW_USERS_30_DAYS') {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 30);
+      userWhere.createdAt = { gte: cutoff };
+    } else if (segment === 'RECENT_BUYERS_30_DAYS') {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 30);
+      userWhere.orders = {
+        some: { createdAt: { gte: cutoff }, status: { in: ['COMPLETED', 'DELIVERED'] } },
+      };
+    } else if (segment === 'VIP' || segment === 'SPENT_1M_PLUS') {
+      userWhere.totalSpent = { gte: 1000000 };
+    } else if (segment === 'BIRTHDAY_THIS_MONTH') {
+      userWhere.birthday = { not: null };
+    } else if (segment === 'ORDER_COUNT_3_PLUS') {
+      const orders = await this.prisma.order.groupBy({
+        by: ['zaloUserId'],
+        where: { status: { in: ['COMPLETED', 'DELIVERED'] }, zaloUserId: { not: null } },
+        _count: { _all: true },
+      });
+      const userIds = orders
+        .filter((order) => order._count._all >= 3)
+        .map((order) => order.zaloUserId)
+        .filter(Boolean) as string[];
+      userWhere.zaloId = { in: userIds };
+    } else if (segment.startsWith('LIST_')) {
+      const listId = Number.parseInt(segment.slice(5), 10);
+      if (!Number.isInteger(listId)) return [];
+      const entries = await this.prisma.marketingListEntry.findMany({
+        where: { listId, status: 'VERIFIED', hasZalo: true },
+        select: { phone: true, zaloUid: true },
+      });
+      userWhere = {
+        OR: [
+          { phone: { in: entries.map((entry) => entry.phone).filter(Boolean) } },
+          { zaloId: { in: entries.map((entry) => entry.zaloUid).filter(Boolean) } },
+        ],
+      };
+    }
+
+    const users = await this.prisma.user.findMany({
+      where: userWhere,
+      select: { zaloId: true, name: true, phone: true, membershipTier: true, birthday: true },
+    });
+    if (segment === 'BIRTHDAY_THIS_MONTH') {
+      const month = new Date().getMonth();
+      return users.filter((user) => user.birthday?.getMonth() === month);
+    }
+    return users;
+  }
+
+  private async removeRecentlyContactedUsers<T extends { zaloId: string }>(users: T[], dailyLimit = 1): Promise<T[]> {
+    if (!users.length) return users;
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const recent = await this.prisma.notification.findMany({
+      where: {
+        zaloUserId: { in: users.map((user) => user.zaloId) },
+        type: 'PROMO',
+        createdAt: { gte: since },
+      },
+      select: { zaloUserId: true },
+    });
+    const sentCount = new Map<string, number>();
+    for (const notification of recent) {
+      if (notification.zaloUserId) sentCount.set(notification.zaloUserId, (sentCount.get(notification.zaloUserId) || 0) + 1);
+    }
+    return users.filter((user) => (sentCount.get(user.zaloId) || 0) < Math.max(1, dailyLimit));
+  }
+
+  async previewTargetAudience(targetSegment: string) {
+    const users = await this.resolveTargetedUsers(targetSegment);
+    const eligibleUsers = await this.removeRecentlyContactedUsers(users);
+    return {
+      segment: (targetSegment || 'ALL').toUpperCase(),
+      targetCount: eligibleUsers.length,
+      suppressedCount: users.length - eligibleUsers.length,
+      sample: eligibleUsers.slice(0, 8).map((user) => ({
+        zaloId: user.zaloId,
+        name: user.name,
+        phone: user.phone,
+        membershipTier: user.membershipTier,
+      })),
+    };
+  }
+
   /**
    * AI-Powered Campaign Content Generator using Gemini AI
    */
@@ -87,20 +187,8 @@ Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "su
     const { type, targetSegment, bonusCoins, discountPercent, discountValue } = dto;
     const segment = targetSegment || 'ALL';
 
-    // 1. Calculate target audience count in DB
-    let userWhere: any = {};
-    if (['SILVER', 'GOLD', 'DIAMOND'].includes(segment)) {
-      const tierMap: Record<string, string> = { SILVER: 'Bạc', GOLD: 'Vàng', DIAMOND: 'Kim cương' };
-      userWhere.membershipTier = tierMap[segment] || segment;
-    } else if (segment === 'INACTIVE_30_DAYS') {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      userWhere.updatedAt = { lte: thirtyDaysAgo };
-    } else if (segment === 'VIP') {
-      userWhere.totalSpent = { gte: 1000000 };
-    }
-
-    const totalUsersCount = await this.prisma.user.count({ where: userWhere });
+    // 1. Use the same audience rules as preview and real delivery.
+    const totalUsersCount = (await this.resolveTargetedUsers(segment)).length;
     const targetCount = totalUsersCount || 10;
 
     // 2. Average Order Value
@@ -191,7 +279,13 @@ Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "su
       },
     });
 
+    // Do not send promotional notifications during the quiet window.
     for (const campaign of dueCampaigns) {
+      const currentHour = now.getHours();
+      const inQuietHours = campaign.quietHoursStart > campaign.quietHoursEnd
+        ? currentHour >= campaign.quietHoursStart || currentHour < campaign.quietHoursEnd
+        : currentHour >= campaign.quietHoursStart && currentHour < campaign.quietHoursEnd;
+      if (inQuietHours) continue;
       this.logger.log(`[Auto-Scheduler] Auto-launching due campaign #${campaign.id}: "${campaign.title}"`);
       try {
         await this.launchCampaign(campaign.id);
@@ -353,7 +447,7 @@ Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "su
 
   async create(dto: CreateCampaignDto) {
     const status = dto.scheduledAt ? 'SCHEDULED' : 'DRAFT';
-    return this.prisma.campaign.create({
+    const campaign = await this.prisma.campaign.create({
       data: {
         title: dto.title,
         description: dto.description || null,
@@ -364,8 +458,18 @@ Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "su
         discountPercent: dto.discountPercent || 0,
         scheduledAt: dto.scheduledAt ? new Date(dto.scheduledAt) : null,
         status,
+        approvalStatus: dto.approvalRequired ? 'PENDING' : 'NOT_REQUIRED',
+        dailyLimit: dto.dailyLimit || 1,
+        quietHoursStart: dto.quietHoursStart ?? 22,
+        quietHoursEnd: dto.quietHoursEnd ?? 7,
+        experimentKey: dto.experimentKey?.trim() || null,
+        variantLabel: dto.variantLabel?.trim() || null,
       },
     });
+    await this.prisma.campaignHistory.create({
+      data: { campaignId: campaign.id, action: 'CREATED', details: { status, approvalRequired: Boolean(dto.approvalRequired) } },
+    });
+    return campaign;
   }
 
   async findAll() {
@@ -413,45 +517,19 @@ Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "su
       throw new BadRequestException('Chiến dịch này đã hoàn thành trước đó.');
     }
 
-    // Segment targeted users
-    let userWhere: any = {};
-    const segment = campaign.targetSegment;
-
-    if (['SILVER', 'GOLD', 'DIAMOND'].includes(segment)) {
-      const tierMap: Record<string, string> = {
-        SILVER: 'Bạc',
-        GOLD: 'Vàng',
-        DIAMOND: 'Kim cương',
-      };
-      userWhere.membershipTier = tierMap[segment] || segment;
-    } else if (segment === 'INACTIVE_30_DAYS') {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      userWhere.updatedAt = { lte: thirtyDaysAgo };
-    } else if (segment === 'VIP') {
-      userWhere.totalSpent = { gte: 1000000 };
-    } else if (segment.startsWith('LIST_')) {
-      const listId = parseInt(segment.split('_')[1], 10);
-      const listEntries = await this.prisma.marketingListEntry.findMany({
-        where: { listId, status: 'VERIFIED', hasZalo: true },
-        select: { phone: true, zaloUid: true },
-      });
-
-      const phones = listEntries.map(e => e.phone);
-      const zaloUids = listEntries.map(e => e.zaloUid).filter(Boolean) as string[];
-
-      userWhere = {
-        OR: [
-          { phone: { in: phones } },
-          { zaloId: { in: zaloUids } }
-        ]
-      };
+    if (campaign.status === 'PAUSED') {
+      throw new BadRequestException('Campaign is paused. Resume it before launching.');
+    }
+    if (campaign.approvalStatus === 'PENDING') {
+      throw new BadRequestException('Campaign approval is required before launching.');
     }
 
-    const targetedUsers = await this.prisma.user.findMany({
-      where: userWhere,
-      select: { zaloId: true, name: true, phone: true },
-    });
+    const segment = campaign.targetSegment;
+
+    const targetedUsers = await this.removeRecentlyContactedUsers(
+      await this.resolveTargetedUsers(segment),
+      campaign.dailyLimit,
+    );
 
     if (targetedUsers.length === 0) {
       throw new BadRequestException('Không tìm thấy người dùng phù hợp với phân tập khách hàng này.');
@@ -522,6 +600,77 @@ Yêu cầu trả về JSON có dạng {"title": "...", "description": "...", "su
 
     this.logger.log(`Campaign #${id} "${campaign.title}" launched successfully to ${targetedUsers.length} users.`);
     return this.findOne(id);
+  }
+
+  async updateStatus(id: number, status: string) {
+    const campaign = await this.prisma.campaign.findUnique({ where: { id } });
+    if (!campaign) throw new NotFoundException('Campaign not found.');
+    const nextStatus = status.toUpperCase();
+    if (!['PAUSED', 'RESUME'].includes(nextStatus)) {
+      throw new BadRequestException('Status must be PAUSED or RESUME.');
+    }
+    if (campaign.status === 'COMPLETED' || campaign.status === 'CANCELLED') {
+      throw new BadRequestException('Finished campaigns cannot be changed.');
+    }
+    const resumedStatus = campaign.scheduledAt && campaign.scheduledAt > new Date() ? 'SCHEDULED' : 'DRAFT';
+    return this.prisma.campaign.update({
+      where: { id },
+      data: { status: nextStatus === 'PAUSED' ? 'PAUSED' : resumedStatus },
+    });
+  }
+
+  async requestApproval(id: number, actorId?: string) {
+    const campaign = await this.prisma.campaign.findUnique({ where: { id } });
+    if (!campaign) throw new NotFoundException('Campaign not found.');
+    if (campaign.status === 'COMPLETED' || campaign.status === 'CANCELLED') {
+      throw new BadRequestException('Finished campaigns cannot be submitted.');
+    }
+    const updated = await this.prisma.campaign.update({
+      where: { id },
+      data: { approvalStatus: 'PENDING' },
+    });
+    await this.prisma.campaignHistory.create({
+      data: { campaignId: id, action: 'SUBMITTED_FOR_APPROVAL', actorId: actorId || null },
+    });
+    return updated;
+  }
+
+  async approve(id: number, actorId?: string) {
+    const campaign = await this.prisma.campaign.findUnique({ where: { id } });
+    if (!campaign) throw new NotFoundException('Campaign not found.');
+    const updated = await this.prisma.campaign.update({
+      where: { id },
+      data: { approvalStatus: 'APPROVED', approvedAt: new Date(), approvedBy: actorId || 'admin' },
+    });
+    await this.prisma.campaignHistory.create({
+      data: { campaignId: id, action: 'APPROVED', actorId: actorId || null },
+    });
+    return updated;
+  }
+
+  async getHistory(id: number) {
+    await this.findOne(id);
+    return this.prisma.campaignHistory.findMany({ where: { campaignId: id }, orderBy: { createdAt: 'desc' } });
+  }
+
+  async listTemplates() {
+    return this.prisma.campaignTemplate.findMany({ where: { active: true }, orderBy: { updatedAt: 'desc' } });
+  }
+
+  async createTemplate(data: { name: string; description?: string; type: string; targetSegment?: string; content: string; voucherCode?: string; bonusCoins?: number; discountPercent?: number }) {
+    if (!data.name?.trim() || !data.content?.trim()) throw new BadRequestException('Template name and content are required.');
+    return this.prisma.campaignTemplate.create({
+      data: {
+        name: data.name.trim(),
+        description: data.description?.trim() || null,
+        type: data.type.toUpperCase(),
+        targetSegment: data.targetSegment?.toUpperCase() || 'ALL',
+        content: data.content.trim(),
+        voucherCode: data.voucherCode?.trim().toUpperCase() || null,
+        bonusCoins: data.bonusCoins || 0,
+        discountPercent: data.discountPercent || 0,
+      },
+    });
   }
 
   async getActiveForUser(zaloUserId: string) {

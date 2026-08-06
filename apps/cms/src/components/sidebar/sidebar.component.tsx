@@ -23,6 +23,8 @@ import {
   ChevronDown,
   ChevronRight,
   LogOut,
+  ClipboardList,
+  ServerCrash,
 } from 'lucide-react';
 import type { ISidebarComponentProps } from './sidebar.type';
 
@@ -67,7 +69,7 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
   useEffect(() => {
     const fetchPendingCount = async () => {
       try {
-        const orders = await apiRequest<any[]>('/orders/admin/all').catch(() => []);
+        const orders = await apiRequest<any[]>('/orders/admin/all?page=1&limit=100').catch(() => []);
         if (Array.isArray(orders)) {
           const pending = orders.filter((o) => o.status === 'PROCESSING' || o.status === 'PENDING' || o.status === 'RETURN_REQUESTED').length;
           setPendingOrdersCount(pending);
@@ -146,6 +148,8 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
       title: 'HỆ THỐNG',
       items: [
         { to: '/settings', label: 'Cấu hình hệ thống', icon: <Settings size={17} /> },
+        { to: '/audit-logs', label: 'Nhật ký thao tác', icon: <ClipboardList size={17} /> },
+        { to: '/system-logs', label: 'Nhật ký lỗi API', icon: <ServerCrash size={17} /> },
       ],
     },
   ];
@@ -240,7 +244,7 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
             >
               <div className="flex items-center gap-2">
                 <Database size={14} />
-                <span>Cơ sở dữ liệu (Raw Tables)</span>
+                <span>Cơ sở dữ liệu chuyên sâu</span>
               </div>
               {showDevTools ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>

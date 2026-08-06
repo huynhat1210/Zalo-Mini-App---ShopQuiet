@@ -168,7 +168,7 @@ export const Support: React.FC = () => {
 
         const [history, orders, users] = await Promise.all([
           apiRequest<Message[]>(`/chat/messages?zaloUserId=${activeSession.zaloUserId}`),
-          apiRequest<Order[]>('/orders/admin/all'),
+          apiRequest<Order[]>('/orders/admin/all?page=1&limit=100'),
           apiRequest<any[]>('/users'),
         ]);
         if (Array.isArray(history)) setMessages(history);
@@ -257,7 +257,7 @@ export const Support: React.FC = () => {
                   isShop ? 'bg-white/30 text-white' : 'bg-teal-50 text-[#0e6877] border border-teal-200'
                 }`}
               >
-                📦 Đang hỏi sản phẩm
+                <Package size={12} /> Đang hỏi sản phẩm
               </span>
               <h4 className={`text-xs font-bold truncate leading-snug ${isShop ? 'text-white' : 'text-slate-800'}`}>
                 {prod.name}
@@ -406,7 +406,7 @@ export const Support: React.FC = () => {
                       <p className={`text-[10px] truncate ${
                         isActive ? 'text-white/80' : hasUnread ? 'text-rose-900 font-extrabold' : 'text-slate-500 font-medium'
                       }`}>
-                        {session.lastMessage.startsWith('[PRODUCT_CONTEXT]') ? '📦 Hỏi về sản phẩm' : session.lastMessage}
+                        {session.lastMessage.startsWith('[PRODUCT_CONTEXT]') ? 'Hỏi về sản phẩm' : session.lastMessage}
                       </p>
 
                       {hasUnread && !isActive && (

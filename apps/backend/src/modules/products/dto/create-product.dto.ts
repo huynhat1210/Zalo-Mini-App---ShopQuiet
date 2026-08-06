@@ -68,3 +68,8 @@ export class UpdateVariantStockDto {
   @IsNumber()
   stock: number;
 }
+
+export class UpdateProductStockDto {
+  @IsNumber()
+  stock: number;
+}

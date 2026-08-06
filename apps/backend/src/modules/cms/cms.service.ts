@@ -1,5 +1,7 @@
-import { Injectable, OnModuleInit, NotFoundException } from '@nestjs/common';
+import { Injectable, OnModuleInit, NotFoundException, Inject } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 
 export type CmsContentType =
   | 'banners'
@@ -14,7 +16,10 @@ export type CmsContentType =
 
 @Injectable()
 export class CmsService implements OnModuleInit {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+  ) {}
 
   async onModuleInit() {
     await this.ensureDefaults();
@@ -806,6 +811,75 @@ export class CmsService implements OnModuleInit {
     }
 
     return adminNotifs;
+  }
+
+  async getAuditLogs(options: { page?: number; limit?: number; action?: string } = {}) {
+    const page = Math.max(1, Math.floor(options.page || 1));
+    const limit = Math.min(100, Math.max(1, Math.floor(options.limit || 25)));
+    const action = options.action?.trim();
+    const where = action ? { action: { contains: action, mode: 'insensitive' as const } } : {};
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.auditLog.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.auditLog.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: { page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)) },
+    };
+  }
+
+  async getSystemLogs(options: { page?: number; limit?: number; level?: string; statusCode?: number } = {}) {
+    const page = Math.max(1, Math.floor(options.page || 1));
+    const limit = Math.min(100, Math.max(1, Math.floor(options.limit || 25)));
+    const where = {
+      ...(options.level ? { level: options.level.toUpperCase() } : {}),
+      ...(options.statusCode ? { statusCode: options.statusCode } : {}),
+    };
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.systemLog.findMany({ where, skip: (page - 1) * limit, take: limit, orderBy: { createdAt: 'desc' } }),
+      this.prisma.systemLog.count({ where }),
+    ]);
+    return { data, meta: { page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)) } };
+  }
+
+  async updateApproval(type: string, id: number, status: string) {
+    const modelMap: Record<string, 'product' | 'banner' | 'comment'> = {
+      products: 'product',
+      banners: 'banner',
+      comments: 'comment',
+    };
+    const model = modelMap[type];
+    const normalizedStatus = status?.toUpperCase();
+    if (!model || !['PENDING', 'APPROVED', 'REJECTED'].includes(normalizedStatus)) {
+      throw new NotFoundException('Loại nội dung hoặc trạng thái duyệt không hợp lệ.');
+    }
+
+    const updated = await (this.prisma as any)[model].update({
+      where: { id },
+      data: {
+        approvalStatus: normalizedStatus,
+        approvedAt: normalizedStatus === 'APPROVED' ? new Date() : null,
+        approvedBy: normalizedStatus === 'APPROVED' ? 'keycloak-admin' : null,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        adminId: 'keycloak-admin',
+        action: `CONTENT_${normalizedStatus}`,
+        details: JSON.stringify({ type, id, status: normalizedStatus }),
+      },
+    });
+    if (model === 'banner') {
+      await this.cacheManager.del('banners_all');
+    }
+    return updated;
   }
 
   async getDashboardAnalytics() {

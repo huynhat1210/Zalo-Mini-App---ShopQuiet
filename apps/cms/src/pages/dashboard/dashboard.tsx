@@ -46,7 +46,7 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
         if (!isSilent) setLoading(true);
         const [products, orders, vouchers] = await Promise.all([
           apiRequest('/products?page=1&limit=100').catch(() => ({ data: [] })),
-          apiRequest('/orders/admin/all').catch(() => []),
+          apiRequest('/orders/admin/all?page=1&limit=100').catch(() => []),
           apiRequest('/vouchers').catch(() => []),
         ]);
 
@@ -264,7 +264,7 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
           <div className="flex justify-between items-center pb-3 border-b border-slate-100">
             <div>
               <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-                🛍️ Đơn Hàng Tiếp Nhận Gần Đây
+                <span className="flex items-center gap-2"><ShoppingBag size={16} /> Đơn hàng tiếp nhận gần đây</span>
               </h3>
               <p className="text-slate-400 text-xs mt-0.5 font-medium">Danh sách các đơn phát sinh từ Zalo Mini App</p>
             </div>
@@ -291,7 +291,7 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-2xl bg-white border border-slate-200/80 flex items-center justify-center font-black text-xs text-[#0e6877] shrink-0 shadow-2xs group-hover:border-teal-300">
-                        📦
+                        <Package size={18} />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">

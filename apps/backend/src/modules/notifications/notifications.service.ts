@@ -1,18 +1,36 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
-export class NotificationsService {
+export class NotificationsService implements OnModuleInit, OnModuleDestroy {
+  private scheduler?: ReturnType<typeof setInterval>;
+
   constructor(private prisma: PrismaService) {}
+
+  onModuleInit() {
+    this.scheduler = setInterval(() => void this.publishScheduled(), 30000);
+    void this.publishScheduled();
+  }
+
+  onModuleDestroy() {
+    if (this.scheduler) clearInterval(this.scheduler);
+  }
+
+  private async publishScheduled() {
+    await this.prisma.notification.updateMany({
+      where: { status: 'SCHEDULED', scheduledAt: { lte: new Date() } },
+      data: { status: 'SENT' },
+    });
+  }
 
   async findAll(zaloUserId?: string) {
     const whereCondition = zaloUserId
       ? { OR: [{ zaloUserId }, { zaloUserId: null }] }
       : {};
     return this.prisma.notification.findMany({
-      where: whereCondition,
+      where: { ...whereCondition, status: 'SENT' },
       orderBy: {
-        id: 'desc',
+        createdAt: 'desc',
       },
     });
   }
@@ -60,13 +78,18 @@ export class NotificationsService {
     content: string;
     type: string;
     zaloUserId?: string;
+    scheduledAt?: string;
   }) {
+    const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : undefined;
+    const isScheduled = Boolean(scheduledAt && scheduledAt.getTime() > Date.now());
     return this.prisma.notification.create({
       data: {
         title: data.title,
         content: data.content,
         type: data.type,
         zaloUserId: data.zaloUserId || null,
+        status: isScheduled ? 'SCHEDULED' : 'SENT',
+        scheduledAt: scheduledAt || null,
         date:
           new Date().toLocaleTimeString([], {
             hour: '2-digit',

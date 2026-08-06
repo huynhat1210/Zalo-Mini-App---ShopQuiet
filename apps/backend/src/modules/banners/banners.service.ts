@@ -52,7 +52,7 @@ export class BannersService {
 
     if (banners.length === 0) {
       banners = await this.prisma.banner.findMany({
-        where: { active: true },
+        where: { active: true, approvalStatus: 'APPROVED' },
         orderBy: { createdAt: 'desc' },
       });
     }

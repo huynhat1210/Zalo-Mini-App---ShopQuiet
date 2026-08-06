@@ -1,0 +1,15 @@
+ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "approvalStatus" TEXT NOT NULL DEFAULT 'APPROVED';
+ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "approvedAt" TIMESTAMP(3);
+ALTER TABLE "Product" ADD COLUMN IF NOT EXISTS "approvedBy" TEXT;
+
+ALTER TABLE "Comment" ADD COLUMN IF NOT EXISTS "approvalStatus" TEXT NOT NULL DEFAULT 'APPROVED';
+ALTER TABLE "Comment" ADD COLUMN IF NOT EXISTS "approvedAt" TIMESTAMP(3);
+ALTER TABLE "Comment" ADD COLUMN IF NOT EXISTS "approvedBy" TEXT;
+
+ALTER TABLE "Banner" ADD COLUMN IF NOT EXISTS "approvalStatus" TEXT NOT NULL DEFAULT 'APPROVED';
+ALTER TABLE "Banner" ADD COLUMN IF NOT EXISTS "approvedAt" TIMESTAMP(3);
+ALTER TABLE "Banner" ADD COLUMN IF NOT EXISTS "approvedBy" TEXT;
+
+CREATE INDEX IF NOT EXISTS "Product_approvalStatus_idx" ON "Product"("approvalStatus");
+CREATE INDEX IF NOT EXISTS "Comment_approvalStatus_idx" ON "Comment"("approvalStatus");
+CREATE INDEX IF NOT EXISTS "Banner_approvalStatus_idx" ON "Banner"("approvalStatus");

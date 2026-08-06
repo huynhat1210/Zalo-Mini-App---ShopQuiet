@@ -1,7 +1,7 @@
 import React, { createContext } from 'react';
 import type { ReactNode } from 'react';
 import type { Role, Permission } from '../../utils/permissions';
-import { hasPermission, hasAnyPermission, hasAllPermissions, roleDefinitions } from '../../utils/permissions';
+import { hasPermission, hasAnyPermission, hasAllPermissions } from '../../utils/permissions';
 
 interface PermissionContextType {
   userRole: Role;
@@ -28,17 +28,11 @@ export const PermissionProviderComponent: React.FC<IPermissionComponentProps> = 
 
   const setRole = (role: Role) => {
     setUserRole(role);
-    // Store in localStorage for persistence
-    localStorage.setItem('cms_user_role', role);
   };
 
-  // Load role from localStorage on mount
   React.useEffect(() => {
-    const storedRole = localStorage.getItem('cms_user_role') as Role;
-    if (storedRole && roleDefinitions[storedRole]) {
-      setUserRole(storedRole);
-    }
-  }, []);
+    setUserRole(initialRole);
+  }, [initialRole]);
 
   const canEdit = (resource: string): boolean => {
     const editPermission = `edit_${resource}` as Permission;
