@@ -66,7 +66,9 @@ async function bootstrap() {
     .setDescription('Hệ thống API Server dành cho Zalo Mini App E-Commerce và Trang Quản trị ShopQuiet CMS')
     .setVersion('1.0.0')
     .setContact('ShopQuiet Engineering', 'https://shopquiet.local', 'engineering@shopquiet.local')
-    .addServer('/api/v1', 'API v1')
+    // The global prefix is already part of every generated OpenAPI path.
+    // Keeping the server root prevents Swagger Try it out from doubling it.
+    .addServer('/', 'API v1')
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT', name: 'Authorization', description: 'Nhập JWT Token', in: 'header' },
       'JWT-auth',

@@ -69,11 +69,16 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
   useEffect(() => {
     const fetchPendingCount = async () => {
       try {
-        const orders = await apiRequest<any[]>('/orders/admin/all?page=1&limit=100').catch(() => []);
-        if (Array.isArray(orders)) {
-          const pending = orders.filter((o) => o.status === 'PROCESSING' || o.status === 'PENDING' || o.status === 'RETURN_REQUESTED').length;
-          setPendingOrdersCount(pending);
-        }
+        const statuses = ['PROCESSING', 'PENDING', 'RETURN_REQUESTED'];
+        const responses = await Promise.all(statuses.map((status) =>
+          apiRequest<{ pagination?: { total?: number } }>(
+            `/orders/admin/all?page=1&limit=1&status=${status}`,
+            'GET',
+            undefined,
+            { envelope: true },
+          ).catch(() => null),
+        ));
+        setPendingOrdersCount(responses.reduce((total, response) => total + Number(response?.pagination?.total || 0), 0));
       } catch (e) {
         console.error('Failed to load pending orders count in sidebar:', e);
       }
@@ -91,11 +96,18 @@ export const SidebarComponent: React.FC<ISidebarComponentProps> = (props) => {
     fetchPendingCount();
     fetchUnreadChatCount();
 
-    const interval = setInterval(() => {
-      fetchPendingCount();
-      fetchUnreadChatCount();
-    }, 45000);
-    return () => clearInterval(interval);
+    const refreshWhenVisible = () => {
+      if (!document.hidden) {
+        void fetchPendingCount();
+        void fetchUnreadChatCount();
+      }
+    };
+    const interval = setInterval(refreshWhenVisible, 60000);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
   }, []);
 
   useEffect(() => {

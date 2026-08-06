@@ -332,7 +332,7 @@ export const Inventory: React.FC = () => {
                     <tr key={v.id} className="hover:bg-slate-50 transition-colors">
                       <td className="py-3.5 px-4 font-bold">
                         <div className="flex items-center gap-3">
-                          <img src={v.image} alt={v.productName} className="w-9 h-9 object-cover rounded-lg border border-slate-200" />
+                          <img loading="lazy" decoding="async" src={v.image} alt={v.productName} className="w-9 h-9 object-cover rounded-lg border border-slate-200" />
                           <div>
                             <p className="text-xs font-bold text-slate-800">{v.productName}</p>
                             <span className="text-[10px] text-slate-400 font-normal">{v.categoryName}</span>

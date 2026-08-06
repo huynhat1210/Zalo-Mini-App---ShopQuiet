@@ -64,8 +64,15 @@ export const AiOpsChatbox: React.FC<IAiOpsChatboxProps> = () => {
 
   useEffect(() => {
     fetchAlerts();
-    const interval = setInterval(() => fetchAlerts(true), 15000);
-    return () => clearInterval(interval);
+    const refreshWhenVisible = () => {
+      if (!document.hidden) void fetchAlerts(true);
+    };
+    const interval = setInterval(refreshWhenVisible, 60000);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
   }, []);
 
   useEffect(() => {

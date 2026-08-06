@@ -1,10 +1,13 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AutomationService } from './automation.service';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { RolesGuard } from '../../auth/roles.guard';
 import { Roles } from '../../auth/roles.decorator';
 
 @Controller('automation')
+@ApiTags('Automation')
+@ApiBearerAuth('JWT-auth')
 export class AutomationController {
   constructor(private readonly automationService: AutomationService) {}
 

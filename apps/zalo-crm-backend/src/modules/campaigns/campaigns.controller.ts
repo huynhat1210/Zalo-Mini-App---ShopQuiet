@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CampaignsService } from './campaigns.service';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
@@ -17,6 +18,8 @@ import { Roles } from '../../auth/roles.decorator';
 import { CurrentUser } from '../../auth/current-user.decorator';
 
 @Controller('campaigns')
+@ApiTags('Campaigns')
+@ApiBearerAuth('JWT-auth')
 export class CampaignsController {
   constructor(private readonly campaignsService: CampaignsService) {}
 

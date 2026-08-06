@@ -173,7 +173,7 @@ export const Banners: React.FC<IBannersProps> = (_props) => {
             >
               <div>
                 <div className="h-44 bg-slate-100 relative overflow-hidden">
-                  <img src={banner.imageUrl} alt={banner.title || 'Banner'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <img loading="lazy" decoding="async" src={banner.imageUrl} alt={banner.title || 'Banner'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   <span className={`absolute top-3 right-3 text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${banner.active ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-slate-200 text-slate-500 border-slate-300'}`}>
                     {banner.active ? 'Đang hiển thị' : 'Đã khóa'}
                   </span>

@@ -212,7 +212,7 @@ export const Categories: React.FC = () => {
                       <td className="py-4 px-4 font-bold text-slate-800">
                         <div className="flex items-center gap-3">
                           {cat.imageUrl ? (
-                            <img src={cat.imageUrl} alt={cat.name} className="w-10 h-10 object-cover rounded-xl border border-slate-200" />
+                            <img loading="lazy" decoding="async" src={cat.imageUrl} alt={cat.name} className="w-10 h-10 object-cover rounded-xl border border-slate-200" />
                           ) : (
                             <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400">
                               <Package size={18} />

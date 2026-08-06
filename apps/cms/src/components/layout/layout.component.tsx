@@ -65,9 +65,15 @@ export const LayoutComponent: React.FC<ILayoutComponentProps> = (props) => {
 
   useEffect(() => {
     fetchNotifications();
-    // Poll notifications every 30 seconds for real-time Flash Sale & Order alerts
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
+    const refreshWhenVisible = () => {
+      if (!document.hidden) void fetchNotifications();
+    };
+    const interval = setInterval(refreshWhenVisible, 60000);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
   }, []);
 
   // Close dropdown on outside click
@@ -259,5 +265,4 @@ export const LayoutComponent: React.FC<ILayoutComponentProps> = (props) => {
     </div>
   );
 };
-
 

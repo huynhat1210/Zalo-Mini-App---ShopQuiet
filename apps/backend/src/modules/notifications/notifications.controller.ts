@@ -63,7 +63,7 @@ export class NotificationsController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Gửi ngay hoặc lên lịch thông báo hệ thống' })
   async createNotification(@Body() body: CreateNotificationDto) {
     return this.notificationsService.create(body);

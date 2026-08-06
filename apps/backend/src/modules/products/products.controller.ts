@@ -118,7 +118,7 @@ export class ProductsController {
   @Get('products/admin/all')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   async getAllProductsAdmin(
     @Query('search') search?: string,
     @Query('categoryId') categoryId?: string,
@@ -167,7 +167,7 @@ export class ProductsController {
   @Post('categories')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create category (Admin only)' })
   async createCategory(@Body() body: { name: string; slug?: string; description?: string; imageUrl?: string }) {
     return this.productsService.createCategory(body);
@@ -176,7 +176,7 @@ export class ProductsController {
   @Put('categories/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update category (Admin only)' })
   async updateCategory(
     @Param('id', ParseIntPipe) id: number,
@@ -188,7 +188,7 @@ export class ProductsController {
   @Delete('categories/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Delete category (Admin only)' })
   async deleteCategory(@Param('id', ParseIntPipe) id: number) {
     return this.productsService.deleteCategory(id);
@@ -197,7 +197,7 @@ export class ProductsController {
   @Post('products')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create new product (Admin only)' })
   @ApiResponse({ status: 201, description: 'Product created' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
@@ -208,7 +208,7 @@ export class ProductsController {
   @Put('products/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update product (Admin only)' })
   @ApiResponse({ status: 200, description: 'Product updated' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
@@ -222,7 +222,7 @@ export class ProductsController {
   @Patch('products/:id/stock')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update stock for a simple product (Admin only)' })
   async updateProductStock(
     @Param('id', ParseIntPipe) id: number,
@@ -234,7 +234,7 @@ export class ProductsController {
   @Delete('products/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Delete product (Admin only)' })
   @ApiResponse({ status: 200, description: 'Product deleted' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
@@ -247,7 +247,7 @@ export class ProductsController {
   @Post('products/:id/variants')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Add product variant (Admin only)' })
   @ApiResponse({ status: 201, description: 'Variant added' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
@@ -261,7 +261,7 @@ export class ProductsController {
   @Patch('variants/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update variant stock (Admin only)' })
   @ApiResponse({ status: 200, description: 'Variant updated' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
@@ -275,7 +275,7 @@ export class ProductsController {
   @Delete('variants/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Delete variant (Admin only)' })
   @ApiResponse({ status: 200, description: 'Variant deleted' })
   @ApiResponse({ status: 403, description: 'Forbidden' })

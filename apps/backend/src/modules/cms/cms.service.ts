@@ -910,6 +910,20 @@ export class CmsService implements OnModuleInit {
 
     // 3. Count total users
     const totalUsers = await this.prisma.user.count();
+    const [totalProducts, totalVouchers, totalOrders, recentOrders] = await Promise.all([
+      this.prisma.product.count(),
+      this.prisma.voucher.count(),
+      this.prisma.order.count(),
+      this.prisma.order.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 6,
+        include: {
+          items: {
+            include: { product: true },
+          },
+        },
+      }),
+    ]);
 
     // 4. Low stock variants alert (stock < 10)
     const lowStockVariants = await this.prisma.productVariant.findMany({
@@ -984,6 +998,10 @@ export class CmsService implements OnModuleInit {
 
     return {
       totalRevenue,
+      totalProducts,
+      totalVouchers,
+      totalOrders,
+      recentOrders,
       orderStatusCounts,
       totalUsers,
       lowStockVariants,

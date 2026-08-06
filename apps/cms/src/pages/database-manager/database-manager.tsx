@@ -342,6 +342,8 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
             {/* Product Image */}
             <div className="h-52 bg-[#fbf9f7] relative overflow-hidden">
               <img
+                loading="lazy"
+                decoding="async"
                 src={imgUrl}
                 alt={product.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -486,7 +488,7 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
                     <div key={idx} className="flex justify-between items-center py-2 text-xs">
                       <div className="flex items-center gap-2.5">
                         {imgUrl ? (
-                          <img src={imgUrl} alt={item.product?.name} className="w-8 h-8 rounded-lg object-cover border border-slate-200" />
+                          <img loading="lazy" decoding="async" src={imgUrl} alt={item.product?.name} className="w-8 h-8 rounded-lg object-cover border border-slate-200" />
                         ) : (
                           <div className="w-8 h-8 bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-center text-slate-400 font-bold text-[10px]">SP</div>
                         )}
@@ -547,7 +549,7 @@ export const DatabaseManager: React.FC<IDatabaseManagerProps> = (_props) => {
       {recordsList.map((banner) => (
         <div key={banner.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col hover:shadow-md transition-all duration-200 group">
           <div className="h-44 bg-[#fbf9f7] relative overflow-hidden">
-            <img src={banner.imageUrl} alt={banner.title || 'Slide Banner'} className="w-full h-full object-cover" />
+            <img loading="lazy" decoding="async" src={banner.imageUrl} alt={banner.title || 'Slide Banner'} className="w-full h-full object-cover" />
             <div className="absolute top-4 right-4 flex gap-2">
               <button onClick={() => openDrawerForEdit(banner)} className="p-2 bg-white/90 hover:bg-white text-[#0e6877] rounded-xl transition-colors shadow-lg"><Edit3 size={13} /></button>
               <button onClick={() => handleDeleteRecord(banner.id)} className="p-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition-colors shadow-lg"><Trash2 size={13} /></button>

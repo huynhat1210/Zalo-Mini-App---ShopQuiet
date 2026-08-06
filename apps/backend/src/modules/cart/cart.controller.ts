@@ -31,7 +31,7 @@ export class CartController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get user cart' })
   @ApiResponse({ status: 200, description: 'Cart retrieved' })
   async getCart(@Headers('x-zalo-user-id') zaloUserId?: string) {
@@ -40,7 +40,7 @@ export class CartController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Add item to cart' })
   @ApiResponse({ status: 201, description: 'Item added to cart' })
   async addToCart(
@@ -58,7 +58,7 @@ export class CartController {
 
   @Put('quantity')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update cart item quantity' })
   @ApiResponse({ status: 200, description: 'Quantity updated' })
   async updateQuantity(
@@ -76,7 +76,7 @@ export class CartController {
 
   @Put('variant')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Update cart item variant' })
   @ApiResponse({ status: 200, description: 'Variant updated' })
   async updateItemVariant(
@@ -95,7 +95,7 @@ export class CartController {
 
   @Delete(':productId')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Remove item from cart' })
   @ApiResponse({ status: 200, description: 'Item removed' })
   async removeFromCart(
@@ -114,7 +114,7 @@ export class CartController {
 
   @Delete()
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Clear cart' })
   @ApiResponse({ status: 200, description: 'Cart cleared' })
   async clearCart(@Headers('x-zalo-user-id') zaloUserId?: string) {

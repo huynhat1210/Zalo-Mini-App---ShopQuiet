@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 import * as express from 'express';
 import { loadRuntimeEnv } from './prisma/prisma.service';
@@ -25,6 +26,41 @@ async function bootstrap() {
   );
 
   app.setGlobalPrefix('api/v1');
+
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('ShopQuiet Campaign API')
+    .setDescription('API quản lý chiến dịch, tự động hóa và tệp khách hàng của ShopQuiet')
+    .setVersion('1.0.0')
+    .addServer('/', 'API v1')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        description: 'Nhập JWT Token',
+        in: 'header',
+      },
+      'JWT-auth',
+    )
+    .addTag('Campaigns', 'Quản lý chiến dịch và phê duyệt')
+    .addTag('Automation', 'Quản lý kịch bản tự động hóa')
+    .addTag('Marketing Lists', 'Quản lý tệp khách hàng')
+    .addTag('App', 'Kiểm tra trạng thái dịch vụ')
+    .build();
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api/docs', app, swaggerDocument, {
+    jsonDocumentUrl: 'api/docs-json',
+    customSiteTitle: 'ShopQuiet Campaign API Documentation',
+    swaggerOptions: {
+      persistAuthorization: true,
+      displayRequestDuration: true,
+      docExpansion: 'none',
+      filter: true,
+      tagsSorter: 'alpha',
+      operationsSorter: 'alpha',
+    },
+  });
 
   app.enableCors({
     origin: true, // Allow all origins in development

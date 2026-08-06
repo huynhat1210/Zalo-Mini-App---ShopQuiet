@@ -347,7 +347,7 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
                         >
                           <div className="w-9 h-9 rounded-2xl bg-teal-50 border border-teal-100 flex items-center justify-center font-black text-xs text-[#0e6877] shrink-0 shadow-2xs">
                             {canRenderAvatar(user.avatar) ? (
-                              <img src={user.avatar} alt="" className="w-full h-full rounded-2xl object-cover" />
+                              <img loading="lazy" decoding="async" src={user.avatar} alt="" className="w-full h-full rounded-2xl object-cover" />
                             ) : (
                               (user.name || 'Z')[0].toUpperCase()
                             )}
@@ -675,7 +675,7 @@ export const UserManagement: React.FC<IUserManagementProps> = (_props) => {
                             <div key={fav.id} className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center gap-3">
                               <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-200">
                                 {fav.product?.images && (
-                                  <img src={fav.product.images.split(',')[0]} alt="" className="w-full h-full object-cover" />
+                                  <img loading="lazy" decoding="async" src={fav.product.images.split(',')[0]} alt="" className="w-full h-full object-cover" />
                                 )}
                               </div>
                               <div className="min-w-0 flex-1">

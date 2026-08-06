@@ -159,10 +159,15 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
 
   useEffect(() => {
     fetchOrders();
-    const interval = setInterval(() => {
-      fetchOrders(true);
-    }, 30000);
-    return () => clearInterval(interval);
+    const refreshWhenVisible = () => {
+      if (!document.hidden) void fetchOrders(true);
+    };
+    const interval = setInterval(refreshWhenVisible, 60000);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
   }, [currentPage, itemsPerPage, searchTerm, statusFilter]);
 
   const handleUpdateStatus = async (orderId: string, newStatus: string, trackNum?: string) => {

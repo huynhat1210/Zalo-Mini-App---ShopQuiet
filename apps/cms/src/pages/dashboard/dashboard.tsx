@@ -44,42 +44,30 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
     const fetchDashboardData = async (isSilent = false) => {
       try {
         if (!isSilent) setLoading(true);
-        const [products, orders, vouchers] = await Promise.all([
-          apiRequest('/products?page=1&limit=100').catch(() => ({ data: [] })),
-          apiRequest('/orders/admin/all?page=1&limit=100').catch(() => []),
-          apiRequest('/vouchers').catch(() => []),
-        ]);
-
-        const orderList = Array.isArray(orders) ? orders : [];
-        const productList = products && Array.isArray(products) ? products : products?.data || [];
-        const voucherList = Array.isArray(vouchers) ? vouchers : [];
-
-        const revenue = orderList
-          .filter(
-            (o: any) =>
-              o.status === 'COMPLETED' ||
-              o.status === 'DELIVERED' ||
-              o.status === 'PROCESSING' ||
-              o.status === 'SHIPPED',
-          )
-          .reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0);
-
-        const lowStock = productList
-          .filter((prod: any) => {
-            if (Array.isArray(prod.variants)) {
-              return prod.variants.some((v: any) => v.stock < 5);
-            }
-            return false;
-          })
-          .slice(0, 5);
+        const dashboard = await apiRequest<any>('/cms/analytics/dashboard');
+        const orderList = Array.isArray(dashboard?.recentOrders) ? dashboard.recentOrders : [];
+        const lowStock = (dashboard?.lowStockVariants || []).reduce((products: any[], variant: any) => {
+          const productId = variant.productId ?? variant.product?.id;
+          const existing = products.find((product) => product.id === productId);
+          if (existing) {
+            existing.variants.push(variant);
+          } else {
+            products.push({
+              id: productId,
+              name: variant.product?.name || 'Sản phẩm',
+              variants: [variant],
+            });
+          }
+          return products;
+        }, []).slice(0, 5);
 
         setStats({
-          totalProducts: productList.length,
-          totalOrders: orderList.length,
-          totalRevenue: revenue,
-          totalVouchers: voucherList.length,
-          recentOrders: orderList.slice(0, 6),
-          allOrders: orderList,
+          totalProducts: Number(dashboard?.totalProducts || 0),
+          totalOrders: Number(dashboard?.totalOrders || 0),
+          totalRevenue: Number(dashboard?.totalRevenue || 0),
+          totalVouchers: Number(dashboard?.totalVouchers || 0),
+          recentOrders: orderList,
+          allOrders: [],
           lowStockProducts: lowStock,
         });
       } catch (err) {
@@ -90,10 +78,15 @@ export const Dashboard: React.FC<IDashboardProps> = (_props) => {
     };
 
     fetchDashboardData();
-    const interval = setInterval(() => {
-      fetchDashboardData(true);
-    }, 30000);
-    return () => clearInterval(interval);
+    const refreshWhenVisible = () => {
+      if (!document.hidden) void fetchDashboardData(true);
+    };
+    const interval = setInterval(refreshWhenVisible, 60000);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
   }, []);
 
   const formatPrice = (amount: number) => {
