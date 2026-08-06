@@ -25,6 +25,21 @@ import { LazyImageComponent } from "../../components";
 const PageCast = Page as any;
 const BoxCast = Box as any;
 
+function parseReviewImages(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter(Boolean).map(String);
+  if (typeof value !== "string" || !value.trim()) return [];
+
+  const raw = value.trim();
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed.filter(Boolean).map(String);
+    if (typeof parsed === "string" && parsed.trim()) return [parsed.trim()];
+  } catch {
+    if (/^(https?:\/\/|data:|blob:|\/)/i.test(raw)) return [raw];
+  }
+  return [];
+}
+
 export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
   const { t } = useTranslation();
   const { product, onClose, onAddToCart } = props;
@@ -222,12 +237,8 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
     fetchRelated();
   }, [product?.id, product?.category?.id]);
 
-  if (!product) return null;
-
-  const isLiked = isSavedItem(product.id);
-  const images = safeParseImages(product.images);
-
   // Auto-slide image carousel every 3.5 seconds
+  const images = safeParseImages(product?.images);
   const totalImages = images.length;
   useEffect(() => {
     if (totalImages <= 1) return;
@@ -236,6 +247,10 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
     }, 3500);
     return () => clearInterval(timer);
   }, [totalImages]);
+
+  if (!product) return null;
+
+  const isLiked = isSavedItem(product.id);
 
   // Get unique colors and sizes
   const uniqueColors = Array.from(
@@ -852,61 +867,35 @@ export const ProductDetail: React.FC<IProductDetailProps> = (props) => {
                 </div>
 
                 {/* Review attached images */}
-                {rev.images && (
+                {(() => {
+                  const reviewImages = parseReviewImages(rev.images);
+                  if (reviewImages.length === 0) return null;
+                  return (
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {(() => {
-                      try {
-                        const parsed = JSON.parse(rev.images);
-                        if (Array.isArray(parsed) && parsed.length > 0) {
-                          return parsed.map((imgUrl: string, idx: number) => {
-                            const isAbsolute =
-                              imgUrl.startsWith("http") ||
-                              imgUrl.startsWith("data:") ||
-                              imgUrl.startsWith("blob:");
-                            const fullUrl = isAbsolute
-                              ? imgUrl
-                              : `${API_BASE_URL.replace("/api/v1", "")}${imgUrl.startsWith("/") ? "" : "/"}${imgUrl}`;
-                            return (
-                              <div
-                                key={idx}
-                                className="w-16 h-16 rounded overflow-hidden border border-[#f0edeb] bg-neutral-50"
-                              >
-                                <img
-                                  src={fullUrl}
-                                  className="w-full h-full object-cover"
-                                  alt=""
-                                />
-                              </div>
-                            );
-                          });
-                        }
-                      } catch (e) {
-                        if (
-                          typeof rev.images === "string" &&
-                          rev.images.trim()
-                        ) {
-                          const isAbsolute =
-                            rev.images.startsWith("http") ||
-                            rev.images.startsWith("data:") ||
-                            rev.images.startsWith("blob:");
-                          const fullUrl = isAbsolute
-                            ? rev.images
-                            : `${API_BASE_URL.replace("/api/v1", "")}${rev.images.startsWith("/") ? "" : "/"}${rev.images}`;
-                          return (
-                            <div className="w-16 h-16 rounded overflow-hidden border border-[#f0edeb] bg-neutral-50">
-                              <img
-                                src={fullUrl}
-                                className="w-full h-full object-cover"
-                                alt=""
-                              />
-                            </div>
-                          );
-                        }
-                      }
-                      return null;
-                    })()}
+                    {reviewImages.map((imgUrl, idx) => {
+                      const isAbsolute =
+                        imgUrl.startsWith("http") ||
+                        imgUrl.startsWith("data:") ||
+                        imgUrl.startsWith("blob:");
+                      const fullUrl = isAbsolute
+                        ? imgUrl
+                        : `${API_BASE_URL.replace("/api/v1", "")}${imgUrl.startsWith("/") ? "" : "/"}${imgUrl}`;
+                      return (
+                        <div
+                          key={idx}
+                          className="w-16 h-16 rounded overflow-hidden border border-[#f0edeb] bg-neutral-50"
+                        >
+                          <img
+                            src={fullUrl}
+                            className="w-full h-full object-cover"
+                            alt="Ảnh đánh giá"
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
-                )}
+                  );
+                })()}
               </div>
             ))
           )}

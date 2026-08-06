@@ -428,7 +428,7 @@ export default function App() {
                         {activeTab === "checkout" && <Checkout />}
                         {activeTab === "order-success" && <OrderSuccess />}
                         {activeTab === "order-detail" && <OrderDetail />}
-                        {activeTab === "payment-simulate" && (
+                        {import.meta.env.DEV && activeTab === "payment-simulate" && (
                           <PaymentSimulate />
                         )}
                         {activeTab === "flash-sale-list" && <FlashSaleList />}

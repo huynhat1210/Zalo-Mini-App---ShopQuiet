@@ -56,9 +56,9 @@ export class CampaignsService implements OnModuleInit, OnModuleDestroy {
   private async resolveTargetedUsers(targetSegment: string) {
     const segment = (targetSegment || 'ALL').toUpperCase();
     const tierMap: Record<string, string> = {
-      SILVER: 'Báº¡c',
-      GOLD: 'VÃ ng',
-      DIAMOND: 'Kim cÆ°Æ¡ng',
+      SILVER: 'Bạc',
+      GOLD: 'Vàng',
+      DIAMOND: 'Kim cương',
     };
     let userWhere: any = {};
 

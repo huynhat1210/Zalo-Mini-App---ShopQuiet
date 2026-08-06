@@ -50,7 +50,7 @@ export const VoucherExchangeModalComponent: React.FC<
       if (exchangeVoucher) {
         await exchangeVoucher(voucher.code, cost);
       } else {
-        await apiRequest(`/vouchers/${voucher.code}/exchange`, "POST");
+        throw new Error("Chức năng đổi voucher chưa được cấu hình.");
       }
       if (showToast) showToast(`Đổi thành công mã ${voucher.code}!`, "success");
       if (onVoucherExchanged) onVoucherExchanged();

@@ -28,6 +28,7 @@ enum OrderStatus {
   DELIVERED
   COMPLETED
   RETURN_REQUESTED
+  RETURN_REJECTED
   RETURNED
   CANCELLED
   REFUNDED
@@ -198,7 +199,7 @@ model Comment {
   images     Json?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  approvalStatus String  @default("APPROVED")
+  approvalStatus String  @default("PENDING")
   approvedAt DateTime?
   approvedBy String?
   product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -239,6 +240,7 @@ model Order {
   shippingPhone       String?
   shippingName        String?
   trackingNumber      String?
+  cancellationReason  String?
   returnReason        String?
   returnDescription   String?
   returnImages        Json?

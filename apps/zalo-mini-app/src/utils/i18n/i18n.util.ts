@@ -62,6 +62,26 @@ export const translations = {
     "profile.emailNotUpdated": "Chưa cập nhật Email",
     "profile.birthdayNotUpdated": "Chưa cập nhật Ngày sinh",
     "profile.genderNotUpdated": "Chưa cập nhật Giới tính",
+    "profile.genderMale": "Nam",
+    "profile.genderFemale": "Nữ",
+    "profile.genderOther": "Khác",
+    "profile.editTitle": "Chỉnh sửa thông tin",
+    "profile.fullName": "Họ tên",
+    "profile.phone": "Số điện thoại",
+    "profile.email": "Email",
+    "profile.birthday": "Ngày sinh",
+    "profile.gender": "Giới tính",
+    "profile.selectGender": "Chọn giới tính",
+    "profile.day": "Ngày",
+    "profile.month": "Tháng",
+    "profile.year": "Năm",
+    "profile.phonePlaceholder": "Chưa cập nhật số điện thoại",
+    "profile.emailPlaceholder": "Chưa cập nhật email",
+    "profile.getZaloPhone": "Lấy số Zalo",
+    "profile.saving": "Đang lưu...",
+    "profile.save": "Lưu lại",
+    "profile.cancel": "Hủy",
+    "profile.nameRequired": "Họ tên không được để trống!",
 
     // CSKH / Help Center
     "help.title": "Trợ giúp & Hỗ trợ CSKH",
@@ -112,6 +132,7 @@ export const translations = {
     "order.statusShipped": "Đang giao",
     "order.statusCompleted": "Hoàn thành",
     "order.statusCancelled": "Đã hủy",
+    "order.statusReturnRejected": "Từ chối hoàn trả",
     "home.addedToCart": "Đã thêm sản phẩm vào giỏ hàng!",
     "common.warning": "Lưu ý",
 
@@ -125,6 +146,16 @@ export const translations = {
     "search.clearHistory": "Xóa lịch sử",
     "search.cancel": "Hủy",
     "search.placeholder": "Tìm kiếm sản phẩm...",
+    "search.selectVariant": "Vui lòng chọn phân loại sản phẩm!",
+    "search.addedToCart": "Đã thêm %1% vào giỏ hàng!",
+    "search.newest": "Mới nhất",
+    "search.priceLowHigh": "Giá: Thấp → Cao",
+    "search.priceHighLow": "Giá: Cao → Thấp",
+    "search.popular": "Phổ biến",
+    "search.bestSelling": "Bán chạy",
+    "search.results": "Kết quả tìm kiếm",
+    "search.found": "Tìm thấy %1% sản phẩm",
+    "flashSale.loading": "Đang tải sản phẩm khuyến mãi...",
 
     // Checkout Page
     "checkout.title": "Thanh toán",
@@ -288,11 +319,11 @@ export const translations = {
     "saved.remove": "Xóa",
 
     // Flash Sale Page
-    "flashSale.title": "Flash Sale",
-    "flashSale.ending": "Kết thúc sau",
+    "flashSale.title": "Khuyến mãi nhanh",
+    "flashSale.ending": "Chương trình kết thúc sau",
     "flashSale.sold": "Đã bán",
     "flashSale.viewAll": "Xem tất cả",
-    "flashSale.empty": "Không có Flash Sale nào",
+    "flashSale.empty": "Hôm nay chưa có sản phẩm khuyến mãi.",
 
     // Payment Simulate Page
     "payment.title": "Mô phỏng thanh toán",
@@ -451,6 +482,26 @@ export const translations = {
     "profile.emailNotUpdated": "Email not updated",
     "profile.birthdayNotUpdated": "Birthday not updated",
     "profile.genderNotUpdated": "Gender not updated",
+    "profile.genderMale": "Male",
+    "profile.genderFemale": "Female",
+    "profile.genderOther": "Other",
+    "profile.editTitle": "Edit Profile",
+    "profile.fullName": "Full name",
+    "profile.phone": "Phone number",
+    "profile.email": "Email",
+    "profile.birthday": "Birthday",
+    "profile.gender": "Gender",
+    "profile.selectGender": "Select gender",
+    "profile.day": "Day",
+    "profile.month": "Month",
+    "profile.year": "Year",
+    "profile.phonePlaceholder": "Phone number not updated",
+    "profile.emailPlaceholder": "Email not updated",
+    "profile.getZaloPhone": "Get Zalo number",
+    "profile.saving": "Saving...",
+    "profile.save": "Save",
+    "profile.cancel": "Cancel",
+    "profile.nameRequired": "Full name is required!",
 
     // CSKH / Help Center
     "help.title": "CSKH Help & Support",
@@ -468,6 +519,7 @@ export const translations = {
     "order.statusShipped": "Shipping",
     "order.statusCompleted": "Completed",
     "order.statusCancelled": "Cancelled",
+    "order.statusReturnRejected": "Return rejected",
     "home.addedToCart": "Added product to cart!",
     "common.warning": "Warning",
 
@@ -481,6 +533,16 @@ export const translations = {
     "search.clearHistory": "Clear History",
     "search.cancel": "Cancel",
     "search.placeholder": "Search products...",
+    "search.selectVariant": "Please select a product variant!",
+    "search.addedToCart": "Added %1% to cart!",
+    "search.newest": "Newest",
+    "search.priceLowHigh": "Price: Low → High",
+    "search.priceHighLow": "Price: High → Low",
+    "search.popular": "Popular",
+    "search.bestSelling": "Best Selling",
+    "search.results": "Search Results",
+    "search.found": "Found %1% products",
+    "flashSale.loading": "Loading sale products...",
 
     // Checkout Page
     "checkout.title": "Checkout",
@@ -716,6 +778,16 @@ export const translations = {
 
 const listeners = new Set<(lang: Language) => void>();
 
+const repairTextEncoding = (value: string): string => {
+  if (!/[\u00c3\u00c2\u00c4\u00c6\u00e1\u00e3][\u0080-\u00ff]/.test(value)) return value;
+  try {
+    const bytes = Uint8Array.from(Array.from(value).map((char) => char.charCodeAt(0) & 0xff));
+    return new TextDecoder("utf-8").decode(bytes);
+  } catch {
+    return value;
+  }
+};
+
 let currentLang: Language =
   (localStorage.getItem("app_lang") as Language) || "vi";
 
@@ -741,7 +813,8 @@ export const useTranslation = () => {
   }, []);
 
   const t = (key: keyof (typeof translations)["vi"]) => {
-    return translations[lang][key] || translations["vi"][key] || key;
+    const value = translations[lang][key] || translations["vi"][key] || key;
+    return repairTextEncoding(String(value));
   };
 
   return { t, lang, setLanguage };

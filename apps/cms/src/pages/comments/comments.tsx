@@ -22,7 +22,7 @@ interface CustomerComment {
   content: string;
   rating: number;
   orderId?: string;
-  images?: string;
+  images?: unknown;
   createdAt: string;
   approvalStatus?: string;
   user?: {
@@ -33,7 +33,7 @@ interface CustomerComment {
   product?: {
     id: number;
     name: string;
-    images?: string;
+    images?: unknown;
   };
 }
 
@@ -107,29 +107,35 @@ export const CommentsPage: React.FC = () => {
   const count5Star = comments.filter((c) => c.rating === 5).length;
   const countLowStar = comments.filter((c) => c.rating <= 2).length;
 
-  const parseImages = (imgsInput?: any): string[] => {
+  const parseImages = (imgsInput?: unknown): string[] => {
     if (!imgsInput) return [];
-    if (Array.isArray(imgsInput)) return imgsInput;
+    if (Array.isArray(imgsInput)) {
+      return imgsInput
+        .map((item: any) => (typeof item === 'string' ? item : item?.url || item?.secure_url || ''))
+        .filter(Boolean);
+    }
     if (typeof imgsInput === 'string') {
       const trimmed = imgsInput.trim();
       if (!trimmed) return [];
       try {
         const parsed = JSON.parse(trimmed);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed)) return parseImages(parsed);
+        if (parsed && typeof parsed === 'object') return parseImages(parsed.url || parsed.secure_url);
         if (typeof parsed === 'string') {
-          try {
-            const doubleParsed = JSON.parse(parsed);
-            if (Array.isArray(doubleParsed)) return doubleParsed;
-          } catch {}
-          return [parsed];
+          return parseImages(parsed);
         }
       } catch (e) {
-        if (trimmed.startsWith('http') || trimmed.startsWith('/')) {
+        if (/^(https?:\/\/|data:|blob:|\/)/i.test(trimmed)) {
           return [trimmed];
         }
       }
     }
     return [];
+  };
+
+  const resolveImageUrl = (value: string) => {
+    if (/^(https?:\/\/|data:|blob:)/i.test(value)) return value;
+    return `${serverUrl}${value.startsWith('/') ? '' : '/'}${value}`;
   };
 
   const renderStars = (rating: number) => {
@@ -305,15 +311,8 @@ export const CommentsPage: React.FC = () => {
                 {comments.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((item) => {
                   const reviewImgs = parseImages(item.images);
                   let productImg = '';
-                  try {
-                    if (item.product?.images) {
-                      const parsed = JSON.parse(item.product.images);
-                      if (Array.isArray(parsed) && parsed.length > 0) productImg = parsed[0];
-                    }
-                  } catch (e) {
-                    if (typeof item.product?.images === 'string') productImg = item.product.images;
-                  }
-                  const fullProdImg = productImg.startsWith('http') ? productImg : `${serverUrl}${productImg}`;
+                  productImg = parseImages(item.product?.images)[0] || '';
+                  const fullProdImg = productImg ? resolveImageUrl(productImg) : '';
 
                   return (
                     <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
@@ -395,13 +394,7 @@ export const CommentsPage: React.FC = () => {
                             </span>
                             <div className="flex flex-wrap gap-1.5">
                               {reviewImgs.map((img, idx) => {
-                                const isAbsolute =
-                                  img.startsWith('http') ||
-                                  img.startsWith('data:') ||
-                                  img.startsWith('blob:');
-                                const fullImg = isAbsolute
-                                  ? img
-                                  : `${serverUrl}${img.startsWith('/') ? '' : '/'}${img}`;
+                                const fullImg = resolveImageUrl(img);
                                 return (
                                   <img
                                     key={idx}

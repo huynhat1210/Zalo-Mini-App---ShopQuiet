@@ -3,7 +3,7 @@ import { io, Socket } from "socket.io-client";
 import api from "zmp-sdk";
 import { useCart } from "../../App";
 import { useAppStore } from "../../store";
-import { apiRequest, API_BASE_URL } from "../../utils/api";
+import { apiRequest, apiUploadRequest, API_BASE_URL } from "../../utils/api";
 import { tokenStorage } from "../../utils/auth";
 import { useTranslation } from "../../utils/i18n/i18n.util";
 import {
@@ -47,6 +47,7 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
   const [latestOrder, setLatestOrder] = useState<any | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const pendingTempIds = useRef<Set<string>>(new Set());
 
@@ -178,29 +179,65 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
     }
   };
 
-  // Feature 4: Pick image via Zalo SDK & Send
+  // Keep the selected File so the backend can upload a public URL for both sides of the chat.
+  const uploadChatImage = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      showToast("Vui lòng chọn tệp hình ảnh.", "warning");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      showToast("Ảnh không được vượt quá 10 MB.", "warning");
+      return;
+    }
+
+    showToast("Đang tải ảnh lên...", "info");
+    const url = await apiUploadRequest(file, "/chat/upload-image");
+    await handleSendMessage(`[IMAGE_ATTACHMENT] ${url}`);
+  };
+
   const handleChooseImage = async () => {
     try {
       if (api.chooseImage) {
         api.chooseImage({
           count: 1,
           sourceType: ["album", "camera"],
-          success: (res: any) => {
-            if (res.filePaths && res.filePaths.length > 0) {
-              const imgPath = res.filePaths[0];
-              const text = `[IMAGE_ATTACHMENT] ${imgPath}`;
-              handleSendMessage(text);
+          success: async (res: any) => {
+            const path = res?.filePaths?.[0];
+            if (!path) return;
+            try {
+              // Zalo web uses an object URL; fetching it restores the File selected by the user.
+              const response = await fetch(path);
+              const blob = await response.blob();
+              const extension = blob.type.split("/")[1] || "jpg";
+              await uploadChatImage(
+                new File([blob], `chat-${Date.now()}.${extension}`, {
+                  type: blob.type || "image/jpeg",
+                }),
+              );
+            } catch (error) {
+              console.warn("Could not read selected Zalo image, opening file fallback:", error);
+              imageInputRef.current?.click();
             }
           },
-          fail: (err: any) => {
-            console.log("chooseImage fail:", err);
-          },
+          fail: () => imageInputRef.current?.click(),
         });
-      } else {
-        showToast(t("chat.templates"), "info");
+        return;
       }
-    } catch (e) {
-      console.error("Image pick error:", e);
+    } catch (error) {
+      console.warn("Zalo image picker unavailable, opening file fallback:", error);
+    }
+    imageInputRef.current?.click();
+  };
+
+  const handleImageSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      await uploadChatImage(file);
+    } catch (error: any) {
+      console.error("Image upload error:", error);
+      showToast(error?.message || "Không thể tải ảnh lên. Vui lòng thử lại.", "warning");
     }
   };
 
@@ -450,6 +487,13 @@ export const ChatOverlay: React.FC<ChatOverlayProps> = ({ onClose }: ChatOverlay
           >
             <PhotoIcon className="w-5 h-5 text-slate-600" strokeWidth={2} />
           </button>
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageSelected}
+            className="hidden"
+          />
           <input
             type="text"
             placeholder={t("chat.placeholder")}

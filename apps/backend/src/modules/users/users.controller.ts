@@ -124,7 +124,7 @@ export class UsersController {
   async getMyReviews(@Headers('x-zalo-user-id') zaloUserId?: string) {
     if (!zaloUserId) return [];
     return (this.prisma.comment as any).findMany({
-      where: { zaloUserId },
+      where: { zaloUserId, approvalStatus: 'APPROVED' },
       include: {
         product: {
           include: {

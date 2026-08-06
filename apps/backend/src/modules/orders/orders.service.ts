@@ -609,12 +609,23 @@ export class OrdersService {
     };
   }
 
-  async updateStatus(id: string, status: string, trackingNumber?: string) {
+  async updateStatus(
+    id: string,
+    status: string,
+    trackingNumber?: string,
+    cancellationReason?: string,
+  ) {
+    if (['CANCELLED', 'RETURN_REJECTED'].includes(status) && !cancellationReason?.trim()) {
+      throw new BadRequestException('Vui lòng nhập lý do hủy đơn.');
+    }
     const order = await this.prisma.order.update({
       where: { id },
       data: {
         status: status as OrderStatus,
         ...(trackingNumber !== undefined ? { trackingNumber } : {}),
+        ...(['CANCELLED', 'RETURN_REJECTED'].includes(status)
+          ? { cancellationReason: cancellationReason!.trim() }
+          : {}),
       },
       include: {
         items: {
@@ -715,8 +726,9 @@ export class OrdersService {
           console.error(`Failed to reward points for order ${order.id}:`, e);
         }
       }
-    } else if (status === 'CANCELLED' || status === 'RETURNED') {
+    } else if (status === 'CANCELLED' || status === 'RETURNED' || status === 'RETURN_REJECTED') {
       const isReturn = status === 'RETURNED';
+      const isReturnRejected = status === 'RETURN_REJECTED';
       content = isReturn
         ? `Đơn hàng #${id} gồm [${itemsText}] đã được hoàn trả thành công.`
         : `Đơn hàng #${id} gồm [${itemsText}] đã được hủy bỏ thành công.`;
@@ -724,8 +736,17 @@ export class OrdersService {
         ? `Đơn hàng #${id} đã hoàn trả`
         : `Đơn hàng #${id} đã hủy`;
 
-      // Return stock back to inventory and decrement soldCount
-      for (const item of order.items) {
+      if (!isReturn && (order as any).cancellationReason) {
+        content += ` Lý do hủy: ${(order as any).cancellationReason}.`;
+      }
+      if (isReturnRejected) {
+        content = `Yêu cầu hoàn trả của đơn hàng #${id} đã bị từ chối. Lý do: ${(order as any).cancellationReason}.`;
+        notifTitle = `Yêu cầu hoàn trả đơn #${id} bị từ chối`;
+      }
+
+      // Return stock only after the shop accepts the return.
+      if (!isReturnRejected) {
+        for (const item of order.items) {
         const itemSize = item.size || 'DEFAULT';
         const itemColor = item.color || 'DEFAULT';
         try {
@@ -758,6 +779,7 @@ export class OrdersService {
             `Failed to restock or decrement soldCount for product ${item.productId} size ${itemSize}:`,
             e,
           );
+        }
         }
       }
     } else if (status === 'PENDING_PAYMENT') {
@@ -818,6 +840,12 @@ export class OrdersService {
     description: string,
     images?: string[],
   ) {
+    if (!description?.trim() || description.trim().length < 10) {
+      throw new BadRequestException('Vui lòng mô tả chi tiết tình trạng sản phẩm (ít nhất 10 ký tự).');
+    }
+    if (!Array.isArray(images) || images.length === 0) {
+      throw new BadRequestException('Vui lòng gửi ít nhất một ảnh làm bằng chứng.');
+    }
     const order = await this.prisma.order.update({
       where: { id },
       data: {

@@ -87,7 +87,7 @@ export const ReviewModal: React.FC<IReviewModalProps> = (props) => {
 
       if (res) {
         onReviewSuccess(orderId, productId);
-        showToast("Đánh giá sản phẩm thành công!", "success");
+        showToast("Đã gửi đánh giá. Đánh giá sẽ hiển thị sau khi được duyệt.", "success");
         onClose();
       }
     } catch (e: any) {

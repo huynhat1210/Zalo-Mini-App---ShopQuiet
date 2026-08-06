@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Page } from "zmp-ui";
-import { apiRequest, API_BASE_URL, safeParseImages } from "../../utils";
+import { apiRequest, API_BASE_URL, formatDateVN, safeParseImages } from "../../utils";
 import { EmptyStateComponent } from "../empty-state";
 import { ReviewModal } from "../review-modal";
 import { ChevronLeftIcon, CheckIcon } from "@heroicons/react/24/outline";
@@ -8,6 +8,32 @@ import { StarIcon } from "@heroicons/react/24/solid";
 import { IOrderHistoryProps } from "./order-history.type";
 
 const PageCast = Page as any;
+
+const parseReviewImages = (value: unknown): string[] => {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value
+      .map((item: any) =>
+        typeof item === "string" ? item : item?.url || item?.secure_url || "",
+      )
+      .filter(Boolean);
+  }
+  if (typeof value !== "string") return [];
+
+  const input = value.trim();
+  if (!input) return [];
+  try {
+    return parseReviewImages(JSON.parse(input));
+  } catch {
+    return /^(https?:\/\/|data:|blob:|\/)/i.test(input) ? [input] : [];
+  }
+};
+
+const resolveReviewImageUrl = (value: string): string => {
+  if (/^(https?:\/\/|data:|blob:)/i.test(value)) return value;
+  const origin = API_BASE_URL.replace("/api/v1", "");
+  return `${origin}${value.startsWith("/") ? "" : "/"}${value}`;
+};
 
 export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
   const {
@@ -22,11 +48,11 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
     onReviewSuccess,
   } = props;
 
-  const [ordersTab, setOrdersTabState] = useState<"active" | "history" | "reviews">(
+  const [ordersTab, setOrdersTabState] = useState<"active" | "history" | "cancelled" | "reviews">(
     () => (localStorage.getItem("active_order_tab") as any) || "active",
   );
 
-  const setOrdersTab = (tab: "active" | "history" | "reviews") => {
+  const setOrdersTab = (tab: "active" | "history" | "cancelled" | "reviews") => {
     setOrdersTabState(tab);
     localStorage.setItem("active_order_tab", tab);
   };
@@ -93,8 +119,11 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
   const historyOrdersList = orders.filter(
     (o) =>
       o.status === "COMPLETED" ||
-      o.status === "DELIVERED" ||
-      o.status === "CANCELLED",
+      o.status === "DELIVERED",
+  );
+
+  const cancelledOrdersList = orders.filter(
+    (o) => o.status === "CANCELLED" || o.status === "RETURN_REJECTED",
   );
 
   const reviewsOrdersList = orders.filter(
@@ -106,6 +135,8 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
       ? activeOrdersList
       : ordersTab === "history"
         ? historyOrdersList
+        : ordersTab === "cancelled"
+          ? cancelledOrdersList
         : ordersTab === "reviews"
           ? reviewsOrdersList
           : [];
@@ -131,6 +162,7 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
         {[
           { id: "active", label: "Đang đến" },
           { id: "history", label: "Lịch sử" },
+          { id: "cancelled", label: "Đã hủy" },
           { id: "reviews", label: "Đánh giá" },
         ].map((tab) => {
           const isTabActive = ordersTab === tab.id;
@@ -194,10 +226,7 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                           {review.product?.name || "Sản phẩm"}
                         </p>
                         <p className="text-[10px] text-textColor-variant  mt-0.5">
-                          {new Date(review.createdAt).toLocaleDateString(
-                            "vi-VN",
-                            { year: "numeric", month: "short", day: "numeric" },
-                          )}
+                          {formatDateVN(review.createdAt)}
                         </p>
                       </div>
                       {/* Stars */}
@@ -217,9 +246,7 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                       </p>
                       {(() => {
                         try {
-                          const parsedImages = JSON.parse(
-                            review.images || "[]",
-                          );
+                          const parsedImages = parseReviewImages(review.images);
                           if (
                             Array.isArray(parsedImages) &&
                             parsedImages.length > 0
@@ -232,11 +259,7 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                                     className="w-14 h-14 rounded-lg border border-neutral-250/60  overflow-hidden bg-white  flex-shrink-0"
                                   >
                                     <img
-                                      src={
-                                        u.startsWith("http") || u.startsWith("data:") || u.startsWith("blob:")
-                                          ? u
-                                          : `${API_BASE_URL.replace("/api/v1", "")}${u.startsWith("/") ? "" : "/"}${u}`
-                                      }
+                                      src={resolveReviewImageUrl(u)}
                                       alt="Đánh giá"
                                       className="w-full h-full object-cover"
                                     />
@@ -291,11 +314,7 @@ export const OrderHistory: React.FC<IOrderHistoryProps> = (props) => {
                       Mã đơn #{order.id}
                     </span>
                     <span className="text-[10px] text-textColor-variant  block mt-0.5 font-medium">
-                      {new Date(order.createdAt).toLocaleDateString("vi-VN", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
+                      {formatDateVN(order.createdAt)}
                     </span>
                   </div>
                   <span

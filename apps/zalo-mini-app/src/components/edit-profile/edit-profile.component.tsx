@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import api from "zmp-sdk";
 import { apiRequest } from "../../utils/api";
+import { normalizeBirthday, normalizeGender } from "../../utils/profile.util";
+import { useTranslation } from "../../utils/i18n/i18n.util";
 import { IEditProfileProps } from "./edit-profile.type";
 
 export const EditProfile: React.FC<IEditProfileProps> = (props) => {
   const { isOpen, onClose, zaloUser, updateZaloUser, showToast } = props;
+  const { t } = useTranslation();
 
   const [editName, setEditName] = useState("");
   const [editAvatar, setEditAvatar] = useState("");
@@ -17,7 +20,7 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
   // Birthday splits
   const parseBirthday = (val: string) => {
     if (!val) return { d: "", m: "", y: "" };
-    const parts = val.split("-");
+    const parts = normalizeBirthday(val).split("-");
     if (parts.length === 3) return { d: parts[2], m: parts[1], y: parts[0] };
     return { d: "", m: "", y: "" };
   };
@@ -32,8 +35,8 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
       setEditAvatar(zaloUser.avatar || "");
       setEditPhone(zaloUser.phone || "");
       setEditEmail(zaloUser.email || "");
-      setEditBirthday(zaloUser.birthday || "");
-      setEditGender(zaloUser.gender || "");
+      setEditBirthday(normalizeBirthday(zaloUser.birthday));
+      setEditGender(normalizeGender(zaloUser.gender));
 
       const bday = parseBirthday(zaloUser.birthday || "");
       setBdDay(bday.d);
@@ -96,7 +99,7 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
 
   const handleSave = async () => {
     if (!editName.trim()) {
-      showToast("Họ tên không được để trống!", "warning");
+      showToast(t("profile.nameRequired"), "warning");
       return;
     }
     setUpdating(true);
@@ -118,8 +121,8 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
           role: res.role,
           phone: res.phone || "",
           email: res.email || "",
-          birthday: res.birthday || "",
-          gender: res.gender || "",
+          birthday: normalizeBirthday(res.birthday),
+          gender: normalizeGender(res.gender),
           totalSpent: res.totalSpent || 0,
           membershipTier: res.membershipTier || "Đồng",
         };
@@ -141,13 +144,13 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
     <div className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-xs flex items-center justify-center p-6 animate-fade-in">
       <div className="bg-white  text-slate-900  w-full max-w-sm rounded-3xl p-6 border border-[#f0edeb]  shadow-2xl space-y-4 animate-scale-up">
         <h3 className="text-xs font-bold text-textColor  uppercase tracking-wider text-left">
-          Chỉnh sửa thông tin
+          {t("profile.editTitle")}
         </h3>
 
         <div className="space-y-3 text-left">
           <div>
             <label className="text-[9px] font-extrabold text-textColor-variant  uppercase tracking-wider block mb-1">
-              Họ tên
+              {t("profile.fullName")}
             </label>
             <input
               type="text"
@@ -159,14 +162,14 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
 
           <div>
             <label className="text-[9px] font-extrabold text-textColor-variant  uppercase tracking-wider block mb-1">
-              Số điện thoại
+              {t("profile.phone")}
             </label>
             <div className="flex gap-2">
               <input
                 type="tel"
                 value={editPhone}
                 onChange={(e) => setEditPhone(e.target.value)}
-                placeholder="Chưa cập nhật SĐT"
+                placeholder={t("profile.phonePlaceholder")}
                 className="flex-1 bg-neutral-50  border border-neutral-200  rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor  placeholder-slate-400"
               />
               {!editPhone && (
@@ -175,7 +178,7 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
                   onClick={fetchZaloPhone}
                   className="px-3 bg-primary/10 text-primary border-none rounded-xl text-[10px] font-black uppercase tracking-wider cursor-pointer"
                 >
-                  Lấy SĐT Zalo
+                  {t("profile.getZaloPhone")}
                 </button>
               )}
             </div>
@@ -183,20 +186,20 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
 
           <div>
             <label className="text-[9px] font-extrabold text-textColor-variant uppercase tracking-wider block mb-1">
-              Email
+              {t("profile.email")}
             </label>
             <input
               type="email"
               value={editEmail}
               onChange={(e) => setEditEmail(e.target.value)}
-              placeholder="Chưa cập nhật email"
+              placeholder={t("profile.emailPlaceholder")}
               className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor"
             />
           </div>
 
           <div>
             <label className="text-[9px] font-extrabold text-textColor-variant uppercase tracking-wider block mb-2">
-              Ngày sinh
+              {t("profile.birthday")}
             </label>
             <div className="grid grid-cols-3 gap-2">
               <select
@@ -207,7 +210,7 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
                 }}
                 className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-2 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor"
               >
-                <option value="">Ngày</option>
+                <option value="">{t("profile.day")}</option>
                 {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
                   <option key={d} value={String(d).padStart(2, "0")}>
                     {d}
@@ -222,10 +225,10 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
                 }}
                 className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-2 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor"
               >
-                <option value="">Tháng</option>
+                <option value="">{t("profile.month")}</option>
                 {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
                   <option key={m} value={String(m).padStart(2, "0")}>
-                    Tháng {m}
+                    {t("profile.month")} {m}
                   </option>
                 ))}
               </select>
@@ -237,7 +240,7 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
                 }}
                 className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-2 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor"
               >
-                <option value="">Năm</option>
+                <option value="">{t("profile.year")}</option>
                 {Array.from(
                   { length: 60 },
                   (_, i) => new Date().getFullYear() - i,
@@ -252,17 +255,17 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
 
           <div>
             <label className="text-[9px] font-extrabold text-textColor-variant uppercase tracking-wider block mb-1">
-              Giới tính
+              {t("profile.gender")}
             </label>
             <select
               value={editGender}
               onChange={(e) => setEditGender(e.target.value)}
               className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-primary text-textColor"
             >
-              <option value="">Chọn giới tính</option>
-              <option value="Nam">Nam</option>
-              <option value="Nữ">Nữ</option>
-              <option value="Khác">Khác</option>
+              <option value="">{t("profile.selectGender")}</option>
+              <option value="male">{t("profile.genderMale")}</option>
+              <option value="female">{t("profile.genderFemale")}</option>
+              <option value="other">{t("profile.genderOther")}</option>
             </select>
           </div>
         </div>
@@ -274,14 +277,14 @@ export const EditProfile: React.FC<IEditProfileProps> = (props) => {
             onClick={handleSave}
             className="flex-1 h-10 bg-primary text-white font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-primary-dark disabled:bg-slate-300"
           >
-            {updating ? "Đang lưu..." : "Lưu lại"}
+            {updating ? t("profile.saving") : t("profile.save")}
           </button>
           <button
             type="button"
             onClick={onClose}
             className="h-10 px-4 bg-neutral-100 text-textColor font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-neutral-200"
           >
-            Hủy
+            {t("profile.cancel")}
           </button>
         </div>
       </div>

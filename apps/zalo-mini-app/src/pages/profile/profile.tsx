@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Page } from "zmp-ui";
 import { useCart, IOrder } from "../../App";
-import { apiRequest, useTranslation } from "../../utils";
+import { apiRequest, formatBirthdayVN, normalizeBirthday, normalizeGender, useTranslation } from "../../utils";
 import { IProfileProps } from "./profile.type";
 import {
   UserPlusIcon,
@@ -139,9 +139,18 @@ export const Profile: React.FC<IProfileProps> = (props) => {
     email: zaloUser?.email || "",
     avatar: zaloUser?.avatar || "",
     zaloId: zaloUser?.id || "",
-    birthday: zaloUser?.birthday || "",
-    gender: zaloUser?.gender || "",
+    birthday: formatBirthdayVN(zaloUser?.birthday),
+    gender: normalizeGender(zaloUser?.gender),
   };
+
+  const genderLabel =
+    profile.gender === "male"
+      ? t("profile.genderMale")
+      : profile.gender === "female"
+        ? t("profile.genderFemale")
+        : profile.gender === "other"
+          ? t("profile.genderOther")
+          : "";
 
   const fetchUsersList = async () => {
     try {
@@ -369,7 +378,7 @@ export const Profile: React.FC<IProfileProps> = (props) => {
               </p>
               <p className="flex items-center gap-1.5">
                 <UserIcon className="w-3.5 h-3.5 opacity-80" strokeWidth={2} />
-                <span>{profile.gender || t("profile.genderNotUpdated")}</span>
+                <span>{genderLabel || t("profile.genderNotUpdated")}</span>
               </p>
             </div>
           </div>

@@ -13,6 +13,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { crmApiRequest } from '../../utils/api';
+import { formatDateTimeVN } from '../../utils/date.util';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 interface Notification {
@@ -64,7 +65,7 @@ export const LayoutComponent: React.FC<ILayoutComponentProps> = (props) => {
         title: statusCopy[campaign.status].title,
         content: `${campaign.title}: ${statusCopy[campaign.status].content}`,
         type: statusCopy[campaign.status].type,
-        date: new Date(campaign.updatedAt).toLocaleString('vi-VN'),
+        date: formatDateTimeVN(campaign.updatedAt),
         read: true,
         link: statusCopy[campaign.status].link,
       })));

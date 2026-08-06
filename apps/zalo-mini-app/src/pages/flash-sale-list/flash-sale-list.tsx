@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { useCart } from "../../App";
 import { LazyImageComponent } from "../../components/lazy-image";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import { apiRequest, safeParseImages } from "../../utils";
+import { apiRequest, safeParseImages, useTranslation } from "../../utils";
 
 export const FlashSaleList = () => {
+  const { t } = useTranslation();
   const { setActiveTab, setSelectedProductDetail, addToCart, showToast } =
     useCart();
   const [products, setProducts] = useState<any[]>([]);
@@ -69,7 +70,7 @@ export const FlashSaleList = () => {
 
   const handleAddToCart = (product: any) => {
     addToCart(product);
-    showToast(`Added "${product.name}" to cart`, "success");
+    showToast(t("search.addedToCart").replace("%1%", product.name), "success");
   };
 
   return (
@@ -83,7 +84,7 @@ export const FlashSaleList = () => {
           <ArrowLeftIcon className="w-5 h-5" />
         </button>
         <span className="text-white font-bold text-sm uppercase tracking-wider">
-          Flash Sale Opportunities
+          {t("flashSale.title")}
         </span>
       </div>
 
@@ -92,7 +93,7 @@ export const FlashSaleList = () => {
         {/* Countdown Card */}
         <div className="bg-gradient-to-r from-primary to-primary-dark rounded-2xl p-4.5 text-center text-white shadow-md">
           <p className="text-[10px] font-extrabold uppercase tracking-widest text-primary-light/80 mb-2">
-            Program ends in
+            {t("flashSale.ending")}
           </p>
           <div className="flex items-center justify-center gap-2">
             <div className="bg-white/15 backdrop-blur-md rounded-lg px-3 py-2 text-white font-bold text-sm">
@@ -117,11 +118,11 @@ export const FlashSaleList = () => {
         {loading ? (
           <div className="flex items-center justify-center h-48 text-textColor-variant text-xs">
             <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2"></div>
-            Loading sale products...
+            {t("flashSale.loading")}
           </div>
         ) : products.length === 0 ? (
           <div className="flex items-center justify-center h-48 text-textColor-variant text-xs">
-            No Flash Sale products today.
+            {t("flashSale.empty")}
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3.5 pb-8">
@@ -196,7 +197,7 @@ export const FlashSaleList = () => {
                             />
                           </div>
                           <span className="text-[8px] font-bold text-textColor-variant whitespace-nowrap">
-                            Sold {product.soldCount || 0}
+                            {t("flashSale.sold")} {product.soldCount || 0}
                           </span>
                         </div>
                       </div>

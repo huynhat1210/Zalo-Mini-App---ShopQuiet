@@ -8,6 +8,7 @@ import {
   Headers,
   Query,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import type { CreateOrderDto } from './orders.service';
 import type { Order } from '@prisma/client';
@@ -79,8 +80,9 @@ export class OrdersController {
     @Param('id') id: string,
     @Body('status') status: string,
     @Body('trackingNumber') trackingNumber?: string,
+    @Body('cancellationReason') cancellationReason?: string,
   ) {
-    return this.ordersService.updateStatus(id, status, trackingNumber);
+    return this.ordersService.updateStatus(id, status, trackingNumber, cancellationReason);
   }
 
   @Post(':id/return')
@@ -91,6 +93,12 @@ export class OrdersController {
     @Body('description') description: string,
     @Body('images') images?: string[],
   ) {
+    if (!description?.trim() || description.trim().length < 10) {
+      throw new BadRequestException('Vui lòng mô tả chi tiết tình trạng sản phẩm (ít nhất 10 ký tự).');
+    }
+    if (!Array.isArray(images) || images.length === 0) {
+      throw new BadRequestException('Vui lòng gửi ít nhất một ảnh làm bằng chứng.');
+    }
     return this.ordersService.requestReturn(id, reason, description, images);
   }
 }

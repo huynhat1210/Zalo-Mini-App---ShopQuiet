@@ -213,11 +213,31 @@ export async function apiUploadRequest(
     headers["x-zalo-user-id"] = zaloUserId;
   }
 
-  const response = await fetch(url, {
+  let response = await fetch(url, {
     method: "POST",
     headers,
     body: formData,
   });
+
+  if (response.status === 401 && accessToken) {
+    try {
+      if (!refreshPromise) {
+        refreshPromise = refreshAccessToken(accessToken).finally(() => {
+          refreshPromise = null;
+        });
+      }
+      const newToken = await refreshPromise;
+      headers["Authorization"] = `Bearer ${newToken}`;
+      response = await fetch(url, {
+        method: "POST",
+        headers,
+        body: formData,
+      });
+    } catch {
+      tokenStorage.clearTokens();
+      throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    }
+  }
 
   if (!response.ok) {
     let errMsg = `Lỗi tải ảnh: ${response.status}`;

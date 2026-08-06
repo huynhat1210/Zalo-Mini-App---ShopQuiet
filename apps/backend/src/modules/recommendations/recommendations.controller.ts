@@ -1,5 +1,5 @@
-import { Controller, Get, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { RecommendationsService } from './recommendations.service';
 
 @ApiTags('AI Recommendations')
@@ -19,12 +19,18 @@ export class RecommendationsController {
   }
 
   @Get('similar')
+  @ApiQuery({ name: 'productId', required: true, type: Number, example: 7 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 6 })
   async getSimilarProducts(
     @Query('productId') productId: string,
     @Query('limit') limit?: string,
   ) {
+    const parsedProductId = Number(productId);
+    if (!Number.isInteger(parsedProductId) || parsedProductId <= 0) {
+      throw new BadRequestException('productId phải là số nguyên dương.');
+    }
     return this.recommendationsService.getSimilarProducts(
-      parseInt(productId, 10),
+      parsedProductId,
       limit ? parseInt(limit, 10) : 6,
     );
   }
@@ -48,12 +54,18 @@ export class RecommendationsController {
   }
 
   @Get('frequently-bought-together')
+  @ApiQuery({ name: 'productId', required: true, type: Number, example: 7 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 4 })
   async getFrequentlyBoughtTogether(
     @Query('productId') productId: string,
     @Query('limit') limit?: string,
   ) {
+    const parsedProductId = Number(productId);
+    if (!Number.isInteger(parsedProductId) || parsedProductId <= 0) {
+      throw new BadRequestException('productId phải là số nguyên dương.');
+    }
     return this.recommendationsService.getFrequentlyBoughtTogether(
-      parseInt(productId, 10),
+      parsedProductId,
       limit ? parseInt(limit, 10) : 4,
     );
   }

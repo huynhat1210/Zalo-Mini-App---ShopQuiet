@@ -4,6 +4,7 @@ import api from "zmp-sdk";
 import { getAccessToken } from "zmp-sdk/apis";
 import { apiRequest } from "../../utils/api";
 import { tokenStorage } from "../../utils/auth";
+import { normalizeBirthday, normalizeGender } from "../../utils/profile.util";
 import type { IAppState } from "./app-store.type";
 import type { IProduct } from "../../App.type";
 
@@ -60,9 +61,9 @@ export const useAppStore = create<IAppState>()(
             name: user.name,
             avatar: user.avatar,
             phone: user.phone || undefined,
-            birthday: user.birthday || undefined,
+            birthday: normalizeBirthday(user.birthday) || undefined,
             email: user.email || undefined,
-            gender: user.gender || undefined,
+            gender: normalizeGender(user.gender) || undefined,
           })
             .then((freshUser: any) => {
               if (freshUser) {
@@ -73,8 +74,8 @@ export const useAppStore = create<IAppState>()(
                   role: freshUser.role,
                   phone: freshUser.phone || "",
                   email: freshUser.email || "",
-                  birthday: freshUser.birthday || "",
-                  gender: freshUser.gender || "",
+                  birthday: normalizeBirthday(freshUser.birthday),
+                  gender: normalizeGender(freshUser.gender),
                   totalSpent: freshUser.totalSpent || 0,
                   membershipTier: freshUser.membershipTier || "Đồng",
                 };
@@ -97,9 +98,9 @@ export const useAppStore = create<IAppState>()(
             name: currentUser.name,
             avatar: currentUser.avatar,
             phone: currentUser.phone || undefined,
-            birthday: currentUser.birthday || undefined,
+            birthday: normalizeBirthday(currentUser.birthday) || undefined,
             email: currentUser.email || undefined,
-            gender: currentUser.gender || undefined,
+            gender: normalizeGender(currentUser.gender) || undefined,
           });
           if (freshUser) {
             const mappedUser = {
@@ -109,8 +110,8 @@ export const useAppStore = create<IAppState>()(
               role: freshUser.role,
               phone: freshUser.phone || "",
               email: freshUser.email || "",
-              birthday: freshUser.birthday || "",
-              gender: freshUser.gender || "",
+              birthday: normalizeBirthday(freshUser.birthday),
+              gender: normalizeGender(freshUser.gender),
               totalSpent: freshUser.totalSpent || 0,
               membershipTier: freshUser.membershipTier || "Đồng",
             };
@@ -316,7 +317,7 @@ export const useAppStore = create<IAppState>()(
           const urlToken = urlParams.get("token");
           const urlRefreshToken = urlParams.get("refreshToken");
 
-          if (urlToken && urlRefreshToken) {
+          if (import.meta.env.DEV && urlToken && urlRefreshToken) {
             tokenStorage.setTokens({
               access_token: urlToken,
               refresh_token: urlRefreshToken,
@@ -341,8 +342,8 @@ export const useAppStore = create<IAppState>()(
                   role: freshUser.role,
                   phone: freshUser.phone || "",
                   email: freshUser.email || "",
-                  birthday: freshUser.birthday || "",
-                  gender: freshUser.gender || "",
+                  birthday: normalizeBirthday(freshUser.birthday),
+                  gender: normalizeGender(freshUser.gender),
                   totalSpent: freshUser.totalSpent || 0,
                   membershipTier: freshUser.membershipTier || "Đồng",
                 };
@@ -351,8 +352,6 @@ export const useAppStore = create<IAppState>()(
                   "zalo_profile_custom",
                   JSON.stringify(mappedUser),
                 );
-                get().fetchCart().catch(console.error);
-                get().fetchFavorites().catch(console.error);
                 return;
               }
             } catch (err) {
@@ -379,12 +378,10 @@ export const useAppStore = create<IAppState>()(
                   role: keycloakProfile.role || "user",
                   phone: keycloakProfile.phone || "",
                   email: keycloakProfile.email || "",
-                  birthday: keycloakProfile.birthday || "",
-                  gender: keycloakProfile.gender || "",
+                  birthday: normalizeBirthday(keycloakProfile.birthday),
+                  gender: normalizeGender(keycloakProfile.gender),
                 },
               });
-              get().fetchCart().catch(console.error);
-              get().fetchFavorites().catch(console.error);
               return;
             }
           } catch (error) {
@@ -421,8 +418,6 @@ export const useAppStore = create<IAppState>()(
              set({ zaloUser: parsed });
 
              if (localStorage.getItem("keycloak_managed_session") === "true" && tokenStorage.getAccessToken()) {
-               get().fetchCart().catch(console.error);
-               get().fetchFavorites().catch(console.error);
                return;
              }
 
@@ -462,8 +457,8 @@ export const useAppStore = create<IAppState>()(
                 role: authData.user.role,
                 phone: authData.user.phone || "",
                 email: authData.user.email || "",
-                birthday: authData.user.birthday || "",
-                gender: authData.user.gender || "",
+                birthday: normalizeBirthday(authData.user.birthday),
+                gender: normalizeGender(authData.user.gender),
                 totalSpent: authData.user.totalSpent || 0,
                 membershipTier: authData.user.membershipTier || "Đồng",
               };
@@ -472,8 +467,6 @@ export const useAppStore = create<IAppState>()(
                 "zalo_profile_custom",
                 JSON.stringify(mappedUser),
               );
-              get().fetchCart().catch(console.error);
-              get().fetchFavorites().catch(console.error);
              } catch (error) {
                tokenStorage.clearTokens();
                localStorage.removeItem("zalo_profile_custom");
@@ -505,8 +498,6 @@ export const useAppStore = create<IAppState>()(
             };
             set({ zaloUser: user });
             localStorage.setItem("zalo_profile_custom", JSON.stringify(user));
-            get().fetchCart().catch(console.error);
-            get().fetchFavorites().catch(console.error);
           } else {
             // Real Zalo App but user denied permission
             const guestUser = {
@@ -519,8 +510,6 @@ export const useAppStore = create<IAppState>()(
               gender: "",
             };
             set({ zaloUser: guestUser });
-            get().fetchCart().catch(console.error);
-            get().fetchFavorites().catch(console.error);
           }
         };
 
@@ -588,8 +577,8 @@ export const useAppStore = create<IAppState>()(
                   role: authData.user.role,
                   phone: authData.user.phone || "",
                   email: authData.user.email || "",
-                  birthday: authData.user.birthday || "",
-                  gender: authData.user.gender || "",
+                  birthday: normalizeBirthday(authData.user.birthday),
+                  gender: normalizeGender(authData.user.gender),
                   totalSpent: authData.user.totalSpent || 0,
                   membershipTier: authData.user.membershipTier || "Đồng",
                 };
@@ -598,8 +587,6 @@ export const useAppStore = create<IAppState>()(
                   "zalo_profile_custom",
                   JSON.stringify(mappedUser),
                 );
-                get().fetchCart().catch(console.error);
-                get().fetchFavorites().catch(console.error);
                } catch (error) {
                  tokenStorage.clearTokens();
                  localStorage.removeItem("zalo_profile_custom");
@@ -638,7 +625,7 @@ export const useAppStore = create<IAppState>()(
       },
       fetchCart: async () => {
         // Only fetch if user is authenticated
-        if (!get().zaloUser?.id) {
+        if (!get().zaloUser?.id || !tokenStorage.getAccessToken()) {
           set({ cart: [] });
           return;
         }
@@ -671,6 +658,7 @@ export const useAppStore = create<IAppState>()(
         } finally {
           tokenStorage.clearTokens();
           localStorage.removeItem("zalo_profile_custom");
+          localStorage.removeItem("keycloak_managed_session");
           set({ zaloUser: null, cart: [], savedItems: [] });
         }
       },
@@ -911,8 +899,8 @@ export const useAppStore = create<IAppState>()(
               role: authData.user.role,
               phone: authData.user.phone || "",
               email: authData.user.email || "",
-              birthday: authData.user.birthday || "",
-              gender: authData.user.gender || "",
+              birthday: normalizeBirthday(authData.user.birthday),
+              gender: normalizeGender(authData.user.gender),
               totalSpent: authData.user.totalSpent || 0,
               membershipTier: authData.user.membershipTier || "Đồng",
             };

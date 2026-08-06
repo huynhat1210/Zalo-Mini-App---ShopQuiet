@@ -15,7 +15,7 @@ import { LazyImageComponent, PriceSlider } from "../../components";
 const PageCast = Page as any;
 
 export const Search: React.FC<ISearchProps> = (_props) => {
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
   const {
     setSelectedProductDetail,
     addToCart,
@@ -59,11 +59,11 @@ export const Search: React.FC<ISearchProps> = (_props) => {
     if (hasColors || hasSizes) {
       // Product has variants - open product detail to select
       setSelectedProductDetail(product);
-      showToast("Please select product variant!", "info");
+      showToast(t("search.selectVariant"), "info");
     } else {
       // Product has no variants - add directly
       addToCart(product);
-      showToast(`Added ${product.name} to cart!`, "success");
+      showToast(t("search.addedToCart").replace("%1%", product.name), "success");
 
       // Track add_to_cart event
       if (zaloUser?.id) {
@@ -297,19 +297,19 @@ export const Search: React.FC<ISearchProps> = (_props) => {
             className="px-4 py-2.5 rounded-full border border-[#eae8e6] bg-white text-xs font-semibold text-textColor-variant outline-none cursor-pointer"
           >
             <option value="newest">
-              {lang === "vi" ? "Mới nhất" : "Newest"}
+              {t("search.newest")}
             </option>
             <option value="price-asc">
-              {lang === "vi" ? "Giá: Thấp → Cao" : "Price: Low → High"}
+              {t("search.priceLowHigh")}
             </option>
             <option value="price-desc">
-              {lang === "vi" ? "Giá: Cao → Thấp" : "Price: High → Low"}
+              {t("search.priceHighLow")}
             </option>
             <option value="popularity">
-              {lang === "vi" ? "Phổ biến" : "Popular"}
+              {t("search.popular")}
             </option>
             <option value="best-selling">
-              {lang === "vi" ? "Bán chạy" : "Best Selling"}
+              {t("search.bestSelling")}
             </option>
           </select>
 
@@ -507,12 +507,10 @@ export const Search: React.FC<ISearchProps> = (_props) => {
           <div className="space-y-4">
             <div className="flex justify-between items-center px-1">
               <h3 className="text-[10px] font-extrabold text-[#526069]/60 uppercase tracking-widest">
-                {lang === "vi" ? "Kết quả tìm kiếm" : "Search Results"}
+                {t("search.results")}
               </h3>
               <span className="text-[10px] text-textColor/45 font-medium">
-                {lang === "vi"
-                  ? `Tìm thấy ${sortedProducts.length} sản phẩm`
-                  : `Found ${sortedProducts.length} products`}
+                {t("search.found").replace("%1%", String(sortedProducts.length))}
               </span>
             </div>
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE_URL, apiRequest } from '../../utils/api';
+import { formatDateTimeVN } from '../../utils/date.util';
 import { 
   Search, 
   Check, 
@@ -56,9 +57,10 @@ interface Order {
   shippingMethodCode?: string | null;
   items: OrderItem[];
   trackingNumber?: string | null;
+  cancellationReason?: string | null;
   returnReason?: string | null;
   returnDescription?: string | null;
-  returnImages?: string | null;
+  returnImages?: unknown;
 }
 
 export const Orders: React.FC<IOrdersProps> = (_props) => {
@@ -80,6 +82,8 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
   // Tracking modal state
   const [trackingModalOrderId, setTrackingModalOrderId] = useState<string | null>(null);
   const [trackingNumberInput, setTrackingNumberInput] = useState('');
+  const [decisionModal, setDecisionModal] = useState<{ orderId: string; action: 'cancel' | 'reject-return' } | null>(null);
+  const [decisionReason, setDecisionReason] = useState('');
 
   // Field Normalizers (Fixes missing name/phone/address bugs)
   const getRecipientName = (o: Order): string => {
@@ -128,7 +132,7 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleString('vi-VN');
+    return formatDateTimeVN(dateStr);
   };
 
   const toggleExpand = (id: string) => {
@@ -170,17 +174,20 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
     };
   }, [currentPage, itemsPerPage, searchTerm, statusFilter]);
 
-  const handleUpdateStatus = async (orderId: string, newStatus: string, trackNum?: string) => {
+  const handleUpdateStatus = async (orderId: string, newStatus: string, trackNum?: string, cancellationReason?: string) => {
     try {
       const payload: Record<string, string> = { status: newStatus };
       if (trackNum) {
         payload.trackingNumber = trackNum;
       }
+      if (newStatus === 'CANCELLED' || newStatus === 'RETURN_REJECTED') {
+        payload.cancellationReason = cancellationReason?.trim() || '';
+      }
 
       await apiRequest(`/orders/${orderId}/status`, 'PATCH', payload);
       
       setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus, trackingNumber: trackNum || o.trackingNumber } : o)),
+        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus, trackingNumber: trackNum || o.trackingNumber, cancellationReason: ['CANCELLED', 'RETURN_REJECTED'].includes(newStatus) ? cancellationReason : o.cancellationReason } : o)),
       );
       
       setTrackingModalOrderId(null);
@@ -189,6 +196,22 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
     } catch (err: any) {
       toastError('Cập nhật thất bại', err.message || 'Lỗi khi cập nhật trạng thái đơn hàng.');
     }
+  };
+
+  const openDecisionModal = (orderId: string, action: 'cancel' | 'reject-return') => {
+    setDecisionReason('');
+    setDecisionModal({ orderId, action });
+  };
+
+  const submitDecision = async () => {
+    if (!decisionModal || decisionReason.trim().length < 5) {
+      toastError('Thiếu lý do', 'Vui lòng nhập lý do tối thiểu 5 ký tự.');
+      return;
+    }
+    const status = decisionModal.action === 'cancel' ? 'CANCELLED' : 'RETURN_REJECTED';
+    await handleUpdateStatus(decisionModal.orderId, status, undefined, decisionReason);
+    setDecisionModal(null);
+    setDecisionReason('');
   };
 
   const handlePrint = (order: Order) => {
@@ -294,6 +317,8 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
         return <span className="px-3 py-1 text-[11px] font-black uppercase tracking-wider bg-red-50 text-red-600 rounded-full border border-red-200 shadow-2xs">Đã hủy</span>;
       case 'RETURN_REQUESTED':
         return <span className="px-3 py-1 text-[11px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 rounded-full border border-purple-200 shadow-2xs animate-pulse">Chờ trả hàng</span>;
+      case 'RETURN_REJECTED':
+        return <span className="px-3 py-1 text-[11px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 rounded-full border border-rose-200 shadow-2xs">Từ chối hoàn trả</span>;
       case 'RETURNED':
         return <span className="px-3 py-1 text-[11px] font-black uppercase tracking-wider bg-gray-100 text-gray-600 rounded-full border border-gray-200 shadow-2xs">Đã trả hàng</span>;
       default:
@@ -391,6 +416,7 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
             { id: 'SHIPPED', label: 'Đang giao' },
             { id: 'COMPLETED', label: 'Hoàn thành' },
             { id: 'RETURN_REQUESTED', label: 'Chờ trả hàng' },
+            { id: 'RETURN_REJECTED', label: 'Từ chối hoàn trả' },
             { id: 'CANCELLED', label: 'Đã hủy' },
           ].map((tab) => (
             <button
@@ -454,6 +480,11 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
 
                     <div className="ml-0 lg:ml-2 flex items-center gap-2">
                       {getStatusBadge(order.status)}
+                      {order.status === 'CANCELLED' && order.cancellationReason && (
+                        <span className="text-[10px] text-red-700 bg-red-50 border border-red-200 rounded-lg px-2 py-1 max-w-[220px] truncate" title={order.cancellationReason}>
+                          Lý do: {order.cancellationReason}
+                        </span>
+                      )}
                       {order.shippingMethodCode === 'express' ? (
                         <span className="bg-amber-100 text-amber-900 border border-amber-300/60 px-2 py-0.5 rounded-full text-[10px] font-extrabold flex items-center gap-1 shadow-2xs">
                           <Zap size={11} className="text-amber-600 fill-amber-500" /> Hỏa Tốc
@@ -693,7 +724,7 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
 
                     {/* Column 3: Return Complaints or Payment Summary */}
                     <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80 flex flex-col justify-between space-y-3">
-                      {['RETURN_REQUESTED', 'RETURNED'].includes(order.status) ? (
+                      {['RETURN_REQUESTED', 'RETURN_REJECTED', 'RETURNED'].includes(order.status) ? (
                         <div className="bg-purple-50 border border-purple-200 rounded-xl p-3.5 space-y-2 text-xs">
                           <span className="block text-[10px] font-black text-purple-800 uppercase tracking-wider flex items-center gap-1">
                             <AlertTriangle size={13} /> Yêu Cầu Hoàn Trả
@@ -703,9 +734,9 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
                             {order.returnDescription && (
                               <p className="text-slate-700 bg-white p-2 rounded-lg border border-purple-200 mt-1">{order.returnDescription}</p>
                             )}
-                            {order.returnImages && (() => {
+                            {Boolean(order.returnImages) && (() => {
                               try {
-                                const parsed = JSON.parse(order.returnImages);
+                                const parsed = (Array.isArray(order.returnImages) ? order.returnImages : JSON.parse(String(order.returnImages))) as string[];
                                 if (Array.isArray(parsed) && parsed.length > 0) {
                                   return (
                                     <div className="flex gap-2 pt-1 flex-wrap">
@@ -723,9 +754,43 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
                               } catch (e) {}
                               return null;
                             })()}
-                          </div>
-                        </div>
-                      ) : (
+                           </div>
+                            {order.status === 'RETURN_REQUESTED' && !(decisionModal?.orderId === order.id && decisionModal.action === 'reject-return') && (
+                              <div className="flex gap-2 pt-2">
+                               <button
+                                 onClick={() => handleUpdateStatus(order.id, 'RETURNED')}
+                                 className="flex-1 rounded-xl bg-emerald-600 py-2 text-[11px] font-bold text-white transition-colors hover:bg-emerald-700"
+                               >
+                                 <Check size={13} className="mr-1 inline" /> Chấp nhận hoàn trả
+                               </button>
+                               <button
+                                 onClick={() => openDecisionModal(order.id, 'reject-return')}
+                                 className="flex-1 rounded-xl border border-rose-200 bg-rose-50 py-2 text-[11px] font-bold text-rose-700 transition-colors hover:bg-rose-100"
+                               >
+                                 <XCircle size={13} className="mr-1 inline" /> Từ chối
+                               </button>
+                              </div>
+                            )}
+                            {decisionModal?.orderId === order.id && decisionModal.action === 'reject-return' && (
+                              <div className="mt-3 rounded-2xl border border-rose-200 bg-white p-3 shadow-sm">
+                                <p className="text-[10px] font-black uppercase tracking-wider text-rose-700">Lý do từ chối hoàn trả</p>
+                                <p className="mt-1 text-[11px] leading-relaxed text-slate-500">Nội dung này sẽ được lưu vào đơn hàng và gửi cho khách hàng.</p>
+                                <textarea
+                                  autoFocus
+                                  rows={3}
+                                  value={decisionReason}
+                                  onChange={(event) => setDecisionReason(event.target.value)}
+                                  placeholder="Nhập lý do cụ thể..."
+                                  className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-800 outline-none focus:border-rose-400 focus:bg-white"
+                                />
+                                <div className="mt-2 flex justify-end gap-2">
+                                  <button onClick={() => setDecisionModal(null)} className="rounded-lg border-none bg-slate-100 px-3 py-2 text-[11px] font-bold text-slate-600 hover:bg-slate-200">Quay lại</button>
+                                  <button onClick={submitDecision} className="rounded-lg border-none bg-rose-600 px-3 py-2 text-[11px] font-bold text-white hover:bg-rose-700">Xác nhận từ chối</button>
+                                </div>
+                              </div>
+                            )}
+                         </div>
+                       ) : (
                         <div className="space-y-2.5">
                           <span className="text-[10.5px] font-black text-slate-500 uppercase tracking-wider block">
                             Tổng Quan Thanh Toán
@@ -743,11 +808,17 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
 
                       {/* Bottom Secondary Action Bar */}
                       <div className="pt-2 flex items-center gap-2">
-                        {order.status !== 'COMPLETED' && order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && order.status !== 'RETURNED' && (
+                        {order.status !== 'COMPLETED' && order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && order.status !== 'RETURNED' && order.status !== 'RETURN_REQUESTED' && (
                           <button
                             onClick={async () => {
                               if (await confirm('Hủy đơn hàng?', `Đơn #${order.id.slice(-6).toUpperCase()} sẽ được chuyển sang trạng thái đã hủy.`)) {
-                                handleUpdateStatus(order.id, 'CANCELLED');
+                                 openDecisionModal(order.id, 'cancel');
+                                 return;
+                                  if (!decisionReason.trim()) {
+                                   toastError('Thiếu lý do hủy đơn', 'Vui lòng nhập lý do trước khi hủy đơn.');
+                                   return;
+                                 }
+                                  handleUpdateStatus(order.id, 'CANCELLED', undefined, decisionReason);
                               }
                             }}
                             className="w-full py-2 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white font-bold rounded-xl text-xs transition-all border border-red-200 hover:border-red-600 cursor-pointer"
@@ -788,6 +859,36 @@ export const Orders: React.FC<IOrdersProps> = (_props) => {
 
 
 
+      {decisionModal && decisionModal.action === 'cancel' && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-teal-700">Xác nhận nghiệp vụ</p>
+                <h2 className="mt-1 text-lg font-black text-slate-900">
+                  {decisionModal.action === 'cancel' ? 'Hủy đơn hàng' : 'Từ chối yêu cầu hoàn trả'}
+                </h2>
+                <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                  Lý do sẽ được lưu vào đơn hàng và gửi thông báo cho khách hàng.
+                </p>
+              </div>
+              <button onClick={() => setDecisionModal(null)} className="rounded-full border-none bg-slate-100 px-3 py-2 text-slate-500 hover:bg-slate-200">×</button>
+            </div>
+            <textarea
+              autoFocus
+              rows={4}
+              value={decisionReason}
+              onChange={(event) => setDecisionReason(event.target.value)}
+              placeholder={decisionModal.action === 'cancel' ? 'Ví dụ: Sản phẩm hết hàng hoặc thông tin đơn chưa phù hợp...' : 'Ví dụ: Hình ảnh chưa đủ căn cứ để chấp nhận hoàn trả...'}
+              className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800 outline-none focus:border-teal-500 focus:bg-white"
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <button onClick={() => setDecisionModal(null)} className="rounded-xl border-none bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-200">Đóng</button>
+              <button onClick={submitDecision} className="rounded-xl border-none bg-teal-700 px-4 py-2.5 text-xs font-bold text-white hover:bg-teal-800">Xác nhận</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

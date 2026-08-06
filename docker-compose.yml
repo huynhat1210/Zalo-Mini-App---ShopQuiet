@@ -13,6 +13,7 @@ services:
       NODE_ENV: production
       HOST: 0.0.0.0
       PORT: 3000
+      RUN_DB_MIGRATIONS: "true"
     command: ["node", "apps/backend/dist/main.js"]
     ports:
       - "127.0.0.1:3000:3000"
@@ -35,6 +36,7 @@ services:
     environment:
       NODE_ENV: production
       CRM_PORT: 3002
+      RUN_DB_MIGRATIONS: "false"
     command: ["node", "apps/zalo-crm-backend/dist/main.js"]
     ports:
       - "127.0.0.1:3002:3002"

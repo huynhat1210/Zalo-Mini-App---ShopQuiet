@@ -64,14 +64,6 @@ if (typeof window !== "undefined") {
     }
   });
 
-  // Clear the abandoned browser-redirect session from older Mini App builds.
-  // Native Zalo login now provisions a Keycloak token through the backend.
-  if (localStorage.getItem("keycloak_managed_session") === "true") {
-    localStorage.removeItem("keycloak_managed_session");
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-  }
-
   // The Mini App no longer accepts the legacy backend JWT. Keep only a
   // Keycloak-issued token so an expired token from older app versions cannot
   // trigger protected requests during startup.

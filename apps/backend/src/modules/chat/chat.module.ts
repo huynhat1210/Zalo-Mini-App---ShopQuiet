@@ -6,10 +6,12 @@ import { ChatGateway } from './chat.gateway';
 import { GeminiAiOpsService } from './gemini-ai-ops.service';
 import { GeminiAiOpsController } from './gemini-ai-ops.controller';
 import { PrismaModule } from '../../prisma/prisma.module';
+import { MediaModule } from '../media/media.module';
 
 @Module({
   imports: [
     PrismaModule,
+    MediaModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'your-secret-key',
     }),
@@ -19,4 +21,3 @@ import { PrismaModule } from '../../prisma/prisma.module';
   exports: [ChatService, GeminiAiOpsService],
 })
 export class ChatModule {}
-

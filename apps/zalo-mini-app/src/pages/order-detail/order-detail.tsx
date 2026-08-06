@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Page } from "zmp-ui";
 import { useCart, IOrderItem } from "../../App";
 import { apiRequest, apiUploadRequest, API_BASE_URL } from "../../utils/api";
-import { useTranslation } from "../../utils";
+import { formatDateTimeVN, useTranslation } from "../../utils";
 import { IOrderDetailProps } from "./order-detail.type";
 import api from "zmp-sdk";
 import { ChevronLeft, CheckCircle, Clock, Check } from "lucide-react";
@@ -22,6 +22,7 @@ const STATUS_LABEL: Record<string, string> = {
   CANCELLED: "order.statusCancelled",
   PENDING_PAYMENT: "order.statusProcessing",
   RETURN_REQUESTED: "order.statusProcessing",
+  RETURN_REJECTED: "order.statusReturnRejected",
   RETURNED: "order.statusCancelled",
 };
 
@@ -81,6 +82,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
     try {
       await apiRequest(`/orders/${selectedOrder.id}/status`, "PATCH", {
         status: "CANCELLED",
+        cancellationReason: "Khách hàng chủ động hủy đơn.",
       });
       showToast("Đã hủy đơn hàng thành công!", "success");
       setSelectedOrder({ ...selectedOrder, status: "CANCELLED" });
@@ -136,7 +138,8 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
   // Auto poll order status while waiting for Pay2S IPN / Webhook payment
   useEffect(() => {
     if (!selectedOrder || selectedOrder.status !== "PENDING_PAYMENT") return;
-    const interval = setInterval(async () => {
+    const checkPaymentStatus = async () => {
+      if (document.hidden) return;
       try {
         const updated = await apiRequest<any>(`/orders/${selectedOrder.id}`);
         if (updated && updated.status !== "PENDING_PAYMENT") {
@@ -144,8 +147,17 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
           showToast("Xác nhận thanh toán thành công!", "success");
         }
       } catch (e) {}
-    }, 4000);
-    return () => clearInterval(interval);
+    };
+    checkPaymentStatus();
+    const interval = setInterval(checkPaymentStatus, 10000);
+    const onVisibilityChange = () => {
+      if (!document.hidden) checkPaymentStatus();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, [selectedOrder?.id, selectedOrder?.status]);
 
   const handleReorder = async () => {
@@ -206,6 +218,14 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
   const handleSubmitReturn = async () => {
     if (!returnReason) {
       showToast("Vui lòng chọn lý do hoàn trả!", "warning");
+      return;
+    }
+    if (returnDescription.trim().length < 10) {
+      showToast("Vui lòng mô tả chi tiết ít nhất 10 ký tự.", "warning");
+      return;
+    }
+    if (returnImages.length === 0) {
+      showToast("Vui lòng tải lên ít nhất một ảnh bằng chứng.", "warning");
       return;
     }
     setSubmittingReturn(true);
@@ -292,7 +312,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
                 {t("orderDetail.orderId")} #{selectedOrder.id}
               </span>
               <span className="text-[10px] text-textColor-variant block mt-0.5 font-medium">
-                {new Date(selectedOrder.createdAt).toLocaleString("vi-VN")}
+                {formatDateTimeVN(selectedOrder.createdAt)}
               </span>
             </div>
             <span
@@ -303,6 +323,15 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
           </div>
 
           {/* Delivery tracking status timeline — only for non-draft orders */}
+          {["CANCELLED", "RETURN_REJECTED"].includes(selectedOrder.status) && selectedOrder.cancellationReason && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-left">
+              <p className="text-[10px] font-black uppercase tracking-wider text-red-700">
+                {selectedOrder.status === "RETURN_REJECTED" ? "Lý do từ chối hoàn trả" : "Lý do hủy đơn"}
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-red-800">{selectedOrder.cancellationReason}</p>
+            </div>
+          )}
+
           {!isPendingPayment && (
             <div className="pt-1.5 space-y-3">
               <div className="flex justify-between items-center">
@@ -689,7 +718,9 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
             {selectedOrder.returnImages &&
               (() => {
                 try {
-                  const parsed = JSON.parse(selectedOrder.returnImages);
+                  const parsed = Array.isArray(selectedOrder.returnImages)
+                    ? selectedOrder.returnImages
+                    : JSON.parse(String(selectedOrder.returnImages));
                   if (Array.isArray(parsed) && parsed.length > 0) {
                     return (
                       <div className="flex gap-2 mt-2">
@@ -840,7 +871,7 @@ export const OrderDetail: React.FC<IOrderDetailProps> = (_props) => {
             {/* Action buttons */}
             <div className="flex gap-3 pt-2">
               <button
-                disabled={submittingReturn || !returnReason}
+                disabled={submittingReturn || !returnReason || returnDescription.trim().length < 10 || returnImages.length === 0}
                 onClick={handleSubmitReturn}
                 className="flex-1 h-10 bg-primary text-white font-bold text-xs uppercase tracking-wider rounded-xl border-none cursor-pointer hover:bg-primary-dark disabled:bg-neutral-300 active:scale-98 transition-all"
               >

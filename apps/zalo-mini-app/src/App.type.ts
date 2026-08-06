@@ -29,6 +29,7 @@ export interface IOrder {
   estimatedDeliveryDate?: string;
   shippingMethodCode?: string;
   trackingNumber?: string;
+  cancellationReason?: string;
 }
 
 export interface INotification {

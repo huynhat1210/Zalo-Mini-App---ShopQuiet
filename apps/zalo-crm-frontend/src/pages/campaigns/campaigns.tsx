@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiRequest, crmApiRequest } from '../../utils/api';
+import { formatDateTimeVN } from '../../utils/date.util';
 import {
   Megaphone,
   Plus,
@@ -676,7 +677,7 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
                       <div className="font-extrabold text-slate-900 text-sm">{c.title}</div>
                       {c.description && <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">{c.description}</div>}
                       <div className="text-[10px] text-slate-400 mt-1">
-                        Ngày tạo: {new Date(c.createdAt).toLocaleDateString('vi-VN')}
+                        Ngày tạo: {formatDateTimeVN(c.createdAt)}
                       </div>
                     </td>
 
@@ -895,10 +896,10 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
                 <div className="rounded-2xl border border-slate-200 p-4 text-xs">
                     <div className="mb-2 flex items-center gap-2 font-bold text-slate-700"><CalendarDays size={15} className="text-[#0e6877]" /> Thời gian</div>
                   <div className="space-y-1 text-slate-500">
-                    <div>Tạo lúc: {new Date(selectedCampaign.createdAt).toLocaleString('vi-VN')}</div>
-                    {selectedCampaign.scheduledAt && <div>Lên lịch: {new Date(selectedCampaign.scheduledAt).toLocaleString('vi-VN')}</div>}
-                    {selectedCampaign.startedAt && <div>Bắt đầu: {new Date(selectedCampaign.startedAt).toLocaleString('vi-VN')}</div>}
-                    {selectedCampaign.endedAt && <div>Kết thúc: {new Date(selectedCampaign.endedAt).toLocaleString('vi-VN')}</div>}
+                    <div>Tạo lúc: {formatDateTimeVN(selectedCampaign.createdAt)}</div>
+                    {selectedCampaign.scheduledAt && <div>Lên lịch: {formatDateTimeVN(selectedCampaign.scheduledAt)}</div>}
+                    {selectedCampaign.startedAt && <div>Bắt đầu: {formatDateTimeVN(selectedCampaign.startedAt)}</div>}
+                    {selectedCampaign.endedAt && <div>Kết thúc: {formatDateTimeVN(selectedCampaign.endedAt)}</div>}
                   </div>
                 </div>
                 <div className="rounded-2xl border border-slate-200 p-4 text-xs">
@@ -925,7 +926,7 @@ export const Campaigns: React.FC<ICampaignsProps> = () => {
                   <div className="mb-2 flex items-center gap-2 font-bold text-slate-700"><History size={15} className="text-[#0e6877]" /> Lịch sử xử lý</div>
                   {selectedCampaign.histories?.length ? (
                     <div className="space-y-2">
-                      {selectedCampaign.histories.slice(0, 5).map((item) => <div key={item.id} className="flex justify-between gap-2 text-slate-500"><span>{historyActionLabels[item.action] || item.action}</span><span className="whitespace-nowrap text-[10px]">{new Date(item.createdAt).toLocaleString('vi-VN')}</span></div>)}
+                      {selectedCampaign.histories.slice(0, 5).map((item) => <div key={item.id} className="flex justify-between gap-2 text-slate-500"><span>{historyActionLabels[item.action] || item.action}</span><span className="whitespace-nowrap text-[10px]">{formatDateTimeVN(item.createdAt)}</span></div>)}
                     </div>
                   ) : <div className="text-slate-400">Chưa có lịch sử.</div>}
                 </div>

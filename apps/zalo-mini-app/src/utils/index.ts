@@ -4,3 +4,5 @@ export * from "./use-debounce";
 export * from "./delivery-date";
 export * from "./analytics";
 export * from "./i18n";
+export * from "./profile.util";
+export * from "./date.util";

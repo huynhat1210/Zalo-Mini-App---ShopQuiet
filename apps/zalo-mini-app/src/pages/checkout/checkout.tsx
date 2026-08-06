@@ -133,7 +133,8 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
   // Auto-listen to Order Payment Status via Polling while VietQR modal is open
   useEffect(() => {
     if (!vietQrModalData?.orderId) return;
-    const interval = setInterval(async () => {
+    const checkPaymentStatus = async () => {
+      if (document.hidden) return;
       try {
         const order = await apiRequest<any>(`/orders/${vietQrModalData.orderId}`);
         if (
@@ -150,8 +151,17 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           setActiveTab("order-success");
         }
       } catch (e) {}
-    }, 3000);
-    return () => clearInterval(interval);
+    };
+    checkPaymentStatus();
+    const interval = setInterval(checkPaymentStatus, 10000);
+    const onVisibilityChange = () => {
+      if (!document.hidden) checkPaymentStatus();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
   }, [vietQrModalData?.orderId]);
 
   // Tier benefits state
@@ -779,6 +789,13 @@ export const Checkout: React.FC<ICheckoutProps> = (_props) => {
           }
         } catch (pay2sErr) {
           console.error("Failed to generate Pay2S link:", pay2sErr);
+          showToast(
+            "Không thể tạo liên kết thanh toán. Đơn hàng vẫn được giữ lại để bạn thử lại.",
+            "warning",
+          );
+          setSelectedOrder(createdOrder);
+          setActiveTab("order-detail");
+          return;
         }
 
         clearPurchasedItems();

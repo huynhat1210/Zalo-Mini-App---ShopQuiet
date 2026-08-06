@@ -149,7 +149,7 @@ export class AuthService {
       user: {
         zaloId: user.zaloId, name: user.name, avatar: user.avatar,
         role: user.role || 'USER', phone: user.phone || '', email: user.email || '',
-        birthday: user.birthday || null, totalSpent: Number(user.totalSpent) || 0,
+        birthday: user.birthday || null, gender: user.gender || '', totalSpent: Number(user.totalSpent) || 0,
         membershipTier: user.membershipTier || 'Đồng',
       },
     };
@@ -511,6 +511,7 @@ export class AuthService {
         phone: user.phone || '',
         email: user.email || '',
         birthday: user.birthday || null,
+        gender: user.gender || '',
         totalSpent: Number(user.totalSpent) || 0,
         membershipTier: user.membershipTier || 'Đồng',
       },
