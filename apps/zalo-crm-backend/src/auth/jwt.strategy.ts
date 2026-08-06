@@ -2,7 +2,6 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { passportJwtSecret } from 'jwks-rsa';
-import { AuthProvider } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -38,16 +37,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
     const subject = String(payload.sub || '');
     const username = payload.preferred_username ? String(payload.preferred_username) : undefined;
-    const identity = await this.prisma.authIdentity.findUnique({
-      where: {
-        provider_providerSubject: {
-          provider: AuthProvider.KEYCLOAK,
-          providerSubject: subject,
-        },
-      },
-      include: { user: true },
-    });
-    const user = identity?.user || (username
+    const user = await this.prisma.user.findUnique({
+      where: { keycloakUserId: subject },
+    }) || (username
       ? await this.prisma.user.findUnique({ where: { zaloId: username } })
       : null);
     if (!user) {

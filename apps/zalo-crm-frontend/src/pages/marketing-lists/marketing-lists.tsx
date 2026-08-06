@@ -7,14 +7,11 @@ import {
   Search,
   Trash2,
   X,
-  Compass,
   CheckCircle2,
   Clock,
-  Link,
   Database,
   Smartphone,
   Check,
-  AlertCircle
 } from 'lucide-react';
 import { useToast } from '../../contexts';
 
@@ -22,7 +19,7 @@ interface IMarketingList {
   id: number;
   name: string;
   description?: string | null;
-  sourceType: string; // 'PASTE', 'GROUP_SCAN'
+  sourceType: string; // 'PASTE'
   sourceId?: string | null;
   createdAt: string;
   totalEntries: number;
@@ -48,7 +45,6 @@ export const MarketingLists: React.FC = () => {
   
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isScanModalOpen, setIsScanModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedList, setSelectedList] = useState<any | null>(null);
   const [listEntries, setListEntries] = useState<IEntry[]>([]);
@@ -58,14 +54,6 @@ export const MarketingLists: React.FC = () => {
   const [listName, setListName] = useState('');
   const [listDesc, setListDesc] = useState('');
   const [phonesText, setPhonesText] = useState('');
-  const [groupUrl, setGroupUrl] = useState('');
-  const [scanListName, setScanListName] = useState('');
-
-  // Scanning State Simulation
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanProgress, setScanProgress] = useState(0);
-  const [scanStateText, setScanStateText] = useState('');
-
   useEffect(() => {
     fetchLists();
   }, []);
@@ -121,59 +109,6 @@ export const MarketingLists: React.FC = () => {
     setPhonesText('');
   };
 
-  const handleScanGroup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!groupUrl.trim()) {
-      toastError('Lỗi', 'Vui lòng nhập Link/ID nhóm Zalo');
-      return;
-    }
-
-    setIsScanning(true);
-    setScanProgress(5);
-    setScanStateText('Đang thiết lập kết nối đến Zalo Group...');
-
-    // Simulate nice progress increments
-    const intervals = [
-      { progress: 20, text: 'Đang kết nối thành công Zalo Sandbox API...', delay: 800 },
-      { progress: 45, text: 'Đang giải mã danh sách thành viên nhóm...', delay: 1500 },
-      { progress: 70, text: 'Đang trích xuất UID Zalo và ảnh đại diện thành viên công khai...', delay: 2400 },
-      { progress: 90, text: 'Đang đồng bộ SĐT liên kết...', delay: 3200 },
-      { progress: 100, text: 'Hoàn thành nạp dữ liệu thành công!', delay: 4000 }
-    ];
-
-    intervals.forEach(step => {
-      setTimeout(() => {
-        setScanProgress(step.progress);
-        setScanStateText(step.text);
-        if (step.progress === 100) {
-          executeScanRequest();
-        }
-      }, step.delay);
-    });
-  };
-
-  const executeScanRequest = async () => {
-    try {
-      const res = await crmApiRequest('/marketing-lists/scan-group', 'POST', {
-        groupUrl,
-        listName: scanListName,
-      });
-      if (res) {
-        toastSuccess('Quét thành công', `Đã tìm thấy và lưu ${res.totalEntries} thành viên nhóm vào tệp mới!`);
-        setIsScanModalOpen(false);
-        setGroupUrl('');
-        setScanListName('');
-        fetchLists();
-      }
-    } catch (e: any) {
-      toastError('Thất bại', e.message || 'Không thể quét nhóm Zalo');
-    } finally {
-      setIsScanning(false);
-      setScanProgress(0);
-      setScanStateText('');
-    }
-  };
-
   const handleDeleteList = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!(await confirm('Xóa tệp khách hàng?', 'Thao tác này không thể hoàn tác.'))) return;
@@ -212,7 +147,6 @@ export const MarketingLists: React.FC = () => {
   const totalLists = lists.length;
   const totalPhones = lists.reduce((sum, l) => sum + l.totalEntries, 0);
   const totalZaloVerified = lists.reduce((sum, l) => sum + l.hasZaloEntries, 0);
-  const totalGroupScans = lists.filter(l => l.sourceType === 'GROUP_SCAN').length;
 
   return (
     <div className="space-y-6">
@@ -229,13 +163,6 @@ export const MarketingLists: React.FC = () => {
         </div>
         <div className="flex gap-2 shrink-0">
           <button
-            onClick={() => setIsScanModalOpen(true)}
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm border-none cursor-pointer active:scale-95"
-          >
-            <Compass size={15} />
-            Quét nhóm Zalo
-          </button>
-          <button
             onClick={() => setIsCreateModalOpen(true)}
             className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm border-none cursor-pointer active:scale-95"
           >
@@ -246,7 +173,7 @@ export const MarketingLists: React.FC = () => {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600">
             <FolderOpen size={20} />
@@ -277,15 +204,6 @@ export const MarketingLists: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
-            <Compass size={20} />
-          </div>
-          <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nhóm Zalo đã quét</p>
-            <p className="text-xl font-black text-slate-900 mt-0.5">{totalGroupScans}</p>
-          </div>
-        </div>
       </div>
 
       {/* Main Table Area */}
@@ -359,15 +277,9 @@ export const MarketingLists: React.FC = () => {
                         )}
                       </td>
                       <td className="py-4 px-6">
-                        {list.sourceType === 'GROUP_SCAN' ? (
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 border border-emerald-100 text-emerald-800 rounded font-black text-[9px] uppercase tracking-wider">
-                            <Compass size={10} /> Quét nhóm
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-teal-50 border border-teal-100 text-[#0e6877] rounded font-black text-[9px] uppercase tracking-wider">
-                            <Database size={10} /> Nhập SĐT
-                          </span>
-                        )}
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-teal-50 border border-teal-100 text-[#0e6877] rounded font-black text-[9px] uppercase tracking-wider">
+                          <Database size={10} /> Nhập SĐT
+                        </span>
                       </td>
                       <td className="py-4 px-6 text-center font-bold text-slate-900">
                         {list.totalEntries}
@@ -475,100 +387,6 @@ export const MarketingLists: React.FC = () => {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* ── SCAN MODAL ──────────────────────────────────────────────────── */}
-      {isScanModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-scaleUp">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <Compass className="text-emerald-600" size={18} />
-                Quét thành viên nhóm Zalo
-              </h3>
-              <button
-                onClick={() => !isScanning && setIsScanModalOpen(false)}
-                disabled={isScanning}
-                className="p-1 hover:bg-slate-200 rounded-lg text-slate-400 hover:text-slate-700 transition-colors border-none bg-transparent cursor-pointer disabled:opacity-50"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {isScanning ? (
-              <div className="p-12 text-center space-y-5">
-                <div className="relative w-20 h-20 mx-auto flex items-center justify-center bg-emerald-50 rounded-2xl">
-                  <Compass className="text-emerald-600 animate-spin" size={36} />
-                </div>
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-slate-800">Đang quét thành viên... {scanProgress}%</h4>
-                  <p className="text-[10px] text-slate-400 max-w-xs mx-auto leading-relaxed">{scanStateText}</p>
-                </div>
-                
-                {/* Progress bar */}
-                <div className="w-full bg-slate-100 rounded-full h-2 max-w-sm mx-auto overflow-hidden">
-                  <div 
-                    className="bg-emerald-600 h-2 rounded-full transition-all duration-500 ease-out"
-                    style={{ width: `${scanProgress}%` }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={handleScanGroup} className="p-6 space-y-4">
-                <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl flex items-start gap-3">
-                  <AlertCircle size={18} className="text-emerald-600 shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-emerald-800 leading-relaxed">
-                    Dán link nhóm Zalo của bạn hoặc ID nhóm Zalo cần tiếp thị. Hệ thống sẽ kết nối qua API Sandbox để giải mã thành viên nhóm và lưu toàn bộ danh bạ thành viên.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Link hoặc ID Nhóm Zalo *</label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                      <Link size={15} />
-                    </span>
-                    <input
-                      type="text"
-                      required
-                      placeholder="https://zalo.me/g/abc123xyz"
-                      value={groupUrl}
-                      onChange={(e) => setGroupUrl(e.target.value)}
-                      className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-emerald-500 rounded-xl py-2.5 pl-10 pr-3.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Đặt tên tệp khách hàng lưu trữ</label>
-                  <input
-                    type="text"
-                    placeholder="Nhập tên tệp (để trống hệ thống sẽ tự sinh)"
-                    value={scanListName}
-                    onChange={(e) => setScanListName(e.target.value)}
-                    className="w-full bg-[#fbf9f7] border border-slate-200 focus:border-emerald-500 rounded-xl py-2.5 px-3.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none transition-all"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setIsScanModalOpen(false)}
-                    className="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold bg-white cursor-pointer hover:bg-slate-50 transition-colors"
-                  >
-                    Hủy bỏ
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm border-none cursor-pointer"
-                  >
-                    Bắt đầu quét nhóm
-                  </button>
-                </div>
-              </form>
-            )}
           </div>
         </div>
       )}

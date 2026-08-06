@@ -33,12 +33,4 @@ export class MarketingListController {
   remove(@Param('id') id: string) {
     return this.marketingListService.deleteList(+id);
   }
-
-  @Post('scan-group')
-  scanGroup(
-    @Body('groupUrl') groupUrl: string,
-    @Body('listName') listName: string,
-  ) {
-    return this.marketingListService.scanGroup(groupUrl, listName);
-  }
 }

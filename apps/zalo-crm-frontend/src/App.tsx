@@ -17,6 +17,7 @@ let tokenRefreshInterval: ReturnType<typeof setInterval> | undefined;
 let tokenRefreshInFlight: Promise<boolean> | undefined;
 let authRedirectInProgress = false;
 const KEYCLOAK_INIT_TIMEOUT_MS = 12000;
+const APP_LOGIN_SESSION_KEY = 'campaign_keycloak_login_session';
 
 function persistKeycloakSession() {
   localStorage.setItem('crm_access_token', keycloak.token || '');
@@ -85,16 +86,21 @@ async function refreshKeycloakToken(minValidity: number) {
 function initializeKeycloak() {
   if (!keycloakInitialization) {
     clearStaleKeycloakSession();
+    const authResponse = /(?:[?#&])(?:code|error)=/.test(window.location.href);
+    const appSessionActive = sessionStorage.getItem(APP_LOGIN_SESSION_KEY) === 'active';
     keycloakInitialization = keycloak
-      .init({
-        onLoad: 'login-required',
-        checkLoginIframe: false,
-      })
+      .init({ onLoad: 'check-sso', checkLoginIframe: false })
       .then((authenticated) => {
+        if (!authResponse && !appSessionActive) {
+          sessionStorage.setItem(APP_LOGIN_SESSION_KEY, 'pending');
+          void keycloak.login({ prompt: 'login' });
+          return false;
+        }
         if (!authenticated) {
           return false;
         }
 
+        sessionStorage.setItem(APP_LOGIN_SESSION_KEY, 'active');
         persistKeycloakSession();
         keycloak.onTokenExpired = () => {
           void refreshKeycloakToken(0).catch((error) => {
@@ -202,6 +208,7 @@ export const App: React.FC = () => {
     localStorage.removeItem('crm_refresh_token');
     localStorage.removeItem('crm_profile');
     localStorage.removeItem('crm_auth_provider');
+    sessionStorage.removeItem(APP_LOGIN_SESSION_KEY);
     // Keep the shared Keycloak SSO session alive so CMS stays signed in.
     keycloak.clearToken();
     window.location.assign(await keycloak.createLoginUrl({ prompt: 'login' }));

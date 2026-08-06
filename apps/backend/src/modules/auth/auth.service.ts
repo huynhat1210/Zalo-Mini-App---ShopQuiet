@@ -104,15 +104,10 @@ export class AuthService {
     }
 
     if (keycloakUser?.id) {
-      const linkedIdentity = await this.prisma.authIdentity.findUnique({
-        where: {
-          provider_providerSubject: {
-            provider: AuthProvider.KEYCLOAK,
-            providerSubject: keycloakUser.id,
-          },
-        },
+      const linkedUser = await this.prisma.user.findUnique({
+        where: { keycloakUserId: keycloakUser.id },
       });
-      if (linkedIdentity && linkedIdentity.zaloUserId !== user.zaloId) {
+      if (linkedUser && linkedUser.zaloId !== user.zaloId) {
         throw new ConflictException('Tài khoản Keycloak đã được liên kết với một tài khoản ShopQuiet khác');
       }
 
@@ -120,19 +115,11 @@ export class AuthService {
         where: { zaloId: user.zaloId },
         data: {
           lastLoginAt: new Date(),
+          provider: AuthProvider.ZALO,
+          providerSubject: String(user.zaloId),
+          keycloakUserId: keycloakUser.id,
+          providerVerifiedAt: new Date(),
         },
-      });
-
-      await this.prisma.authIdentity.upsert({
-        where: { provider_providerSubject: { provider: AuthProvider.KEYCLOAK, providerSubject: keycloakUser.id } },
-        create: { zaloUserId: user.zaloId, provider: AuthProvider.KEYCLOAK, providerSubject: keycloakUser.id, verifiedAt: new Date() },
-        update: { verifiedAt: new Date() },
-      });
-
-      await this.prisma.authIdentity.upsert({
-        where: { provider_providerSubject: { provider: AuthProvider.ZALO, providerSubject: String(user.zaloId) } },
-        create: { zaloUserId: user.zaloId, provider: AuthProvider.ZALO, providerSubject: String(user.zaloId), verifiedAt: new Date() },
-        update: { verifiedAt: new Date() },
       });
     }
 
@@ -186,36 +173,19 @@ export class AuthService {
    * Authentication must never create a local user as a side effect of validating a token.
    */
   async findUserByKeycloakSubject(subject: string, legacyUsername?: string) {
-    const identity = await this.prisma.authIdentity.findUnique({
-      where: {
-        provider_providerSubject: {
-          provider: AuthProvider.KEYCLOAK,
-          providerSubject: subject,
-        },
-      },
-      include: { user: true },
+    const linkedUser = await this.prisma.user.findUnique({
+      where: { keycloakUserId: subject },
     });
-    if (identity?.user) return identity.user;
+    if (linkedUser) return linkedUser;
 
     // Compatibility for users provisioned before AuthIdentity became canonical.
     if (!legacyUsername) return null;
     const legacyUser = await this.prisma.user.findUnique({ where: { zaloId: legacyUsername } });
     if (!legacyUser) return null;
 
-    await this.prisma.authIdentity.upsert({
-      where: {
-        provider_providerSubject: {
-          provider: AuthProvider.KEYCLOAK,
-          providerSubject: subject,
-        },
-      },
-      create: {
-        zaloUserId: legacyUser.zaloId,
-        provider: AuthProvider.KEYCLOAK,
-        providerSubject: subject,
-        verifiedAt: new Date(),
-      },
-      update: { verifiedAt: new Date() },
+    await this.prisma.user.update({
+      where: { zaloId: legacyUser.zaloId },
+      data: { keycloakUserId: subject },
     });
     return legacyUser;
   }

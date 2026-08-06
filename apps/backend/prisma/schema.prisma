@@ -118,6 +118,10 @@ model User {
   termsAcceptedAt    DateTime?
   marketingConsentAt DateTime?
   deletedAt          DateTime?
+  provider           AuthProvider   @default(ZALO)
+  providerSubject    String?        @unique
+  keycloakUserId     String?        @unique
+  providerVerifiedAt DateTime?
 
   cartItems      CartItem[]
   comments       Comment[]
@@ -129,29 +133,12 @@ model User {
   pointsHistory  PointsHistory[]
   campaignUsers  CampaignUser[]
   automationLogs AutomationLog[]
-  authIdentities AuthIdentity[]
   authSessions   AuthSession[]
 
   @@index([name])
   @@index([role])
   @@index([status])
   @@index([createdAt])
-}
-
-model AuthIdentity {
-  id              Int          @id @default(autoincrement())
-  zaloUserId      String
-  provider        AuthProvider
-  providerSubject String
-  verifiedAt      DateTime?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-
-  user User @relation(fields: [zaloUserId], references: [zaloId], onDelete: Cascade)
-
-  @@unique([provider, providerSubject])
-  @@unique([zaloUserId, provider])
-  @@index([zaloUserId])
 }
 
 model AuthSession {

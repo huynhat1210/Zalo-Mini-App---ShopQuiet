@@ -45,7 +45,7 @@ export class MarketingListService {
       });
 
       // Start background lookup simulation
-      this.simulateZaloLookup(list.id);
+      void this.matchEntriesToUsers(list.id);
     }
 
     return this.findOne(list.id);
@@ -119,105 +119,35 @@ export class MarketingListService {
     });
     return { success: true };
   }
-
-  // Simulate scanning group members
-  async scanGroup(groupUrl: string, listName: string) {
-    if (!groupUrl || groupUrl.trim() === '') {
-      throw new BadRequestException('Link nhóm Zalo không được để trống');
-    }
-
-    const name = listName?.trim() || `Tệp quét nhóm_${new Date().toLocaleDateString('vi-VN')}`;
-
-    // Create the marketing list first
-    const list = await this.prisma.marketingList.create({
-      data: {
-        name,
-        description: `Quét thành viên từ nhóm: ${groupUrl}`,
-        sourceType: 'GROUP_SCAN',
-        sourceId: groupUrl.trim(),
-      },
-    });
-
-    // Simulated list of Zalo members
-    const firstNames = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Phan', 'Vũ', 'Đặng', 'Bùi', 'Đỗ', 'Ngô', 'Hồ'];
-    const middleNames = ['Văn', 'Thị', 'Minh', 'Anh', 'Hoàng', 'Thanh', 'Đức', 'Hải', 'Ngọc', 'Quốc', 'Mỹ', 'Kim'];
-    const lastNames = ['An', 'Bình', 'Cường', 'Duy', 'Dũng', 'Đăng', 'Giang', 'Hùng', 'Khoa', 'Khánh', 'Liêm', 'Mỹ', 'Nam', 'Phong', 'Quân', 'Sơn', 'Tuấn', 'Việt', 'Yến', 'Bảo'];
-
-    const totalMembers = Math.floor(Math.random() * 16) + 15; // 15 to 30 members
-    const entriesData = [];
-
-    for (let i = 0; i < totalMembers; i++) {
-      const randFirst = firstNames[Math.floor(Math.random() * firstNames.length)];
-      const randMiddle = middleNames[Math.floor(Math.random() * middleNames.length)];
-      const randLast = lastNames[Math.floor(Math.random() * lastNames.length)];
-      const fullName = `${randFirst} ${randMiddle} ${randLast}`;
-
-      // Random phone number
-      const phonePrefixes = ['090', '091', '098', '096', '097', '034', '035', '038', '077', '079', '086'];
-      const prefix = phonePrefixes[Math.floor(Math.random() * phonePrefixes.length)];
-      const suffix = Math.floor(1000000 + Math.random() * 9000000).toString();
-      const phone = `${prefix}${suffix}`;
-
-      // Random Zalo UID
-      const zaloUid = `zalo_${Math.floor(100000000 + Math.random() * 900000000)}`;
-
-      // In group scan, members are scanned directly with profiles
-      const hasZalo = Math.random() > 0.15; // 85% have Zalo
-
-      entriesData.push({
-        listId: list.id,
-        phone,
-        name: fullName,
-        zaloUid: hasZalo ? zaloUid : null,
-        hasZalo,
-        status: 'VERIFIED',
+  // Resolve imported phone numbers against first-party ShopQuiet users.
+  private async matchEntriesToUsers(listId: number) {
+    try {
+      const entries = await this.prisma.marketingListEntry.findMany({
+        where: { listId, status: 'PENDING' },
       });
-    }
+      const phones = entries.map((entry) => entry.phone);
+      const users = await this.prisma.user.findMany({
+        where: { phone: { in: phones } },
+        select: { zaloId: true, phone: true, name: true },
+      });
+      const usersByPhone = new Map(users.filter((user) => user.phone).map((user) => [user.phone!, user]));
 
-    await this.prisma.marketingListEntry.createMany({
-      data: entriesData,
-    });
-
-    return this.findOne(list.id);
-  }
-
-  // Background simulation of Tra cứu Zalo SĐT
-  private simulateZaloLookup(listId: number) {
-    // Run lookup in background
-    setTimeout(async () => {
-      try {
-        const entries = await this.prisma.marketingListEntry.findMany({
-          where: { listId, status: 'PENDING' },
+      for (const entry of entries) {
+        const user = usersByPhone.get(entry.phone);
+        await this.prisma.marketingListEntry.update({
+          where: { id: entry.id },
+          data: {
+            status: 'VERIFIED',
+            hasZalo: Boolean(user),
+            name: user?.name || null,
+            zaloUid: user?.zaloId || null,
+          },
         });
-
-        const firstNames = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Vũ', 'Đặng', 'Bùi'];
-        const lastNames = ['An', 'Bình', 'Chi', 'Dương', 'Hà', 'Minh', 'Nam', 'Tùng', 'Yến', 'Quốc'];
-
-        for (const entry of entries) {
-          const hasZalo = Math.random() > 0.3; // 70% have Zalo
-          const randFirst = firstNames[Math.floor(Math.random() * firstNames.length)];
-          const randLast = lastNames[Math.floor(Math.random() * lastNames.length)];
-          const name = hasZalo ? `${randFirst} ${randLast}` : null;
-          const zaloUid = hasZalo ? `zalo_${Math.floor(100000000 + Math.random() * 900000000)}` : null;
-
-          await this.prisma.marketingListEntry.update({
-            where: { id: entry.id },
-            data: {
-              status: 'VERIFIED',
-              hasZalo,
-              name,
-              zaloUid,
-            },
-          });
-
-          // Wait small delay between each check to simulate API throttling
-          await new Promise(resolve => setTimeout(resolve, 300));
-        }
-
-        this.logger.log(`Completed background Zalo lookup for list ${listId}`);
-      } catch (err) {
-        this.logger.error(`Error in background Zalo lookup for list ${listId}:`, err);
       }
-    }, 1000);
+
+      this.logger.log(`Matched ${users.length}/${entries.length} imported contacts to ShopQuiet users for list ${listId}`);
+    } catch (err) {
+      this.logger.error(`Failed to match imported contacts for list ${listId}:`, err);
+    }
   }
 }
